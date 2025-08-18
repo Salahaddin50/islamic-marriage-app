@@ -1,0 +1,75 @@
+# Dependencies
+node_modules/
+
+# Development files
+.expo/
+.expo-shared/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Build artifacts (except dist which is our output)
+web-build/
+android/
+ios/
+
+# Source code (not needed for deployment)
+src/
+components/
+app/
+assets/
+
+# Configuration files
+*.config.js
+*.config.ts
+tsconfig.json
+
+# Documentation
+*.md
+AUTHENTICATION_SETUP.md
+DIGITALOCEAN_INSTALLATION.md
+DIGITALOCEAN_SETUP_GUIDE.md
+GOOGLE_OAUTH_SETUP.md
+ISLAMIC_FEATURES.md
+ISLAMIC_MARRIAGE_SETUP.md
+MEDIA_SETUP_GUIDE.md
+
+# Database files
+*.sql
+
+# Test files
+test-*.js
+*.test.js
+*.test.ts
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Scripts
+scripts/
+fix-*.js
+setup-*.js
+
+# Styles (will be bundled)
+styles/
+web-styles.css
+
+# Utilities
+utils/
+
+# Constants and data (will be bundled)
+constants/
+data/
+hooks/
+tabs/
+
+# Stubs
+web-stubs/
+
+# Package lock (use package.json only)
+package-lock.json
+yarn.lock
