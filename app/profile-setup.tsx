@@ -1,0 +1,1206 @@
+// ============================================================================
+// PROFILE SETUP SCREEN - HUME ISLAMIC DATING APP
+// ============================================================================
+// Multi-step profile completion after initial signup
+// ============================================================================
+
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Alert, KeyboardAvoidingView, Platform, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from 'expo-router';
+import { router } from 'expo-router';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { COLORS, SIZES, icons } from '../constants';
+import Header from '../components/Header';
+import Input from '../components/Input';
+import Button from '../components/Button';
+import DatePickerModal from '../components/DatePickerModal';
+import SearchableDropdown from '../components/SearchableDropdown';
+// Import removed - we'll implement steps directly
+import { getResponsiveFontSize, getResponsiveSpacing } from '../utils/responsive';
+import { phoneCodesData } from '../data/phoneCodes';
+import { getCountriesAsDropdownItems, getCitiesForCountry } from '../data/countries';
+import RegistrationService, { RegistrationData } from '../src/services/registration.service';
+import type { GenderType } from '../src/types/database.types';
+
+// ================================
+// VALIDATION SCHEMAS
+// ================================
+
+const basicInfoSchema = z.object({
+  firstName: z.string()
+    .min(2, 'First name must be at least 2 characters')
+    .max(50, 'First name must be less than 50 characters')
+    .regex(/^[a-zA-Z\s]+$/, 'First name must contain only letters'),
+  lastName: z.string()
+    .max(50, 'Last name must be less than 50 characters')
+    .regex(/^[a-zA-Z\s]*$/, 'Last name must contain only letters')
+    .optional(),
+  dateOfBirth: z.string()
+    .refine((date) => {
+      const birthDate = new Date(date);
+      const today = new Date();
+      const age = today.getFullYear() - birthDate.getFullYear();
+      return age >= 18 && age <= 80;
+    }, 'You must be between 18 and 80 years old'),
+  gender: z.enum(['male', 'female'] as const),
+  phoneCode: z.string().min(1, 'Phone code is required'),
+  mobileNumber: z.string()
+    .min(8, 'Mobile number must be at least 8 digits')
+    .max(15, 'Mobile number must be less than 15 digits')
+    .regex(/^[0-9]+$/, 'Mobile number must contain only numbers'),
+  country: z.string().min(2, 'Country is required'),
+  city: z.string().min(2, 'City is required'),
+});
+
+const physicalDetailsSchema = z.object({
+  height: z.number().min(120, 'Height must be at least 120cm').max(250, 'Height must be less than 250cm'),
+  weight: z.number().min(30, 'Weight must be at least 30kg').max(200, 'Weight must be less than 200kg'),
+  eyeColor: z.string().min(1, 'Eye color is required'),
+  hairColor: z.string().min(1, 'Hair color is required'),
+  skinColor: z.string().min(1, 'Skin color is required'),
+  bodyType: z.string().min(1, 'Body type is required'),
+});
+
+const lifestyleSchema = z.object({
+  education: z.string().min(1, 'Education level is required'),
+  occupation: z.string().optional(), // Made optional for females who select "Not Working"
+  income: z.string().optional(),
+  socialCondition: z.string().optional(), // For males
+  housingType: z.string().min(1, 'Housing type is required'),
+  livingCondition: z.string().min(1, 'Living condition is required'),
+  workStatus: z.string().optional(), // For females: "Not Working" or "Working"
+});
+
+const religiousSchema = z.object({
+  religiousLevel: z.string().min(1, 'Religious level is required'),
+  prayerFrequency: z.string().min(1, 'Prayer frequency is required'),
+  quranReading: z.string().min(1, 'Quran reading level is required'),
+  hijabPractice: z.string().optional(), // Only for females (legacy)
+  coveringLevel: z.string().optional(), // New field for females
+  beardPractice: z.string().optional(), // Only for males
+});
+
+const polygamySchema = z.object({
+  seekingWifeNumber: z.string().optional(), // For males - single selection
+  acceptedWifePositions: z.array(z.string()).optional(), // For females - multi selection
+});
+
+type BasicInfoForm = z.infer<typeof basicInfoSchema>;
+type PhysicalDetails = z.infer<typeof physicalDetailsSchema>;
+type LifestyleDetails = z.infer<typeof lifestyleSchema>;
+type ReligiousDetails = z.infer<typeof religiousSchema>;
+type PolygamyDetails = z.infer<typeof polygamySchema>;
+
+
+
+// ================================
+// PROFILE SETUP COMPONENT
+// ================================
+
+const ProfileSetup: React.FC = () => {
+  const navigation = useNavigation();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [comprehensiveData, setComprehensiveData] = useState({});
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState<string>('');
+  const [availableCities, setAvailableCities] = useState<string[]>([]);
+
+  // Form states for each step
+  const [physicalDetails, setPhysicalDetails] = useState<Partial<PhysicalDetails>>({});
+  const [lifestyleDetails, setLifestyleDetails] = useState<Partial<LifestyleDetails>>({});
+  const [religiousDetails, setReligiousDetails] = useState<Partial<ReligiousDetails>>({});
+  const [polygamyDetails, setPolygamyDetails] = useState<Partial<PolygamyDetails>>({});
+
+  // Form management for Step 1 (Basic Info)
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    watch,
+    setValue,
+  } = useForm<BasicInfoForm>({
+    resolver: zodResolver(basicInfoSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      dateOfBirth: '',
+      gender: undefined,
+      phoneCode: '',
+      mobileNumber: '',
+      country: '',
+      city: '',
+    }
+  });
+
+  // Form hooks for each step
+  const physicalForm = useForm<PhysicalDetails>({
+    resolver: zodResolver(physicalDetailsSchema),
+    defaultValues: physicalDetails,
+  });
+
+  const lifestyleForm = useForm<LifestyleDetails>({
+    resolver: zodResolver(lifestyleSchema),
+    defaultValues: lifestyleDetails,
+  });
+
+  const religiousForm = useForm<ReligiousDetails>({
+    resolver: zodResolver(religiousSchema),
+    defaultValues: religiousDetails,
+  });
+
+  const watchedValues = watch();
+
+  // Step 1: Basic Info
+  const handleBasicInfo = async (data: BasicInfoForm) => {
+    setComprehensiveData({ ...comprehensiveData, basicInfo: data });
+    setCurrentStep(2);
+  };
+
+  // Step 2: Physical Details
+  const handlePhysicalDetailsNext = (data: PhysicalDetails) => {
+    setPhysicalDetails(data);
+    setCurrentStep(3);
+  };
+
+  // Step 3: Lifestyle & Work
+  const handleLifestyleNext = (data: LifestyleDetails) => {
+    setLifestyleDetails(data);
+    setCurrentStep(4);
+  };
+
+  // Step 4: Religious Commitment
+  const handleReligiousNext = (data: ReligiousDetails) => {
+    setReligiousDetails(data);
+    setCurrentStep(5);
+  };
+
+  // Step 5: Complete Registration
+  const handlePolygamyComplete = async () => {
+    setIsLoading(true);
+    try {
+      const completeProfile = {
+        basicInfo: comprehensiveData.basicInfo,
+        physicalDetails,
+        lifestyleDetails,
+        religiousDetails,
+        polygamyDetails,
+        gender: watchedValues.gender,
+      };
+
+      await RegistrationService.createComprehensiveProfile(completeProfile);
+      
+      // Show success message and navigate to home
+      Alert.alert(
+        'Profile Complete!',
+        'Your Islamic dating profile has been created successfully!',
+        [
+          {
+            text: 'Start Browsing',
+            onPress: () => router.replace('/(tabs)')
+          }
+        ],
+        { cancelable: false }
+      );
+      
+      // Automatic navigation after 2 seconds as backup
+      setTimeout(() => {
+        router.replace('/(tabs)');
+      }, 2000);
+    } catch (error: any) {
+      console.error('Profile completion error:', error);
+      Alert.alert('Error', 'Failed to complete profile. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    } else {
+      // If on first step, go back to previous screen
+      router.back();
+    }
+  };
+
+  // Handle country selection and update cities
+  const handleCountryChange = (selectedCountry: { label: string; value: string }) => {
+    setSelectedCountry(selectedCountry.value);
+    setValue('country', selectedCountry.value);
+    
+    // Update available cities based on selected country
+    const cities = getCitiesForCountry(selectedCountry.value);
+    setAvailableCities(cities.map(city => city.value));
+    
+    // Clear city selection when country changes
+    setValue('city', '');
+  };
+
+  // Options for dropdowns
+  const eyeColorOptions = [
+    'Brown', 'Black', 'Hazel', 'Green', 'Blue', 'Gray', 'Amber'
+  ];
+
+  const hairColorOptions = [
+    'Black', 'Dark Brown', 'Brown', 'Light Brown', 'Blonde', 'Red', 'Gray', 'White'
+  ];
+
+  const skinColorOptions = [
+    'Very Fair', 'Fair', 'Medium', 'Olive', 'Brown', 'Dark Brown', 'Very Dark'
+  ];
+
+  const bodyTypeOptions = [
+    'Slim', 'Average', 'Athletic', 'Curvy', 'Heavy Set', 'Plus Size'
+  ];
+
+  const educationOptions = [
+    'High School', 'Some College', 'Bachelor\'s Degree', 'Master\'s Degree', 
+    'PhD/Doctorate', 'Islamic Studies', 'Professional Certification', 'Other'
+  ];
+
+  const housingOptions = [
+    'Rent Apartment', 'Rent House', 'Own Apartment', 'Own House', 
+    'Family Home', 'Shared Accommodation', 'Other'
+  ];
+
+  const livingConditionOptions = [
+    { label: 'Living with Parents', value: 'living_with_parents' },
+    { label: 'Living Alone', value: 'living_alone' },
+    { label: 'Living with Children', value: 'living_with_children' }
+  ];
+
+  const socialConditionOptions = [
+    { label: 'Sufficient', value: 'sufficient' },
+    { label: 'Rich', value: 'rich' },
+    { label: 'Very Rich', value: 'very_rich' }
+  ];
+
+  const coveringLevelOptions = [
+    { label: 'Will Cover', value: 'will_cover' },
+    { label: 'Hijab', value: 'hijab' },
+    { label: 'Niqab', value: 'niqab' }
+  ];
+
+  const workStatusOptions = [
+    { label: 'Not Working', value: 'not_working' },
+    { label: 'Working', value: 'working' }
+  ];
+
+  const religiousLevelOptions = [
+    'Very Religious', 'Religious', 'Moderately Religious', 'Somewhat Religious', 'Learning'
+  ];
+
+  const prayerFrequencyOptions = [
+    'All 5 Daily Prayers', 'Most Prayers', 'Some Prayers', 'Friday Only', 'Occasionally', 'Learning to Pray'
+  ];
+
+  const quranReadingOptions = [
+    'Memorized Significant Portions', 'Read Fluently', 'Read with Help', 'Learning to Read', 'Cannot Read Arabic'
+  ];
+
+  // Helper function for dropdown selector
+  const renderDropdownSelector = (
+    title: string,
+    options: string[] | { label: string; value: string }[],
+    selectedValue: string | undefined,
+    onSelect: (value: string) => void,
+    required = false
+  ) => (
+    <View style={styles.selectorContainer}>
+      <Text style={styles.selectorTitle}>{title} {required && '*'}</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionsScroll}>
+        {options.map((option) => {
+          const isObject = typeof option === 'object';
+          const optionValue = isObject ? option.value : option;
+          const optionLabel = isObject ? option.label : option;
+          
+          return (
+            <TouchableOpacity
+              key={optionValue}
+              style={[
+                styles.optionChip,
+                selectedValue === optionValue && styles.optionChipSelected
+              ]}
+              onPress={() => onSelect(optionValue)}
+            >
+              <Text style={[
+                styles.optionChipText,
+                selectedValue === optionValue && styles.optionChipTextSelected
+              ]}>
+                {optionLabel}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+
+  // Final submission
+  const handleCompleteProfile = async () => {
+    setIsLoading(true);
+    try {
+      const registrationData: RegistrationData = {
+        firstName: watchedValues.firstName!,
+        lastName: watchedValues.lastName || '',
+        email: '', // This will be taken from auth context
+        dateOfBirth: watchedValues.dateOfBirth!,
+        gender: watchedValues.gender!,
+        country: watchedValues.country!,
+        city: watchedValues.city!,
+      };
+
+      // Register with simplified preferences  
+      await RegistrationService.createProfileWithPreferences(registrationData, islamicPreferences);
+
+      Alert.alert(
+        'Profile Complete!',
+        'Your profile has been set up successfully. Welcome to Hume!',
+        [
+          {
+            text: 'Start Browsing',
+            onPress: () => navigation.navigate('(tabs)')
+          }
+        ]
+      );
+    } catch (error: any) {
+      console.error('Profile completion error:', error);
+      Alert.alert('Error', 'Failed to complete profile. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardContainer}
+      >
+        <Header 
+          showBackButton={currentStep > 1} 
+          onBackPress={handleBack}
+        />
+
+        {/* Step Progress */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBar}>
+            <View style={[styles.progressFill, { width: `${(currentStep / 5) * 100}%` }]} />
+          </View>
+          <Text style={styles.progressText}>Step {currentStep} of 5</Text>
+        </View>
+
+        {/* Step 1: Basic Information */}
+        {currentStep === 1 && (
+          <View style={styles.stepContainer}>
+            <Text style={styles.stepTitle}>Basic Information</Text>
+            <Text style={styles.stepSubtitle}>
+              Let's get to know you better
+            </Text>
+
+            <View style={styles.formContainer}>
+              <Controller
+                control={control}
+                name="firstName"
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    id="firstName"
+                    placeholder="First Name *"
+                    onInputChanged={(id, text) => onChange(text)}
+                    errorText={errors.firstName?.message}
+                    icon={icons.user}
+                  />
+                )}
+              />
+
+              <Controller
+                control={control}
+                name="lastName"
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    id="lastName"
+                    placeholder="Last Name"
+                    onInputChanged={(id, text) => onChange(text)}
+                    errorText={errors.lastName?.message}
+                    icon={icons.user}
+                  />
+                )}
+              />
+
+              {/* Phone Code Selection */}
+              <Controller
+                control={control}
+                name="phoneCode"
+                render={({ field: { onChange, value } }) => (
+                  <SearchableDropdown
+                    data={phoneCodesData}
+                    onSelect={(item) => onChange(item.value)}
+                    placeholder="Select Phone Code *"
+                    selectedValue={value}
+                    error={errors.phoneCode?.message}
+                    searchPlaceholder="Search country code..."
+                    icon={icons.telephone}
+                  />
+                )}
+              />
+
+              {/* Mobile Number */}
+              <Controller
+                control={control}
+                name="mobileNumber"
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    id="mobileNumber"
+                    placeholder="Mobile Number *"
+                    onInputChanged={(id, text) => onChange(text)}
+                    errorText={errors.mobileNumber?.message}
+                    icon={icons.call}
+                    keyboardType="phone-pad"
+                  />
+                )}
+              />
+
+              <Controller
+                control={control}
+                name="dateOfBirth"
+                render={({ field: { onChange, value } }) => (
+                  <TouchableOpacity 
+                    style={styles.datePickerInput}
+                    onPress={() => setShowDatePicker(true)}
+                  >
+                    <View style={styles.dateInputContainer}>
+                      <Text style={[
+                        styles.dateInputText,
+                        !value && styles.dateInputPlaceholder
+                      ]}>
+                        {value || 'Date of Birth *'}
+                      </Text>
+                      <View style={styles.calendarIcon}>
+                        <Text style={styles.calendarEmoji}>📅</Text>
+                      </View>
+                    </View>
+                    {errors.dateOfBirth && (
+                      <Text style={styles.errorText}>{errors.dateOfBirth.message}</Text>
+                    )}
+                  </TouchableOpacity>
+                )}
+              />
+
+              {/* Country Selection */}
+              <Controller
+                control={control}
+                name="country"
+                render={({ field: { onChange, value } }) => (
+                  <SearchableDropdown
+                    data={getCountriesAsDropdownItems()}
+                    onSelect={(item) => handleCountryChange(item)}
+                    placeholder="Select Country *"
+                    selectedValue={value}
+                    error={errors.country?.message}
+                    searchPlaceholder="Search country..."
+                    icon={icons.location}
+                  />
+                )}
+              />
+
+              {/* City Selection */}
+              <Controller
+                control={control}
+                name="city"
+                render={({ field: { onChange, value } }) => (
+                  <SearchableDropdown
+                    data={getCitiesForCountry(selectedCountry)}
+                    onSelect={(item) => onChange(item.value)}
+                    placeholder={selectedCountry ? "Select City *" : "Select Country First"}
+                    selectedValue={value}
+                    error={errors.city?.message}
+                    disabled={!selectedCountry}
+                    searchPlaceholder="Search city..."
+                    icon={icons.location}
+                  />
+                )}
+              />
+
+              {/* Gender Selection */}
+              <View style={styles.genderContainer}>
+                <Text style={styles.genderTitle}>Gender *</Text>
+                <View style={styles.genderButtons}>
+                  <Controller
+                    control={control}
+                    name="gender"
+                    render={({ field: { onChange, value } }) => (
+                      <>
+                        <TouchableOpacity
+                          style={[
+                            styles.genderButton,
+                            value === 'male' && styles.genderButtonSelected
+                          ]}
+                          onPress={() => onChange('male')}
+                        >
+                          <Text style={[
+                            styles.genderButtonText,
+                            value === 'male' && styles.genderButtonTextSelected
+                          ]}>
+                            Male
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[
+                            styles.genderButton,
+                            value === 'female' && styles.genderButtonSelected
+                          ]}
+                          onPress={() => onChange('female')}
+                        >
+                          <Text style={[
+                            styles.genderButtonText,
+                            value === 'female' && styles.genderButtonTextSelected
+                          ]}>
+                            Female
+                          </Text>
+                        </TouchableOpacity>
+                      </>
+                    )}
+                  />
+                </View>
+                {errors.gender && (
+                  <Text style={styles.errorText}>{errors.gender.message}</Text>
+                )}
+              </View>
+
+              <Button
+                title="Continue"
+                onPress={handleSubmit(handleBasicInfo)}
+                style={styles.continueButton}
+              />
+            </View>
+          </View>
+        )}
+
+        {/* Step 2: Physical Details */}
+        {currentStep === 2 && (
+          <ScrollView style={styles.stepContainer} showsVerticalScrollIndicator={false}>
+            <Text style={styles.stepTitle}>Physical Details</Text>
+            <Text style={styles.stepSubtitle}>Help others know what you look like</Text>
+
+            <View style={styles.formContainer}>
+              <View style={styles.rowContainer}>
+                <View style={styles.halfWidth}>
+                  <Controller
+                    control={physicalForm.control}
+                    name="height"
+                    render={({ field: { onChange, value } }) => (
+                      <Input
+                        id="height"
+                        placeholder="Height (cm) *"
+                        onInputChanged={(id, text) => onChange(parseInt(text) || 0)}
+                        errorText={physicalForm.formState.errors.height?.message}
+                        keyboardType="numeric"
+                      />
+                    )}
+                  />
+                </View>
+                <View style={styles.halfWidth}>
+                  <Controller
+                    control={physicalForm.control}
+                    name="weight"
+                    render={({ field: { onChange, value } }) => (
+                      <Input
+                        id="weight"
+                        placeholder="Weight (kg) *"
+                        onInputChanged={(id, text) => onChange(parseInt(text) || 0)}
+                        errorText={physicalForm.formState.errors.weight?.message}
+                        keyboardType="numeric"
+                      />
+                    )}
+                  />
+                </View>
+              </View>
+
+              <Controller
+                control={physicalForm.control}
+                name="eyeColor"
+                render={({ field: { onChange, value } }) => 
+                  renderDropdownSelector('Eye Color', eyeColorOptions, value, onChange, true)
+                }
+              />
+
+              <Controller
+                control={physicalForm.control}
+                name="hairColor"
+                render={({ field: { onChange, value } }) => 
+                  renderDropdownSelector('Hair Color', hairColorOptions, value, onChange, true)
+                }
+              />
+
+              <Controller
+                control={physicalForm.control}
+                name="skinColor"
+                render={({ field: { onChange, value } }) => 
+                  renderDropdownSelector('Skin Color', skinColorOptions, value, onChange, true)
+                }
+              />
+
+              <Controller
+                control={physicalForm.control}
+                name="bodyType"
+                render={({ field: { onChange, value } }) => 
+                  renderDropdownSelector('Body Type', bodyTypeOptions, value, onChange, true)
+                }
+              />
+
+              <Button
+                title="Continue"
+                onPress={physicalForm.handleSubmit(handlePhysicalDetailsNext)}
+                style={styles.continueButton}
+              />
+            </View>
+          </ScrollView>
+        )}
+
+        {/* Step 3: Lifestyle & Work */}
+        {currentStep === 3 && (
+          <ScrollView style={styles.stepContainer} showsVerticalScrollIndicator={false}>
+            <Text style={styles.stepTitle}>Lifestyle & Work</Text>
+            <Text style={styles.stepSubtitle}>Tell us about your life and career</Text>
+
+            <View style={styles.formContainer}>
+              <Controller
+                control={lifestyleForm.control}
+                name="education"
+                render={({ field: { onChange, value } }) => 
+                  renderDropdownSelector('Education Level', educationOptions, value, onChange, true)
+                }
+              />
+
+              {/* For Males: Occupation and Income */}
+              {watchedValues.gender === 'male' && (
+                <>
+                  <Controller
+                    control={lifestyleForm.control}
+                    name="occupation"
+                    render={({ field: { onChange, value } }) => (
+                      <Input
+                        id="occupation"
+                        placeholder="Occupation/Work *"
+                        onInputChanged={(id, text) => onChange(text)}
+                        errorText={lifestyleForm.formState.errors.occupation?.message}
+                      />
+                    )}
+                  />
+
+                  <Controller
+                    control={lifestyleForm.control}
+                    name="income"
+                    render={({ field: { onChange, value } }) => (
+                      <Input
+                        id="income"
+                        placeholder="Monthly Income (Optional)"
+                        onInputChanged={(id, text) => onChange(text)}
+                      />
+                    )}
+                  />
+
+                  <Controller
+                    control={lifestyleForm.control}
+                    name="socialCondition"
+                    render={({ field: { onChange, value } }) => 
+                      renderDropdownSelector('Social Condition', socialConditionOptions, value, onChange, true)
+                    }
+                  />
+                </>
+              )}
+
+              {/* For Females: Work Status and Conditional Occupation */}
+              {watchedValues.gender === 'female' && (
+                <>
+                  <Controller
+                    control={lifestyleForm.control}
+                    name="workStatus"
+                    render={({ field: { onChange, value } }) => 
+                      renderDropdownSelector('Work Status', workStatusOptions, value, onChange, true)
+                    }
+                  />
+
+                  {lifestyleForm.watch('workStatus') === 'Working' && (
+                    <Controller
+                      control={lifestyleForm.control}
+                      name="occupation"
+                      render={({ field: { onChange, value } }) => (
+                        <Input
+                          id="occupation"
+                          placeholder="Occupation (Optional)"
+                          onInputChanged={(id, text) => onChange(text)}
+                        />
+                      )}
+                    />
+                  )}
+                </>
+              )}
+
+              <Controller
+                control={lifestyleForm.control}
+                name="housingType"
+                render={({ field: { onChange, value } }) => 
+                  renderDropdownSelector('Housing Type', housingOptions, value, onChange, true)
+                }
+              />
+
+              <Controller
+                control={lifestyleForm.control}
+                name="livingCondition"
+                render={({ field: { onChange, value } }) => 
+                  renderDropdownSelector('Living Condition', livingConditionOptions, value, onChange, true)
+                }
+              />
+
+              <Button
+                title="Continue"
+                onPress={lifestyleForm.handleSubmit(handleLifestyleNext)}
+                style={styles.continueButton}
+              />
+            </View>
+          </ScrollView>
+        )}
+
+        {/* Step 4: Religious Commitment */}
+        {currentStep === 4 && (
+          <ScrollView style={styles.stepContainer} showsVerticalScrollIndicator={false}>
+            <Text style={styles.stepTitle}>Religious Commitment</Text>
+            <Text style={styles.stepSubtitle}>Share your Islamic practices and beliefs</Text>
+
+            <View style={styles.formContainer}>
+              <Controller
+                control={religiousForm.control}
+                name="religiousLevel"
+                render={({ field: { onChange, value } }) => 
+                  renderDropdownSelector('Religious Level', religiousLevelOptions, value, onChange, true)
+                }
+              />
+
+              <Controller
+                control={religiousForm.control}
+                name="prayerFrequency"
+                render={({ field: { onChange, value } }) => 
+                  renderDropdownSelector('Prayer Frequency', prayerFrequencyOptions, value, onChange, true)
+                }
+              />
+
+              <Controller
+                control={religiousForm.control}
+                name="quranReading"
+                render={({ field: { onChange, value } }) => 
+                  renderDropdownSelector('Quran Reading Level', quranReadingOptions, value, onChange, true)
+                }
+              />
+
+              {watchedValues.gender === 'female' && (
+                <Controller
+                  control={religiousForm.control}
+                  name="coveringLevel"
+                  render={({ field: { onChange, value } }) => 
+                    renderDropdownSelector('Covering Level', coveringLevelOptions, value, onChange, true)
+                  }
+                />
+              )}
+
+              {watchedValues.gender === 'male' && (
+                <Controller
+                  control={religiousForm.control}
+                  name="beardPractice"
+                  render={({ field: { onChange, value } }) => 
+                    renderDropdownSelector('Beard Practice', ['Full Beard', 'Trimmed Beard', 'Mustache Only', 'Clean Shaven'], value, onChange)
+                  }
+                />
+              )}
+
+              <Button
+                title="Continue"
+                onPress={religiousForm.handleSubmit(handleReligiousNext)}
+                style={styles.continueButton}
+              />
+            </View>
+          </ScrollView>
+        )}
+
+        {/* Step 5: Marriage Intentions */}
+        {currentStep === 5 && (
+          <ScrollView style={styles.stepContainer} showsVerticalScrollIndicator={false}>
+            <Text style={styles.stepTitle}>Marriage Intentions</Text>
+            <Text style={styles.stepSubtitle}>
+              {watchedValues.gender === 'male' 
+                ? 'Which wife number are you looking for?' 
+                : 'Which positions would you accept in a polygamous marriage?'
+              }
+            </Text>
+
+            <View style={styles.formContainer}>
+              {watchedValues.gender === 'male' ? (
+                // Male: Single selection for wife number
+                <View style={styles.polygamySection}>
+                  <Text style={styles.polygamyTitle}>Looking for which wife? *</Text>
+                  <Text style={styles.polygamyNote}>
+                    If you select 2nd wife, it means you currently have 1 wife.
+                    If you select 3rd wife, it means you currently have 2 wives, etc.
+                  </Text>
+                  
+                  {['2nd Wife', '3rd Wife', '4th Wife'].map((option, index) => {
+                    const value = `${index + 2}`;
+                    return (
+                      <TouchableOpacity
+                        key={option}
+                        style={[
+                          styles.polygamyOption,
+                          polygamyDetails.seekingWifeNumber === value && styles.polygamyOptionSelected
+                        ]}
+                        onPress={() => setPolygamyDetails({ ...polygamyDetails, seekingWifeNumber: value })}
+                      >
+                        <View style={styles.optionContent}>
+                          <Text style={[
+                            styles.optionLabel,
+                            polygamyDetails.seekingWifeNumber === value && styles.optionLabelSelected
+                          ]}>
+                            {option}
+                          </Text>
+                          <Text style={[
+                            styles.optionDescription,
+                            polygamyDetails.seekingWifeNumber === value && styles.optionDescriptionSelected
+                          ]}>
+                            Currently have {index + 1} wife{index > 0 ? 's' : ''}
+                          </Text>
+                        </View>
+                        {polygamyDetails.seekingWifeNumber === value && (
+                          <View style={styles.selectedIndicator} />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              ) : (
+                // Female: Multi-selection for wife positions
+                <View style={styles.polygamySection}>
+                  <Text style={styles.polygamyTitle}>Which positions would you accept? *</Text>
+                  <Text style={styles.polygamyNote}>
+                    You can select multiple positions that you would be comfortable with.
+                  </Text>
+                  
+                  {['2nd Wife', '3rd Wife', '4th Wife'].map((option, index) => {
+                    const value = `${index + 2}`;
+                    const isSelected = polygamyDetails.acceptedWifePositions?.includes(value) || false;
+                    
+                    return (
+                      <TouchableOpacity
+                        key={option}
+                        style={[
+                          styles.polygamyOption,
+                          isSelected && styles.polygamyOptionSelected
+                        ]}
+                        onPress={() => {
+                          const current = polygamyDetails.acceptedWifePositions || [];
+                          const updated = isSelected 
+                            ? current.filter(v => v !== value)
+                            : [...current, value];
+                          setPolygamyDetails({ ...polygamyDetails, acceptedWifePositions: updated });
+                        }}
+                      >
+                        <View style={styles.optionContent}>
+                          <Text style={[
+                            styles.optionLabel,
+                            isSelected && styles.optionLabelSelected
+                          ]}>
+                            {option}
+                          </Text>
+                          <Text style={[
+                            styles.optionDescription,
+                            isSelected && styles.optionDescriptionSelected
+                          ]}>
+                            Accept being the {option.toLowerCase()}
+                          </Text>
+                        </View>
+                        {isSelected && (
+                          <View style={styles.selectedIndicator} />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+
+              <Button
+                title={isLoading ? "Completing Registration..." : "Complete Registration"}
+                onPress={handlePolygamyComplete}
+                style={styles.continueButton}
+                disabled={isLoading || (
+                  watchedValues.gender === 'male' ? !polygamyDetails.seekingWifeNumber : 
+                  !polygamyDetails.acceptedWifePositions?.length
+                )}
+              />
+            </View>
+          </ScrollView>
+        )}
+
+        {/* Date Picker Modal */}
+        <DatePickerModal
+          open={showDatePicker}
+          startDate="1950-01-01"
+          selectedDate={selectedDate}
+          onClose={() => setShowDatePicker(false)}
+          onChangeStartDate={(date: string) => {
+            // Convert from YYYY/MM/DD to YYYY-MM-DD format
+            const formattedDate = date.replace(/\//g, '-');
+            setSelectedDate(formattedDate);
+            // Update the form value
+            const currentValues = watchedValues;
+            setValue('dateOfBirth', formattedDate);
+            setShowDatePicker(false);
+          }}
+        />
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+};
+
+// ================================
+// STYLES
+// ================================
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.white,
+  },
+  keyboardContainer: {
+    flex: 1,
+  },
+  progressContainer: {
+    paddingHorizontal: getResponsiveSpacing(24),
+    paddingVertical: getResponsiveSpacing(16),
+  },
+  progressBar: {
+    height: 4,
+    backgroundColor: COLORS.gray2,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: COLORS.primary,
+    borderRadius: 2,
+  },
+  progressText: {
+    fontSize: getResponsiveFontSize(12),
+    fontFamily: 'medium',
+    color: COLORS.gray,
+    textAlign: 'center',
+    marginTop: getResponsiveSpacing(8),
+  },
+  stepContainer: {
+    flex: 1,
+    paddingHorizontal: getResponsiveSpacing(24),
+  },
+  stepTitle: {
+    fontSize: getResponsiveFontSize(24),
+    fontFamily: 'bold',
+    color: COLORS.black,
+    textAlign: 'center',
+    marginBottom: getResponsiveSpacing(8),
+  },
+  stepSubtitle: {
+    fontSize: getResponsiveFontSize(16),
+    fontFamily: 'regular',
+    color: COLORS.gray,
+    textAlign: 'center',
+    marginBottom: getResponsiveSpacing(32),
+    lineHeight: getResponsiveFontSize(22),
+  },
+  stepNote: {
+    fontSize: getResponsiveFontSize(18),
+    fontFamily: 'medium',
+    color: COLORS.primary,
+    textAlign: 'center',
+    marginTop: getResponsiveSpacing(32),
+  },
+  formContainer: {
+    flex: 1,
+  },
+  genderContainer: {
+    marginBottom: getResponsiveSpacing(24),
+  },
+  genderTitle: {
+    fontSize: getResponsiveFontSize(16),
+    fontFamily: 'semiBold',
+    color: COLORS.black,
+    marginBottom: getResponsiveSpacing(12),
+  },
+  genderButtons: {
+    flexDirection: 'row',
+    gap: getResponsiveSpacing(12),
+  },
+  genderButton: {
+    flex: 1,
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    borderRadius: 25,
+    paddingVertical: getResponsiveSpacing(16),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: getResponsiveSpacing(6),
+  },
+  genderButtonSelected: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  genderButtonText: {
+    fontSize: getResponsiveFontSize(16),
+    fontFamily: 'semiBold',
+    color: COLORS.primary,
+  },
+  genderButtonTextSelected: {
+    color: COLORS.white,
+  },
+  errorText: {
+    fontSize: getResponsiveFontSize(12),
+    fontFamily: 'regular',
+    color: COLORS.red,
+    marginTop: getResponsiveSpacing(4),
+  },
+  continueButton: {
+    marginTop: getResponsiveSpacing(24),
+    marginBottom: getResponsiveSpacing(32),
+  },
+  rowContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: getResponsiveSpacing(12),
+  },
+  halfWidth: {
+    flex: 1,
+  },
+  selectorContainer: {
+    marginBottom: getResponsiveSpacing(24),
+  },
+  selectorTitle: {
+    fontSize: getResponsiveFontSize(16),
+    fontFamily: 'semiBold',
+    color: COLORS.black,
+    marginBottom: getResponsiveSpacing(12),
+  },
+  optionsScroll: {
+    flexGrow: 0,
+  },
+  optionChip: {
+    backgroundColor: COLORS.white,
+    borderRadius: 20,
+    paddingHorizontal: getResponsiveSpacing(16),
+    paddingVertical: getResponsiveSpacing(8),
+    marginRight: getResponsiveSpacing(8),
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+  optionChipSelected: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  optionChipText: {
+    fontSize: getResponsiveFontSize(14),
+    fontFamily: 'medium',
+    color: COLORS.primary,
+  },
+  optionChipTextSelected: {
+    color: COLORS.white,
+  },
+  polygamySection: {
+    marginBottom: getResponsiveSpacing(24),
+  },
+  polygamyTitle: {
+    fontSize: getResponsiveFontSize(18),
+    fontFamily: 'semiBold',
+    color: COLORS.black,
+    marginBottom: getResponsiveSpacing(8),
+  },
+  polygamyNote: {
+    fontSize: getResponsiveFontSize(14),
+    fontFamily: 'regular',
+    color: COLORS.gray,
+    marginBottom: getResponsiveSpacing(20),
+    lineHeight: getResponsiveFontSize(20),
+  },
+  polygamyOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.gray2,
+    borderRadius: 12,
+    padding: getResponsiveSpacing(16),
+    marginBottom: getResponsiveSpacing(12),
+  },
+  polygamyOptionSelected: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.primary + '10',
+  },
+  optionContent: {
+    flex: 1,
+  },
+  optionLabel: {
+    fontSize: getResponsiveFontSize(16),
+    fontFamily: 'semiBold',
+    color: COLORS.black,
+    marginBottom: getResponsiveSpacing(4),
+  },
+  optionLabelSelected: {
+    color: COLORS.primary,
+  },
+  optionDescription: {
+    fontSize: getResponsiveFontSize(14),
+    fontFamily: 'regular',
+    color: COLORS.gray,
+  },
+  optionDescriptionSelected: {
+    color: COLORS.primary,
+  },
+  selectedIndicator: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: COLORS.primary,
+  },
+  datePickerInput: {
+    marginVertical: getResponsiveSpacing(12),
+  },
+  dateInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: COLORS.greyscale500,
+    borderRadius: 12,
+    paddingHorizontal: getResponsiveSpacing(16),
+    paddingVertical: getResponsiveSpacing(16),
+    backgroundColor: COLORS.white,
+    minHeight: 52,
+  },
+  dateInputText: {
+    fontSize: getResponsiveFontSize(16),
+    fontFamily: 'regular',
+    color: COLORS.black,
+    flex: 1,
+  },
+  dateInputPlaceholder: {
+    color: COLORS.gray,
+  },
+  calendarIcon: {
+    marginLeft: getResponsiveSpacing(8),
+  },
+  calendarEmoji: {
+    fontSize: getResponsiveFontSize(20),
+  },
+
+});
+
+export default ProfileSetup;

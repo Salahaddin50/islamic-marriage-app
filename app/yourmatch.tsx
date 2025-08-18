@@ -1,0 +1,64 @@
+import { View, StyleSheet, FlatList } from 'react-native';
+import React from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Header from '@/components/Header';
+import { COLORS, SIZES } from '@/constants';
+import MatchCard from '@/components/MatchCard';
+import { yourMatches } from '@/data';
+import { useNavigation } from 'expo-router';
+import { NavigationProp } from '@react-navigation/native';
+
+const YourMatch = () => {
+  const navigation = useNavigation<NavigationProp<any>>();
+
+  return (
+    <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
+      <View style={[styles.container, { backgroundColor: COLORS.white }]}>
+        <Header title="Your Match" />
+        <View style={styles.viewContainer}>
+          <FlatList
+            data={yourMatches}
+            keyExtractor={item => item.id.toString()}
+            numColumns={2}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item }) => (
+              <MatchCard
+                name={item.name}
+                age={item.age}
+                image={item.image}
+                position={item.position}
+                containerStyle={{
+                  width: (SIZES.width - 48) / 2,
+                  height: 272,
+                  marginBottom: 12,
+                }}
+                imageStyle={{
+                  width: (SIZES.width - 48) / 2,
+                  height: 272,
+                }}
+                onPress={() => navigation.navigate("itsamatch")}
+              />
+            )}
+          />
+        </View>
+      </View>
+    </SafeAreaView>
+  )
+};
+
+const styles = StyleSheet.create({
+  area: {
+    flex: 1,
+    backgroundColor: COLORS.white,
+  },
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: COLORS.white,
+  },
+  viewContainer: {
+    marginVertical: 16
+  }
+});
+
+export default YourMatch
