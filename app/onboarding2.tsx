@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import PageContainer from '../components/PageContainer';
 import DotsView from '../components/DotsView';
 import Button from '../components/Button';
-import Onboarding1Styles from '../styles/OnboardingStyles';
+import Onboarding1Styles from '../styles/OnboardingStyles.js';
 import { COLORS, illustrations, images } from '../constants';
 import { useNavigation } from 'expo-router';
 
