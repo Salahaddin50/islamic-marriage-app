@@ -15,16 +15,16 @@ web-build/
 android/
 ios/
 
-# Source code (not needed for deployment)
-src/
-components/
-app/
-assets/
+# Source code that IS needed for deployment
+# src/
+# components/
+# app/
+# assets/
 
-# Configuration files
-*.config.js
-*.config.ts
-tsconfig.json
+# Configuration files (keep essential ones)
+# *.config.js
+# *.config.ts
+# tsconfig.json
 
 # Documentation
 *.md
@@ -59,13 +59,13 @@ styles/
 web-styles.css
 
 # Utilities
-utils/
+# utils/
 
 # Constants and data (will be bundled)
-constants/
-data/
-hooks/
-tabs/
+# constants/
+# data/
+# hooks/
+# tabs/
 
 # Stubs
 web-stubs/
