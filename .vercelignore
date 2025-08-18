@@ -54,8 +54,8 @@ scripts/
 fix-*.js
 setup-*.js
 
-# Styles (will be bundled)
-styles/
+# Styles are needed for deployment
+# styles/ - REMOVED: styles are required for imports
 web-styles.css
 
 # Utilities

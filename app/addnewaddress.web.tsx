@@ -3,7 +3,7 @@ import React, { useRef, useEffect, useReducer, useCallback, useState } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { icons, SIZES, COLORS, FONTS } from '../constants';
 import RBSheet from 'react-native-raw-bottom-sheet';
-import { commonStyles } from '../styles/CommonStyles.js';
+import { commonStyles } from '../styles/CommonStyles';
 import Input from '../components/Input';
 import { validateInput } from '../utils/actions/formActions';
 import { reducer } from '../utils/reducers/formReducers';
