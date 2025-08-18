@@ -37,10 +37,6 @@
         }
       ]
     }
-  ],
-  "functions": {
-    "app/**/*.tsx": {
-      "includeFiles": "**"
-    }
-  }
+  ]
+
 }
