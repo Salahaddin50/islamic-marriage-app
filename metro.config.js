@@ -23,8 +23,7 @@ config.resolver.assetExts = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'webp',
 // Add web platform support
 config.resolver.platforms = ['web', 'native', 'ios', 'android'];
 
-// Explicitly set Babel transformer path and disable inline requires
-config.transformer.babelTransformerPath = require.resolve('metro-react-native-babel-transformer');
+// Add buffer to the global polyfills
 config.transformer.assetPlugins = ['expo-asset/tools/uri'];
 config.transformer.getTransformOptions = async () => ({
   transform: {
