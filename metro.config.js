@@ -2,12 +2,6 @@ const { getDefaultConfig } = require('expo/metro-config');
 
 const config = getDefaultConfig(__dirname);
 
-// Explicitly set node_modules paths
-config.resolver.nodeModulesPaths = [
-  './node_modules',
-  '../node_modules',
-];
-
 // Add polyfills for AWS SDK and Buffer
 config.resolver.alias = {
   ...config.resolver.alias,
@@ -16,15 +10,10 @@ config.resolver.alias = {
   'react-native-maps': require.resolve('./web-stubs/react-native-maps.js'),
 };
 
-// Explicitly define source and asset extensions
-config.resolver.sourceExts = ['ts', 'tsx', 'js', 'jsx', 'json', 'wasm', 'mjs', 'cjs', 'web.js', 'web.ts', 'web.tsx'];
-config.resolver.assetExts = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'webp', 'svg', 'mp4', 'mov', 'avi', 'm4a', 'mp3', 'wav', 'aac', 'ttf', 'otf', 'woff', 'woff2'];
+// Ensure font extensions are included in asset extensions
+config.resolver.assetExts.push('ttf', 'otf', 'woff', 'woff2');
 
-// Add web platform support
-config.resolver.platforms = ['web', 'native', 'ios', 'android'];
-
-// Add buffer to the global polyfills
-config.transformer.assetPlugins = ['expo-asset/tools/uri'];
+// Disable inline requires for better web compatibility
 config.transformer.getTransformOptions = async () => ({
   transform: {
     experimentalImportSupport: false,
