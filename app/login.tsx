@@ -71,11 +71,6 @@ const Login = () => {
         try {
             console.log("Starting Google Authentication for Islamic Dating");
             
-            const redirectUrl = getOAuthRedirectUrl();
-            console.log("🔍 DEBUG: OAuth Redirect URL:", redirectUrl);
-            console.log("🔍 DEBUG: Window location:", typeof window !== 'undefined' ? window.location.href : 'No window');
-            console.log("🔍 DEBUG: Environment:", process.env.NODE_ENV);
-            
             // Start Google OAuth with Supabase with explicit site URL
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',

@@ -39,35 +39,23 @@ const OAUTH_REDIRECT_URLS = {
 export const getOAuthRedirectUrl = (): string => {
   const environment = getCurrentEnvironment();
   
-  console.log("🔍 DEBUG: getCurrentEnvironment():", environment);
-  console.log("🔍 DEBUG: __DEV__:", __DEV__);
-  console.log("🔍 DEBUG: process.env.NODE_ENV:", process.env.NODE_ENV);
-  
   // For web/browser environments, detect the actual URL
   if (typeof window !== 'undefined') {
     const { protocol, host } = window.location;
-    console.log("🔍 DEBUG: Window protocol:", protocol);
-    console.log("🔍 DEBUG: Window host:", host);
     
     // FORCE production URL if we're on Vercel
     if (host.includes('vercel.app') || host.includes('islamic-marriage-app')) {
-      const forcedUrl = 'https://islamic-marriage-app.vercel.app/auth/callback';
-      console.log("🔍 DEBUG: FORCING production URL:", forcedUrl);
-      return forcedUrl;
+      return 'https://islamic-marriage-app.vercel.app/auth/callback';
     }
     
     // In production, override with environment-specific URL if available
     if (environment === ENV.PRODUCTION && !host.includes('localhost')) {
-      const detectedUrl = `${protocol}//${host}/auth/callback`;
-      console.log("🔍 DEBUG: Using detected URL:", detectedUrl);
-      return detectedUrl;
+      return `${protocol}//${host}/auth/callback`;
     }
   }
   
   // Fallback to environment configuration
-  const fallbackUrl = OAUTH_REDIRECT_URLS[environment];
-  console.log("🔍 DEBUG: Using fallback URL:", fallbackUrl);
-  return fallbackUrl;
+  return OAUTH_REDIRECT_URLS[environment];
 };
 
 export const isDevelopment = getCurrentEnvironment() === ENV.DEVELOPMENT;
