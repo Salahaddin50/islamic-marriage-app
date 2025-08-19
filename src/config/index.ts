@@ -39,18 +39,28 @@ const OAUTH_REDIRECT_URLS = {
 export const getOAuthRedirectUrl = (): string => {
   const environment = getCurrentEnvironment();
   
+  console.log("🔍 DEBUG: getCurrentEnvironment():", environment);
+  console.log("🔍 DEBUG: __DEV__:", __DEV__);
+  console.log("🔍 DEBUG: process.env.NODE_ENV:", process.env.NODE_ENV);
+  
   // For web/browser environments, detect the actual URL
   if (typeof window !== 'undefined') {
     const { protocol, host } = window.location;
+    console.log("🔍 DEBUG: Window protocol:", protocol);
+    console.log("🔍 DEBUG: Window host:", host);
     
     // In production, override with environment-specific URL if available
     if (environment === ENV.PRODUCTION && !host.includes('localhost')) {
-      return `${protocol}//${host}/auth/callback`;
+      const detectedUrl = `${protocol}//${host}/auth/callback`;
+      console.log("🔍 DEBUG: Using detected URL:", detectedUrl);
+      return detectedUrl;
     }
   }
   
   // Fallback to environment configuration
-  return OAUTH_REDIRECT_URLS[environment];
+  const fallbackUrl = OAUTH_REDIRECT_URLS[environment];
+  console.log("🔍 DEBUG: Using fallback URL:", fallbackUrl);
+  return fallbackUrl;
 };
 
 export const isDevelopment = getCurrentEnvironment() === ENV.DEVELOPMENT;
