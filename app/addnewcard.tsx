@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState, useReducer, useCallback, useEffect } from 'react';
-import { commonStyles } from '../styles/CommonStyles.js';
+import { commonStyles } from '../styles/CommonStyles';
 import { COLORS, SIZES } from '../constants';
 import Input from '../components/Input';
 import { validateInput } from '../utils/actions/formActions';

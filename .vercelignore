@@ -56,7 +56,7 @@ setup-*.js
 
 # Styles are needed for deployment
 # styles/ - REMOVED: styles are required for imports
-web-styles.css
+# web-styles.css - NEEDED for web layout
 
 # Utilities
 # utils/
@@ -67,8 +67,8 @@ web-styles.css
 # hooks/
 # tabs/
 
-# Stubs
-web-stubs/
+# Stubs (needed for build)
+# web-stubs/
 
 # Package lock (use package.json only)
 package-lock.json

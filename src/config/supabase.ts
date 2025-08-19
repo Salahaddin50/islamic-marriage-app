@@ -2,11 +2,12 @@ import { createClient } from '@supabase/supabase-js';
 import { Database } from '../types/database.types';
 
 // Supabase configuration
-const supabaseUrl = 'https://rpzkugodaacelruquhtc.supabase.co';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://rpzkugodaacelruquhtc.supabase.co';
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwemt1Z29kYWFjZWxydXF1aHRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyOTIwNTQsImV4cCI6MjA3MDg2ODA1NH0.NEPLSSs8JG4LK-RwJWI3GIg9hwzQLMXyllVF3Fv3yCE';
 
-if (!supabaseAnonKey) {
-  throw new Error('Missing Supabase anonymous key. Please add EXPO_PUBLIC_SUPABASE_ANON_KEY to your environment variables.');
+// For build environments, use defaults if environment variables are not available
+if (!supabaseAnonKey && typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  console.warn('Missing Supabase configuration. Using defaults for development.');
 }
 
 // Create Supabase client with TypeScript types
