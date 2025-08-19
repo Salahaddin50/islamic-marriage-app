@@ -1,4 +1,4 @@
-const safeRequire = (path: string) => {
+export const safeRequire = (path: string) => {
   try {
     return require(path);
   } catch (error) {
