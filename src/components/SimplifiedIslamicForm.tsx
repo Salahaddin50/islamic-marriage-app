@@ -1,4 +1,5 @@
-// ============================================================================
+
+ // ============================================================================
 // SIMPLIFIED ISLAMIC PREFERENCES FORM - HUME DATING APP
 // ============================================================================
 // Simplified form for Islamic marriage preferences based on gender
@@ -33,7 +34,7 @@ interface SimplifiedPreferences {
   // For males: polygamy intentions
   seekingWifeNumber?: ('second' | 'third' | 'fourth')[];
   currentWives?: number;
-  maxWives?: number;
+  gitmaxWives?: number;
 }
 
 interface SimplifiedIslamicFormProps {
