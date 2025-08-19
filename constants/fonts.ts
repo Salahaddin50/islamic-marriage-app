@@ -1,39 +1,22 @@
-import black from "../assets/fonts/Urbanist-Black.ttf";
-import blackItalic from "../assets/fonts/Urbanist-BlackItalic.ttf";
-import bold from "../assets/fonts/Urbanist-Bold.ttf";
-import boldItalic from "../assets/fonts/Urbanist-BoldItalic.ttf";
-import extraBold from "../assets/fonts/Urbanist-ExtraBold.ttf";
-import extraBoldItalic from "../assets/fonts/Urbanist-ExtraBoldItalic.ttf";
-import extraLight from "../assets/fonts/Urbanist-ExtraLight.ttf";
-import extraLightItalic from "../assets/fonts/Urbanist-ExtraLightItalic.ttf";
-import italic from "../assets/fonts/Urbanist-Italic.ttf";
-import light from "../assets/fonts/Urbanist-Light.ttf";
-import lightItalic from "../assets/fonts/Urbanist-LightItalic.ttf";
-import medium from "../assets/fonts/Urbanist-Medium.ttf";
-import mediumItalic from "../assets/fonts/Urbanist-MediumItalic.ttf";
-import regular from "../assets/fonts/Urbanist-Regular.ttf";
-import semiBold from "../assets/fonts/Urbanist-SemiBold.ttf";
-import semiBoldItalic from "../assets/fonts/Urbanist-SemiBoldItalic.ttf";
-import thin from "../assets/fonts/Urbanist-Thin.ttf";
-import thinItalic from "../assets/fonts/Urbanist-ThinItalic.ttf";
+import { getAssetUri } from '../utils/assetLoader';
 
 export const FONTS = {
-    black,
-    blackItalic,
-    bold,
-    boldItalic,
-    extraBold,
-    extraBoldItalic,
-    extraLight,
-    extraLightItalic,
-    italic,
-    light,
-    lightItalic,
-    medium,
-    mediumItalic,
-    regular,
-    semiBold,
-    semiBoldItalic,
-    thin,
-    thinItalic
-}
+    black: getAssetUri("assets/fonts/Urbanist-Black.ttf"),
+    blackItalic: getAssetUri("assets/fonts/Urbanist-BlackItalic.ttf"),
+    bold: getAssetUri("assets/fonts/Urbanist-Bold.ttf"),
+    boldItalic: getAssetUri("assets/fonts/Urbanist-BoldItalic.ttf"),
+    extraBold: getAssetUri("assets/fonts/Urbanist-ExtraBold.ttf"),
+    extraBoldItalic: getAssetUri("assets/fonts/Urbanist-ExtraBoldItalic.ttf"),
+    extraLight: getAssetUri("assets/fonts/Urbanist-ExtraLight.ttf"),
+    extraLightItalic: getAssetUri("assets/fonts/Urbanist-ExtraLightItalic.ttf"),
+    italic: getAssetUri("assets/fonts/Urbanist-Italic.ttf"),
+    light: getAssetUri("assets/fonts/Urbanist-Light.ttf"),
+    lightItalic: getAssetUri("assets/fonts/Urbanist-LightItalic.ttf"),
+    medium: getAssetUri("assets/fonts/Urbanist-Medium.ttf"),
+    mediumItalic: getAssetUri("assets/fonts/Urbanist-MediumItalic.ttf"),
+    regular: getAssetUri("assets/fonts/Urbanist-Regular.ttf"),
+    semiBold: getAssetUri("assets/fonts/Urbanist-SemiBold.ttf"),
+    semiBoldItalic: getAssetUri("assets/fonts/Urbanist-SemiBoldItalic.ttf"),
+    thin: getAssetUri("assets/fonts/Urbanist-Thin.ttf"),
+    thinItalic: getAssetUri("assets/fonts/Urbanist-ThinItalic.ttf")
+};

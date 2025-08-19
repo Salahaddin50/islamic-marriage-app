@@ -1,21 +1,13 @@
-import facebook from "../assets/icons/socials/facebook.png";
-import instagram from "../assets/icons/socials/instagram.png";
-import linkedin from "../assets/icons/socials/linkedin.png";
-import messenger from "../assets/icons/socials/messenger.png";
-import titktok from "../assets/icons/socials/tiktok.png";
-import twitter from "../assets/icons/socials/twitter.png";
-import wechat from "../assets/icons/socials/wechat.png";
-import whatsapp from "../assets/icons/socials/whatsappp.png";
-import yahoo from "../assets/icons/socials/yahoo.png";
+import { getAssetUri } from '../utils/assetLoader';
 
 export default {
-    facebook,
-    instagram,
-    linkedin,
-    messenger,
-    titktok,
-    twitter,
-    wechat,
-    whatsapp,
-    yahoo
-}
+    facebook: getAssetUri("assets/icons/socials/facebook.png"),
+    instagram: getAssetUri("assets/icons/socials/instagram.png"),
+    linkedin: getAssetUri("assets/icons/socials/linkedin.png"),
+    messenger: getAssetUri("assets/icons/socials/messenger.png"),
+    titktok: getAssetUri("assets/icons/socials/tiktok.png"),
+    twitter: getAssetUri("assets/icons/socials/twitter.png"),
+    wechat: getAssetUri("assets/icons/socials/wechat.png"),
+    whatsapp: getAssetUri("assets/icons/socials/whatsappp.png"),
+    yahoo: getAssetUri("assets/icons/socials/yahoo.png")
+};
