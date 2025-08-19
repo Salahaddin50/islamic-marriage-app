@@ -1,6 +1,8 @@
-const addFileOutline = require("../assets/icons/add-file-outline.png");
-const addFile = require("../assets/icons/add-file.png");
-const arrowBack = require("../assets/icons/arrow-back.png");
+import { safeRequire } from '../utils/iconHelper';
+
+const addFileOutline = safeRequire("../assets/icons/add-file-outline.png");
+const addFile = safeRequire("../assets/icons/add-file.png");
+const arrowBack = safeRequire("../assets/icons/arrow-back.png");
 const arrowDown = require("../assets/icons/arrow-down.png");
 const arrowRight = require("../assets/icons/arrow-right.png"); 
 const arrowUp = require("../assets/icons/arrow-up.png");
