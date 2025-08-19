@@ -1,47 +1,47 @@
-const ornament = require("../assets/images/ornament.png");
-const logo = require("../assets/images/logo.png");
-const logo2 = require("../assets/images/logo2.png");
-const splashOnboarding = require("../assets/images/splash_onboarding.jpg");
+import ornament from "../assets/images/ornament.png";
+import logo from "../assets/images/logo.png";
+import logo2 from "../assets/images/logo2.png";
+import splashOnboarding from "../assets/images/splash_onboarding.jpg";
 
-const user1 = require("../assets/images/users/user1.jpeg");
-const user2 = require("../assets/images/users/user2.jpeg");
-const user3 = require("../assets/images/users/user3.jpeg");
-const user4 = require("../assets/images/users/user4.jpeg");
-const user5 = require("../assets/images/users/user5.jpeg");
-const user6 = require("../assets/images/users/user6.jpeg");
-const user7 = require("../assets/images/users/user7.jpeg");
-const user8 = require("../assets/images/users/user8.jpeg");
-const user9 = require("../assets/images/users/user9.jpeg");
-const user10 = require("../assets/images/users/user10.jpeg");
-const user11 = require("../assets/images/users/user11.jpeg");
+import user1 from "../assets/images/users/user1.jpeg";
+import user2 from "../assets/images/users/user2.jpeg";
+import user3 from "../assets/images/users/user3.jpeg";
+import user4 from "../assets/images/users/user4.jpeg";
+import user5 from "../assets/images/users/user5.jpeg";
+import user6 from "../assets/images/users/user6.jpeg";
+import user7 from "../assets/images/users/user7.jpeg";
+import user8 from "../assets/images/users/user8.jpeg";
+import user9 from "../assets/images/users/user9.jpeg";
+import user10 from "../assets/images/users/user10.jpeg";
+import user11 from "../assets/images/users/user11.jpeg";
 
-const menber1 = require("../assets/images/menbers/user1.jpg");
-const menber2 = require("../assets/images/menbers/user2.jpg");
-const menber3 = require("../assets/images/menbers/user3.jpg");
-const menber4 = require("../assets/images/menbers/user4.jpg");
-const menber5 = require("../assets/images/menbers/user5.jpg");
-const menber6 = require("../assets/images/menbers/user6.jpg");
-const menber7 = require("../assets/images/menbers/user7.jpg");
-const menber8 = require("../assets/images/menbers/user8.jpg");
+import menber1 from "../assets/images/menbers/user1.jpg";
+import menber2 from "../assets/images/menbers/user2.jpg";
+import menber3 from "../assets/images/menbers/user3.jpg";
+import menber4 from "../assets/images/menbers/user4.jpg";
+import menber5 from "../assets/images/menbers/user5.jpg";
+import menber6 from "../assets/images/menbers/user6.jpg";
+import menber7 from "../assets/images/menbers/user7.jpg";
+import menber8 from "../assets/images/menbers/user8.jpg";
 
-const model1 = require("../assets/images/model1.jpg");
-const model2 = require("../assets/images/model2.jpg");
-const model3 = require("../assets/images/model3.jpg");
-const model4 = require("../assets/images/model4.jpg");
+import model1 from "../assets/images/model1.jpg";
+import model2 from "../assets/images/model2.jpg";
+import model3 from "../assets/images/model3.jpg";
+import model4 from "../assets/images/model4.jpg";
 
-const elipseCard = require("../assets/images/elipse-card.png");
-const rectangleCard = require("../assets/images/rectangle-card.png");
+import elipseCard from "../assets/images/elipse-card.png";
+import rectangleCard from "../assets/images/rectangle-card.png";
 
-const backgroundAvatar1 = require("../assets/images/background_avatar1.jpeg");
-const backgroundAvatar2 = require("../assets/images/background_avatar2.jpeg");
-const backgroundAvatar3 = require("../assets/images/background_avatar3.jpg");
+import backgroundAvatar1 from "../assets/images/background_avatar1.jpeg";
+import backgroundAvatar2 from "../assets/images/background_avatar2.jpeg";
+import backgroundAvatar3 from "../assets/images/background_avatar3.jpg";
 
-const background =  require("../assets/images/background.jpg");
-const avatar = require("../assets/images/avatar.png");
-const face = require("../assets/images/face.png");
-const scanCard = require("../assets/images/scan_card.png");
+import background from  "../assets/images/background.jpg";
+import avatar from "../assets/images/avatar.png";
+import face from "../assets/images/face.png";
+import scanCard from "../assets/images/scan_card.png";
 
-const matchCover = require("../assets/images/match_cover.png");
+import matchCover from "../assets/images/match_cover.png";
 
 export default {
     ornament,
@@ -73,7 +73,7 @@ export default {
     model2,
     model3,
     model4,
-    
+
 elipseCard,
     rectangleCard,
     splashOnboarding,

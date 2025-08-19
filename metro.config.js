@@ -18,7 +18,7 @@ config.resolver.alias = {
 
 // Explicitly define source and asset extensions
 config.resolver.sourceExts = ['ts', 'tsx', 'js', 'jsx', 'json', 'wasm', 'mjs', 'cjs', 'web.js', 'web.ts', 'web.tsx'];
-config.resolver.assetExts = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'webp', 'svg', 'mp4', 'mov', 'avi', 'm4a', 'mp3', 'wav', 'aac'];
+config.resolver.assetExts = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'webp', 'svg', 'mp4', 'mov', 'avi', 'm4a', 'mp3', 'wav', 'aac', 'ttf', 'otf', 'woff', 'woff2'];
 
 // Add web platform support
 config.resolver.platforms = ['web', 'native', 'ios', 'android'];

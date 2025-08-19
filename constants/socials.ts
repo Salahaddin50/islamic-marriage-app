@@ -1,12 +1,12 @@
-const facebook = require("../assets/icons/socials/facebook.png");
-const instagram = require("../assets/icons/socials/instagram.png");
-const linkedin = require("../assets/icons/socials/linkedin.png");
-const messenger = require("../assets/icons/socials/messenger.png");
-const titktok = require("../assets/icons/socials/tiktok.png");
-const twitter = require("../assets/icons/socials/twitter.png");
-const wechat = require("../assets/icons/socials/wechat.png");
-const whatsapp = require("../assets/icons/socials/whatsappp.png");
-const yahoo = require("../assets/icons/socials/yahoo.png");
+import facebook from "../assets/icons/socials/facebook.png";
+import instagram from "../assets/icons/socials/instagram.png";
+import linkedin from "../assets/icons/socials/linkedin.png";
+import messenger from "../assets/icons/socials/messenger.png";
+import titktok from "../assets/icons/socials/tiktok.png";
+import twitter from "../assets/icons/socials/twitter.png";
+import wechat from "../assets/icons/socials/wechat.png";
+import whatsapp from "../assets/icons/socials/whatsappp.png";
+import yahoo from "../assets/icons/socials/yahoo.png";
 
 export default {
     facebook,

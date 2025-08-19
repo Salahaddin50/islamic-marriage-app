@@ -1,29 +1,29 @@
-const fingerprint = require("../assets/illustrations/fingerprint.png");
-const passwordSuccess = require("../assets/illustrations/password_success.png");
-const password = require("../assets/illustrations/password.png");
-const passwordDark = require("../assets/illustrations/password_dark.png");
-const newPassword = require("../assets/illustrations/new_password.png");
-const passwordSuccessDark = require("../assets/illustrations/password_success_dark.png");
-const empty = require("../assets/illustrations/empty.png");
-const notFound = require("../assets/illustrations/not_found.png");
-const background = require("../assets/illustrations/background.png");
+import fingerprint from "../assets/illustrations/fingerprint.png";
+import passwordSuccess from "../assets/illustrations/password_success.png";
+import password from "../assets/illustrations/password.png";
+import passwordDark from "../assets/illustrations/password_dark.png";
+import newPassword from "../assets/illustrations/new_password.png";
+import passwordSuccessDark from "../assets/illustrations/password_success_dark.png";
+import empty from "../assets/illustrations/empty.png";
+import notFound from "../assets/illustrations/not_found.png";
+import background from "../assets/illustrations/background.png";
 
-const onboarding1 = require("../assets/illustrations/onboarding1.png");
-const onboarding2 = require("../assets/illustrations/onboarding2.png");
-const onboarding3 = require("../assets/illustrations/onboarding3.png");
-const onboarding4 = require("../assets/illustrations/onboarding4.png");
-const onboarding5 = require("../assets/illustrations/onboarding5.png");
-const onboarding6 = require("../assets/illustrations/onboarding6.png");
-const onboarding7 = require("../assets/illustrations/onboarding7.png");
-const onboarding8 = require("../assets/illustrations/onboarding8.png");
-const onboarding9 = require("../assets/illustrations/onboarding9.png");
+import onboarding1 from "../assets/illustrations/onboarding1.png";
+import onboarding2 from "../assets/illustrations/onboarding2.png";
+import onboarding3 from "../assets/illustrations/onboarding3.png";
+import onboarding4 from "../assets/illustrations/onboarding4.png";
+import onboarding5 from "../assets/illustrations/onboarding5.png";
+import onboarding6 from "../assets/illustrations/onboarding6.png";
+import onboarding7 from "../assets/illustrations/onboarding7.png";
+import onboarding8 from "../assets/illustrations/onboarding8.png";
+import onboarding9 from "../assets/illustrations/onboarding9.png";
 
-const userSuccess = require("../assets/illustrations/user_success.png");
-const checked = require("../assets/illustrations/checked.png");
-const premium = require("../assets/illustrations/premium.png");
-const identity = require("../assets/illustrations/identity.png");
-const identityDark = require("../assets/illustrations/identity_dark.png");
-const card = require("../assets/illustrations/card.png");
+import userSuccess from "../assets/illustrations/user_success.png";
+import checked from "../assets/illustrations/checked.png";
+import premium from "../assets/illustrations/premium.png";
+import identity from "../assets/illustrations/identity.png";
+import identityDark from "../assets/illustrations/identity_dark.png";
+import card from "../assets/illustrations/card.png";
 
 export default {
     fingerprint,
