@@ -76,11 +76,11 @@ const Login = () => {
             console.log("🔍 DEBUG: Window location:", typeof window !== 'undefined' ? window.location.href : 'No window');
             console.log("🔍 DEBUG: Environment:", process.env.NODE_ENV);
             
-            // Start Google OAuth with Supabase
+            // Start Google OAuth with Supabase with explicit site URL
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: redirectUrl,
+                    redirectTo: 'https://islamic-marriage-app.vercel.app/auth/callback',
                     queryParams: {
                         access_type: 'offline',
                         prompt: 'consent',
