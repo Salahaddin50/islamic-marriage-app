@@ -49,6 +49,13 @@ export const getOAuthRedirectUrl = (): string => {
     console.log("🔍 DEBUG: Window protocol:", protocol);
     console.log("🔍 DEBUG: Window host:", host);
     
+    // FORCE production URL if we're on Vercel
+    if (host.includes('vercel.app') || host.includes('islamic-marriage-app')) {
+      const forcedUrl = 'https://islamic-marriage-app.vercel.app/auth/callback';
+      console.log("🔍 DEBUG: FORCING production URL:", forcedUrl);
+      return forcedUrl;
+    }
+    
     // In production, override with environment-specific URL if available
     if (environment === ENV.PRODUCTION && !host.includes('localhost')) {
       const detectedUrl = `${protocol}//${host}/auth/callback`;
