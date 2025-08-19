@@ -10,6 +10,8 @@ config.resolver.alias = {
   'react-native-maps': require.resolve('./web-stubs/react-native-maps.js'),
 };
 
+config.resolver.assetExts = [...config.resolver.assetExts, 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'webp', 'svg', 'mp4', 'mov', 'avi', 'm4a', 'mp3', 'wav', 'aac', 'json'];
+
 // Add web platform support
 config.resolver.platforms = ['web', 'native', 'ios', 'android'];
 
