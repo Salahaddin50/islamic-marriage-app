@@ -20,6 +20,7 @@ import OrSeparator from '../../components/OrSeparator';
 import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '../../utils/responsive';
 import RegistrationService from '../services/registration.service';
 import { supabase } from '../config/supabase';
+import { getOAuthRedirectUrl } from '../config';
 
 // ================================
 // VALIDATION SCHEMA
@@ -119,7 +120,7 @@ const SimpleSignup: React.FC<Props> = ({ onGoogleSignup, onSignupSuccess }) => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.protocol}//${window.location.host}/auth/callback`,
+          redirectTo: getOAuthRedirectUrl(),
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

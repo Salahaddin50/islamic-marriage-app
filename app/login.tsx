@@ -18,6 +18,7 @@ import Button from '../components/Button';
 import SocialButton from '../components/SocialButton';
 import OrSeparator from '../components/OrSeparator';
 import { useNavigation } from 'expo-router';
+import { getOAuthRedirectUrl } from '../src/config';
 import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '../utils/responsive';
 import RegistrationService from '../src/services/registration.service';
 import { auth } from '../src/config/supabase';
@@ -74,7 +75,7 @@ const Login = () => {
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${window.location.protocol}//${window.location.host}/auth/callback`,
+                    redirectTo: getOAuthRedirectUrl(),
                     queryParams: {
                         access_type: 'offline',
                         prompt: 'consent',

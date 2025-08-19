@@ -28,6 +28,31 @@ export const getCurrentEnvironment = (): Environment => {
   return ENV.PRODUCTION;
 };
 
+// OAuth Redirect URLs Configuration
+const OAUTH_REDIRECT_URLS = {
+  [ENV.DEVELOPMENT]: 'http://localhost:8081/auth/callback',
+  [ENV.STAGING]: 'https://staging-hume-dating.vercel.app/auth/callback',
+  [ENV.PRODUCTION]: 'https://islamic-marriage-app.vercel.app/auth/callback',
+};
+
+// Helper function to get the correct OAuth redirect URL
+export const getOAuthRedirectUrl = (): string => {
+  const environment = getCurrentEnvironment();
+  
+  // For web/browser environments, detect the actual URL
+  if (typeof window !== 'undefined') {
+    const { protocol, host } = window.location;
+    
+    // In production, override with environment-specific URL if available
+    if (environment === ENV.PRODUCTION && !host.includes('localhost')) {
+      return `${protocol}//${host}/auth/callback`;
+    }
+  }
+  
+  // Fallback to environment configuration
+  return OAUTH_REDIRECT_URLS[environment];
+};
+
 export const isDevelopment = getCurrentEnvironment() === ENV.DEVELOPMENT;
 export const isStaging = getCurrentEnvironment() === ENV.STAGING;
 export const isProduction = getCurrentEnvironment() === ENV.PRODUCTION;
@@ -69,6 +94,9 @@ export const AUTH_CONFIG = {
   // Token Expiry (in milliseconds)
   ACCESS_TOKEN_EXPIRY: 15 * 60 * 1000, // 15 minutes
   REFRESH_TOKEN_EXPIRY: 7 * 24 * 60 * 60 * 1000, // 7 days
+  
+  // OAuth Redirect URLs
+  OAUTH_REDIRECT_URLS,
   
   // OAuth Configuration
   GOOGLE_CLIENT_ID: {
