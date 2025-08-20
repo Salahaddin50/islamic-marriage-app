@@ -1,13 +1,12 @@
-import { getAssetUri } from '../utils/assetLoader';
-
+// Use direct require for proper asset bundling by Metro/Expo
 export default {
-    facebook: getAssetUri("assets/icons/socials/facebook.png"),
-    instagram: getAssetUri("assets/icons/socials/instagram.png"),
-    linkedin: getAssetUri("assets/icons/socials/linkedin.png"),
-    messenger: getAssetUri("assets/icons/socials/messenger.png"),
-    titktok: getAssetUri("assets/icons/socials/tiktok.png"),
-    twitter: getAssetUri("assets/icons/socials/twitter.png"),
-    wechat: getAssetUri("assets/icons/socials/wechat.png"),
-    whatsapp: getAssetUri("assets/icons/socials/whatsappp.png"),
-    yahoo: getAssetUri("assets/icons/socials/yahoo.png")
+    facebook: require("../assets/icons/socials/facebook.png"),
+    instagram: require("../assets/icons/socials/instagram.png"),
+    linkedin: require("../assets/icons/socials/linkedin.png"),
+    messenger: require("../assets/icons/socials/messenger.png"),
+    titktok: require("../assets/icons/socials/tiktok.png"),
+    twitter: require("../assets/icons/socials/twitter.png"),
+    wechat: require("../assets/icons/socials/wechat.png"),
+    whatsapp: require("../assets/icons/socials/whatsappp.png"),
+    yahoo: require("../assets/icons/socials/yahoo.png")
 };

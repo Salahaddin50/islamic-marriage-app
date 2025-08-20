@@ -12,7 +12,7 @@ try {
   execSync('npm install', { stdio: 'inherit' });
 
   console.log('🔨 Building Expo web app...');
-  execSync('npx expo export --platform web', { stdio: 'inherit' });
+  execSync('npx expo export --platform web --clear', { stdio: 'inherit' });
 
   console.log('📁 Checking build output...');
   const distPath = path.join(process.cwd(), 'dist');
