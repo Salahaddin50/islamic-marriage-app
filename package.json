@@ -1,7 +1,7 @@
 {
   "name": "hume",
   "main": "expo-router/entry",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
@@ -10,9 +10,12 @@
     "web": "expo start --web",
     "build": "expo export --platform web",
     "build:web": "expo export --platform web",
+    "build:production": "expo export --platform web --clear",
     "export": "expo export --platform web",
+    "deploy": "npm run build:production",
     "test": "jest --watchAll",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "type-check": "tsc --noEmit"
   },
   "jest": {
     "preset": "jest-expo"
