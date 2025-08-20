@@ -6,11 +6,6 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { FONTS } from '@/constants/fonts';
 import { LogBox, Platform } from 'react-native';
-
-// Import web styles for responsive design
-if (Platform.OS === 'web') {
-  require('../web-styles.css');
-}
 // import { QueryProviderWithDevtools } from '../src/providers/QueryProvider'; // Temporarily commented for initial testing
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -35,17 +30,18 @@ export default function RootLayout() {
       const viewportMeta = document.createElement('meta');
       viewportMeta.name = 'viewport';
       viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
-      if (!document.querySelector('meta[name="viewport"]')) {
-        document.head.appendChild(viewportMeta);
-      }
+      document.head.appendChild(viewportMeta);
+
+      // Add responsive CSS
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = '/web-styles.css';
+      document.head.appendChild(link);
 
       // Add mobile-friendly CSS class to body
       document.body.classList.add('mobile-friendly');
       document.body.style.maxWidth = '100vw';
       document.body.style.overflowX = 'hidden';
-      
-      // Use system fonts for web to avoid font loading issues
-      document.body.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif';
     }
   }, []);
 

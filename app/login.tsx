@@ -18,7 +18,6 @@ import Button from '../components/Button';
 import SocialButton from '../components/SocialButton';
 import OrSeparator from '../components/OrSeparator';
 import { useNavigation } from 'expo-router';
-import { getOAuthRedirectUrl } from '../src/config';
 import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '../utils/responsive';
 import RegistrationService from '../src/services/registration.service';
 import { auth } from '../src/config/supabase';
@@ -71,11 +70,11 @@ const Login = () => {
         try {
             console.log("Starting Google Authentication for Islamic Dating");
             
-            // Start Google OAuth with Supabase with explicit site URL
+            // Start Google OAuth with Supabase
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: 'https://islamic-marriage-app.vercel.app/auth/callback',
+                    redirectTo: `${window.location.protocol}//${window.location.host}/auth/callback`,
                     queryParams: {
                         access_type: 'offline',
                         prompt: 'consent',

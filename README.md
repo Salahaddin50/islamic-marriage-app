@@ -1,208 +1,50 @@
-# 🕌 Islamic Marriage Dating App - Hume
+# Welcome to your Expo app 👋
 
-A modern, secure, and Islamic-compliant dating application built with React Native, Expo, and TypeScript. Designed specifically for Muslim singles seeking marriage partners with Islamic values and principles.
+This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-## ✨ Features
+## Get started
 
-### 🎯 Core Functionality
-- **Islamic-compliant matching** system with religious preferences
-- **Secure authentication** with Google OAuth integration
-- **Photo & video uploads** with DigitalOcean Spaces integration
-- **Real-time messaging** and video calling
-- **Advanced filtering** by Islamic preferences (Prayer frequency, Hijab preference, etc.)
-- **Profile verification** with ID card and selfie verification
-- **Cross-platform support** (iOS, Android, Web)
+1. Install dependencies
 
-### 🕌 Islamic Features
-- **Halal matching** based on Islamic principles
-- **Religious preferences** questionnaire
-- **Privacy-focused** design respecting Islamic values
-- **Family involvement** options
-- **Islamic calendar** integration
-- **Prayer time** awareness
-- **Modest photo** guidelines and enforcement
-
-### 🔒 Security & Privacy
-- **Multi-factor authentication**
-- **Profile verification** with government ID
-- **End-to-end encryption** for messages
-- **Privacy controls** for profile visibility
-- **Secure media storage** with DigitalOcean
-
-## 🛠️ Tech Stack
-
-### Frontend
-- **React Native 0.76.5** - Cross-platform mobile development
-- **Expo 52** - Development platform and build service
-- **TypeScript 5.3.3** - Type-safe JavaScript
-- **React Native Web** - Web platform support
-- **Expo Router** - File-based navigation
-
-### Backend & Services
-- **Supabase** - Backend-as-a-Service with PostgreSQL
-- **DigitalOcean Spaces** - Cloud storage for media files
-- **Google OAuth** - Authentication service
-- **Real-time subscriptions** - Live chat and notifications
-
-### Development Tools
-- **Metro** - JavaScript bundler
-- **ESLint** - Code linting
-- **Prettier** - Code formatting
-- **Git** - Version control
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js 18+ and npm/yarn
-- Expo CLI (`npm install -g @expo/cli`)
-- Git
-- Android Studio (for Android development)
-- Xcode (for iOS development, macOS only)
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Salahaddin50/islamic-marriage-app.git
-   cd islamic-marriage-app
-   ```
-
-2. **Install dependencies**
    ```bash
    npm install
    ```
 
-3. **Environment setup**
+2. Start the app
+
    ```bash
-   cp env.example .env
-   # Edit .env with your configuration
+    npx expo start
    ```
 
-4. **Start development server**
-   ```bash
-   # For web
-   npx expo start --web
-   
-   # For mobile (requires Expo Go app)
-   npx expo start
-   ```
+In the output, you'll find options to open the app in a
 
-### Environment Variables
-Create a `.env` file with the following variables:
+- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
+- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
+- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
+- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-```env
-# Supabase Configuration
-EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
-EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-# DigitalOcean Spaces
-EXPO_PUBLIC_DO_SPACES_ENDPOINT=your_spaces_endpoint
-EXPO_PUBLIC_DO_SPACES_BUCKET=your_bucket_name
-EXPO_PUBLIC_DO_ACCESS_KEY=your_access_key
-EXPO_PUBLIC_DO_SECRET_KEY=your_secret_key
+## Get a fresh project
 
-# Google OAuth
-EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=your_google_client_id
-```
+When you're ready, run:
 
-## 📱 Platform Support
-
-| Platform | Status | Notes |
-|----------|--------|--------|
-| **iOS** | ✅ Supported | Requires iOS 13+ |
-| **Android** | ✅ Supported | Requires Android 6.0+ |
-| **Web** | ✅ Supported | Modern browsers |
-
-## 🔧 Development
-
-### Project Structure
-```
-src/
-├── api/              # API integration
-├── components/       # Reusable UI components
-├── config/           # Configuration files
-├── contexts/         # React contexts
-├── database/         # Database schemas
-├── screens/          # Screen components
-├── services/         # Business logic services
-├── types/            # TypeScript type definitions
-└── utils/            # Utility functions
-
-app/                  # Expo Router pages
-components/           # UI components
-constants/           # App constants
-data/                # Static data
-hooks/               # Custom React hooks
-```
-
-### Key Services
-- **Authentication**: Google OAuth, email/password, phone verification
-- **Media Management**: DigitalOcean Spaces integration for photos/videos
-- **Islamic Matching**: Religious preference-based matching algorithm
-- **Profile Management**: Comprehensive user profiles with Islamic preferences
-- **Messaging**: Real-time chat with Islamic moderation
-
-## 🕌 Islamic Compliance Features
-
-### Matching Criteria
-- **Religious Practice Level** (Very religious, Moderate, etc.)
-- **Prayer Frequency** (5 times daily, Sometimes, etc.)
-- **Hijab Preference** (Yes, No, Doesn't matter)
-- **Beard Preference** (Yes, No, Doesn't matter)
-- **Islamic Education** (Formal Islamic education, Self-taught, etc.)
-- **Family Values** (Traditional, Modern, Balanced)
-
-### Privacy & Modesty
-- **Photo Guidelines** - Modest photo requirements
-- **Chat Moderation** - Inappropriate content filtering
-- **Profile Privacy** - Control who can see your profile
-- **Family Involvement** - Options for family member access
-
-## 🚀 Deployment
-
-### Mobile Apps
 ```bash
-# Build for iOS
-eas build --platform ios
-
-# Build for Android
-eas build --platform android
+npm run reset-project
 ```
 
-### Web Deployment
-```bash
-# Build for web
-npx expo export --platform web
+This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-# Deploy to your preferred hosting service
-```
+## Learn more
 
-## 🤝 Contributing
+To learn more about developing your project with Expo, look at the following resources:
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
+- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
 
-## 📄 License
+## Join the community
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Join our community of developers creating universal apps.
 
-## 🙏 Acknowledgments
-
-- Islamic scholars for guidance on halal dating principles
-- Muslim community for feedback and feature requests
-- Open source community for amazing tools and libraries
-
-## 📞 Support
-
-For support and inquiries:
-- **Email**: support@islamicmarriageapp.com
-- **GitHub Issues**: [Create an issue](https://github.com/Salahaddin50/islamic-marriage-app/issues)
-
----
-
-**Built with ❤️ for the Muslim community seeking halal marriage connections.**
-
-May Allah bless all users in finding their righteous spouse. Ameen. 🤲
+- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
+- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.

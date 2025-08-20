@@ -6,18 +6,13 @@ const config = getDefaultConfig(__dirname);
 config.resolver.alias = {
   ...config.resolver.alias,
   'buffer': require.resolve('buffer'),
-  // Add web stubs for react-native-maps
-  'react-native-maps': require.resolve('./web-stubs/react-native-maps.js'),
 };
 
-// Ensure font extensions are included in asset extensions
-config.resolver.assetExts.push('ttf', 'otf', 'woff', 'woff2');
-
-// Disable inline requires for better web compatibility
+// Add buffer to the global polyfills
 config.transformer.getTransformOptions = async () => ({
   transform: {
     experimentalImportSupport: false,
-    inlineRequires: false,
+    inlineRequires: true,
   },
 });
 
