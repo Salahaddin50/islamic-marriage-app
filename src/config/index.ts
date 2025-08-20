@@ -337,16 +337,16 @@ export const ANALYTICS_CONFIG = {
 
 export const FEATURE_FLAGS = {
   // Core Features
-  ENABLE_VIDEO_CHAT: true,
+  ENABLE_VIDEO_CHAT: false,
   ENABLE_VOICE_MESSAGES: true,
-  ENABLE_STORIES: true,
+  ENABLE_STORIES: false,
   ENABLE_LIVE_STREAMING: false,
   
   // Experimental Features
-  ENABLE_AI_MATCHING: true,
+  ENABLE_AI_MATCHING: false,
   ENABLE_PERSONALITY_QUIZ: true,
   ENABLE_ICEBREAKERS: true,
-  ENABLE_BLIND_DATES: true,
+  ENABLE_BLIND_DATES: false,
   
   // Business Features
   ENABLE_PREMIUM_ANALYTICS: true,
