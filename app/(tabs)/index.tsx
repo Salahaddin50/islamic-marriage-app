@@ -6,6 +6,7 @@ import { getResponsiveWidth, getResponsiveFontSize, getResponsiveSpacing, isMobi
 import { useNavigation } from 'expo-router';
 import { NavigationProp } from '@react-navigation/native';
 import { menbers } from '@/data';
+import { supabase } from '@/src/config/supabase';
 import SwipeCard from '@/components/SwipeCard';
 import SwipeCardFooter from '@/components/SwipeCardFooter';
 import RBSheet from "react-native-raw-bottom-sheet";
@@ -57,6 +58,7 @@ const HomeScreen = () => {
   const [selectedGender, setSelectedGender] = useState<string>("Female");
   const [ageRange, setAgeRange] = useState([20, 50]); // Initial age range values
   const [formState, dispatchFormState] = useReducer(reducer, initialState);
+  const [displayName, setDisplayName] = useState<string>('');
 
   const inputChangedHandler = useCallback(
     (inputId: string, inputValue: string) => {
@@ -81,6 +83,29 @@ const HomeScreen = () => {
       setUsers(menbers);
     }
   }, [users.length])
+
+  // Load current user's display name from Supabase profile
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('first_name,last_name')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (profile?.first_name || profile?.last_name) {
+          const name = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ');
+          setDisplayName(name);
+        } else if (user.email) {
+          setDisplayName(user.email.split('@')[0]);
+        }
+      } catch (e) {
+        // ignore
+      }
+    })();
+  }, []);
 
   // Pan responder config
   const panResponder = PanResponder.create({
@@ -147,7 +172,7 @@ const HomeScreen = () => {
             <Text style={styles.greeeting}>Good Morning👋</Text>
             <Text style={[styles.title, {
               color: COLORS.greyscale900
-            }]}>Andrew Ainsley</Text>
+            }]}>{displayName || 'Welcome'}</Text>
           </View>
         </View>
         <View style={styles.viewRight}>
@@ -366,7 +391,7 @@ const styles = StyleSheet.create({
   viewContainer: {
     flex: 1,
     alignItems: 'center',
-    paddingBottom: isMobileWeb() ? 140 : 120, // Add bottom padding for action buttons
+    paddingBottom: isMobileWeb() ? 160 : 140, // Optimized padding for better space usage
     position: 'relative',
   },
   bottomTitle: {

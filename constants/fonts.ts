@@ -1,42 +1,46 @@
 import { Platform } from 'react-native';
 
-// Use system fonts for web to avoid loading issues, custom fonts for native
+// Register font families for React Native Web - removed local fonts that don't exist
+// Google Fonts will be loaded by _layout.tsx instead
+
+// TikTok-style font stack - modern, clean, and trendy
 export const FONTS = Platform.OS === 'web' ? {
-    black: 'system-ui',
-    blackItalic: 'system-ui',
-    bold: 'system-ui',
-    boldItalic: 'system-ui',
-    extraBold: 'system-ui',
-    extraBoldItalic: 'system-ui',
-    extraLight: 'system-ui',
-    extraLightItalic: 'system-ui',
-    italic: 'system-ui',
-    light: 'system-ui',
-    lightItalic: 'system-ui',
-    medium: 'system-ui',
-    mediumItalic: 'system-ui',
-    regular: 'system-ui',
-    semiBold: 'system-ui',
-    semiBoldItalic: 'system-ui',
-    thin: 'system-ui',
-    thinItalic: 'system-ui'
+    black: '"Poppins", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    blackItalic: '"Poppins", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    bold: '"Poppins", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    boldItalic: '"Poppins", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif', 
+    extraBold: '"Poppins", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    extraBoldItalic: '"Poppins", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    extraLight: '"Inter", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    extraLightItalic: '"Inter", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    italic: '"Inter", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    light: '"Inter", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    lightItalic: '"Inter", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    medium: '"Inter", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    mediumItalic: '"Inter", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    regular: '"Inter", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    semiBold: '"Inter", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    semiBoldItalic: '"Inter", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    thin: '"Inter", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    thinItalic: '"Inter", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
 } : {
-    black: require("../assets/fonts/Urbanist-Black.ttf"),
-    blackItalic: require("../assets/fonts/Urbanist-BlackItalic.ttf"),
-    bold: require("../assets/fonts/Urbanist-Bold.ttf"),
-    boldItalic: require("../assets/fonts/Urbanist-BoldItalic.ttf"),
-    extraBold: require("../assets/fonts/Urbanist-ExtraBold.ttf"),
-    extraBoldItalic: require("../assets/fonts/Urbanist-ExtraBoldItalic.ttf"),
-    extraLight: require("../assets/fonts/Urbanist-ExtraLight.ttf"),
-    extraLightItalic: require("../assets/fonts/Urbanist-ExtraLightItalic.ttf"),
-    italic: require("../assets/fonts/Urbanist-Italic.ttf"),
-    light: require("../assets/fonts/Urbanist-Light.ttf"),
-    lightItalic: require("../assets/fonts/Urbanist-LightItalic.ttf"),
-    medium: require("../assets/fonts/Urbanist-Medium.ttf"),
-    mediumItalic: require("../assets/fonts/Urbanist-MediumItalic.ttf"),
-    regular: require("../assets/fonts/Urbanist-Regular.ttf"),
-    semiBold: require("../assets/fonts/Urbanist-SemiBold.ttf"),
-    semiBoldItalic: require("../assets/fonts/Urbanist-SemiBoldItalic.ttf"),
-    thin: require("../assets/fonts/Urbanist-Thin.ttf"),
-    thinItalic: require("../assets/fonts/Urbanist-ThinItalic.ttf")
+    // For native platforms, use system fonts until custom Playfair Display fonts are added
+    black: 'System',
+    blackItalic: 'System',
+    bold: 'System',
+    boldItalic: 'System',
+    extraBold: 'System',
+    extraBoldItalic: 'System',
+    extraLight: 'System',
+    extraLightItalic: 'System',
+    italic: 'System',
+    light: 'System',
+    lightItalic: 'System',
+    medium: 'System',
+    mediumItalic: 'System',
+    regular: 'System',
+    semiBold: 'System',
+    semiBoldItalic: 'System',
+    thin: 'System',
+    thinItalic: 'System'
 };

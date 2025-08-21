@@ -17,10 +17,8 @@ import { supabase } from '../src/config/supabase';
 import Button from '../components/Button';
 import SocialButton from '../components/SocialButton';
 import OrSeparator from '../components/OrSeparator';
-import { useNavigation } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '../utils/responsive';
-import RegistrationService from '../src/services/registration.service';
-import { auth } from '../src/config/supabase';
 
 const isTestMode = true;
 
@@ -113,28 +111,45 @@ const Login = () => {
             const email = formState.inputValues.email;
             const password = formState.inputValues.password;
 
-            // Sign in with Supabase
-            const result = await RegistrationService.signInUser(email, password);
+            // Direct Supabase auth login
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
 
-            if (result.success && result.data) {
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            if (data.user && data.session) {
                 // Store login state if remember me is checked
                 if (isChecked) {
-                    // TODO: Implement secure storage for remember me
                     console.log('Remember me enabled');
                 }
 
-                Alert.alert(
-                    'Login Successful', 
-                    `Welcome back, ${result.data.userProfile.profile.first_name}!`,
-                    [{ text: 'Continue', onPress: () => navigate("(tabs)") }]
-                );
-            } else {
-                setError(result.error || 'Login failed');
-                Alert.alert('Login Failed', result.error || 'Invalid credentials. Please try again.');
+                // Check if user has profile
+                const { data: profile, error: profileError } = await supabase
+                    .from('user_profiles')
+                    .select('user_id')
+                    .eq('user_id', data.user.id)
+                    .maybeSingle();
+
+                if (profileError) {
+                    console.warn('Profile check error:', profileError);
+                }
+
+                // Redirect based on profile existence
+                if (profile) {
+                    // Has profile - go to main app
+                    window.location.href = '/(tabs)';
+                } else {
+                    // No profile - go to profile setup
+                    window.location.href = '/profile-setup';
+                }
             }
         } catch (error) {
             console.error('Login error:', error);
-            const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+            const errorMessage = error instanceof Error ? error.message : 'Invalid credentials. Please try again.';
             setError(errorMessage);
             Alert.alert('Login Failed', errorMessage);
         } finally {
@@ -337,8 +352,8 @@ const styles = StyleSheet.create({
     },
     forgotPasswordContainer: {
         alignItems: 'center',
-        marginTop: getResponsiveSpacing(16),
-        marginBottom: getResponsiveSpacing(32),
+        marginTop: getResponsiveSpacing(12),
+        marginBottom: getResponsiveSpacing(4),
     },
     forgotPasswordText: {
         fontSize: getResponsiveFontSize(16),
@@ -350,19 +365,19 @@ const styles = StyleSheet.create({
         width: '100%',
         maxWidth: isMobileWeb() ? '100%' : 400,
         alignSelf: 'center',
-        marginTop: getResponsiveSpacing(20),
+        marginTop: getResponsiveSpacing(4),
     },
     googleButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: COLORS.white,
-        borderWidth: 1.5,
+        borderWidth: 1,
         borderColor: COLORS.gray6,
         borderRadius: 30,
-        paddingVertical: getResponsiveSpacing(14),
+        paddingVertical: getResponsiveSpacing(12),
         paddingHorizontal: getResponsiveSpacing(20),
-        marginTop: getResponsiveSpacing(20),
+        marginTop: getResponsiveSpacing(4),
         height: isMobileWeb() ? 48 : 52,
         shadowColor: '#000',
         shadowOffset: {

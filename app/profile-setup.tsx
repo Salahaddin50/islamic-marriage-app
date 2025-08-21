@@ -66,6 +66,7 @@ const physicalDetailsSchema = z.object({
 
 const lifestyleSchema = z.object({
   education: z.string().min(1, 'Education level is required'),
+  languagesSpoken: z.array(z.string()).min(1, 'At least one language is required'),
   occupation: z.string().optional(), // Made optional for females who select "Not Working"
   income: z.string().optional(),
   socialCondition: z.string().optional(), // For males
@@ -263,6 +264,16 @@ const ProfileSetup: React.FC = () => {
     'PhD/Doctorate', 'Islamic Studies', 'Professional Certification', 'Other'
   ];
 
+  const languageOptions = [
+    { label: 'Arabic', value: 'Arabic' },
+    { label: 'English', value: 'English' },
+    { label: 'Turkish', value: 'Turkish' },
+    { label: 'Russian', value: 'Russian' },
+    { label: 'Spanish', value: 'Spanish' },
+    { label: 'French', value: 'French' },
+    { label: 'Urdu', value: 'Urdu' }
+  ];
+
   const housingOptions = [
     'Rent Apartment', 'Rent House', 'Own Apartment', 'Own House', 
     'Family Home', 'Shared Accommodation', 'Other'
@@ -341,6 +352,48 @@ const ProfileSetup: React.FC = () => {
     </View>
   );
 
+  // Helper function for multi-select (for languages)
+  const renderMultiSelector = (
+    title: string,
+    options: { label: string; value: string }[],
+    selectedValues: string[],
+    onToggle: (value: string) => void,
+    required = false
+  ) => (
+    <View style={styles.selectorContainer}>
+      <Text style={styles.selectorTitle}>{title} {required && '*'}</Text>
+      <Text style={styles.multiSelectNote}>You can select multiple languages</Text>
+      <View style={styles.multiSelectContainer}>
+        {options.map((option) => {
+          const isSelected = selectedValues.includes(option.value);
+          
+          return (
+            <TouchableOpacity
+              key={option.value}
+              style={[
+                styles.optionChip,
+                isSelected && styles.optionChipSelected
+              ]}
+              onPress={() => onToggle(option.value)}
+            >
+              <Text style={[
+                styles.optionChipText,
+                isSelected && styles.optionChipTextSelected
+              ]}>
+                {option.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+      {selectedValues.length > 0 && (
+        <Text style={styles.selectedCount}>
+          {selectedValues.length} language{selectedValues.length > 1 ? 's' : ''} selected
+        </Text>
+      )}
+    </View>
+  );
+
   // Final submission
   const handleCompleteProfile = async () => {
     setIsLoading(true);
@@ -397,7 +450,12 @@ const ProfileSetup: React.FC = () => {
 
         {/* Step 1: Basic Information */}
         {currentStep === 1 && (
-          <View style={styles.stepContainer}>
+          <ScrollView 
+            style={styles.stepContainer}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.stepScrollContent}
+          >
             <Text style={styles.stepTitle}>Basic Information</Text>
             <Text style={styles.stepSubtitle}>
               Let's get to know you better
@@ -578,7 +636,7 @@ const ProfileSetup: React.FC = () => {
                 style={styles.continueButton}
               />
             </View>
-          </View>
+          </ScrollView>
         )}
 
         {/* Step 2: Physical Details */}
@@ -674,6 +732,26 @@ const ProfileSetup: React.FC = () => {
                 name="education"
                 render={({ field: { onChange, value } }) => 
                   renderDropdownSelector('Education Level', educationOptions, value, onChange, true)
+                }
+              />
+
+              <Controller
+                control={lifestyleForm.control}
+                name="languagesSpoken"
+                render={({ field: { onChange, value } }) => 
+                  renderMultiSelector(
+                    'Languages Spoken', 
+                    languageOptions, 
+                    value || [], 
+                    (selectedLanguage) => {
+                      const currentLanguages = value || [];
+                      const updatedLanguages = currentLanguages.includes(selectedLanguage)
+                        ? currentLanguages.filter(lang => lang !== selectedLanguage)
+                        : [...currentLanguages, selectedLanguage];
+                      onChange(updatedLanguages);
+                    },
+                    true
+                  )
                 }
               />
 
@@ -1073,6 +1151,9 @@ const styles = StyleSheet.create({
     marginTop: getResponsiveSpacing(24),
     marginBottom: getResponsiveSpacing(32),
   },
+  stepScrollContent: {
+    paddingBottom: getResponsiveSpacing(40),
+  },
   rowContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1113,6 +1194,23 @@ const styles = StyleSheet.create({
   },
   optionChipTextSelected: {
     color: COLORS.white,
+  },
+  multiSelectContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: getResponsiveSpacing(8),
+  },
+  multiSelectNote: {
+    fontSize: getResponsiveFontSize(12),
+    fontFamily: 'regular',
+    color: COLORS.gray,
+    marginBottom: getResponsiveSpacing(12),
+  },
+  selectedCount: {
+    fontSize: getResponsiveFontSize(12),
+    fontFamily: 'medium',
+    color: COLORS.primary,
+    marginTop: getResponsiveSpacing(8),
   },
   polygamySection: {
     marginBottom: getResponsiveSpacing(24),

@@ -1,17 +1,20 @@
 import { ViewStyle, TouchableWithoutFeedback, Animated } from 'react-native';
 import React, { useCallback, useRef } from 'react';
 import { FontAwesome } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { isMobileWeb } from '../utils/responsive';
+import { icons } from '../constants';
 
 interface SwipeCardButtonProps {
-  name: any; // Name of the FontAwesome icon
+  name: any; // Name of the icon (FontAwesome or custom)
   size: number; // Size of the icon
   color: string; // Color of the icon and border
   style?: ViewStyle; // Optional additional style for the button
   onPress?: () => void; // Optional function to handle button press
+  useCustomIcon?: boolean; // Whether to use custom icons instead of FontAwesome
 }
 
-const SwipeCardButton: React.FC<SwipeCardButtonProps> = ({ name, size, color, style, onPress }) => {
+const SwipeCardButton: React.FC<SwipeCardButtonProps> = ({ name, size, color, style, onPress, useCustomIcon = false }) => {
   const scale = useRef(new Animated.Value(1)).current;
 
   const animateScale = useCallback(
@@ -54,7 +57,19 @@ const SwipeCardButton: React.FC<SwipeCardButtonProps> = ({ name, size, color, st
           ...style,
         }}
       >
-        <FontAwesome name={name} size={size} color={color} />
+        {useCustomIcon ? (
+          <Image 
+            source={name}
+            style={{ 
+              width: size, 
+              height: size,
+              tintColor: color 
+            }}
+            contentFit="contain"
+          />
+        ) : (
+          <FontAwesome name={name} size={size} color={color} />
+        )}
       </Animated.View>
     </TouchableWithoutFeedback>
   );

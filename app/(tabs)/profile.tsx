@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity, Switch } from 'react-native';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView } from 'react-native-virtualized-view';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -11,6 +11,7 @@ import { launchImagePicker } from '@/utils/ImagePickerHelper';
 import { useNavigation } from 'expo-router';
 import SettingsItem from '@/components/SettingsItem';
 import { getResponsiveFontSize, getResponsiveSpacing, getResponsiveWidth, isMobileWeb } from '@/utils/responsive';
+import { supabase } from '@/src/config/supabase';
 
 type Nav = {
   navigate: (value: string) => void
@@ -50,6 +51,31 @@ const Profile = () => {
    */
   const renderProfile = () => {
     const [image, setImage] = useState(images.user1)
+    const [displayName, setDisplayName] = useState<string>('');
+    const [email, setEmail] = useState<string>('');
+
+    useEffect(() => {
+      (async () => {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) return;
+          setEmail(user.email || '');
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('first_name,last_name')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          if (profile?.first_name || profile?.last_name) {
+            const name = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ');
+            setDisplayName(name);
+          } else if (user.email) {
+            setDisplayName(user.email.split('@')[0]);
+          }
+        } catch (e) {
+          // ignore
+        }
+      })();
+    }, []);
 
     const pickImage = async () => {
       try {
@@ -75,8 +101,8 @@ const Profile = () => {
             <MaterialIcons name="edit" size={16} color={COLORS.white} />
           </TouchableOpacity>
         </View>
-        <Text style={[styles.title, { color: COLORS.greyscale900 }]}>Nathalie Erneson</Text>
-        <Text style={[styles.subtitle, { color: COLORS.greyscale900 }]}>nathalie_erneson@gmail.com</Text>
+        <Text style={[styles.title, { color: COLORS.greyscale900 }]}>{displayName || 'Profile'}</Text>
+        <Text style={[styles.subtitle, { color: COLORS.greyscale900 }]}>{email}</Text>
       </View>
     )
   }

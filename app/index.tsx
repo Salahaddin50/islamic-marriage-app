@@ -4,23 +4,20 @@
 // Mobile-first responsive onboarding with Islamic branding
 // ============================================================================
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Image, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PageContainer from '../components/PageContainer';
 import DotsView from '../components/DotsView';
 import Button from '../components/Button';
 import { COLORS, illustrations, images } from '../constants';
-import { useNavigation } from 'expo-router';
+import { router } from 'expo-router';
 import { getResponsiveFontSize, getResponsiveSpacing, getResponsiveWidth, getResponsiveHeight, isMobileWeb } from '../utils/responsive';
-
-type Nav = {
-  navigate: (value: string) => void
-}
 
 const Index = () => {
   const [progress, setProgress] = useState(0);
-  const { navigate } = useNavigation<Nav>();
+  const intervalRef = useRef<any>(null);
+  const navigatingRef = useRef(false);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -32,16 +29,17 @@ const Index = () => {
         return prevProgress + 0.75;
       });
     }, 2000);
+    intervalRef.current = intervalId;
 
     return () => clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
+    if (navigatingRef.current) return;
     if (progress >= 1) {
-      // Navigate to the onboarding2 Screen
-      navigate('onboarding2');
+      router.replace('/onboarding2');
     }
-  }, [progress, navigate]);
+  }, [progress]);
 
   return (
     <SafeAreaView style={styles.area}>
@@ -85,12 +83,20 @@ const Index = () => {
                 <Button
                   title="Get Started"
                   filled
-                  onPress={() => navigate('onboarding2')}
+                  onPress={() => {
+                    navigatingRef.current = true;
+                    if (intervalRef.current) clearInterval(intervalRef.current);
+                    router.push('/onboarding2');
+                  }}
                   style={styles.nextButton}
                 />
                 <Button
                   title="Skip to Login"
-                  onPress={() => navigate('welcome')}
+                  onPress={() => {
+                    navigatingRef.current = true;
+                    if (intervalRef.current) clearInterval(intervalRef.current);
+                    router.replace('/login');
+                  }}
                   textColor={COLORS.primary}
                   style={styles.skipButton}
                 />

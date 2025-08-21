@@ -11,7 +11,66 @@
     content="width=device-width, initial-scale=1, shrink-to-fit=no"
   />
   <title>Hume - Dating App</title>
-  <link rel="stylesheet" href="../web-styles.css">
+  <!-- Playfair Display - Exotic Elegant Serif Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <style>
+    /* Responsive Web Styles for Hume Dating App */
+    
+    /* Additional responsive styles */
+    .app-container {
+      max-width: 100vw;
+      margin: 0 auto;
+      min-height: 100vh;
+    }
+    
+    /* Mobile styles (default) */
+    @media (max-width: 480px) {
+      .app-container {
+        padding: 8px;
+      }
+      
+      button, .touchable {
+        min-height: 44px;
+        min-width: 44px;
+      }
+      
+      .text-large { font-size: 18px; }
+      .text-medium { font-size: 16px; }
+      .text-small { font-size: 14px; }
+    }
+    
+    /* Tablet styles */
+    @media (min-width: 481px) and (max-width: 768px) {
+      .app-container {
+        max-width: 600px;
+        padding: 16px;
+      }
+      
+      .text-large { font-size: 20px; }
+      .text-medium { font-size: 18px; }
+      .text-small { font-size: 16px; }
+    }
+    
+    /* Desktop styles */
+    @media (min-width: 769px) {
+      .app-container {
+        max-width: 800px;
+        padding: 24px;
+      }
+      
+      .text-large { font-size: 22px; }
+      .text-medium { font-size: 20px; }
+      .text-small { font-size: 18px; }
+    }
+    
+    /* Hide scrollbars on web */
+    ::-webkit-scrollbar {
+      width: 0px;
+      background: transparent;
+    }
+  </style>
   <style>
     /**
      * Extend the react-native-web reset:
@@ -41,7 +100,7 @@
     }
     
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      font-family: "Playfair Display", Georgia, "Times New Roman", serif;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       overflow-x: hidden;

@@ -1,4 +1,5 @@
 import { Dimensions } from 'react-native';
+import { FONTS as FONT_FAMILIES } from './fonts';
 
 const { height, width } = Dimensions.get('window');
 
@@ -83,16 +84,19 @@ export const SIZES = {
 };
 
 export const FONTS = {
-    largeTitle: { fontFamily: 'black', fontSize: SIZES.largeTitle, lineHeight: 55, color: "black" },
-    h1: { fontFamily: 'bold', fontSize: SIZES.h1, lineHeight: 36, color: "black" },
-    h2: { fontFamily: 'bold', fontSize: SIZES.h2, lineHeight: 30, color: "black" },
-    h3: { fontFamily: 'bold', fontSize: SIZES.h3, lineHeight: 22, color: "black" },
-    h4: { fontFamily: 'bold', fontSize: SIZES.h4, lineHeight: 20 },
-    body1: { fontFamily: 'regular', fontSize: SIZES.body1, lineHeight: 36, color: "black" },
-    body2: { fontFamily: 'regular', fontSize: SIZES.body2, lineHeight: 30, color: "black" },
-    body3: { fontFamily: 'regular', fontSize: SIZES.body3, lineHeight: 22, color: "black" },
-    body4: { fontFamily: 'regular', fontSize: SIZES.body4, lineHeight: 20, color: "black" },
+    largeTitle: { fontFamily: FONT_FAMILIES.black, fontSize: SIZES.largeTitle, lineHeight: 55, color: "black" },
+    h1: { fontFamily: FONT_FAMILIES.bold, fontSize: SIZES.h1, lineHeight: 36, color: "black" },
+    h2: { fontFamily: FONT_FAMILIES.bold, fontSize: SIZES.h2, lineHeight: 30, color: "black" },
+    h3: { fontFamily: FONT_FAMILIES.bold, fontSize: SIZES.h3, lineHeight: 22, color: "black" },
+    h4: { fontFamily: FONT_FAMILIES.bold, fontSize: SIZES.h4, lineHeight: 20 },
+    body1: { fontFamily: FONT_FAMILIES.regular, fontSize: SIZES.body1, lineHeight: 36, color: "black" },
+    body2: { fontFamily: FONT_FAMILIES.regular, fontSize: SIZES.body2, lineHeight: 30, color: "black" },
+    body3: { fontFamily: FONT_FAMILIES.regular, fontSize: SIZES.body3, lineHeight: 22, color: "black" },
+    body4: { fontFamily: FONT_FAMILIES.regular, fontSize: SIZES.body4, lineHeight: 20, color: "black" },
 };
+
+// Export individual font families for component use
+export { FONT_FAMILIES };
 
 
 

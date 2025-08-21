@@ -7,7 +7,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, Alert, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -57,7 +57,57 @@ interface Props {
 
 const SimpleSignup: React.FC<Props> = ({ onGoogleSignup, onSignupSuccess }) => {
   const navigation = useNavigation();
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+
+  // Handle post-signup navigation (similar to auth callback)
+  const handlePostSignupNavigation = async () => {
+    try {
+      console.log('Starting post-signup navigation...');
+      
+      // Get the current session from Supabase
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      console.log('Session check:', { 
+        hasSession: !!session, 
+        userId: session?.user?.id,
+        sessionError: sessionError?.message 
+      });
+      
+      if (sessionError || !session) {
+        console.error('Session error after signup:', sessionError);
+        router.push('/login');
+        return;
+      }
+
+      // Check if user profile exists and is completed
+      const { data: existingProfile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('user_id')
+        .eq('user_id', session.user.id)
+        .single();
+
+      console.log('Profile check:', { hasProfile: !!existingProfile, profileError: profileError?.message, profileErrorCode: profileError?.code });
+
+      // If profile doesn't exist (PGRST116 = no rows returned), navigate to setup
+      if (!existingProfile) {
+        console.log('Profile missing or incomplete, navigating to profile setup...');
+        // Force navigation to profile setup
+        router.push('/profile-setup');
+        return;
+      }
+      
+      // If profile exists, go to main app
+      console.log('Profile completed, navigating to main app...');
+      router.push('/(tabs)');
+
+    } catch (error: any) {
+      console.error('Post-signup navigation error:', error);
+      // Fallback to profile setup on error
+      console.log('Fallback: navigating to profile setup...');
+      router.push('/profile-setup');
+    }
+  };
 
   // React Hook Form setup
   const {
@@ -75,37 +125,106 @@ const SimpleSignup: React.FC<Props> = ({ onGoogleSignup, onSignupSuccess }) => {
     }
   });
 
-  // Handle form submission
+  // Handle form submission with smart signup/login logic
   const handleSignup = async (data: SignupForm) => {
     setIsLoading(true);
     try {
-      // Create account with Supabase Auth
-      const { user } = await RegistrationService.createAccount(data.email, data.password);
+      // First, try to create a new account
+      const { user, session } = await RegistrationService.createAccount(data.email, data.password);
+      
+      console.log('Signup result:', { user: !!user, session: !!session });
       
       if (user) {
-        Alert.alert(
-          'Account Created!', 
-          'Your account has been created successfully. Please complete your profile.',
-          [
-            {
-              text: 'Continue',
-              onPress: () => {
-                onSignupSuccess?.(data.email);
-                // Navigate to profile completion
-                navigation.navigate('profile-setup');
-              }
-            }
-          ]
-        );
+        // Check if email confirmation is required
+        if (!session) {
+          // No active session (email confirmation required) -> send to login
+          router.push('/login');
+          return;
+        }
+
+        // New user created successfully -> go directly to profile-setup
+        onSignupSuccess?.(data.email);
+        await handlePostSignupNavigation();
       }
     } catch (error: any) {
       console.error('Signup error:', error);
-      Alert.alert(
-        'Signup Failed',
-        error.message || 'Something went wrong during signup. Please try again.'
-      );
+      
+      // If user already exists, try to log them in instead
+      console.log('Checking error message:', error.message);
+      const errorMsg = error.message.toLowerCase();
+      const isUserExists = errorMsg.includes('already registered') || 
+                          errorMsg.includes('user already') ||
+                          errorMsg.includes('already been registered') ||
+                          errorMsg.includes('email already') ||
+                          (errorMsg.includes('user') && errorMsg.includes('registered'));
+      
+      if (isUserExists) {
+        console.log('User already exists, attempting login...');
+        await handleExistingUserLogin(data.email, data.password);
+        return;
+      }
+      
+      // Handle other error cases
+      let errorMessage = 'Something went wrong during signup. Please try again.';
+      
+      if (error.message.includes('Invalid email')) {
+        errorMessage = 'Please enter a valid email address.';
+      } else if (error.message.includes('Password')) {
+        errorMessage = 'Password must be at least 6 characters long.';
+      } else if (error.message.includes('rate limit')) {
+        errorMessage = 'Too many signup attempts. Please wait a moment and try again.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      Alert.alert('Signup Failed', errorMessage);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Handle login for existing users who tried to signup
+  const handleExistingUserLogin = async (email: string, password: string) => {
+    try {
+      console.log('Attempting to login existing user...');
+      
+      // Try to log in the existing user
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      console.log('Login attempt result:', { 
+        user: !!data?.user, 
+        session: !!data?.session, 
+        error: error?.message 
+      });
+
+      if (error) {
+        console.log('Login failed:', error.message);
+        // Login failed - likely wrong password
+        Alert.alert('Login Required','This email is already registered. Please enter the correct password or reset your password.',[
+          { text: 'Try Again' },
+          { text: 'Reset Password', onPress: () => router.push('/forgotpasswordemail') }
+        ]);
+        return;
+      }
+
+      if (data.user && data.session) {
+        console.log('Login successful! Checking profile and navigating...');
+        onSignupSuccess?.(email);
+        await handlePostSignupNavigation();
+      } else {
+        console.log('Login response missing user or session');
+        throw new Error('Login response incomplete');
+      }
+
+    } catch (loginError: any) {
+      console.error('Auto-login error:', loginError);
+      Alert.alert('Login Required','This email is already registered. Please go to the login page and sign in with your password.',[
+        { text: 'OK' },
+        { text: 'Go to Login', onPress: () => router.push('/login') }
+      ]);
     }
   };
 

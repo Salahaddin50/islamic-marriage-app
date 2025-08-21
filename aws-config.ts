@@ -13,4 +13,3 @@ AWS.config.setPromisesDependency(null);
 
 export default AWS;
 
-

@@ -5,12 +5,13 @@
 // ============================================================================
 
 import React from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity, KeyboardAvoidingView, Platform, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS, SIZES, icons, images } from "../constants";
 import SocialButtonV2 from "../components/SocialButtonV2";
 import { useNavigation } from "expo-router";
 import { getResponsiveFontSize, getResponsiveSpacing, getResponsiveWidth, isMobileWeb } from "../utils/responsive";
+import { supabase } from "../src/config/supabase";
 
 type Nav = {
     navigate: (value: string) => void
@@ -19,6 +20,38 @@ type Nav = {
 // Responsive Welcome Screen
 const Welcome = () => {
     const { navigate } = useNavigation<Nav>();
+
+    // Handle Google Sign In with Supabase - INSTANT redirect
+    const handleGoogleSignIn = async () => {
+        try {
+            // Use Supabase Google OAuth directly - no loading state needed
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: Platform.OS === 'web' 
+                        ? `${window.location.origin}/auth/callback`
+                        : 'com.hume.dating://auth/callback'
+                }
+            });
+            
+            if (error) {
+                throw error;
+            }
+            
+            // For web, redirect happens automatically and instantly
+            // For mobile, OAuth flow will handle the redirect
+            
+        } catch (error: any) {
+            console.error('Google Sign In Error:', error);
+            
+            // Show user-friendly error message only on actual errors
+            Alert.alert(
+                "Authentication Failed", 
+                error.message || "Failed to sign in with Google. Please try again.",
+                [{ text: "OK" }]
+            );
+        }
+    };
 
     return (
         <SafeAreaView style={styles.area}>
@@ -45,10 +78,10 @@ const Welcome = () => {
 
                     {/* Social Buttons Section */}
                     <View style={styles.socialButtonsContainer}>
-                        {/* Only Google for Islamic Community */}
+                        {/* Google OAuth - Instant Redirect */}
                         <TouchableOpacity
                             style={styles.googleButton}
-                            onPress={() => navigate("signup")}
+                            onPress={handleGoogleSignIn}
                         >
                             <Image 
                                 source={icons.google} 

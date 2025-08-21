@@ -8,6 +8,9 @@ config.resolver.alias = {
   'buffer': require.resolve('buffer'),
 };
 
+// Add CSS support for web
+config.resolver.assetExts.push('css');
+
 // Add buffer to the global polyfills
 config.transformer.getTransformOptions = async () => ({
   transform: {

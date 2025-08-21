@@ -6,6 +6,11 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { FONTS } from '@/constants/fonts';
 import { LogBox, Platform } from 'react-native';
+
+// Import CSS for web builds
+if (Platform.OS === 'web') {
+  require('../web-styles.css');
+}
 // import { QueryProviderWithDevtools } from '../src/providers/QueryProvider'; // Temporarily commented for initial testing
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -14,8 +19,20 @@ SplashScreen.preventAutoHideAsync();
 //Ignore all log notifications
 LogBox.ignoreAllLogs();
 
+// Suppress React Native Web deprecation warnings for cleaner console
+if (Platform.OS === 'web') {
+  const originalWarn = console.warn;
+  console.warn = (...args) => {
+    if (args[0]?.includes?.('"shadow*" style props are deprecated')) return;
+    if (args[0]?.includes?.('style.tintColor is deprecated')) return;
+    if (args[0]?.includes?.('props.pointerEvents is deprecated')) return;
+    originalWarn(...args);
+  };
+}
+
 export default function RootLayout() {
-  const [loaded] = useFonts(FONTS);
+  // For web, don't use useFonts since we're loading from Google Fonts
+  const [loaded] = Platform.OS === 'web' ? [true] : useFonts(FONTS);
 
   useEffect(() => {
     if (loaded) {
@@ -32,16 +49,77 @@ export default function RootLayout() {
       viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
       document.head.appendChild(viewportMeta);
 
-      // Add responsive CSS
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = '/web-styles.css';
-      document.head.appendChild(link);
+      // Add Google Fonts link for TikTok-style fonts (Inter + Poppins)
+      const fontLink = document.createElement('link');
+      fontLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap';
+      fontLink.rel = 'stylesheet';
+      document.head.appendChild(fontLink);
+
+      // Add font preconnect for better performance
+      const preconnect1 = document.createElement('link');
+      preconnect1.rel = 'preconnect';
+      preconnect1.href = 'https://fonts.googleapis.com';
+      document.head.appendChild(preconnect1);
+
+      const preconnect2 = document.createElement('link');
+      preconnect2.rel = 'preconnect';
+      preconnect2.href = 'https://fonts.gstatic.com';
+      preconnect2.crossOrigin = 'anonymous';
+      document.head.appendChild(preconnect2);
 
       // Add mobile-friendly CSS class to body
       document.body.classList.add('mobile-friendly');
       document.body.style.maxWidth = '100vw';
       document.body.style.overflowX = 'hidden';
+
+      // FORCE TikTok-style fonts with inline styles
+      const forceTikTokStyle = document.createElement('style');
+      forceTikTokStyle.innerHTML = `
+        /* TikTok-style font stack - modern, clean, and trendy */
+        *, *::before, *::after {
+          font-family: "Inter", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+        }
+        
+        /* Override ALL possible font declarations */
+        html, body, #root, #root * {
+          font-family: "Inter", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+        }
+        
+        /* Override React Native Web generated classes */
+        [class*="css-"], [class*="r-"] {
+          font-family: "Inter", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+        }
+        
+        /* Override inline styles */
+        [style*="font-family"] {
+          font-family: "Inter", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+        }
+        
+        /* TikTok-style typography improvements */
+        body {
+          font-weight: 400;
+          line-height: 1.5;
+          letter-spacing: -0.01em;
+        }
+        
+        /* Headings use Poppins for impact */
+        h1, h2, h3, h4, h5, h6, .heading {
+          font-family: "Poppins", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+          font-weight: 600;
+          letter-spacing: -0.02em;
+        }
+        
+        /* Buttons and CTAs use Inter for clarity */
+        button, .button, .cta {
+          font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+          font-weight: 500;
+          letter-spacing: -0.005em;
+        }
+      `;
+      document.head.appendChild(forceTikTokStyle);
+      
+      // Also set it on body directly
+      document.body.style.fontFamily = '"Inter", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
     }
   }, []);
 

@@ -32,6 +32,7 @@ const PersonalDetailsScreen = () => {
   
   // Lifestyle & Work
   const [education, setEducation] = useState('');
+  const [languages, setLanguages] = useState<string[]>([]);
   const [occupation, setOccupation] = useState('');
   const [income, setIncome] = useState('');
   const [housingType, setHousingType] = useState('');
@@ -58,6 +59,15 @@ const PersonalDetailsScreen = () => {
   const bodyTypeOptions = ['Slim', 'Athletic', 'Average', 'Curvy', 'Plus Size', 'Muscular'];
   
   const educationOptions = ['High School', 'Some College', 'Associate Degree', 'Bachelor\'s Degree', 'Master\'s Degree', 'Doctorate', 'Trade School', 'Other'];
+  const languageOptions = [
+    { label: 'Arabic', value: 'Arabic' },
+    { label: 'English', value: 'English' },
+    { label: 'Turkish', value: 'Turkish' },
+    { label: 'Russian', value: 'Russian' },
+    { label: 'Spanish', value: 'Spanish' },
+    { label: 'French', value: 'French' },
+    { label: 'Urdu', value: 'Urdu' }
+  ];
   const housingOptions = ['Own House', 'Rent Apartment', 'Family Home', 'Shared Accommodation', 'Other'];
   
   const livingConditionOptions = {
@@ -118,6 +128,7 @@ const PersonalDetailsScreen = () => {
         setBodyType(details.body_type || '');
         
         setEducation(details.education_level || '');
+        setLanguages(details.languages_spoken || []);
         setOccupation(details.occupation || '');
         setIncome(details.monthly_income || '');
         setHousingType(details.housing_type || '');
@@ -172,6 +183,7 @@ const PersonalDetailsScreen = () => {
         
         // Lifestyle & Work
         education_level: education || undefined,
+        languages_spoken: languages.length > 0 ? languages : undefined,
         occupation: occupation || undefined,
         monthly_income: income || undefined,
         housing_type: housingType || undefined,
@@ -253,40 +265,72 @@ const PersonalDetailsScreen = () => {
     </View>
   );
 
-  // Helper function for multi-select (for female polygamy preferences)
+  // Helper function for multi-select (for languages and female polygamy preferences)
   const renderMultiSelect = (
     title: string,
     options: { label: string; value: string }[],
     selectedValues: string[],
-    onToggle: (value: string) => void
+    onToggle: (value: string) => void,
+    horizontal = false
   ) => (
     <View style={styles.selectorContainer}>
       <Text style={styles.selectorTitle}>{title}</Text>
       <Text style={styles.multiSelectNote}>You can select multiple options</Text>
-      {options.map((option) => {
-        const isSelected = selectedValues.includes(option.value);
-        
-        return (
-          <TouchableOpacity
-            key={option.value}
-            style={[
-              styles.multiSelectOption,
-              isSelected && styles.multiSelectOptionSelected
-            ]}
-            onPress={() => onToggle(option.value)}
-          >
-            <Text style={[
-              styles.multiSelectOptionText,
-              isSelected && styles.multiSelectOptionTextSelected
-            ]}>
-              {option.label}
-            </Text>
-            {isSelected && (
-              <View style={styles.selectedIndicator} />
-            )}
-          </TouchableOpacity>
-        );
-      })}
+      {horizontal ? (
+        <View style={styles.horizontalMultiSelect}>
+          {options.map((option) => {
+            const isSelected = selectedValues.includes(option.value);
+            
+            return (
+              <TouchableOpacity
+                key={option.value}
+                style={[
+                  styles.optionChip,
+                  isSelected && styles.optionChipSelected
+                ]}
+                onPress={() => onToggle(option.value)}
+              >
+                <Text style={[
+                  styles.optionChipText,
+                  isSelected && styles.optionChipTextSelected
+                ]}>
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      ) : (
+        options.map((option) => {
+          const isSelected = selectedValues.includes(option.value);
+          
+          return (
+            <TouchableOpacity
+              key={option.value}
+              style={[
+                styles.multiSelectOption,
+                isSelected && styles.multiSelectOptionSelected
+              ]}
+              onPress={() => onToggle(option.value)}
+            >
+              <Text style={[
+                styles.multiSelectOptionText,
+                isSelected && styles.multiSelectOptionTextSelected
+              ]}>
+                {option.label}
+              </Text>
+              {isSelected && (
+                <View style={styles.selectedIndicator} />
+              )}
+            </TouchableOpacity>
+          );
+        })
+      )}
+      {selectedValues.length > 0 && (
+        <Text style={styles.selectedCount}>
+          {selectedValues.length} selected
+        </Text>
+      )}
     </View>
   );
 
@@ -352,6 +396,19 @@ const PersonalDetailsScreen = () => {
             <Text style={styles.sectionSubtitle}>Tell us about your life and career</Text>
 
             {renderDropdownSelector('Education Level', educationOptions, education, setEducation, true)}
+
+            {renderMultiSelect(
+              'Languages Spoken', 
+              languageOptions, 
+              languages, 
+              (selectedLanguage) => {
+                const updatedLanguages = languages.includes(selectedLanguage)
+                  ? languages.filter(lang => lang !== selectedLanguage)
+                  : [...languages, selectedLanguage];
+                setLanguages(updatedLanguages);
+              },
+              true
+            )}
 
             {/* Gender-specific fields */}
             {personalDetails?.gender === 'male' && (
@@ -624,6 +681,18 @@ const styles = StyleSheet.create({
     fontFamily: 'regular',
     color: COLORS.gray,
     marginBottom: getResponsiveSpacing(12),
+  },
+  horizontalMultiSelect: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: getResponsiveSpacing(8),
+    marginBottom: getResponsiveSpacing(8),
+  },
+  selectedCount: {
+    fontSize: getResponsiveFontSize(12),
+    fontFamily: 'medium',
+    color: COLORS.primary,
+    marginTop: getResponsiveSpacing(8),
   },
   multiSelectOption: {
     flexDirection: 'row',

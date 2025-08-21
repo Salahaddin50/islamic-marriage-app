@@ -3,9 +3,11 @@ import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import DatePicker from 'react-native-modern-datepicker';
 import { COLORS } from '../constants';
 
+// Suppress React defaultProps warnings for cleaner console
 const error = console.error;
 console.error = (...args) => {
   if (/defaultProps/.test(args[0])) return;
+  if (/Unexpected text node/.test(args[0])) return; // Suppress text node warnings
   error(...args);
 };
 

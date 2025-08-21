@@ -17,9 +17,16 @@ const TabLayout = () => {
           right: 0,
           left: 0,
           elevation: 0,
-          height: isMobileWeb() ? 70 : Platform.OS === 'ios' ? 90 : 60,
+          height: isMobileWeb() ? 75 : Platform.OS === 'ios' ? 90 : 65, // Slightly increased for better optimization
           backgroundColor: COLORS.white,
           paddingHorizontal: getResponsiveSpacing(8),
+          // Add subtle shadow to separate from content
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          borderTopWidth: 1,
+          borderTopColor: 'rgba(0,0,0,0.05)',
         },
       }}
     >
@@ -46,7 +53,6 @@ const TabLayout = () => {
                 />
                 <Text style={{
                   ...FONTS.body4,
-                  fontSize: getResponsiveFontSize(FONTS.body4.fontSize || 14),
                   color: focused ? COLORS.primary : COLORS.gray3,
                 }}>Home</Text>
               </View>
@@ -62,15 +68,16 @@ const TabLayout = () => {
             return (
               <View style={{
                 alignItems: "center",
-                paddingTop: 16,
-                width: SIZES.width / 4
+                paddingTop: getResponsiveSpacing(16),
+                width: isMobileWeb() ? '20%' : SIZES.width / 5,
+                minWidth: 60,
               }}>
                 <Image
                   source={focused ? icons.explore : icons.exploreOutline}
                   contentFit="contain"
                   style={{
-                    width: 24,
-                    height: 24,
+                    width: isMobileWeb() ? 20 : 24,
+                    height: isMobileWeb() ? 20 : 24,
                     tintColor: focused ? COLORS.primary : COLORS.gray3,
                   }}
                 />
@@ -91,15 +98,16 @@ const TabLayout = () => {
             return (
               <View style={{
                 alignItems: "center",
-                paddingTop: 16,
-                width: SIZES.width / 4
+                paddingTop: getResponsiveSpacing(16),
+                width: isMobileWeb() ? '20%' : SIZES.width / 5,
+                minWidth: 60,
               }}>
                 <Image
                   source={focused ? icons.heart2 : icons.heart2Outline}
                   contentFit="contain"
                   style={{
-                    width: 24,
-                    height: 24,
+                    width: isMobileWeb() ? 20 : 24,
+                    height: isMobileWeb() ? 20 : 24,
                     tintColor: focused ? COLORS.primary : COLORS.gray3,
                   }}
                 />
@@ -120,15 +128,16 @@ const TabLayout = () => {
             return (
               <View style={{
                 alignItems: "center",
-                paddingTop: 16,
-                width: SIZES.width / 4
+                paddingTop: getResponsiveSpacing(16),
+                width: isMobileWeb() ? '20%' : SIZES.width / 5,
+                minWidth: 60,
               }}>
                 <Image
                   source={focused ? icons.chat : icons.chatBubble2Outline}
                   contentFit="contain"
                   style={{
-                    width: 24,
-                    height: 24,
+                    width: isMobileWeb() ? 20 : 24,
+                    height: isMobileWeb() ? 20 : 24,
                     tintColor: focused ? COLORS.primary : COLORS.gray3,
                   }}
                 />
@@ -149,15 +158,16 @@ const TabLayout = () => {
             return (
               <View style={{
                 alignItems: "center",
-                paddingTop: 16,
-                width: SIZES.width / 4
+                paddingTop: getResponsiveSpacing(16),
+                width: isMobileWeb() ? '20%' : SIZES.width / 5,
+                minWidth: 60,
               }}>
                 <Image
                   source={focused ? icons.user : icons.userOutline}
                   contentFit="contain"
                   style={{
-                    width: 24,
-                    height: 24,
+                    width: isMobileWeb() ? 20 : 24,
+                    height: isMobileWeb() ? 20 : 24,
                     tintColor: focused ? COLORS.primary : COLORS.gray3,
                   }}
                 />

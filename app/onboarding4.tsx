@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PageContainer from '../components/PageContainer';
@@ -6,15 +6,12 @@ import DotsView from '../components/DotsView';
 import Button from '../components/Button';
 import Onboarding1Styles from '../styles/OnboardingStyles';
 import { COLORS, illustrations, images } from '../constants';
-import { useNavigation } from 'expo-router';
-
-type Nav = {
-  navigate: (value: string) => void
-}
+import { router } from 'expo-router';
 
 const Onboarding4 = () => {
   const [progress, setProgress] = useState(0);
-  const { navigate } = useNavigation<Nav>();
+  const intervalRef = useRef<any>(null);
+  const navigatingRef = useRef(false);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -26,16 +23,16 @@ const Onboarding4 = () => {
         return prevProgress + 0.75;
       });
     }, 2000);
-
+    intervalRef.current = intervalId;
     return () => clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
+    if (navigatingRef.current) return;
     if (progress >= 1) {
-      // Navigate to the welcome screen
-      navigate('welcome');
+      router.replace('/welcome');
     }
-  }, [progress, navigate]);
+  }, [progress]);
 
   return (
     <SafeAreaView style={[Onboarding1Styles.container, {
@@ -71,12 +68,20 @@ const Onboarding4 = () => {
             <Button
               title="Next"
               filled
-              onPress={() => navigate('welcome')}
+              onPress={() => {
+                navigatingRef.current = true;
+                if (intervalRef.current) clearInterval(intervalRef.current);
+                router.push('/welcome');
+              }}
               style={Onboarding1Styles.nextButton}
             />
             <Button
               title="Skip"
-              onPress={() => navigate('login')}
+              onPress={() => {
+                navigatingRef.current = true;
+                if (intervalRef.current) clearInterval(intervalRef.current);
+                router.replace('/login');
+              }}
               textColor={COLORS.primary}
               style={Onboarding1Styles.skipButton}
             />

@@ -1,7 +1,6 @@
 import AWS from '../../aws-config';
 import { PhotoVideoItem } from './photos-videos.service';
 import { Buffer } from 'buffer';
-import { PresignedUploadService } from './presigned-upload.service';
 
 // Configure AWS SDK for DigitalOcean Spaces (S3-compatible)
 const spacesEndpoint = new AWS.Endpoint(process.env.EXPO_PUBLIC_DO_SPACES_ENDPOINT || '');
@@ -30,7 +29,7 @@ export class DigitalOceanMediaService {
   private static cdnUrl = process.env.EXPO_PUBLIC_DO_SPACES_CDN || '';
 
   /**
-   * Upload media file to DigitalOcean Spaces using presigned URLs (CORS-friendly)
+   * Upload media file to DigitalOcean Spaces
    */
   static async uploadMedia(
     file: File | Blob,
@@ -51,51 +50,53 @@ export class DigitalOceanMediaService {
         };
       }
 
-      // Generate unique filename
-      const timestamp = Date.now();
-      const random = Math.random().toString(36).substring(2, 8);
-      const extension = this.getFileExtension(file.type);
-      const fileName = `${timestamp}-${random}.${extension}`;
-
-      // Generate presigned upload URL
-      const presignedResult = await PresignedUploadService.generatePresignedUploadUrl(
-        fileName,
-        file.type,
-        options.userId
+      // Generate file key (path in bucket)
+      const fileKey = this.generateFileKey(
+        options.userId,
+        options.mediaType,
+        options.isProfilePicture || false,
+        file.type
       );
 
-      if (!presignedResult.success || !presignedResult.data) {
-        return {
-          success: false,
-          error: presignedResult.error || 'Failed to generate upload URL'
-        };
-      }
+      // For web environment, we can pass the Blob directly
+      // AWS SDK handles Blob/File objects in browser environment
+      const fileBody = file;
 
-      // Upload using presigned URL (bypasses CORS)
-      const uploadResult = await PresignedUploadService.uploadWithPresignedUrl(
-        file,
-        presignedResult.data.uploadUrl
-      );
+      // Upload parameters
+      const uploadParams: AWS.S3.PutObjectRequest = {
+        Bucket: this.spaceName,
+        Key: fileKey,
+        Body: fileBody,
+        ContentType: file.type,
+        ContentLength: file.size,
+        ACL: this.getACL(options.visibility || 'private'),
+        Metadata: {
+          'user-id': options.userId,
+          'media-type': options.mediaType,
+          'is-profile': String(options.isProfilePicture || false),
+          'visibility': options.visibility || 'private',
+          'uploaded-at': new Date().toISOString()
+        }
+      };
 
-      if (!uploadResult.success) {
-        return {
-          success: false,
-          error: uploadResult.error || 'Upload failed'
-        };
-      }
+      // Upload to DigitalOcean Spaces
+      const uploadResult = await s3.upload(uploadParams).promise();
+
+      // Generate CDN URL for faster delivery
+      const cdnUrl = this.generateCDNUrl(fileKey);
 
       // Generate thumbnail for videos (basic implementation)
       let thumbnailUrl;
       if (options.mediaType === 'video') {
-        thumbnailUrl = presignedResult.data.cdnUrl; // Use CDN URL as thumbnail for now
+        thumbnailUrl = await this.generateVideoThumbnail(fileKey);
       }
 
       return {
         success: true,
         data: {
-          url: presignedResult.data.fileUrl,
-          cdnUrl: presignedResult.data.cdnUrl,
-          key: presignedResult.data.key,
+          url: uploadResult.Location,
+          cdnUrl,
+          key: fileKey,
           thumbnailUrl
         }
       };

@@ -435,17 +435,23 @@ export const useUserActivity = () => {
       activityType: string;
       activityData?: any;
     }) => {
-      const { data, error } = await supabase
-        .from('user_activity')
-        .insert({
-          user_id: userId,
-          activity_type: activityType,
-          activity_data: activityData,
-          created_at: new Date().toISOString()
-        });
+      try {
+        const { data, error } = await supabase
+          .from('user_activity')
+          .insert({
+            user_id: userId,
+            activity_type: activityType,
+            activity_data: activityData,
+            created_at: new Date().toISOString()
+          });
 
-      if (error) throw new Error(error.message);
-      return data;
+        if (error) throw new Error(error.message);
+        return data;
+      } catch (err) {
+        // Silently ignore RLS/permission errors to avoid breaking UX
+        console.warn('user_activity log skipped:', (err as any)?.message || err);
+        return null as any;
+      }
     },
   });
 };

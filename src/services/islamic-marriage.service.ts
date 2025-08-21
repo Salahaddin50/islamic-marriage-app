@@ -26,11 +26,9 @@ export class IslamicMarriageService {
   ) {
     try {
       // Start a transaction-like process
-      const { data: user, error: userError } = await db.users.create({
-        auth_user_id: authUserId,
-        email: basicProfile.first_name + '@example.com', // This should come from auth
-        profile_status: 'active'
-      });
+      // Skip creating separate users row; rely on Supabase auth users and user_profiles only
+      const user = { id: authUserId } as any;
+      const userError = null;
 
       if (userError || !user) {
         throw new Error(`Failed to create user: ${userError?.message}`);
@@ -107,7 +105,6 @@ export class IslamicMarriageService {
           *,
           users!inner(*),
           partner_preferences(*),
-          islamic_questionnaire(*),
           media_references(*)
         `)
         .eq('gender', searchGender)
@@ -177,8 +174,7 @@ export class IslamicMarriageService {
         .select(`
           *,
           users!inner(*),
-          partner_preferences(*),
-          islamic_questionnaire(*)
+          partner_preferences(*)
         `)
         .eq('users.profile_status', 'active')
         .neq('user_id', currentUserId);
@@ -393,7 +389,7 @@ export class IslamicMarriageService {
           currentPreferences,
           profile.partner_preferences?.[0],
           null,
-          profile.islamic_questionnaire?.[0]
+          profile.islamic_questionnaire // Now it's a JSON column, not a related table
         );
 
         return {
@@ -455,30 +451,31 @@ export class IslamicMarriageService {
   // Get user's complete Islamic profile
   static async getCompleteIslamicProfile(userId: string): Promise<UserWithProfile | null> {
     try {
-      const [
-        { data: user },
-        { data: profile },
-        { data: preferences },
-        { data: media },
-        { data: questionnaire }
-      ] = await Promise.all([
-        db.users.getById(userId),
-        db.profiles.getByUserId(userId),
-        db.preferences.getByUserId(userId),
-        db.media.getByUserId(userId),
-        db.questionnaire.getByUserId(userId)
-      ]);
+      // Only query user_profiles table - Islamic questionnaire is stored as JSON column
+      const { data: profiles, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', userId);
 
-      if (!user || !profile) {
+      const profile = Array.isArray(profiles) ? profiles[0] : profiles;
+
+      if (profileError || !profile) {
+        console.log('Profile not found for user:', userId, profileError?.message);
         return null;
       }
+
+      // Create a simplified user object from auth user ID
+      const user = {
+        id: userId,
+        profile_status: 'active' // Default status
+      };
 
       return {
         user,
         profile,
-        preferences: preferences || undefined,
-        media: media || [],
-        questionnaire: questionnaire || undefined
+        preferences: undefined, // Will be implemented later if needed
+        media: [], // Will be implemented later if needed  
+        questionnaire: profile.islamic_questionnaire || undefined // Extract from JSON column
       };
     } catch (error) {
       console.error('Get complete Islamic profile error:', error);

@@ -23,6 +23,7 @@ export interface PersonalDetails {
   
   // Lifestyle & Work (stored in main table columns)
   education_level?: string;
+  languages_spoken?: string[];
   occupation?: string;
   monthly_income?: string;
   housing_type?: string;
@@ -72,6 +73,7 @@ export interface UpdatePersonalDetailsData {
   
   // Lifestyle & Work
   education_level?: string;
+  languages_spoken?: string[];
   occupation?: string;
   monthly_income?: string;
   housing_type?: string;
@@ -181,6 +183,7 @@ export class PersonalDetailsService {
       if (updates.skin_tone !== undefined) profileUpdates.skin_tone = updates.skin_tone;
       if (updates.body_type !== undefined) profileUpdates.body_type = updates.body_type;
       if (updates.education_level !== undefined) profileUpdates.education_level = updates.education_level;
+      if (updates.languages_spoken !== undefined) profileUpdates.languages_spoken = updates.languages_spoken;
       if (updates.occupation !== undefined) profileUpdates.occupation = updates.occupation;
       if (updates.monthly_income !== undefined) profileUpdates.monthly_income = updates.monthly_income;
       if (updates.housing_type !== undefined) profileUpdates.housing_type = updates.housing_type;
