@@ -169,7 +169,7 @@ const HomeScreen = () => {
             style={styles.userIcon}
           />
           <View style={styles.viewNameContainer}>
-            <Text style={styles.greeeting}>Good Morning👋</Text>
+            <Text style={styles.greeeting}>Salam Aleykoum 👋</Text>
             <Text style={[styles.title, {
               color: COLORS.greyscale900
             }]}>{displayName || 'Welcome'}</Text>
