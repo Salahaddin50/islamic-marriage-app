@@ -17,7 +17,7 @@ import { supabase } from '../src/config/supabase';
 import Button from '../components/Button';
 import SocialButton from '../components/SocialButton';
 import OrSeparator from '../components/OrSeparator';
-import { useNavigation, useRouter } from 'expo-router';
+import { useNavigation, useRouter, router } from 'expo-router';
 import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '../utils/responsive';
 
 const isTestMode = true;
@@ -141,10 +141,10 @@ const Login = () => {
                 // Redirect based on profile existence
                 if (profile) {
                     // Has profile - go to main app
-                    window.location.href = '/(tabs)';
+                    router.replace('/(tabs)');
                 } else {
                     // No profile - go to profile setup
-                    window.location.href = '/profile-setup';
+                    router.replace('/profile-setup');
                 }
             }
         } catch (error) {
