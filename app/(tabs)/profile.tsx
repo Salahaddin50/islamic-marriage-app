@@ -98,7 +98,7 @@ const Profile = () => {
           <TouchableOpacity
             onPress={pickImage}
             style={styles.picContainer}>
-            <MaterialIcons name="edit" size={16} color={COLORS.white} />
+            <MaterialIcons name="edit" size={18} color={COLORS.white} />
           </TouchableOpacity>
         </View>
         <Text style={[styles.title, { color: COLORS.greyscale900 }]}>{displayName || 'Profile'}</Text>
@@ -367,15 +367,23 @@ const styles = StyleSheet.create({
     borderRadius: 999
   },
   picContainer: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
+    width: 28,
+    height: 28,
+    borderRadius: 6,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.primary,
     position: "absolute",
     right: 0,
-    bottom: 12
+    bottom: 8,
+    zIndex: 2,
+    borderWidth: 2,
+    borderColor: COLORS.white,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 2
   },
   title: {
     fontSize: getResponsiveFontSize(18),

@@ -255,6 +255,8 @@ const PhotosVideos = () => {
         title={`Add ${type === 'photos' ? 'Photo' : 'Video'}`}
         onPress={() => pickMedia(type)}
         style={styles.emptyButton}
+        textColor={COLORS.white}
+        filled
       />
     </View>
   );
@@ -290,10 +292,8 @@ const PhotosVideos = () => {
                   onPress={() => !uploading && pickMedia('photo')}
                   disabled={uploading}
                 >
-                  {uploading ? (
+                  {uploading && (
                     <ActivityIndicator size="small" color={COLORS.primary} />
-                  ) : (
-                    <MaterialCommunityIcons name="plus" size={20} color={COLORS.primary} />
                   )}
                   <Text style={styles.addButtonText}>
                     {uploading ? 'Uploading...' : 'Add Photo'}
@@ -325,10 +325,8 @@ const PhotosVideos = () => {
                   onPress={() => !uploading && pickMedia('video')}
                   disabled={uploading}
                 >
-                  {uploading ? (
+                  {uploading && (
                     <ActivityIndicator size="small" color={COLORS.primary} />
-                  ) : (
-                    <MaterialCommunityIcons name="plus" size={20} color={COLORS.primary} />
                   )}
                   <Text style={styles.addButtonText}>
                     {uploading ? 'Uploading...' : 'Add Video'}
