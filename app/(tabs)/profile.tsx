@@ -249,7 +249,10 @@ const Profile = () => {
     <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
       <View style={[styles.container, { backgroundColor: COLORS.white }]}>
         {renderHeader()}
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
           {renderProfile()}
           {renderSettings()}
         </ScrollView>
@@ -323,7 +326,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.white,
     padding: getResponsiveSpacing(16),
-    marginBottom: getResponsiveSpacing(32)
+  },
+  scrollContent: {
+    paddingBottom: getResponsiveSpacing(100), // Extra space for tab bar
   },
   headerContainer: {
     flexDirection: "row",
