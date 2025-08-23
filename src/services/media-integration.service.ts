@@ -372,7 +372,7 @@ export class MediaIntegrationService {
       .eq('media_type', mediaType)
       .order('media_order', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     return (data?.media_order || 0) + 1;
   }
