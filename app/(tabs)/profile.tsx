@@ -12,7 +12,6 @@ import { useNavigation } from 'expo-router';
 import SettingsItem from '@/components/SettingsItem';
 import { getResponsiveFontSize, getResponsiveSpacing, getResponsiveWidth, isMobileWeb } from '@/utils/responsive';
 import { supabase } from '@/src/config/supabase';
-import { useAuth } from '@/src/contexts/AuthContext';
 
 type Nav = {
   navigate: (value: string) => void
@@ -21,7 +20,6 @@ type Nav = {
 const Profile = () => {
   const refRBSheet = useRef<any>(null);
   const { navigate } = useNavigation<Nav>();
-  const { signOut } = useAuth();
 
   const renderHeader = () => {
     return (
@@ -299,14 +297,7 @@ const Profile = () => {
             title="Yes, Logout"
             filled
             style={styles.logoutButton}
-            onPress={async () => {
-              refRBSheet.current.close();
-              try {
-                await signOut();
-              } catch (error) {
-                console.error('Sign out error:', error);
-              }
-            }}
+            onPress={() => refRBSheet.current.close()}
           />
         </View>
       </RBSheet>
