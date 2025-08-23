@@ -94,14 +94,14 @@ const Welcome = () => {
                         {/* Email Registration */}
                         <TouchableOpacity
                             style={styles.emailButton}
-                            onPress={() => navigate("signup")}
+                            onPress={() => navigate("onboarding1")}
                         >
                             <Image 
                                 source={icons.email2} 
                                 style={styles.socialIcon}
                                 resizeMode="contain"
                             />
-                            <Text style={styles.emailButtonText}>Continue with Email</Text>
+                            <Text style={styles.emailButtonText}>Get Started</Text>
                         </TouchableOpacity>
                     </View>
 

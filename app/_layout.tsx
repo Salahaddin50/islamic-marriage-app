@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { FONTS } from '@/constants/fonts';
 import { LogBox, Platform } from 'react-native';
+import { AuthProvider } from '../src/contexts/AuthContext';
 
 // Import CSS for web builds
 if (Platform.OS === 'web') {
@@ -128,8 +129,10 @@ export default function RootLayout() {
   }
 
   return (
+    <AuthProvider>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
+        <Stack.Screen name="onboarding1" />
         <Stack.Screen name="onboarding2" />
         <Stack.Screen name="onboarding3" />
         <Stack.Screen name="onboarding4" />
@@ -176,5 +179,6 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="+not-found" />
       </Stack>
+    </AuthProvider>
   );
 }

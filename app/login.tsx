@@ -19,6 +19,7 @@ import SocialButton from '../components/SocialButton';
 import OrSeparator from '../components/OrSeparator';
 import { useNavigation, useRouter, router } from 'expo-router';
 import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '../utils/responsive';
+import { useAuth } from '../src/contexts/AuthContext';
 
 const isTestMode = true;
 
@@ -41,8 +42,9 @@ type Nav = {
 // Responsive Login Screen
 const Login = () => {
     const { navigate } = useNavigation<Nav>();
+    const { signIn, isLoading: authLoading } = useAuth();
     const [formState, dispatchFormState] = useReducer(reducer, initialState);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState<string | null>(null);
     const [isChecked, setChecked] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -111,41 +113,17 @@ const Login = () => {
             const email = formState.inputValues.email;
             const password = formState.inputValues.password;
 
-            // Direct Supabase auth login
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
+            // Use AuthContext signIn method
+            const result = await signIn(email, password);
 
-            if (error) {
-                throw new Error(error.message);
-            }
-
-            if (data.user && data.session) {
-                // Store login state if remember me is checked
-                if (isChecked) {
-                    console.log('Remember me enabled');
-                }
-
-                // Check if user has profile
-                const { data: profile, error: profileError } = await supabase
-                    .from('user_profiles')
-                    .select('user_id')
-                    .eq('user_id', data.user.id)
-                    .maybeSingle();
-
-                if (profileError) {
-                    console.warn('Profile check error:', profileError);
-                }
-
-                // Redirect based on profile existence
-                if (profile) {
-                    // Has profile - go to main app
-                    router.replace('/(tabs)');
-                } else {
-                    // No profile - go to profile setup
-                    router.replace('/profile-setup');
-                }
+            if (result.success) {
+                // AuthContext will handle redirecting via the auth state change
+                // The index.tsx auth guard will redirect appropriately
+                console.log('Login successful');
+            } else {
+                const errorMessage = result.error || 'Invalid credentials. Please try again.';
+                setError(errorMessage);
+                Alert.alert('Login Failed', errorMessage);
             }
         } catch (error) {
             console.error('Login error:', error);
@@ -228,11 +206,11 @@ const Login = () => {
 
                         {/* Login Button */}
                         <Button
-                            title={isLoading ? "Logging in..." : "Login"}
+                            title={isLoading || authLoading ? "Logging in..." : "Login"}
                             filled
                             onPress={handleLogin}
                             style={styles.loginButton}
-                            disabled={isLoading || !formState.formIsValid}
+                            disabled={isLoading || authLoading || !formState.formIsValid}
                         />
 
                         {/* Forgot Password */}
@@ -373,7 +351,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         backgroundColor: COLORS.white,
         borderWidth: 1,
-        borderColor: COLORS.gray6,
+        borderColor: COLORS.gray,
         borderRadius: 30,
         paddingVertical: getResponsiveSpacing(12),
         paddingHorizontal: getResponsiveSpacing(20),
@@ -403,7 +381,7 @@ const styles = StyleSheet.create({
         paddingVertical: getResponsiveSpacing(20),
         paddingHorizontal: getResponsiveSpacing(20),
         borderTopWidth: 1,
-        borderTopColor: COLORS.gray7,
+        borderTopColor: COLORS.gray,
         backgroundColor: COLORS.white,
     },
     bottomText: {
