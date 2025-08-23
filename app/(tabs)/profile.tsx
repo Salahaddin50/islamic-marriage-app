@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Switch, Platform } from 'react-native';
 import React, { useState, useRef, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView } from 'react-native-virtualized-view';
@@ -8,10 +8,10 @@ import Button from '@/components/Button';
 import { COLORS, SIZES, icons, images } from '@/constants';
 import { Image } from 'expo-image';
 import { launchImagePicker } from '@/utils/ImagePickerHelper';
-import { useNavigation } from 'expo-router';
+import { useNavigation, router } from 'expo-router';
 import SettingsItem from '@/components/SettingsItem';
 import { getResponsiveFontSize, getResponsiveSpacing, getResponsiveWidth, isMobileWeb } from '@/utils/responsive';
-import { supabase } from '@/src/config/supabase';
+import { supabase, auth } from '@/src/config/supabase';
 
 type Nav = {
   navigate: (value: string) => void
@@ -297,7 +297,16 @@ const Profile = () => {
             title="Yes, Logout"
             filled
             style={styles.logoutButton}
-            onPress={() => refRBSheet.current.close()}
+            onPress={async () => {
+              try {
+                await auth.signOut();
+              } catch {}
+              refRBSheet.current.close();
+              router.replace('/');
+              if (Platform.OS === 'web') {
+                try { (window as any).location.assign('/'); } catch {}
+              }
+            }}
           />
         </View>
       </RBSheet>

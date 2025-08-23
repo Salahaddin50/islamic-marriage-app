@@ -1,10 +1,33 @@
-import { Tabs } from "expo-router";
+import { Tabs, router } from "expo-router";
 import { View, Text, Platform } from "react-native";
 import { Image } from "expo-image";
 import { COLORS, icons, FONTS, SIZES } from "../../constants";
 import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from "../../utils/responsive";
+import React, { useEffect } from 'react';
+import { supabase } from "../../src/config/supabase";
 
 const TabLayout = () => {
+  useEffect(() => {
+    let isMounted = true;
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user && isMounted) {
+          router.replace('/');
+        }
+      } catch {}
+    };
+    checkAuth();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session?.user) {
+        router.replace('/');
+      }
+    });
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   return (
     <Tabs

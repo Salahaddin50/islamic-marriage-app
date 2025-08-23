@@ -13,11 +13,26 @@ import Button from '../components/Button';
 import { COLORS, illustrations, images } from '../constants';
 import { router } from 'expo-router';
 import { getResponsiveFontSize, getResponsiveSpacing, getResponsiveWidth, getResponsiveHeight, isMobileWeb } from '../utils/responsive';
+import { supabase } from '../src/config/supabase';
 
 const Index = () => {
   const [progress, setProgress] = useState(0);
   const intervalRef = useRef<any>(null);
   const navigatingRef = useRef(false);
+
+  useEffect(() => {
+    const checkInitialAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          navigatingRef.current = true;
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          router.replace('/(tabs)');
+        }
+      } catch {}
+    };
+    checkInitialAuth();
+  }, []);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
