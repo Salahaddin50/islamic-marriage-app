@@ -11,7 +11,7 @@ import DatePickerModal from '../components/DatePickerModal';
 import Button from '../components/Button';
 import SearchableDropdown from '../components/SearchableDropdown';
 import { Image } from 'expo-image';
-import { useNavigation } from 'expo-router';
+import { useNavigation, router } from 'expo-router';
 import { NavigationProp } from '@react-navigation/native';
 import ProfileService, { UserProfile, UpdateProfileData } from '../src/services/profile.service';
 import { phoneCodesData } from '../data/phoneCodes';
@@ -221,7 +221,10 @@ const EditProfile = () => {
   return (
     <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
       <View style={[styles.container, { backgroundColor: COLORS.white }]}>
-        <Header title="Edit Profile" />
+        <Header 
+          title="Edit Profile" 
+          onBackPress={() => router.push('/(tabs)/profile')}
+        />
         
         {error && (
           <View style={styles.errorContainer}>

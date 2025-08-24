@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, SIZES, icons } from '../constants';
 import Header from '../components/Header';
+import { router } from 'expo-router';
 import Button from '../components/Button';
 import { Image } from 'expo-image';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -32,6 +33,7 @@ const PhotosVideos = () => {
       
       if (result.success && result.data) {
         console.log('Photos:', result.data.photos.length, 'Videos:', result.data.videos.length);
+        console.log('Photo URLs:', result.data.photos.map(p => p.external_url));
         setPhotos(result.data.photos);
         setVideos(result.data.videos);
       } else {
@@ -200,24 +202,41 @@ const PhotosVideos = () => {
     );
   };
 
-  const renderPhotoItem = ({ item }: { item: PhotoVideoItem }) => (
-    <TouchableOpacity 
-      style={styles.mediaItem}
-      onLongPress={() => showPhotoOptions(item)}
-      activeOpacity={0.8}
-    >
-      <Image
-        source={{ uri: item.external_url }}
-        contentFit="cover"
-        style={styles.photoItem}
-      />
+  const renderPhotoItem = ({ item }: { item: PhotoVideoItem }) => {
+    // Try direct Spaces URL first (more reliable than CDN)
+    const getDirectUrl = (url: string) => {
+      if (url && url.includes('.cdn.')) {
+        return url.replace('.cdn.digitaloceanspaces.com', '.digitaloceanspaces.com');
+      }
+      return url;
+    };
+
+    const imageUrl = getDirectUrl(item.external_url);
+
+    const handleImageError = (error: any) => {
+      console.log('Image load error for (direct URL):', imageUrl, error);
+    };
+
+    return (
+      <TouchableOpacity 
+        style={styles.mediaItem}
+        onLongPress={() => showPhotoOptions(item)}
+        activeOpacity={0.8}
+      >
+        <Image
+          source={{ uri: imageUrl }}
+          contentFit="cover"
+          style={styles.photoItem}
+          onError={handleImageError}
+          onLoad={() => console.log('Image loaded:', imageUrl)}
+        />
       
-      {/* Quick Avatar Button */}
+      {/* Set as Profile Picture Button */}
       <TouchableOpacity
         style={styles.avatarButton}
         onPress={() => setAsAvatar(item.id)}
       >
-        <MaterialCommunityIcons name="account" size={16} color={COLORS.white} />
+        <MaterialCommunityIcons name="account-circle" size={18} color={COLORS.white} />
       </TouchableOpacity>
       
       {/* Delete Button */}
@@ -225,7 +244,7 @@ const PhotosVideos = () => {
         style={styles.deleteButton}
         onPress={() => deleteMedia(item.id, 'photo')}
       >
-        <MaterialCommunityIcons name="close" size={16} color={COLORS.white} />
+        <MaterialCommunityIcons name="delete" size={18} color={COLORS.white} />
       </TouchableOpacity>
       
       {/* Profile Badge */}
@@ -236,16 +255,34 @@ const PhotosVideos = () => {
         </View>
       )}
     </TouchableOpacity>
-  );
+    );
+  };
 
-  const renderVideoItem = ({ item }: { item: PhotoVideoItem }) => (
-    <View style={styles.mediaItem}>
-      <View style={styles.videoContainer}>
-        <Image
-          source={{ uri: item.thumbnail_url || item.external_url }}
-          contentFit="cover"
-          style={styles.videoItem}
-        />
+  const renderVideoItem = ({ item }: { item: PhotoVideoItem }) => {
+    // Try direct Spaces URL first (more reliable than CDN)
+    const getDirectUrl = (url: string) => {
+      if (url && url.includes('.cdn.')) {
+        return url.replace('.cdn.digitaloceanspaces.com', '.digitaloceanspaces.com');
+      }
+      return url;
+    };
+
+    const videoThumbnailUrl = getDirectUrl(item.thumbnail_url || item.external_url);
+
+    const handleVideoImageError = (error: any) => {
+      console.log('Video thumbnail load error for (direct URL):', videoThumbnailUrl, error);
+    };
+
+    return (
+      <View style={styles.mediaItem}>
+        <View style={styles.videoContainer}>
+          <Image
+            source={{ uri: videoThumbnailUrl }}
+            contentFit="cover"
+            style={styles.videoItem}
+            onError={handleVideoImageError}
+            onLoad={() => console.log('Video thumbnail loaded:', videoThumbnailUrl)}
+          />
         <View style={styles.playButton}>
           <MaterialCommunityIcons name="play" size={24} color={COLORS.white} />
         </View>
@@ -254,10 +291,11 @@ const PhotosVideos = () => {
         style={styles.deleteButton}
         onPress={() => deleteMedia(item.id, 'video')}
       >
-        <MaterialCommunityIcons name="close" size={16} color={COLORS.white} />
+        <MaterialCommunityIcons name="delete" size={18} color={COLORS.white} />
       </TouchableOpacity>
     </View>
-  );
+    );
+  };
 
   const renderEmptyState = (type: 'photos' | 'videos') => (
     <View style={styles.emptyState}>
@@ -283,7 +321,10 @@ const PhotosVideos = () => {
   return (
     <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
       <View style={[styles.container, { backgroundColor: COLORS.white }]}>
-        <Header title="My Photos and Videos" />
+        <Header 
+          title="My Photos and Videos" 
+          onBackPress={() => router.push('/(tabs)/profile')}
+        />
         
         {/* Tab Navigation */}
         <View style={styles.tabContainer}>
@@ -501,23 +542,37 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: getResponsiveSpacing(8),
     right: getResponsiveSpacing(8),
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,0,0,0.7)',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,0,0,0.9)',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: COLORS.white,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 3,
   },
   avatarButton: {
     position: 'absolute',
     top: getResponsiveSpacing(8),
     left: getResponsiveSpacing(8),
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,165,0,0.8)',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(34,139,34,0.9)', // Green for profile picture
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: COLORS.white,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 3,
   },
   profileBadge: {
     position: 'absolute',

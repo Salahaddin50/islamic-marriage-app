@@ -6,6 +6,7 @@ import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import { faqKeywords, faqs } from '../data';
 import { ScrollView } from 'react-native-virtualized-view';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { router } from 'expo-router';
 import { Image } from 'expo-image';
 import HelpCenterItem from '@/components/HelpCenterItem';
 
@@ -255,7 +256,7 @@ const SettingsHelpCenter = () => {
             <View style={styles.headerContainer}>
                 <View style={styles.headerLeft}>
                     <TouchableOpacity
-                        onPress={() => navigation.goBack()}>
+                        onPress={() => router.push('/(tabs)/profile')}>
                         <Image
                             source={icons.back}
                             contentFit='contain'

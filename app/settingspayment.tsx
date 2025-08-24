@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView } from 'react-native-virtualized-view';
 import Button from '../components/Button';
 import { Image } from 'expo-image';
-import { useNavigation } from 'expo-router';
+import { useNavigation, router } from 'expo-router';
 import { NavigationProp } from '@react-navigation/native';
 import PaymentMethodItemConnected from '@/components/PaymentMethodItemConnected';
 
@@ -25,7 +25,7 @@ const SettingsPayment = () => {
             <View style={styles.headerContainer}>
                 <View style={styles.headerLeft}>
                     <TouchableOpacity
-                        onPress={() => navigation.goBack()}>
+                        onPress={() => router.push('/(tabs)/profile')}>
                         <Image
                             source={icons.back}
                             contentFit='contain'

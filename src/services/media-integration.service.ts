@@ -63,7 +63,7 @@ export class MediaIntegrationService {
       const mediaReference = {
         user_id: options.userId,
         media_type: options.mediaType,
-        external_url: uploadResult.data.cdnUrl, // Use CDN URL for faster delivery
+        external_url: uploadResult.data.url, // Use direct Spaces URL for reliability
         thumbnail_url: uploadResult.data.thumbnailUrl,
         is_profile_picture: options.isProfilePicture || false,
         visibility_level: options.visibility || 'private',

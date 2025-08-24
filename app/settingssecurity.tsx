@@ -7,7 +7,7 @@ import { ScrollView } from 'react-native-virtualized-view';
 import GlobalSettingsItem from '../components/GlobalSettingsItem';
 import Button from '../components/Button';
 import { Image } from 'expo-image';
-import { useNavigation } from 'expo-router';
+import { useNavigation, router } from 'expo-router';
 
 type Nav = {
   navigate: (value: string) => void
@@ -35,7 +35,10 @@ const SettingsSecurity = () => {
   return (
     <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
       <View style={[styles.container, { backgroundColor: COLORS.white }]}>
-        <Header title="Security" />
+        <Header 
+          title="Security" 
+          onBackPress={() => router.push('/(tabs)/profile')}
+        />
         <ScrollView style={styles.scrollView}
           showsVerticalScrollIndicator={false}>
           <GlobalSettingsItem

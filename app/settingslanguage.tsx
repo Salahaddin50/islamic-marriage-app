@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { COLORS } from '../constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '../components/Header';
+import { router } from 'expo-router';
 import { ScrollView } from 'react-native-virtualized-view';
 import LanguageItem from '@/components/LanguageItem';
 
@@ -22,7 +23,10 @@ const SettingsLanguage = () => {
     return (
         <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
             <View style={[styles.container, { backgroundColor: COLORS.white }]}>
-                <Header title="Language & Region" />
+                <Header 
+                  title="Language & Region" 
+                  onBackPress={() => router.push('/(tabs)/profile')}
+                />
                 <ScrollView showsVerticalScrollIndicator={false}>
                     <Text style={[styles.title, { color: COLORS.black }]}>Suggested</Text>
                     <View style={{ marginTop: 12 }}>

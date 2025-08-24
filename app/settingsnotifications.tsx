@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ScrollView } from 'react-native-virtualized-view';
 import Header from '../components/Header';
+import { router } from 'expo-router';
 import GlobalSettingsItem from '@/components/GlobalSettingsItem';
 
 // Notifications Settings Screen
@@ -64,7 +65,10 @@ const SetttingsNotification = () => {
     <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
       <View style={[styles.container, { backgroundColor: COLORS.white }]}>
         <StatusBar hidden />
-        <Header title="Notifications" />
+        <Header 
+          title="Notifications" 
+          onBackPress={() => router.push('/(tabs)/profile')}
+        />
         <ScrollView
           style={styles.settingsContainer}
           showsVerticalScrollIndicator={false}>
