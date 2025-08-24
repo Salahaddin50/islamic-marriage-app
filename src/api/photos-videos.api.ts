@@ -27,7 +27,7 @@ export class PhotosVideosAPI {
         .from('users')
         .select('id')
         .eq('auth_user_id', authUser.id)
-        .single();
+        .maybeSingle();
 
       if (dbUserError || !dbUser) {
         return {
@@ -85,7 +85,7 @@ export class PhotosVideosAPI {
         .from('users')
         .select('id')
         .eq('auth_user_id', authUser.id)
-        .single();
+        .maybeSingle();
 
       if (dbUserError || !dbUser) {
         return {
@@ -148,7 +148,7 @@ export class PhotosVideosAPI {
         .from('users')
         .select('id')
         .eq('auth_user_id', authUser.id)
-        .single();
+        .maybeSingle();
 
       if (dbUserError || !dbUser) {
         return {
@@ -204,7 +204,7 @@ export class PhotosVideosAPI {
         .from('users')
         .select('id')
         .eq('auth_user_id', authUser.id)
-        .single();
+        .maybeSingle();
 
       if (dbUserError || !dbUser) {
         return {
@@ -249,7 +249,7 @@ export class PhotosVideosAPI {
         .from('users')
         .select('id')
         .eq('auth_user_id', authUser.id)
-        .single();
+        .maybeSingle();
 
       if (dbUserError || !dbUser) {
         return {
