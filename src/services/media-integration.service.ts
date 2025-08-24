@@ -81,6 +81,7 @@ export class MediaIntegrationService {
       let dbError: any | null = null;
 
       const doInsert = async () => {
+        console.log('Attempting to insert media reference:', JSON.stringify(mediaReference));
         const { data, error } = await supabase
           .from('media_references')
           .insert([mediaReference])
@@ -88,6 +89,9 @@ export class MediaIntegrationService {
           .single();
         dbRecord = data;
         dbError = error;
+        if (error) {
+          console.error('Database insert error details:', JSON.stringify(error));
+        }
       };
 
       await doInsert();

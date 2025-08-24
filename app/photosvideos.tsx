@@ -87,6 +87,10 @@ const PhotosVideos = () => {
       }
 
       console.log('Upload result:', result);
+      // Log detailed error information
+      if (!result.success) {
+        console.error('Upload failed details:', JSON.stringify(result));
+      }
 
       if (result.success && result.data) {
         console.log('Upload successful, refreshing media list...');

@@ -208,12 +208,19 @@ export class PhotosVideosAPI {
         };
       }
 
+      // Log video properties before upload
+      console.log('Video upload details - type:', file.type, 'size:', file.size);
+      
       // Use DigitalOcean integration service
       const result = await MediaIntegrationService.uploadMedia(file, {
         userId: dbUser.id,
         mediaType: 'video',
         visibility: options.visibility
       });
+      
+      if (!result.success) {
+        console.error('Video upload integration service error:', result.error);
+      }
 
       return {
         success: result.success,
