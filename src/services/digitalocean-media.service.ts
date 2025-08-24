@@ -247,14 +247,8 @@ export class DigitalOceanMediaService {
   }
 
   private static getACL(visibility: string): string {
-    switch (visibility) {
-      case 'public':
-        return 'public-read';
-      case 'private':
-      case 'matched_only':
-      default:
-        return 'private';
-    }
+    // Make all files public by default for web access
+    return 'public-read';
   }
 
   private static generateCDNUrl(fileKey: string): string {

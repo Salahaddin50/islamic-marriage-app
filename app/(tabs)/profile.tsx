@@ -89,18 +89,13 @@ const Profile = () => {
     };
     return (
       <View style={styles.profileContainer}>
-        <View>
+        <TouchableOpacity onPress={() => navigate("photosvideos")}>
           <Image
             source={image}
             contentFit='cover'
             style={styles.avatar}
           />
-          <TouchableOpacity
-            onPress={pickImage}
-            style={styles.picContainer}>
-            <MaterialIcons name="edit" size={18} color={COLORS.white} />
-          </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
         <Text style={[styles.title, { color: COLORS.greyscale900 }]}>{displayName || 'Profile'}</Text>
         <Text style={[styles.subtitle, { color: COLORS.greyscale900 }]}>{email}</Text>
       </View>
