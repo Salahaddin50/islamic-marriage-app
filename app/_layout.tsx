@@ -6,6 +6,9 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { FONTS } from '@/constants/fonts';
 import { LogBox, Platform } from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome } from '@expo/vector-icons';
 
 // Import CSS for web builds
 if (Platform.OS === 'web') {
@@ -31,8 +34,13 @@ if (Platform.OS === 'web') {
 }
 
 export default function RootLayout() {
-  // For web, don't use useFonts since we're loading from Google Fonts
-  const [loaded] = Platform.OS === 'web' ? [true] : useFonts(FONTS);
+  // Load all fonts including icon fonts
+  const [loaded] = useFonts({ 
+    ...FONTS, 
+    ...MaterialCommunityIcons.font,
+    ...Ionicons.font,
+    ...FontAwesome.font
+  });
 
   useEffect(() => {
     if (loaded) {
@@ -76,7 +84,9 @@ export default function RootLayout() {
       const forceTikTokStyle = document.createElement('style');
       forceTikTokStyle.innerHTML = `
         /* TikTok-style font stack - modern, clean, and trendy */
-        *, *::before, *::after {
+        *:not([style*="font-family: MaterialCommunityIcons"]), 
+        *::before:not([style*="font-family: MaterialCommunityIcons"]), 
+        *::after:not([style*="font-family: MaterialCommunityIcons"]) {
           font-family: "Inter", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
         }
         
@@ -85,13 +95,9 @@ export default function RootLayout() {
           font-family: "Inter", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
         }
         
-        /* Override React Native Web generated classes */
-        [class*="css-"], [class*="r-"] {
-          font-family: "Inter", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
-        }
-        
-        /* Override inline styles */
-        [style*="font-family"] {
+        /* Override React Native Web generated classes, but exclude icons */
+        [class*="css-"]:not([style*="font-family: MaterialCommunityIcons"]), 
+        [class*="r-"]:not([style*="font-family: MaterialCommunityIcons"]) {
           font-family: "Inter", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
         }
         

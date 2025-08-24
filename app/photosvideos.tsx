@@ -6,7 +6,7 @@ import Header from '../components/Header';
 import { router } from 'expo-router';
 import Button from '../components/Button';
 import { Image } from 'expo-image';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { launchMediaPicker } from '../utils/ImagePickerHelper';
 import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '../utils/responsive';
 import { PhotosVideosAPI } from '../src/api/photos-videos.api';
@@ -231,12 +231,12 @@ const PhotosVideos = () => {
           onLoad={() => console.log('Image loaded:', imageUrl)}
         />
       
-      {/* Set as Profile Picture Button */}
+      {/* Set as Main Button */}
       <TouchableOpacity
         style={styles.avatarButton}
         onPress={() => setAsAvatar(item.id)}
       >
-        <MaterialCommunityIcons name="account-circle" size={18} color={COLORS.white} />
+        <Text style={styles.buttonText}>Main</Text>
       </TouchableOpacity>
       
       {/* Delete Button */}
@@ -244,14 +244,13 @@ const PhotosVideos = () => {
         style={styles.deleteButton}
         onPress={() => deleteMedia(item.id, 'photo')}
       >
-        <MaterialCommunityIcons name="delete" size={18} color={COLORS.white} />
+        <Text style={styles.buttonText}>Delete</Text>
       </TouchableOpacity>
       
       {/* Profile Badge */}
       {item.is_profile_picture && (
         <View style={styles.profileBadge}>
-          <MaterialCommunityIcons name="star" size={12} color={COLORS.white} />
-          <Text style={styles.profileBadgeText}>Avatar</Text>
+          <Text style={styles.profileBadgeText}>Current Avatar</Text>
         </View>
       )}
     </TouchableOpacity>
@@ -283,33 +282,35 @@ const PhotosVideos = () => {
             onError={handleVideoImageError}
             onLoad={() => console.log('Video thumbnail loaded:', videoThumbnailUrl)}
           />
-        <View style={styles.playButton}>
-          <MaterialCommunityIcons name="play" size={24} color={COLORS.white} />
+          <View style={styles.playButton}>
+            <Text style={[styles.playButtonText, { color: COLORS.white }]}>Play</Text>
+          </View>
         </View>
+        
+        {/* Delete Button */}
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => deleteMedia(item.id, 'video')}
+        >
+          <Text style={styles.buttonText}>Delete</Text>
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={() => deleteMedia(item.id, 'video')}
-      >
-        <MaterialCommunityIcons name="delete" size={18} color={COLORS.white} />
-      </TouchableOpacity>
-    </View>
     );
   };
 
-  const renderEmptyState = (type: 'photos' | 'videos') => (
+  const renderEmptyState = (type: 'photo' | 'video') => (
     <View style={styles.emptyState}>
       <Image
-        source={type === 'photos' ? icons.image : icons.videoCamera}
+        source={type === 'photo' ? icons.image : icons.videoCamera}
         contentFit="contain"
         style={styles.emptyIcon}
       />
       <Text style={styles.emptyTitle}>No {type} yet</Text>
       <Text style={styles.emptySubtitle}>
-        Add your first {type === 'photos' ? 'photo' : 'video'} to get started
+        Add your first {type} to get started
       </Text>
       <Button
-        title={`Add ${type === 'photos' ? 'Photo' : 'Video'}`}
+        title={`Add ${type === 'photo' ? 'Photo' : 'Video'}`}
         onPress={() => pickMedia(type)}
         style={styles.emptyButton}
         textColor={COLORS.white}
@@ -373,7 +374,7 @@ const PhotosVideos = () => {
                   ItemSeparatorComponent={() => <View style={styles.gridSeparator} />}
                 />
               ) : (
-                renderEmptyState('photos')
+                renderEmptyState('photo')
               )}
             </View>
           ) : (
@@ -406,7 +407,7 @@ const PhotosVideos = () => {
                   ItemSeparatorComponent={() => <View style={styles.gridSeparator} />}
                 />
               ) : (
-                renderEmptyState('videos')
+                renderEmptyState('video')
               )}
             </View>
           )}
@@ -542,13 +543,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: getResponsiveSpacing(8),
     right: getResponsiveSpacing(8),
-    width: 28,
+    paddingHorizontal: getResponsiveSpacing(12),
     height: 28,
     borderRadius: 14,
     backgroundColor: 'rgba(255,0,0,0.9)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: COLORS.white,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -560,19 +561,30 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: getResponsiveSpacing(8),
     left: getResponsiveSpacing(8),
-    width: 28,
+    paddingHorizontal: getResponsiveSpacing(12),
     height: 28,
     borderRadius: 14,
     backgroundColor: 'rgba(34,139,34,0.9)', // Green for profile picture
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: COLORS.white,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 2,
     elevation: 3,
+  },
+  buttonText: {
+    fontSize: getResponsiveFontSize(12),
+    fontFamily: 'semibold',
+    color: COLORS.white,
+    textAlign: 'center',
+  },
+  playButtonText: {
+    fontSize: getResponsiveFontSize(14),
+    fontFamily: 'semibold',
+    color: COLORS.white,
   },
   profileBadge: {
     position: 'absolute',
