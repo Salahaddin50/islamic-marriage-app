@@ -6,7 +6,7 @@ import Header from '../components/Header';
 import Button from '../components/Button';
 import { Image } from 'expo-image';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { launchImagePicker } from '../utils/ImagePickerHelper';
+import { launchMediaPicker } from '../utils/ImagePickerHelper';
 import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '../utils/responsive';
 import { PhotosVideosAPI } from '../src/api/photos-videos.api';
 import { PhotoVideoItem } from '../src/services/photos-videos.service';
@@ -49,16 +49,25 @@ const PhotosVideos = () => {
   const pickMedia = async (type: 'photo' | 'video') => {
     try {
       setUploading(true);
-      const tempUri = await launchImagePicker();
+      const mediaResult = await launchMediaPicker(type);
       
-      if (!tempUri) {
+      if (!mediaResult) {
         setUploading(false);
         return;
       }
 
+      console.log('Picked media:', mediaResult);
+
       // Convert URI to File/Blob for upload
-      const response = await fetch(tempUri);
-      const blob = await response.blob();
+      const response = await fetch(mediaResult.uri);
+      let blob = await response.blob();
+      
+      // Create blob with correct MIME type
+      if (mediaResult.mimeType) {
+        blob = new Blob([blob], { type: mediaResult.mimeType });
+      }
+      
+      console.log('Blob ready for upload - type:', blob.type, 'size:', blob.size);
       
       let result;
       if (type === 'photo') {

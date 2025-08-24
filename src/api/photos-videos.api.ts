@@ -3,6 +3,45 @@ import { MediaIntegrationService } from '../services/media-integration.service';
 import { supabase } from '../config/supabase';
 
 /**
+ * Helper function to get or create database user
+ */
+async function ensureDatabaseUser(authUserId: string): Promise<{ id: string } | null> {
+  // First try to get existing user
+  const { data: existingUser } = await supabase
+    .from('users')
+    .select('id')
+    .eq('auth_user_id', authUserId)
+    .maybeSingle();
+
+  if (existingUser) {
+    return existingUser;
+  }
+
+  // Get auth user details
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  if (!authUser) return null;
+
+  // Create new user in database
+  const { data: newUser, error } = await supabase
+    .from('users')
+    .insert({
+      auth_user_id: authUserId,
+      email: authUser.email || '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
+    .select('id')
+    .single();
+
+  if (error) {
+    console.error('Failed to create database user:', error);
+    return null;
+  }
+
+  return newUser;
+}
+
+/**
  * API layer for Photos and Videos functionality
  * This layer handles the business logic and validation before calling services
  */
@@ -22,17 +61,12 @@ export class PhotosVideosAPI {
         };
       }
 
-      // Get database user ID from auth user ID
-      const { data: dbUser, error: dbUserError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('auth_user_id', authUser.id)
-        .maybeSingle();
-
-      if (dbUserError || !dbUser) {
+      // Get or create database user
+      const dbUser = await ensureDatabaseUser(authUser.id);
+      if (!dbUser) {
         return {
           success: false,
-          error: 'User not found in database'
+          error: 'Failed to access user account'
         };
       }
 
@@ -80,17 +114,12 @@ export class PhotosVideosAPI {
         };
       }
 
-      // Get database user ID from auth user ID
-      const { data: dbUser, error: dbUserError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('auth_user_id', authUser.id)
-        .maybeSingle();
-
-      if (dbUserError || !dbUser) {
+      // Get or create database user
+      const dbUser = await ensureDatabaseUser(authUser.id);
+      if (!dbUser) {
         return {
           success: false,
-          error: 'User not found in database'
+          error: 'Failed to access user account'
         };
       }
 
@@ -143,17 +172,12 @@ export class PhotosVideosAPI {
         };
       }
 
-      // Get database user ID from auth user ID
-      const { data: dbUser, error: dbUserError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('auth_user_id', authUser.id)
-        .maybeSingle();
-
-      if (dbUserError || !dbUser) {
+      // Get or create database user
+      const dbUser = await ensureDatabaseUser(authUser.id);
+      if (!dbUser) {
         return {
           success: false,
-          error: 'User not found in database'
+          error: 'Failed to access user account'
         };
       }
 
@@ -199,17 +223,12 @@ export class PhotosVideosAPI {
         };
       }
 
-      // Get database user ID from auth user ID
-      const { data: dbUser, error: dbUserError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('auth_user_id', authUser.id)
-        .maybeSingle();
-
-      if (dbUserError || !dbUser) {
+      // Get or create database user
+      const dbUser = await ensureDatabaseUser(authUser.id);
+      if (!dbUser) {
         return {
           success: false,
-          error: 'User not found in database'
+          error: 'Failed to access user account'
         };
       }
 
@@ -244,17 +263,12 @@ export class PhotosVideosAPI {
         };
       }
 
-      // Get database user ID from auth user ID
-      const { data: dbUser, error: dbUserError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('auth_user_id', authUser.id)
-        .maybeSingle();
-
-      if (dbUserError || !dbUser) {
+      // Get or create database user
+      const dbUser = await ensureDatabaseUser(authUser.id);
+      if (!dbUser) {
         return {
           success: false,
-          error: 'User not found in database'
+          error: 'Failed to access user account'
         };
       }
 

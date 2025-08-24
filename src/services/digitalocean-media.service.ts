@@ -4,6 +4,12 @@ import { Buffer } from 'buffer';
 
 // Configure AWS SDK for DigitalOcean Spaces (S3-compatible)
 const spacesEndpoint = new AWS.Endpoint(process.env.EXPO_PUBLIC_DO_SPACES_ENDPOINT || '');
+
+// Check for required environment variables
+if (!process.env.EXPO_PUBLIC_DO_SPACES_KEY || !process.env.EXPO_PUBLIC_DO_SPACES_SECRET) {
+  console.error('DigitalOcean Spaces credentials are missing. Please set EXPO_PUBLIC_DO_SPACES_KEY and EXPO_PUBLIC_DO_SPACES_SECRET in your .env file');
+}
+
 const s3 = new AWS.S3({
   endpoint: spacesEndpoint,
   accessKeyId: process.env.EXPO_PUBLIC_DO_SPACES_KEY,
