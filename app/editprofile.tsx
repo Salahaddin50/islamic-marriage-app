@@ -4,6 +4,7 @@ import { COLORS, SIZES, FONTS, icons, images } from '../constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '../components/Header';
 import { MaterialCommunityIcons, Feather } from "@expo/vector-icons";
+import { useProfilePicture } from '@/hooks/useProfilePicture';
 import { launchImagePicker } from '../utils/ImagePickerHelper';
 import Input from '../components/Input';
 import { getFormatedDate } from "react-native-modern-datepicker";
@@ -237,11 +238,7 @@ const EditProfile = () => {
           <View style={{ alignItems: "center", marginVertical: 12 }}>
             <View style={styles.avatarContainer}>
               <Image
-                source={
-                  profileImage ? profileImage : 
-                  profile?.profile_picture_url ? { uri: profile.profile_picture_url } : 
-                  images.user1
-                }
+                source={profileImage || useProfilePicture()}
                 contentFit="cover"
                 style={styles.avatar} 
               />

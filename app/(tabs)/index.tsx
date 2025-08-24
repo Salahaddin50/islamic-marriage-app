@@ -7,6 +7,7 @@ import { useNavigation } from 'expo-router';
 import { NavigationProp } from '@react-navigation/native';
 import { menbers } from '@/data';
 import { supabase } from '@/src/config/supabase';
+import { useProfilePicture } from '@/hooks/useProfilePicture';
 import SwipeCard from '@/components/SwipeCard';
 import SwipeCardFooter from '@/components/SwipeCardFooter';
 import RBSheet from "react-native-raw-bottom-sheet";
@@ -59,6 +60,7 @@ const HomeScreen = () => {
   const [ageRange, setAgeRange] = useState([20, 50]); // Initial age range values
   const [formState, dispatchFormState] = useReducer(reducer, initialState);
   const [displayName, setDisplayName] = useState<string>('');
+  const profilePicture = useProfilePicture();
 
   const inputChangedHandler = useCallback(
     (inputId: string, inputValue: string) => {
@@ -92,9 +94,13 @@ const HomeScreen = () => {
         if (!user) return;
         const { data: profile } = await supabase
           .from('user_profiles')
-          .select('first_name,last_name')
+          .select('first_name,last_name,profile_picture_url')
           .eq('user_id', user.id)
           .maybeSingle();
+        
+        // Profile picture is handled by useProfilePicture hook
+        
+        // Set display name
         if (profile?.first_name || profile?.last_name) {
           const name = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ');
           setDisplayName(name);
@@ -164,7 +170,7 @@ const HomeScreen = () => {
       <View style={styles.headerContainer}>
         <View style={styles.viewLeft}>
           <Image
-            source={images.user5}
+            source={profilePicture}
             resizeMode='contain'
             style={styles.userIcon}
           />

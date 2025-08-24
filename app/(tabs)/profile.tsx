@@ -12,6 +12,7 @@ import { useNavigation, router } from 'expo-router';
 import SettingsItem from '@/components/SettingsItem';
 import { getResponsiveFontSize, getResponsiveSpacing, getResponsiveWidth, isMobileWeb } from '@/utils/responsive';
 import { supabase, auth } from '@/src/config/supabase';
+import { useProfilePicture } from '@/hooks/useProfilePicture';
 
 type Nav = {
   navigate: (value: string) => void
@@ -50,7 +51,7 @@ const Profile = () => {
    * Render user profile
    */
   const renderProfile = () => {
-    const [image, setImage] = useState(images.user1)
+    const profilePicture = useProfilePicture();
     const [displayName, setDisplayName] = useState<string>('');
     const [email, setEmail] = useState<string>('');
 
@@ -62,9 +63,13 @@ const Profile = () => {
           setEmail(user.email || '');
           const { data: profile } = await supabase
             .from('user_profiles')
-            .select('first_name,last_name')
+            .select('first_name,last_name,profile_picture_url')
             .eq('user_id', user.id)
             .maybeSingle();
+          
+          // Profile picture is handled by useProfilePicture hook
+          
+          // Set display name
           if (profile?.first_name || profile?.last_name) {
             const name = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ');
             setDisplayName(name);
@@ -91,7 +96,7 @@ const Profile = () => {
       <View style={styles.profileContainer}>
         <TouchableOpacity onPress={() => navigate("photosvideos")}>
           <Image
-            source={image}
+            source={profilePicture}
             contentFit='cover'
             style={styles.avatar}
           />

@@ -256,9 +256,15 @@ export class DigitalOceanMediaService {
   }
 
   private static async generateVideoThumbnail(fileKey: string): Promise<string | undefined> {
-    // For basic implementation, we'll return the CDN URL
-    // In production, you'd want to use a service like FFmpeg to generate thumbnails
-    return this.generateCDNUrl(fileKey);
+    // Return a default video thumbnail image
+    // Use a data URI for the default video thumbnail
+    return 'data:image/svg+xml;base64,' + Buffer.from(`<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#1A1A1A"/>
+  <circle cx="200" cy="150" r="50" fill="white" fill-opacity="0.2"/>
+  <path d="M220 150L190 170L190 130L220 150Z" fill="white"/>
+  <path d="M160 110H240C245.523 110 250 114.477 250 120V180C250 185.523 245.523 190 240 190H160C154.477 190 150 185.523 150 180V120C150 114.477 154.477 110 160 110Z" stroke="white" stroke-width="8"/>
+</svg>`).toString('base64');
   }
 
   private static async fileToBuffer(file: File | Blob): Promise<Uint8Array> {

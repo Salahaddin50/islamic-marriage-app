@@ -291,7 +291,7 @@ export class MediaIntegrationService {
       await supabase
         .from('user_profiles')
         .update({
-          profile_picture_url: updatedPhoto.external_url,
+          profile_picture_url: updatedPhoto.do_spaces_url, // Use direct URL for reliability
           updated_at: new Date().toISOString()
         })
         .eq('user_id', userId);

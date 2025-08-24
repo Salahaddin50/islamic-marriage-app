@@ -543,10 +543,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: getResponsiveSpacing(8),
     right: getResponsiveSpacing(8),
-    paddingHorizontal: getResponsiveSpacing(12),
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,0,0,0.9)',
+    paddingHorizontal: getResponsiveSpacing(16), // More horizontal padding
+    height: 32, // Taller buttons for better visibility
+    borderRadius: 16, // Matching border radius
+    backgroundColor: '#ff3b30', // Bright red for better visibility
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -561,10 +561,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: getResponsiveSpacing(8),
     left: getResponsiveSpacing(8),
-    paddingHorizontal: getResponsiveSpacing(12),
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(34,139,34,0.9)', // Green for profile picture
+    paddingHorizontal: getResponsiveSpacing(16), // More horizontal padding
+    height: 32, // Taller buttons for better visibility
+    borderRadius: 16, // Matching border radius
+    backgroundColor: '#34c759', // Bright green for better visibility
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -576,7 +576,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   buttonText: {
-    fontSize: getResponsiveFontSize(12),
+    fontSize: getResponsiveFontSize(14), // Larger text for better visibility
     fontFamily: 'semibold',
     color: COLORS.white,
     textAlign: 'center',

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="400" height="300" fill="#1A1A1A"/>
+  
+  <!-- Play button circle -->
+  <circle cx="200" cy="150" r="50" fill="white" fill-opacity="0.2"/>
+  
+  <!-- Play triangle -->
+  <path d="M220 150L190 170L190 130L220 150Z" fill="white"/>
+  
+  <!-- Video camera icon -->
+  <path d="M160 110H240C245.523 110 250 114.477 250 120V180C250 185.523 245.523 190 240 190H160C154.477 190 150 185.523 150 180V120C150 114.477 154.477 110 160 110Z" stroke="white" stroke-width="8"/>
+</svg>
