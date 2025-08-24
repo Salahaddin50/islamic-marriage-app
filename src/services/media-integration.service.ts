@@ -61,14 +61,30 @@ export class MediaIntegrationService {
         do_spaces_cdn_url: uploadResult.data.cdnUrl
       };
 
-      const { data: dbRecord, error: dbError } = await supabase
-        .from('media_references')
-        .insert([mediaReference])
-        .select()
-        .single();
+      // Try insert; if unique_violation (e.g., media_order clash), recompute order and retry once
+      let dbRecord: any | null = null;
+      let dbError: any | null = null;
+
+      const doInsert = async () => {
+        const { data, error } = await supabase
+          .from('media_references')
+          .insert([mediaReference])
+          .select()
+          .single();
+        dbRecord = data;
+        dbError = error;
+      };
+
+      await doInsert();
+
+      if (dbError && (dbError.code === '23505' || /unique/i.test(dbError.message || ''))) {
+        const nextOrder = await this.getNextMediaOrder(options.userId, options.mediaType);
+        mediaReference.media_order = nextOrder;
+        await doInsert();
+      }
 
       if (dbError) {
-        // If database creation fails, delete from DigitalOcean
+        // If database creation still fails, delete from DigitalOcean
         await DigitalOceanMediaService.deleteMedia(uploadResult.data.key);
         return {
           success: false,
@@ -371,9 +387,9 @@ export class MediaIntegrationService {
       .eq('user_id', userId)
       .eq('media_type', mediaType)
       .order('media_order', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(1);
 
-    return (data?.media_order || 0) + 1;
+    const lastOrder = Array.isArray(data) && data.length > 0 ? (data[0] as any).media_order : 0;
+    return (lastOrder || 0) + 1;
   }
 }

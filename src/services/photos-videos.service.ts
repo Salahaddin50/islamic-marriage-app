@@ -341,10 +341,10 @@ export class PhotosVideosService {
       .eq('user_id', userId)
       .eq('media_type', mediaType)
       .order('media_order', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(1);
 
-    return (data?.media_order || 0) + 1;
+    const lastOrder = Array.isArray(data) && data.length > 0 ? (data[0] as any).media_order : 0;
+    return (lastOrder || 0) + 1;
   }
 
   private static validateFile(file: File | Blob, mediaType: 'photo' | 'video'): { isValid: boolean; error?: string } {
