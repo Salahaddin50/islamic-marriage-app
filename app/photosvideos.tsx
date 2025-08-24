@@ -26,12 +26,16 @@ const PhotosVideos = () => {
   const loadMediaItems = async () => {
     try {
       setLoading(true);
+      console.log('Loading media items...');
       const result = await PhotosVideosAPI.getMyMedia();
+      console.log('Load media result:', result);
       
       if (result.success && result.data) {
+        console.log('Photos:', result.data.photos.length, 'Videos:', result.data.videos.length);
         setPhotos(result.data.photos);
         setVideos(result.data.videos);
       } else {
+        console.log('Load media failed:', result.error);
         Alert.alert('Error', result.error || 'Failed to load media');
       }
     } catch (error) {
@@ -58,20 +62,26 @@ const PhotosVideos = () => {
       
       let result;
       if (type === 'photo') {
+        console.log('Uploading photo...');
         result = await PhotosVideosAPI.uploadPhoto(blob, {
           visibility: 'private'
         });
       } else {
+        console.log('Uploading video...');
         result = await PhotosVideosAPI.uploadVideo(blob, {
           visibility: 'private'
         });
       }
 
+      console.log('Upload result:', result);
+
       if (result.success && result.data) {
+        console.log('Upload successful, refreshing media list...');
         // Refresh the media list
         await loadMediaItems();
         Alert.alert('Success', `${type === 'photo' ? 'Photo' : 'Video'} uploaded successfully!`);
       } else {
+        console.log('Upload failed:', result.error);
         Alert.alert('Error', result.error || 'Upload failed');
       }
     } catch (error) {
