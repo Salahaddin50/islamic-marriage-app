@@ -241,7 +241,10 @@ export class PhotosVideosAPI {
    */
   static async deleteMedia(mediaId: string): Promise<{ success: boolean; error?: string }> {
     try {
+      console.log('PhotosVideosAPI.deleteMedia called with ID:', mediaId);
+      
       if (!mediaId) {
+        console.error('Delete media called with empty ID');
         return {
           success: false,
           error: 'Media ID is required'
@@ -251,22 +254,32 @@ export class PhotosVideosAPI {
       // Get current user ID from database (not auth ID)
       const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
       if (authError || !authUser) {
+        console.error('Auth error or no user found:', authError);
         return {
           success: false,
           error: 'Please login first'
         };
       }
 
+      console.log('Auth user found:', authUser.id);
+      
       // Get or create database user
       const dbUser = await ensureDatabaseUser(authUser.id);
       if (!dbUser) {
+        console.error('Failed to get database user');
         return {
           success: false,
           error: 'Failed to access user account'
         };
       }
 
-      return await MediaIntegrationService.deleteMedia(mediaId, dbUser.id);
+      console.log('Database user found:', dbUser.id);
+      console.log('Calling MediaIntegrationService.deleteMedia with:', mediaId, dbUser.id);
+      
+      const result = await MediaIntegrationService.deleteMedia(mediaId, dbUser.id);
+      console.log('MediaIntegrationService.deleteMedia result:', result);
+      
+      return result;
     } catch (error) {
       console.error('API: Delete media error:', error);
       return {

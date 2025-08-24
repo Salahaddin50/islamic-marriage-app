@@ -109,8 +109,51 @@ const PhotosVideos = () => {
     }
   };
 
+  // Separate function to handle the actual deletion process
+  const handleDeleteMedia = async (id: string, type: 'photo' | 'video') => {
+    try {
+      // Show loading indicator
+      setLoading(true);
+      console.log(`Actually deleting ${type} with ID: ${id}`);
+      
+      // Call the API to delete the media
+      const result = await PhotosVideosAPI.deleteMedia(id);
+      console.log('Delete API result:', result);
+      
+      if (result.success) {
+        console.log('Delete successful, refreshing media list');
+        // Refresh the list to show updated data
+        await loadMediaItems();
+        Alert.alert('Success', `${type === 'photo' ? 'Photo' : 'Video'} deleted successfully!`);
+        
+        // If this was a profile picture, we need to make sure the UI updates
+        if (type === 'photo') {
+          // You could implement a global event or state update here
+          console.log('Photo deleted, checking if it was the profile picture');
+        }
+      } else {
+        console.error('Delete failed with error:', result.error);
+        Alert.alert('Error', result.error || 'Delete failed');
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      Alert.alert('Error', 'Failed to delete media');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Function to show the delete confirmation dialog
   const deleteMedia = async (id: string, type: 'photo' | 'video') => {
     console.log(`Delete button clicked for ${type} with ID: ${id}`);
+    
+    // Ensure we have a valid ID
+    if (!id) {
+      console.error('Attempted to delete media with invalid ID:', id);
+      Alert.alert('Error', 'Invalid media ID');
+      return;
+    }
+    
     Alert.alert(
       'Delete Media',
       `Are you sure you want to delete this ${type}?`,
@@ -119,33 +162,9 @@ const PhotosVideos = () => {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: async () => {
-            try {
-              // Show loading indicator
-              setLoading(true);
-              console.log(`Deleting ${type} with ID: ${id}`);
-              const result = await PhotosVideosAPI.deleteMedia(id);
-              console.log('Delete result:', result);
-              
-              if (result.success) {
-                // Refresh the list to show updated data
-                await loadMediaItems();
-                Alert.alert('Success', `${type === 'photo' ? 'Photo' : 'Video'} deleted successfully!`);
-                
-                // If this was a profile picture, we need to make sure the UI updates
-                if (type === 'photo') {
-                  // You could implement a global event or state update here
-                  console.log('Photo deleted, checking if it was the profile picture');
-                }
-              } else {
-                Alert.alert('Error', result.error || 'Delete failed');
-              }
-            } catch (error) {
-              console.error('Delete error:', error);
-              Alert.alert('Error', 'Failed to delete media');
-            } finally {
-              setLoading(false);
-            }
+          onPress: () => {
+            // Call the actual delete handler
+            handleDeleteMedia(id, type);
           }
         }
       ]
@@ -280,9 +299,13 @@ const PhotosVideos = () => {
       
       {/* Delete Button */}
       <TouchableOpacity
-        style={[styles.deleteButton, { zIndex: 20 }]}
-        onPress={() => deleteMedia(item.id, 'photo')}
-        activeOpacity={0.7}
+        style={[styles.deleteButton, { zIndex: 99 }]}
+        onPress={() => {
+          console.log('Delete photo button pressed with ID:', item.id);
+          // For direct testing, bypass the confirmation dialog
+          handleDeleteMedia(item.id, 'photo');
+        }}
+        activeOpacity={0.5}
       >
         <Text style={styles.buttonText}>Delete</Text>
       </TouchableOpacity>
@@ -330,9 +353,13 @@ const PhotosVideos = () => {
         
         {/* Delete Button */}
         <TouchableOpacity
-          style={[styles.deleteButton, { zIndex: 20 }]} 
-          onPress={() => deleteMedia(item.id, 'video')}
-          activeOpacity={0.7}
+          style={[styles.deleteButton, { zIndex: 99 }]} 
+          onPress={() => {
+            console.log('Delete video button pressed with ID:', item.id);
+            // For direct testing, bypass the confirmation dialog
+            handleDeleteMedia(item.id, 'video');
+          }}
+          activeOpacity={0.5}
         >
           <Text style={styles.buttonText}>Delete</Text>
         </TouchableOpacity>
@@ -587,50 +614,51 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     position: 'absolute',
-    top: getResponsiveSpacing(8),
-    right: getResponsiveSpacing(8),
-    paddingHorizontal: getResponsiveSpacing(16), // More horizontal padding
-    height: 36, // Taller buttons for better visibility
-    borderRadius: 18, // Matching border radius
+    top: getResponsiveSpacing(4),
+    right: getResponsiveSpacing(4),
+    paddingHorizontal: getResponsiveSpacing(8), // Smaller horizontal padding
+    height: 24, // Smaller height
+    borderRadius: 12, // Matching border radius
     backgroundColor: '#ff3b30', // Bright red for better visibility
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
+    borderWidth: 1, // Thinner border
     borderColor: COLORS.white,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.5,
-    shadowRadius: 3,
-    elevation: 5,
-    zIndex: 20, // Ensure button is above other elements
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 3,
+    zIndex: 999, // Ensure button is above all other elements
+    pointerEvents: 'auto', // Ensure touch events are captured
   },
   avatarButton: {
     position: 'absolute',
-    top: getResponsiveSpacing(8),
-    left: getResponsiveSpacing(8),
-    paddingHorizontal: getResponsiveSpacing(16), // More horizontal padding
-    height: 36, // Taller buttons for better visibility
-    borderRadius: 18, // Matching border radius
+    top: getResponsiveSpacing(4),
+    left: getResponsiveSpacing(4),
+    paddingHorizontal: getResponsiveSpacing(8), // Smaller horizontal padding
+    height: 24, // Smaller height
+    borderRadius: 12, // Matching border radius
     backgroundColor: '#34c759', // Bright green for better visibility
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
+    borderWidth: 1, // Thinner border
     borderColor: COLORS.white,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.5,
-    shadowRadius: 3,
-    elevation: 5,
-    zIndex: 20, // Ensure button is above other elements
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 3,
+    zIndex: 999, // Ensure button is above other elements
   },
   buttonText: {
-    fontSize: getResponsiveFontSize(15), // Larger text for better visibility
-    fontFamily: 'bold',
+    fontSize: getResponsiveFontSize(10), // Smaller text for tiny buttons
+    fontFamily: 'semiBold',
     color: COLORS.white,
     textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadowRadius: 1,
   },
   playButtonText: {
     fontSize: getResponsiveFontSize(14),

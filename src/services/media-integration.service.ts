@@ -209,12 +209,15 @@ export class MediaIntegrationService {
       }
 
       // 3. Delete from database
-      console.log('Deleting from database...');
-      const { error: dbDeleteError } = await supabase
+      console.log('Deleting from database...', mediaId, userId);
+      const deleteResponse = await supabase
         .from('media_references')
         .delete()
         .eq('id', mediaId)
         .eq('user_id', userId);
+      
+      const { error: dbDeleteError } = deleteResponse;
+      console.log('Delete response:', deleteResponse);
 
       if (dbDeleteError) {
         console.error('Database deletion error:', dbDeleteError);
