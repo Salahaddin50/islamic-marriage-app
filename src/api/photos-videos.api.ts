@@ -6,38 +6,66 @@ import { supabase } from '../config/supabase';
  * Helper function to get or create database user
  */
 async function ensureDatabaseUser(authUserId: string): Promise<{ id: string } | null> {
+  console.log('Looking for user with auth_user_id:', authUserId);
+  
   // First try to get existing user
-  const { data: existingUser } = await supabase
+  const { data: existingUser, error: fetchError } = await supabase
     .from('users')
     .select('id')
     .eq('auth_user_id', authUserId)
     .maybeSingle();
 
+  if (fetchError) {
+    console.error('Error fetching user:', fetchError);
+  }
+
   if (existingUser) {
+    console.log('Found existing user:', existingUser.id);
     return existingUser;
   }
 
+  console.log('User not found, creating new user...');
+
   // Get auth user details
   const { data: { user: authUser } } = await supabase.auth.getUser();
-  if (!authUser) return null;
+  if (!authUser) {
+    console.error('No auth user found');
+    return null;
+  }
+
+  if (!authUser.email) {
+    console.error('Auth user has no email');
+    return null;
+  }
+
+  console.log('Creating user with email:', authUser.email);
 
   // Create new user in database
   const { data: newUser, error } = await supabase
     .from('users')
     .insert({
       auth_user_id: authUserId,
-      email: authUser.email || '',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      email: authUser.email,
+      phone: authUser.phone || null,
+      profile_status: 'active',
+      is_verified: false,
+      verification_documents_submitted: false
     })
     .select('id')
     .single();
 
   if (error) {
     console.error('Failed to create database user:', error);
+    console.error('Error details:', {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code
+    });
     return null;
   }
 
+  console.log('Created new user:', newUser.id);
   return newUser;
 }
 
