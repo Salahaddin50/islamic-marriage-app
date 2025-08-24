@@ -282,6 +282,9 @@ export interface Database {
           mime_type: string | null;
           visibility_level: string;
           created_at: string;
+          do_spaces_key: string | null;
+          do_spaces_url: string | null;
+          do_spaces_cdn_url: string | null;
         };
         Insert: {
           id?: string;
@@ -297,6 +300,9 @@ export interface Database {
           mime_type?: string | null;
           visibility_level?: string;
           created_at?: string;
+          do_spaces_key?: string | null;
+          do_spaces_url?: string | null;
+          do_spaces_cdn_url?: string | null;
         };
         Update: {
           id?: string;
@@ -312,6 +318,9 @@ export interface Database {
           mime_type?: string | null;
           visibility_level?: string;
           created_at?: string;
+          do_spaces_key?: string | null;
+          do_spaces_url?: string | null;
+          do_spaces_cdn_url?: string | null;
         };
       };
       partner_preferences: {

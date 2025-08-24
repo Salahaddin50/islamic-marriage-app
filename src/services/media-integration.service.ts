@@ -38,13 +38,28 @@ export class MediaIntegrationService {
         await this.clearCurrentProfilePicture(options.userId);
       }
 
-      // 3. Get next media order if not specified
+      // 3. Pre-check: if a record with the same do_spaces_key already exists, return it (idempotent)
+      const { data: existingByKeyPre } = await supabase
+        .from('media_references')
+        .select('*')
+        .eq('do_spaces_key', uploadResult.data.key)
+        .eq('user_id', options.userId)
+        .maybeSingle();
+
+      if (existingByKeyPre) {
+        return {
+          success: true,
+          data: existingByKeyPre
+        };
+      }
+
+      // 4. Get next media order if not specified
       const mediaOrder = options.mediaOrder || await this.getNextMediaOrder(
         options.userId,
         options.mediaType
       );
 
-      // 4. Create database reference
+      // 5. Create database reference
       const mediaReference = {
         user_id: options.userId,
         media_type: options.mediaType,
@@ -77,10 +92,24 @@ export class MediaIntegrationService {
 
       await doInsert();
 
-      if (dbError && (dbError.code === '23505' || /unique/i.test(dbError.message || ''))) {
-        const nextOrder = await this.getNextMediaOrder(options.userId, options.mediaType);
-        mediaReference.media_order = nextOrder;
-        await doInsert();
+      if (dbError && (dbError.code === '23505' || dbError.code === '409' || /unique|duplicate/i.test(dbError.message || ''))) {
+        // First try: if duplicate key for do_spaces_key, fetch the existing row and return it
+        const { data: existingByKey } = await supabase
+          .from('media_references')
+          .select('*')
+          .eq('do_spaces_key', uploadResult.data.key)
+          .eq('user_id', options.userId)
+          .maybeSingle();
+
+        if (existingByKey) {
+          dbRecord = existingByKey;
+          dbError = null;
+        } else {
+          // Otherwise assume media_order conflict: recompute order and retry once
+          const nextOrder = await this.getNextMediaOrder(options.userId, options.mediaType);
+          mediaReference.media_order = nextOrder;
+          await doInsert();
+        }
       }
 
       if (dbError) {
