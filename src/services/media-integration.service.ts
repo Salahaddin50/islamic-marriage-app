@@ -60,11 +60,19 @@ export class MediaIntegrationService {
       );
 
       // 5. Create database reference
+      // Ensure thumbnail_url isn't too long (max 500 chars for VARCHAR(500))
+      let thumbnailUrl = uploadResult.data.thumbnailUrl;
+      if (thumbnailUrl && thumbnailUrl.length > 480) {
+        console.log('Thumbnail URL too long, truncating or using fallback');
+        // Use a simple URL parameter instead of a data URI
+        thumbnailUrl = `${uploadResult.data.cdnUrl}?thumbnail=true`;
+      }
+      
       const mediaReference = {
         user_id: options.userId,
         media_type: options.mediaType,
         external_url: uploadResult.data.cdnUrl, // Use CDN URL for better performance
-        thumbnail_url: uploadResult.data.thumbnailUrl,
+        thumbnail_url: thumbnailUrl,
         is_profile_picture: options.isProfilePicture || false,
         visibility_level: options.visibility || 'private',
         media_order: mediaOrder,

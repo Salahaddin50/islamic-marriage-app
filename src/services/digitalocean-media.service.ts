@@ -256,15 +256,18 @@ export class DigitalOceanMediaService {
   }
 
   private static async generateVideoThumbnail(fileKey: string): Promise<string | undefined> {
-    // Return a default video thumbnail image
-    // Use a data URI for the default video thumbnail
-    return 'data:image/svg+xml;base64,' + Buffer.from(`<?xml version="1.0" encoding="UTF-8"?>
-<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="400" height="300" fill="#1A1A1A"/>
-  <circle cx="200" cy="150" r="50" fill="white" fill-opacity="0.2"/>
-  <path d="M220 150L190 170L190 130L220 150Z" fill="white"/>
-  <path d="M160 110H240C245.523 110 250 114.477 250 120V180C250 185.523 245.523 190 240 190H160C154.477 190 150 185.523 150 180V120C150 114.477 154.477 110 160 110Z" stroke="white" stroke-width="8"/>
-</svg>`).toString('base64');
+    // Generate a CDN URL for the video thumbnail instead of using a data URI
+    // This approach creates a much shorter URL that will fit in the VARCHAR(500) column
+    const videoPath = fileKey;
+    const cdnBaseUrl = process.env.EXPO_PUBLIC_DO_SPACES_CDN || '';
+    
+    // If we have a CDN URL, use it to create a thumbnail URL
+    if (cdnBaseUrl) {
+      return `${cdnBaseUrl}/${videoPath}?thumbnail=true`;
+    }
+    
+    // Fallback to a very simple data URI if no CDN is available
+    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3QgZmlsbD0iIzMzMyIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiLz48dGV4dCBmaWxsPSIjZmZmIiB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMTgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIj5WaWRlbzwvdGV4dD48L3N2Zz4=';
   }
 
   private static async fileToBuffer(file: File | Blob): Promise<Uint8Array> {
