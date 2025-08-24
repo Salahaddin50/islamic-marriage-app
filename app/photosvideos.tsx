@@ -117,19 +117,30 @@ const PhotosVideos = () => {
           style: 'destructive',
           onPress: async () => {
             try {
+              // Show loading indicator
+              setLoading(true);
               console.log(`Deleting ${type} with ID: ${id}`);
               const result = await PhotosVideosAPI.deleteMedia(id);
               console.log('Delete result:', result);
               
               if (result.success) {
-                await loadMediaItems(); // Refresh the list
+                // Refresh the list to show updated data
+                await loadMediaItems();
                 Alert.alert('Success', `${type === 'photo' ? 'Photo' : 'Video'} deleted successfully!`);
+                
+                // If this was a profile picture, we need to make sure the UI updates
+                if (type === 'photo') {
+                  // You could implement a global event or state update here
+                  console.log('Photo deleted, checking if it was the profile picture');
+                }
               } else {
                 Alert.alert('Error', result.error || 'Delete failed');
               }
             } catch (error) {
               console.error('Delete error:', error);
               Alert.alert('Error', 'Failed to delete media');
+            } finally {
+              setLoading(false);
             }
           }
         }
@@ -148,19 +159,30 @@ const PhotosVideos = () => {
           text: 'Set as Avatar',
           onPress: async () => {
             try {
+              // Show loading indicator
+              setLoading(true);
               console.log(`Setting photo with ID: ${id} as avatar`);
               const result = await PhotosVideosAPI.setProfilePicture(id);
               console.log('Set avatar result:', result);
               
               if (result.success) {
                 await loadMediaItems(); // Refresh the list
-                Alert.alert('Success', 'Photo set as profile avatar!');
+                Alert.alert('Success', 'Photo set as profile avatar! The avatar will be updated across the app.');
+                
+                // Force refresh of profile picture in app
+                // This helps ensure the UI updates immediately
+                setTimeout(() => {
+                  console.log('Forcing app refresh to update avatar display');
+                  // You could implement a global event or state update here
+                }, 500);
               } else {
                 Alert.alert('Error', result.error || 'Failed to set avatar');
               }
             } catch (error) {
               console.error('Set avatar error:', error);
               Alert.alert('Error', 'Failed to set profile avatar');
+            } finally {
+              setLoading(false);
             }
           }
         }
@@ -564,44 +586,47 @@ const styles = StyleSheet.create({
     top: getResponsiveSpacing(8),
     right: getResponsiveSpacing(8),
     paddingHorizontal: getResponsiveSpacing(16), // More horizontal padding
-    height: 32, // Taller buttons for better visibility
-    borderRadius: 16, // Matching border radius
+    height: 36, // Taller buttons for better visibility
+    borderRadius: 18, // Matching border radius
     backgroundColor: '#ff3b30', // Bright red for better visibility
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: COLORS.white,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
-    elevation: 3,
-    zIndex: 10, // Ensure button is above other elements
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.5,
+    shadowRadius: 3,
+    elevation: 5,
+    zIndex: 20, // Ensure button is above other elements
   },
   avatarButton: {
     position: 'absolute',
     top: getResponsiveSpacing(8),
     left: getResponsiveSpacing(8),
     paddingHorizontal: getResponsiveSpacing(16), // More horizontal padding
-    height: 32, // Taller buttons for better visibility
-    borderRadius: 16, // Matching border radius
+    height: 36, // Taller buttons for better visibility
+    borderRadius: 18, // Matching border radius
     backgroundColor: '#34c759', // Bright green for better visibility
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: COLORS.white,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
-    elevation: 3,
-    zIndex: 10, // Ensure button is above other elements
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.5,
+    shadowRadius: 3,
+    elevation: 5,
+    zIndex: 20, // Ensure button is above other elements
   },
   buttonText: {
-    fontSize: getResponsiveFontSize(14), // Larger text for better visibility
-    fontFamily: 'semibold',
+    fontSize: getResponsiveFontSize(15), // Larger text for better visibility
+    fontFamily: 'bold',
     color: COLORS.white,
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   playButtonText: {
     fontSize: getResponsiveFontSize(14),

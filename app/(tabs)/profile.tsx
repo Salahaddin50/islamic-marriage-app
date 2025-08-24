@@ -62,11 +62,17 @@ const Profile = () => {
           const { data: { user } } = await supabase.auth.getUser();
           if (!user) return;
           setEmail(user.email || '');
-          const { data: profile } = await supabase
-            .from('user_profiles')
-            .select('first_name,last_name,profile_picture_url')
-            .eq('user_id', user.id)
-            .maybeSingle();
+          // Try to get user profile data, handling the case where the table or column might not exist
+          try {
+            const { data: profile, error } = await supabase
+              .from('user_profiles')
+              .select('first_name,last_name,profile_picture_url')
+              .eq('user_id', user.id)
+              .maybeSingle();
+            
+            if (error) {
+              console.log('Error fetching profile in profile.tsx:', error);
+            }
           
           // Profile picture is handled by useProfilePicture hook
           
@@ -76,6 +82,13 @@ const Profile = () => {
             setDisplayName(name);
           } else if (user.email) {
             setDisplayName(user.email.split('@')[0]);
+          }
+          } catch (profileError) {
+            console.log('Error in profile data fetch:', profileError);
+            // Fallback to email username if profile fetch fails
+            if (user.email) {
+              setDisplayName(user.email.split('@')[0]);
+            }
           }
         } catch (e) {
           // ignore

@@ -11,17 +11,38 @@ export function useProfilePicture() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        const { data: profile } = await supabase
+        // First check if the user_profiles table exists
+        const { error: tableCheckError } = await supabase
           .from('user_profiles')
-          .select('profile_picture_url')
-          .eq('user_id', user.id)
-          .maybeSingle();
+          .select('count(*)', { count: 'exact', head: true });
 
-        if (profile?.profile_picture_url) {
-          setProfilePicture({ uri: profile.profile_picture_url });
+        // If the table doesn't exist or there's an error, just return the default avatar
+        if (tableCheckError) {
+          console.log('Error checking user_profiles table:', tableCheckError);
+          return;
+        }
+
+        // Try to get the profile picture URL
+        try {
+          const { data: profile, error: profileError } = await supabase
+            .from('user_profiles')
+            .select('profile_picture_url')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          if (profileError) {
+            console.log('Error fetching profile:', profileError);
+            return;
+          }
+
+          if (profile?.profile_picture_url) {
+            setProfilePicture({ uri: profile.profile_picture_url });
+          }
+        } catch (profileError) {
+          console.log('Error in profile fetch:', profileError);
         }
       } catch (e) {
-        // ignore
+        console.log('Error in useProfilePicture:', e);
       }
     })();
   }, []);

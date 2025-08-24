@@ -154,6 +154,8 @@ export class MediaIntegrationService {
     userId: string
   ): Promise<{ success: boolean; error?: string }> {
     try {
+      console.log(`Deleting media ${mediaId} for user ${userId}`);
+      
       // 1. Get media record from database
       const { data: mediaRecord, error: fetchError } = await supabase
         .from('media_references')
@@ -162,23 +164,40 @@ export class MediaIntegrationService {
         .eq('user_id', userId)
         .single();
 
-      if (fetchError || !mediaRecord) {
+      if (fetchError) {
+        console.error('Error fetching media record:', fetchError);
+        return {
+          success: false,
+          error: `Media fetch error: ${fetchError.message}`
+        };
+      }
+
+      if (!mediaRecord) {
+        console.error('Media record not found');
         return {
           success: false,
           error: 'Media not found or access denied'
         };
       }
 
+      console.log('Found media record:', mediaRecord);
+
       // 2. Delete from DigitalOcean Spaces
       if (mediaRecord.do_spaces_key) {
+        console.log('Deleting from DigitalOcean Spaces:', mediaRecord.do_spaces_key);
         const deleteResult = await DigitalOceanMediaService.deleteMedia(mediaRecord.do_spaces_key);
         if (!deleteResult.success) {
           console.warn('Failed to delete from DigitalOcean:', deleteResult.error);
           // Continue with database deletion even if DigitalOcean deletion fails
+        } else {
+          console.log('Successfully deleted from DigitalOcean Spaces');
         }
+      } else {
+        console.log('No DO Spaces key found, skipping storage deletion');
       }
 
       // 3. Delete from database
+      console.log('Deleting from database...');
       const { error: dbDeleteError } = await supabase
         .from('media_references')
         .delete()
@@ -186,21 +205,32 @@ export class MediaIntegrationService {
         .eq('user_id', userId);
 
       if (dbDeleteError) {
+        console.error('Database deletion error:', dbDeleteError);
         return {
           success: false,
           error: `Database deletion failed: ${dbDeleteError.message}`
         };
       }
+      
+      console.log('Successfully deleted from database');
 
       // 4. If this was a profile picture, clear profile picture URL
       if (mediaRecord.is_profile_picture) {
-        await supabase
+        console.log('This was a profile picture, clearing profile_picture_url in user_profiles');
+        const { error: profileUpdateError } = await supabase
           .from('user_profiles')
           .update({
             profile_picture_url: null,
             updated_at: new Date().toISOString()
           })
           .eq('user_id', userId);
+          
+        if (profileUpdateError) {
+          console.warn('Failed to clear profile_picture_url:', profileUpdateError);
+          // Don't fail the operation if only the profile update fails
+        } else {
+          console.log('Successfully cleared profile_picture_url');
+        }
       }
 
       return { success: true };
@@ -264,8 +294,11 @@ export class MediaIntegrationService {
     userId: string
   ): Promise<{ success: boolean; error?: string }> {
     try {
+      console.log(`Setting photo ${photoId} as profile picture for user ${userId}`);
+      
       // 1. Clear current profile picture
       await this.clearCurrentProfilePicture(userId);
+      console.log('Cleared current profile picture');
 
       // 2. Set new profile picture
       const { data: updatedPhoto, error: updateError } = await supabase
@@ -280,21 +313,44 @@ export class MediaIntegrationService {
         .select()
         .single();
 
-      if (updateError || !updatedPhoto) {
+      if (updateError) {
+        console.error('Error updating media_references:', updateError);
         return {
           success: false,
-          error: 'Failed to update profile picture or photo not found'
+          error: `Failed to update profile picture: ${updateError.message}`
+        };
+      }
+      
+      if (!updatedPhoto) {
+        console.error('No photo found after update');
+        return {
+          success: false,
+          error: 'Photo not found after update'
         };
       }
 
+      console.log('Updated photo in media_references:', updatedPhoto);
+      
+      // Choose the best URL for the profile picture
+      const profilePictureUrl = updatedPhoto.do_spaces_url || updatedPhoto.external_url;
+      console.log('Using URL for profile picture:', profilePictureUrl);
+
       // 3. Update user profile table
-      await supabase
+      const { error: profileUpdateError } = await supabase
         .from('user_profiles')
         .update({
-          profile_picture_url: updatedPhoto.do_spaces_url, // Use direct URL for reliability
+          profile_picture_url: profilePictureUrl,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', userId);
+        
+      if (profileUpdateError) {
+        console.error('Error updating user_profiles:', profileUpdateError);
+        // Don't fail the operation if only the profile update fails
+        console.warn('Profile picture set in media_references but not in user_profiles');
+      } else {
+        console.log('Successfully updated profile_picture_url in user_profiles');
+      }
 
       return { success: true };
 
