@@ -36,5 +36,6 @@ export default {
     avatar: require("../assets/images/avatar.png"),
     face: require("../assets/images/face.png"),
     scanCard: require("../assets/images/scan_card.png"),
-    matchCover: require("../assets/images/match_cover.png")
+    matchCover: require("../assets/images/match_cover.png"),
+    videoThumbnail: require("../assets/images/video-thumbnail.svg")
 };

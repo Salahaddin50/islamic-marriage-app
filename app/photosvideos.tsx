@@ -1,7 +1,8 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, FlatList, ActivityIndicator } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { COLORS, SIZES, icons } from '../constants';
+import { COLORS, SIZES, icons, images } from '../constants';
+import { DEFAULT_VIDEO_THUMBNAIL } from '../constants/defaultThumbnails';
 import Header from '../components/Header';
 import { router } from 'expo-router';
 import Button from '../components/Button';
@@ -18,6 +19,7 @@ const PhotosVideos = () => {
   const [videos, setVideos] = useState<PhotoVideoItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [thumbnailErrors, setThumbnailErrors] = useState<Record<string, boolean>>({});
 
   // Load media items on component mount
   useEffect(() => {
@@ -104,6 +106,7 @@ const PhotosVideos = () => {
   };
 
   const deleteMedia = async (id: string, type: 'photo' | 'video') => {
+    console.log(`Delete button clicked for ${type} with ID: ${id}`);
     Alert.alert(
       'Delete Media',
       `Are you sure you want to delete this ${type}?`,
@@ -114,7 +117,10 @@ const PhotosVideos = () => {
           style: 'destructive',
           onPress: async () => {
             try {
+              console.log(`Deleting ${type} with ID: ${id}`);
               const result = await PhotosVideosAPI.deleteMedia(id);
+              console.log('Delete result:', result);
+              
               if (result.success) {
                 await loadMediaItems(); // Refresh the list
                 Alert.alert('Success', `${type === 'photo' ? 'Photo' : 'Video'} deleted successfully!`);
@@ -132,6 +138,7 @@ const PhotosVideos = () => {
   };
 
   const setAsAvatar = async (id: string) => {
+    console.log(`Main button clicked for photo with ID: ${id}`);
     Alert.alert(
       'Set as Avatar',
       'Do you want to set this photo as your profile avatar?',
@@ -141,7 +148,10 @@ const PhotosVideos = () => {
           text: 'Set as Avatar',
           onPress: async () => {
             try {
+              console.log(`Setting photo with ID: ${id} as avatar`);
               const result = await PhotosVideosAPI.setProfilePicture(id);
+              console.log('Set avatar result:', result);
+              
               if (result.success) {
                 await loadMediaItems(); // Refresh the list
                 Alert.alert('Success', 'Photo set as profile avatar!');
@@ -218,31 +228,35 @@ const PhotosVideos = () => {
     };
 
     return (
-      <TouchableOpacity 
-        style={styles.mediaItem}
-        onLongPress={() => showPhotoOptions(item)}
-        activeOpacity={0.8}
-      >
-        <Image
-          source={{ uri: imageUrl }}
-          contentFit="cover"
-          style={styles.photoItem}
-          onError={handleImageError}
-          onLoad={() => console.log('Image loaded:', imageUrl)}
-        />
+      <View style={styles.mediaItem}>
+        <TouchableOpacity 
+          style={styles.imageContainer}
+          onLongPress={() => showPhotoOptions(item)}
+          activeOpacity={0.8}
+        >
+          <Image
+            source={{ uri: imageUrl }}
+            contentFit="cover"
+            style={styles.photoItem}
+            onError={handleImageError}
+            onLoad={() => console.log('Image loaded:', imageUrl)}
+          />
+        </TouchableOpacity>
       
       {/* Set as Main Button */}
       <TouchableOpacity
         style={styles.avatarButton}
         onPress={() => setAsAvatar(item.id)}
+        activeOpacity={0.7}
       >
         <Text style={styles.buttonText}>Main</Text>
       </TouchableOpacity>
       
       {/* Delete Button */}
       <TouchableOpacity
-        style={styles.deleteButton}
+        style={[styles.deleteButton, { zIndex: 20 }]}
         onPress={() => deleteMedia(item.id, 'photo')}
+        activeOpacity={0.7}
       >
         <Text style={styles.buttonText}>Delete</Text>
       </TouchableOpacity>
@@ -253,7 +267,7 @@ const PhotosVideos = () => {
           <Text style={styles.profileBadgeText}>Current Avatar</Text>
         </View>
       )}
-    </TouchableOpacity>
+    </View>
     );
   };
 
@@ -270,27 +284,29 @@ const PhotosVideos = () => {
 
     const handleVideoImageError = (error: any) => {
       console.log('Video thumbnail load error for (direct URL):', videoThumbnailUrl, error);
+      setThumbnailErrors(prev => ({ ...prev, [item.id]: true }));
     };
 
     return (
       <View style={styles.mediaItem}>
-        <View style={styles.videoContainer}>
+        <TouchableOpacity style={styles.videoContainer}>
           <Image
-            source={{ uri: videoThumbnailUrl }}
+            source={thumbnailErrors[item.id] ? { uri: DEFAULT_VIDEO_THUMBNAIL } : { uri: videoThumbnailUrl }}
             contentFit="cover"
             style={styles.videoItem}
             onError={handleVideoImageError}
-            onLoad={() => console.log('Video thumbnail loaded:', videoThumbnailUrl)}
+            onLoad={() => console.log('Video thumbnail loaded:', thumbnailErrors[item.id] ? 'default thumbnail' : videoThumbnailUrl)}
           />
           <View style={styles.playButton}>
             <Text style={[styles.playButtonText, { color: COLORS.white }]}>Play</Text>
           </View>
-        </View>
+        </TouchableOpacity>
         
         {/* Delete Button */}
         <TouchableOpacity
-          style={styles.deleteButton}
+          style={[styles.deleteButton, { zIndex: 20 }]} 
           onPress={() => deleteMedia(item.id, 'video')}
+          activeOpacity={0.7}
         >
           <Text style={styles.buttonText}>Delete</Text>
         </TouchableOpacity>
@@ -511,6 +527,10 @@ const styles = StyleSheet.create({
     width: (SIZES.width - 56) / 2, // Adjusted for better spacing
     marginHorizontal: getResponsiveSpacing(4),
   },
+  imageContainer: {
+    width: '100%',
+    height: '100%',
+  },
   photoItem: {
     width: '100%',
     height: (SIZES.width - 56) / 2, // Square aspect ratio for photos
@@ -556,6 +576,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 2,
     elevation: 3,
+    zIndex: 10, // Ensure button is above other elements
   },
   avatarButton: {
     position: 'absolute',
@@ -574,6 +595,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 2,
     elevation: 3,
+    zIndex: 10, // Ensure button is above other elements
   },
   buttonText: {
     fontSize: getResponsiveFontSize(14), // Larger text for better visibility

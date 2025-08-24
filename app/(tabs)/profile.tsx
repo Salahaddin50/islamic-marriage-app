@@ -50,8 +50,9 @@ const Profile = () => {
   /**
    * Render user profile
    */
+  const profilePicture = useProfilePicture();
+  
   const renderProfile = () => {
-    const profilePicture = useProfilePicture();
     const [displayName, setDisplayName] = useState<string>('');
     const [email, setEmail] = useState<string>('');
 
@@ -82,16 +83,7 @@ const Profile = () => {
       })();
     }, []);
 
-    const pickImage = async () => {
-      try {
-        const tempUri = await launchImagePicker()
-
-        if (!tempUri) return
-
-        // Set the image
-        setImage({ uri: tempUri })
-      } catch (error) { }
-    };
+    // Removed pickImage function as it's no longer needed
     return (
       <View style={styles.profileContainer}>
         <TouchableOpacity onPress={() => navigate("photosvideos")}>
