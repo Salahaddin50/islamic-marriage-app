@@ -13,17 +13,31 @@ export class PhotosVideosAPI {
    */
   static async getMyMedia(): Promise<MediaListResult> {
     try {
-      // Get current user ID
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) {
+      // Get current user ID from database (not auth ID)
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+      if (authError || !authUser) {
         return {
           success: false,
           error: 'Please login first'
         };
       }
 
+      // Get database user ID from auth user ID
+      const { data: dbUser, error: dbUserError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', authUser.id)
+        .single();
+
+      if (dbUserError || !dbUser) {
+        return {
+          success: false,
+          error: 'User not found in database'
+        };
+      }
+
       // Use DigitalOcean integration service
-      const result = await MediaIntegrationService.getUserMedia(user.id);
+      const result = await MediaIntegrationService.getUserMedia(dbUser.id);
       return {
         success: result.success,
         data: result.data,
@@ -57,18 +71,32 @@ export class PhotosVideosAPI {
         };
       }
 
-      // Get current user ID (replace with your auth logic)
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) {
+      // Get current user ID from database (not auth ID)
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+      if (authError || !authUser) {
         return {
           success: false,
           error: 'Please login first'
         };
       }
 
+      // Get database user ID from auth user ID
+      const { data: dbUser, error: dbUserError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', authUser.id)
+        .single();
+
+      if (dbUserError || !dbUser) {
+        return {
+          success: false,
+          error: 'User not found in database'
+        };
+      }
+
       // Use DigitalOcean integration service
       const result = await MediaIntegrationService.uploadMedia(file, {
-        userId: user.id,
+        userId: dbUser.id,
         mediaType: 'photo',
         isProfilePicture: options.isProfilePicture,
         visibility: options.visibility
@@ -106,18 +134,32 @@ export class PhotosVideosAPI {
         };
       }
 
-      // Get current user ID
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) {
+      // Get current user ID from database (not auth ID)
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+      if (authError || !authUser) {
         return {
           success: false,
           error: 'Please login first'
         };
       }
 
+      // Get database user ID from auth user ID
+      const { data: dbUser, error: dbUserError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', authUser.id)
+        .single();
+
+      if (dbUserError || !dbUser) {
+        return {
+          success: false,
+          error: 'User not found in database'
+        };
+      }
+
       // Use DigitalOcean integration service
       const result = await MediaIntegrationService.uploadMedia(file, {
-        userId: user.id,
+        userId: dbUser.id,
         mediaType: 'video',
         visibility: options.visibility
       });
@@ -148,16 +190,30 @@ export class PhotosVideosAPI {
         };
       }
 
-      // Get current user ID
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) {
+      // Get current user ID from database (not auth ID)
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+      if (authError || !authUser) {
         return {
           success: false,
           error: 'Please login first'
         };
       }
 
-      return await MediaIntegrationService.deleteMedia(mediaId, user.id);
+      // Get database user ID from auth user ID
+      const { data: dbUser, error: dbUserError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', authUser.id)
+        .single();
+
+      if (dbUserError || !dbUser) {
+        return {
+          success: false,
+          error: 'User not found in database'
+        };
+      }
+
+      return await MediaIntegrationService.deleteMedia(mediaId, dbUser.id);
     } catch (error) {
       console.error('API: Delete media error:', error);
       return {
@@ -179,16 +235,30 @@ export class PhotosVideosAPI {
         };
       }
 
-      // Get current user ID
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) {
+      // Get current user ID from database (not auth ID)
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+      if (authError || !authUser) {
         return {
           success: false,
           error: 'Please login first'
         };
       }
 
-      return await MediaIntegrationService.setAsProfilePicture(photoId, user.id);
+      // Get database user ID from auth user ID
+      const { data: dbUser, error: dbUserError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', authUser.id)
+        .single();
+
+      if (dbUserError || !dbUser) {
+        return {
+          success: false,
+          error: 'User not found in database'
+        };
+      }
+
+      return await MediaIntegrationService.setAsProfilePicture(photoId, dbUser.id);
     } catch (error) {
       console.error('API: Set profile picture error:', error);
       return {
