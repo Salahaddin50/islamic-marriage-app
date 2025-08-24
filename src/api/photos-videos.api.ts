@@ -40,19 +40,13 @@ async function ensureDatabaseUser(authUserId: string): Promise<{ id: string } | 
 
   console.log('Creating user with email:', authUser.email);
 
-  // Create new user in database
-  const { data: newUser, error } = await supabase
-    .from('users')
-    .insert({
-      auth_user_id: authUserId,
-      email: authUser.email,
-      phone: authUser.phone || null,
-      profile_status: 'active',
-      is_verified: false,
-      verification_documents_submitted: false
-    })
-    .select('id')
-    .single();
+  // Create new user using secure database function
+  const { data: newUserId, error } = await supabase
+    .rpc('create_user_profile', {
+      p_auth_user_id: authUserId,
+      p_email: authUser.email,
+      p_phone: authUser.phone || null
+    });
 
   if (error) {
     console.error('Failed to create database user:', error);
@@ -65,8 +59,13 @@ async function ensureDatabaseUser(authUserId: string): Promise<{ id: string } | 
     return null;
   }
 
-  console.log('Created new user:', newUser.id);
-  return newUser;
+  if (!newUserId) {
+    console.error('No user ID returned from function');
+    return null;
+  }
+
+  console.log('Created new user:', newUserId);
+  return { id: newUserId };
 }
 
 /**
