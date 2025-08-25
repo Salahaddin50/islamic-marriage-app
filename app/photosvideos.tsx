@@ -10,8 +10,9 @@ import { Image } from 'expo-image';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { launchMediaPicker } from '../utils/ImagePickerHelper';
 import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '../utils/responsive';
-import { PhotosVideosAPI } from '../src/api/photos-videos.api';
-import { PhotoVideoItem } from '../src/services/photos-videos.service';
+  import { PhotosVideosAPI } from '../src/api/photos-videos.api';
+  import { PhotoVideoItem } from '../src/services/photos-videos.service';
+  import { clearProfilePictureCache } from '../hooks/useProfilePicture';
 
 const PhotosVideos = () => {
   const [selectedTab, setSelectedTab] = useState<'photos' | 'videos'>('photos');
@@ -297,13 +298,20 @@ const PhotosVideos = () => {
           try {
             setLoading(true);
             console.log(`Directly setting photo with ID: ${item.id} as avatar`);
+            
+            // Removed test code to fix the error
+            
             PhotosVideosAPI.setProfilePicture(item.id)
               .then(result => {
                 console.log('Set avatar direct result:', result);
                 if (result.success) {
-                  loadMediaItems().then(() => {
-                    Alert.alert('Success', 'Photo set as profile avatar!');
-                  });
+                                      // Clear cache and trigger refresh
+                    clearProfilePictureCache();
+                    loadMediaItems().then(() => {
+                      Alert.alert('Success', 'Photo set as profile avatar!');
+                      // Trigger profile picture refresh across the app
+                      window.dispatchEvent(new CustomEvent('profilePictureUpdated'));
+                    });
                 } else {
                   Alert.alert('Error', result.error || 'Failed to set avatar');
                 }

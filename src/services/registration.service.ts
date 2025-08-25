@@ -730,6 +730,7 @@ export class RegistrationService {
         date_of_birth: profileData.dateOfBirth,
         country: profileData.country,
         city: profileData.city,
+        bio: profileData.aboutMe || '',
         updated_at: new Date().toISOString(),
       };
 

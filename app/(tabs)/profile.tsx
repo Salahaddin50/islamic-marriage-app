@@ -18,6 +18,124 @@ type Nav = {
   navigate: (value: string) => void
 }
 
+// Simple Avatar Component with Profile Picture Support
+const SimpleAvatar = ({ size, displayName, isLoading }: { size: number, displayName?: string, isLoading: boolean }) => {
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [imageLoadError, setImageLoadError] = useState(false);
+  
+  useEffect(() => {
+    const fetchProfileImage = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          console.log('SimpleAvatar: No user found');
+          return;
+        }
+
+        // Check media_references first
+        const { data: mediaRef, error: mediaError } = await supabase
+          .from('media_references')
+          .select('do_spaces_cdn_url, do_spaces_url, external_url, id, is_profile_picture')
+          .eq('user_id', user.id)
+          .eq('media_type', 'photo')
+          .eq('is_profile_picture', true)
+          .maybeSingle();
+
+        if (mediaRef) {
+          const imageUrl = mediaRef.do_spaces_cdn_url || mediaRef.do_spaces_url || mediaRef.external_url;
+          if (imageUrl) {
+            setProfileImageUrl(imageUrl);
+            return;
+          }
+        }
+
+        // Check user_profiles as fallback
+        const { data: profile, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('profile_picture_url')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (profile?.profile_picture_url) {
+          setProfileImageUrl(profile.profile_picture_url);
+        }
+      } catch (error) {
+        console.log('SimpleAvatar: Error fetching profile image:', error);
+      }
+    };
+
+    fetchProfileImage();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <View style={[{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: COLORS.grayscale200,
+        justifyContent: 'center',
+        alignItems: 'center'
+      }]}>
+        <ActivityIndicator size="small" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  const initial = displayName ? displayName.charAt(0).toUpperCase() : 'U';
+  
+  // Show profile picture if available and not errored
+  if (profileImageUrl && !imageLoadError) {
+    return (
+      <View style={[{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        overflow: 'hidden',
+        backgroundColor: COLORS.grayscale200
+      }]}>
+        <Image
+          source={{ uri: profileImageUrl }}
+          style={{
+            width: size,
+            height: size,
+          }}
+          contentFit="cover"
+          onError={() => {
+            console.log('Profile image failed to load, showing initial');
+            setImageLoadError(true);
+          }}
+          onLoad={() => {
+            console.log('Profile image loaded successfully');
+          }}
+        />
+      </View>
+    );
+  }
+  
+  // Fallback to initial
+  return (
+    <View style={[{
+      width: size,
+      height: size,
+      borderRadius: size / 2,
+      backgroundColor: COLORS.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      overflow: 'hidden'
+    }]}>
+      <Text style={{
+        fontSize: size * 0.4,
+        fontWeight: 'bold',
+        color: COLORS.white,
+        textAlign: 'center'
+      }}>
+        {initial}
+      </Text>
+    </View>
+  );
+};
+
 const Profile = () => {
   const refRBSheet = useRef<any>(null);
   const { navigate } = useNavigation<Nav>();
@@ -51,7 +169,6 @@ const Profile = () => {
    * Render user profile
    */
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const { profilePicture, isLoading: profileLoading, hasCustomImage } = useProfilePicture(refreshTrigger);
   
   const renderProfile = () => {
     const [displayName, setDisplayName] = useState<string>('');
@@ -114,23 +231,11 @@ const Profile = () => {
           onPress={() => navigate("photosvideos")}
           onLongPress={refreshProfile} // Allow manual refresh with long press
         >
-          {profileLoading || isLoading ? (
-            <View style={[styles.avatar, styles.loadingAvatar]}>
-              <ActivityIndicator size="small" color={COLORS.primary} />
-            </View>
-          ) : (
-            <View style={styles.avatarContainer}>
-              <Image
-                source={profilePicture}
-                contentFit='cover'
-                style={styles.avatar}
-                onLoad={() => console.log('Profile image loaded successfully')}
-                onError={(error) => console.log('Profile image load error:', error)}
-                // Add key to force re-render when the image source changes
-                key={`profile-image-${hasCustomImage ? 'custom' : 'default'}-${Date.now()}`}
-              />
-            </View>
-          )}
+          <SimpleAvatar 
+            size={isMobileWeb() ? 100 : 120}
+            displayName={displayName}
+            isLoading={isLoading}
+          />
         </TouchableOpacity>
         <Text style={[styles.title, { color: COLORS.greyscale900 }]}>{displayName || 'Profile'}</Text>
         <Text style={[styles.subtitle, { color: COLORS.greyscale900 }]}>{email}</Text>
@@ -392,23 +497,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: .4,
     paddingVertical: getResponsiveSpacing(20)
   },
-  avatarContainer: {
-    width: isMobileWeb() ? 100 : 120,
-    height: isMobileWeb() ? 100 : 120,
-    borderRadius: 999,
-    overflow: 'hidden',
-    backgroundColor: COLORS.grayscale200,
-  },
-  avatar: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 999
-  },
-  loadingAvatar: {
-    backgroundColor: COLORS.grayscale200,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
+
   picContainer: {
     width: 28,
     height: 28,

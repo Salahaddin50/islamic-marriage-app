@@ -26,6 +26,7 @@ export interface UserProfile {
   work_status?: string;
   monthly_income?: string;
   profile_picture_url?: string;
+  about_me?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -40,6 +41,7 @@ export interface UpdateProfileData {
   gender?: GenderType;
   country?: string;
   city?: string;
+  about_me?: string;
 }
 
 export class ProfileService {

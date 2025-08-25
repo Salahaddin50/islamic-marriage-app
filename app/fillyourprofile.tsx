@@ -21,13 +21,15 @@ const initialState = {
         fullName: isTestMode ? 'John Doe' : '',
         email: isTestMode ? 'example@gmail.com' : '',
         nickname: isTestMode ? "" : "",
-        phoneNumber: ''
+        phoneNumber: '',
+        aboutMe: ''
     },
     inputValidities: {
         fullName: false,
         email: false,
         nickname: false,
         phoneNumber: false,
+        aboutMe: true, // Optional field, so always valid
     },
     formIsValid: false,
 }
@@ -216,6 +218,20 @@ const FillYourProfile = () => {
                             placeholder="Email"
                             placeholderTextColor={COLORS.gray}
                             keyboardType="email-address" />
+                            
+                        {/* About Me */}
+                        <View style={styles.textAreaContainer}>
+                            <Text style={styles.textAreaLabel}>About Me</Text>
+                            <TextInput
+                                style={styles.textArea}
+                                placeholder="Tell us about yourself..."
+                                placeholderTextColor={COLORS.gray}
+                                multiline
+                                numberOfLines={4}
+                                textAlignVertical="top"
+                                onChangeText={(text) => inputChangedHandler('aboutMe', text)}
+                            />
+                        </View>
                         <View style={{ width: SIZES.width - 32 }}>
                             <TouchableOpacity
                                 style={[styles.inputBtn, {
@@ -297,6 +313,26 @@ const FillYourProfile = () => {
 
 // createnewpin
 const styles = StyleSheet.create({
+    textAreaContainer: {
+        marginBottom: 16,
+    },
+    textAreaLabel: {
+        fontSize: 16,
+        fontFamily: 'regular',
+        color: COLORS.black,
+        marginBottom: 8,
+    },
+    textArea: {
+        borderWidth: 1,
+        borderColor: COLORS.greyscale500,
+        backgroundColor: COLORS.greyscale500,
+        borderRadius: 12,
+        padding: 16,
+        minHeight: 120,
+        fontSize: 16,
+        fontFamily: 'regular',
+        color: COLORS.black,
+    },
     area: {
         flex: 1,
         backgroundColor: COLORS.white

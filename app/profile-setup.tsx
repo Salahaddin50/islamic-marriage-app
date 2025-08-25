@@ -5,7 +5,7 @@
 // ============================================================================
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, KeyboardAvoidingView, Platform, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Alert, KeyboardAvoidingView, Platform, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from 'expo-router';
 import { router } from 'expo-router';
@@ -29,7 +29,7 @@ import type { GenderType } from '../src/types/database.types';
 // VALIDATION SCHEMAS
 // ================================
 
-const basicInfoSchema = z.object({
+  const basicInfoSchema = z.object({
   firstName: z.string()
     .min(2, 'First name must be at least 2 characters')
     .max(50, 'First name must be less than 50 characters')
@@ -37,6 +37,9 @@ const basicInfoSchema = z.object({
   lastName: z.string()
     .max(50, 'Last name must be less than 50 characters')
     .regex(/^[a-zA-Z\s]*$/, 'Last name must contain only letters')
+    .optional(),
+  aboutMe: z.string()
+    .max(500, 'About Me must be less than 500 characters')
     .optional(),
   dateOfBirth: z.string()
     .refine((date) => {
@@ -126,9 +129,10 @@ const ProfileSetup: React.FC = () => {
     setValue,
   } = useForm<BasicInfoForm>({
     resolver: zodResolver(basicInfoSchema),
-    defaultValues: {
+          defaultValues: {
       firstName: '',
       lastName: '',
+      aboutMe: '',
       dateOfBirth: '',
       gender: undefined,
       phoneCode: '',
@@ -401,6 +405,7 @@ const ProfileSetup: React.FC = () => {
       const registrationData: RegistrationData = {
         firstName: watchedValues.firstName!,
         lastName: watchedValues.lastName || '',
+        aboutMe: watchedValues.aboutMe || '',
         email: '', // This will be taken from auth context
         dateOfBirth: watchedValues.dateOfBirth!,
         gender: watchedValues.gender!,
@@ -489,6 +494,29 @@ const ProfileSetup: React.FC = () => {
                   />
                 )}
               />
+
+              {/* About Me Section */}
+              <View style={styles.textAreaContainer}>
+                <Text style={styles.textAreaLabel}>About Me</Text>
+                <Controller
+                  control={control}
+                  name="aboutMe"
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      style={styles.textArea}
+                      placeholder="Share a bit about yourself, your interests, and what you're looking for..."
+                      value={value}
+                      onChangeText={onChange}
+                      multiline
+                      numberOfLines={4}
+                      textAlignVertical="top"
+                    />
+                  )}
+                />
+                {errors.aboutMe && (
+                  <Text style={styles.errorText}>{errors.aboutMe.message}</Text>
+                )}
+              </View>
 
               {/* Phone Code Selection */}
               <Controller
@@ -1047,6 +1075,26 @@ const ProfileSetup: React.FC = () => {
 // ================================
 
 const styles = StyleSheet.create({
+  textAreaContainer: {
+    marginBottom: getResponsiveSpacing(24),
+  },
+  textAreaLabel: {
+    fontSize: getResponsiveFontSize(16),
+    fontFamily: 'semiBold',
+    color: COLORS.black,
+    marginBottom: getResponsiveSpacing(8),
+  },
+  textArea: {
+    borderWidth: 1,
+    borderColor: COLORS.greyscale500,
+    borderRadius: 12,
+    padding: getResponsiveSpacing(16),
+    minHeight: 120,
+    backgroundColor: COLORS.white,
+    fontSize: getResponsiveFontSize(16),
+    fontFamily: 'regular',
+    color: COLORS.black,
+  },
   container: {
     flex: 1,
     backgroundColor: COLORS.white,

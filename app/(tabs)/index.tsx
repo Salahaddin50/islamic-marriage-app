@@ -8,6 +8,122 @@ import { NavigationProp } from '@react-navigation/native';
 import { menbers } from '@/data';
 import { supabase } from '@/src/config/supabase';
 import { useProfilePicture } from '@/hooks/useProfilePicture';
+
+// Simple Header Avatar Component with Profile Picture Support
+const SimpleHeaderAvatar = ({ size, displayName, isLoading }: { size: number, displayName?: string, isLoading: boolean }) => {
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [imageLoadError, setImageLoadError] = useState(false);
+  
+  useEffect(() => {
+    const fetchProfileImage = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Check media_references first
+        const { data: mediaRef } = await supabase
+          .from('media_references')
+          .select('do_spaces_cdn_url, do_spaces_url, external_url')
+          .eq('user_id', user.id)
+          .eq('media_type', 'photo')
+          .eq('is_profile_picture', true)
+          .maybeSingle();
+
+        if (mediaRef) {
+          const imageUrl = mediaRef.do_spaces_cdn_url || mediaRef.do_spaces_url || mediaRef.external_url;
+          if (imageUrl) {
+            setProfileImageUrl(imageUrl);
+            return;
+          }
+        }
+
+        // Check user_profiles as fallback
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('profile_picture_url')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (profile?.profile_picture_url) {
+          setProfileImageUrl(profile.profile_picture_url);
+        }
+      } catch (error) {
+        console.log('Error fetching header profile image:', error);
+      }
+    };
+
+    fetchProfileImage();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <View style={[{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: COLORS.grayscale200,
+        justifyContent: 'center',
+        alignItems: 'center'
+      }]}>
+        <ActivityIndicator size="small" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  const initial = displayName ? displayName.charAt(0).toUpperCase() : 'U';
+  
+  // Show profile picture if available and not errored
+  if (profileImageUrl && !imageLoadError) {
+    return (
+      <View style={[{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        overflow: 'hidden',
+        backgroundColor: COLORS.grayscale200
+      }]}>
+        <Image
+          source={{ uri: profileImageUrl }}
+          style={{
+            width: size,
+            height: size,
+          }}
+          resizeMode="cover"
+          onError={() => {
+            console.log('Header profile image failed to load, showing initial');
+            setImageLoadError(true);
+          }}
+          onLoad={() => {
+            console.log('Header profile image loaded successfully');
+          }}
+        />
+      </View>
+    );
+  }
+  
+  // Fallback to initial
+  return (
+    <View style={[{
+      width: size,
+      height: size,
+      borderRadius: size / 2,
+      backgroundColor: COLORS.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      overflow: 'hidden'
+    }]}>
+      <Text style={{
+        fontSize: size * 0.4,
+        fontWeight: 'bold',
+        color: COLORS.white,
+        textAlign: 'center'
+      }}>
+        {initial}
+      </Text>
+    </View>
+  );
+};
+
 import SwipeCard from '@/components/SwipeCard';
 import SwipeCardFooter from '@/components/SwipeCardFooter';
 import RBSheet from "react-native-raw-bottom-sheet";
@@ -61,7 +177,7 @@ const HomeScreen = () => {
   const [formState, dispatchFormState] = useReducer(reducer, initialState);
   const [displayName, setDisplayName] = useState<string>('');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const { profilePicture, isLoading: profileLoading, hasCustomImage } = useProfilePicture(refreshTrigger);
+  const { isLoading: profileLoading } = useProfilePicture(refreshTrigger);
 
   const inputChangedHandler = useCallback(
     (inputId: string, inputValue: string) => {
@@ -189,23 +305,11 @@ const HomeScreen = () => {
       <View style={styles.headerContainer}>
         <View style={styles.viewLeft}>
           <TouchableOpacity onLongPress={refreshProfile}>
-            {profileLoading ? (
-              <View style={[styles.userIcon, styles.loadingIcon]}>
-                <ActivityIndicator size="small" color={COLORS.primary} />
-              </View>
-            ) : (
-              <View style={styles.userIconContainer}>
-                <Image
-                  source={profilePicture}
-                  resizeMode='cover'
-                  style={styles.userIcon}
-                  // Add key to force re-render when the image source changes
-                  key={`header-image-${hasCustomImage ? 'custom' : 'default'}-${Date.now()}`}
-                  onLoad={() => console.log('Header image loaded successfully')}
-                  onError={(error) => console.log('Header image load error:', error)}
-                />
-              </View>
-            )}
+            <SimpleHeaderAvatar 
+              size={50}
+              displayName={displayName}
+              isLoading={profileLoading}
+            />
           </TouchableOpacity>
           <View style={styles.viewNameContainer}>
             <Text style={styles.greeeting}>Salam Aleykoum 👋</Text>
@@ -389,16 +493,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center"
   },
-  userIconContainer: {
+  userIcon: {
     width: 48,
     height: 48,
-    borderRadius: 32,
-    overflow: 'hidden',
-    backgroundColor: COLORS.grayscale200,
-  },
-  userIcon: {
-    width: '100%',
-    height: '100%',
     borderRadius: 32
   },
   loadingIcon: {

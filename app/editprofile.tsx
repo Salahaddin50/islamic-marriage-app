@@ -1,11 +1,11 @@
-import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, ActivityIndicator, TextInput } from 'react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { COLORS, SIZES, FONTS, icons, images } from '../constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '../components/Header';
-import { MaterialCommunityIcons, Feather } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 
-import { launchImagePicker } from '../utils/ImagePickerHelper';
+
 import Input from '../components/Input';
 import { getFormatedDate } from "react-native-modern-datepicker";
 import DatePickerModal from '../components/DatePickerModal';
@@ -17,8 +17,124 @@ import { NavigationProp } from '@react-navigation/native';
 import ProfileService, { UserProfile, UpdateProfileData } from '../src/services/profile.service';
 import { phoneCodesData } from '../data/phoneCodes';
 import { useProfilePicture } from '../hooks/useProfilePicture';
+import { supabase } from '../src/config/supabase';
 import { getCountriesAsDropdownItems, getCitiesForCountry } from '../data/countries';
 import type { GenderType } from '../src/types/database.types';
+
+// Simple Edit Avatar Component with Profile Picture Support
+const SimpleEditAvatar = ({ size, displayName, isLoading }: { size: number, displayName?: string, isLoading: boolean }) => {
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [imageLoadError, setImageLoadError] = useState(false);
+  
+  useEffect(() => {
+    const fetchProfileImage = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Check media_references first
+        const { data: mediaRef } = await supabase
+          .from('media_references')
+          .select('do_spaces_cdn_url, do_spaces_url, external_url')
+          .eq('user_id', user.id)
+          .eq('media_type', 'photo')
+          .eq('is_profile_picture', true)
+          .maybeSingle();
+
+        if (mediaRef) {
+          const imageUrl = mediaRef.do_spaces_cdn_url || mediaRef.do_spaces_url || mediaRef.external_url;
+          if (imageUrl) {
+            setProfileImageUrl(imageUrl);
+            return;
+          }
+        }
+
+        // Check user_profiles as fallback
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('profile_picture_url')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (profile?.profile_picture_url) {
+          setProfileImageUrl(profile.profile_picture_url);
+        }
+      } catch (error) {
+        console.log('Error fetching edit profile image:', error);
+      }
+    };
+
+    fetchProfileImage();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <View style={[{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: COLORS.grayscale200,
+        justifyContent: 'center',
+        alignItems: 'center'
+      }]}>
+        <ActivityIndicator size="small" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  const initial = displayName ? displayName.charAt(0).toUpperCase() : 'U';
+  
+  // Show profile picture if available and not errored
+  if (profileImageUrl && !imageLoadError) {
+    return (
+      <View style={[{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        overflow: 'hidden',
+        backgroundColor: COLORS.grayscale200
+      }]}>
+        <Image
+          source={{ uri: profileImageUrl }}
+          style={{
+            width: size,
+            height: size,
+          }}
+          contentFit="cover"
+          onError={() => {
+            console.log('Edit profile image failed to load, showing initial');
+            setImageLoadError(true);
+          }}
+          onLoad={() => {
+            console.log('Edit profile image loaded successfully');
+          }}
+        />
+      </View>
+    );
+  }
+  
+  // Fallback to initial
+  return (
+    <View style={[{
+      width: size,
+      height: size,
+      borderRadius: size / 2,
+      backgroundColor: COLORS.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      overflow: 'hidden'
+    }]}>
+      <Text style={{
+        fontSize: size * 0.4,
+        fontWeight: 'bold',
+        color: COLORS.white,
+        textAlign: 'center'
+      }}>
+        {initial}
+      </Text>
+    </View>
+  );
+};
 
 // Edit Profile Screen
 const EditProfile = () => {
@@ -41,6 +157,7 @@ const EditProfile = () => {
   const [phoneCode, setPhoneCode] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [occupation, setOccupation] = useState('');
+  const [aboutMe, setAboutMe] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [selectedGender, setSelectedGender] = useState<GenderType | ''>('');
   const [selectedCountry, setSelectedCountry] = useState('');
@@ -75,6 +192,7 @@ const EditProfile = () => {
         setPhoneCode(userProfile.phone_code || '');
         setMobileNumber(userProfile.mobile_number || '');
         setOccupation(userProfile.occupation || '');
+        setAboutMe(userProfile.about_me || '');
         setSelectedGender(userProfile.gender || '');
         setSelectedCountry(userProfile.country || '');
         setSelectedCity(userProfile.city || '');
@@ -115,18 +233,7 @@ const EditProfile = () => {
     setOpenDatePicker(false);
   };
 
-  const pickImage = async () => {
-    try {
-      const tempUri = await launchImagePicker();
-      
-      if (!tempUri) return;
-      
-      setProfileImage({ uri: tempUri });
-    } catch (error) {
-      console.error('Image picker error:', error);
-      Alert.alert('Error', 'Failed to pick image');
-    }
-  };
+  // Removed pickImage function as it's no longer needed
 
   const validateForm = (): boolean => {
     if (!firstName.trim()) {
@@ -166,6 +273,7 @@ const EditProfile = () => {
         phone_code: phoneCode,
         mobile_number: mobileNumber.trim(),
         occupation: occupation.trim(),
+        about_me: aboutMe.trim(),
         gender: selectedGender as GenderType,
         country: selectedCountry,
         city: selectedCity,
@@ -240,31 +348,11 @@ const EditProfile = () => {
           {/* Profile Picture */}
           <View style={{ alignItems: "center", marginVertical: 12 }}>
             <View style={styles.avatarContainer}>
-              {profilePictureLoading ? (
-                <View style={[styles.avatar, styles.loadingAvatar]}>
-                  <ActivityIndicator size="small" color={COLORS.primary} />
-                </View>
-              ) : (
-                <Image
-                  source={profileImage || fetchedProfilePicture}
-                  contentFit="cover"
-                  style={styles.avatar}
-                  // Add key to force re-render when the image source changes
-                  key={`edit-profile-image-${hasCustomImage ? 'custom' : 'default'}-${profileImage ? 'selected' : 'fetched'}-${Date.now()}`}
-                  onLoad={() => console.log('Edit profile image loaded successfully')}
-                  onError={(error) => console.log('Edit profile image load error:', error)}
-                />
-              )}
-              <TouchableOpacity
-                onPress={pickImage}
-                style={styles.pickImage}
-              >
-                <MaterialCommunityIcons
-                  name="pencil-outline"
-                  size={24}
-                  color={COLORS.white} 
-                />
-              </TouchableOpacity>
+              <SimpleEditAvatar 
+                size={120}
+                displayName={firstName || 'User'}
+                isLoading={profilePictureLoading}
+              />
             </View>
           </View>
 
@@ -364,6 +452,20 @@ const EditProfile = () => {
               onInputChanged={(id, value) => setOccupation(value)}
               icon={icons.bag}
             />
+
+            {/* About Me */}
+            <View style={styles.textAreaContainer}>
+              <Text style={styles.textAreaLabel}>About Me</Text>
+              <TextInput
+                style={styles.textArea}
+                placeholder="Tell us about yourself..."
+                value={aboutMe}
+                onChangeText={setAboutMe}
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+              />
+            </View>
           </View>
         </ScrollView>
         
@@ -392,6 +494,26 @@ const EditProfile = () => {
 };
 
 const styles = StyleSheet.create({
+  textAreaContainer: {
+    marginBottom: 16,
+  },
+  textAreaLabel: {
+    fontSize: 16,
+    fontFamily: 'regular',
+    color: COLORS.black,
+    marginBottom: 8,
+  },
+  textArea: {
+    borderWidth: 1,
+    borderColor: COLORS.greyscale500,
+    backgroundColor: COLORS.greyscale500,
+    borderRadius: 12,
+    padding: 16,
+    minHeight: 120,
+    fontSize: 16,
+    fontFamily: 'regular',
+    color: COLORS.black,
+  },
   area: {
     flex: 1,
     backgroundColor: COLORS.white
@@ -425,12 +547,10 @@ const styles = StyleSheet.create({
     width: 130,
     height: 130,
     borderRadius: 65,
-    overflow: 'hidden',
-    backgroundColor: COLORS.grayscale200,
   },
   avatar: {
-    height: '100%',
-    width: '100%',
+    height: 130,
+    width: 130,
     borderRadius: 65,
   },
   loadingAvatar: {
@@ -438,17 +558,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: COLORS.grayscale200,
   },
-  pickImage: {
-    height: 42,
-    width: 42,
-    borderRadius: 21,
-    backgroundColor: COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-  },
+  // Removed pickImage styles
   formContainer: {
     marginBottom: 100, // Space for button
   },

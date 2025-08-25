@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, ActivityIndicator, TextInput } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { COLORS, SIZES, FONTS, icons } from '../constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,6 +21,9 @@ const PersonalDetailsScreen = () => {
   
   // Profile data
   const [personalDetails, setPersonalDetails] = useState<PersonalDetails | null>(null);
+  
+  // About Me
+  const [aboutMe, setAboutMe] = useState('');
   
   // Physical Details
   const [height, setHeight] = useState('');
@@ -120,6 +123,7 @@ const PersonalDetailsScreen = () => {
         setPersonalDetails(details);
         
         // Populate form fields with existing data
+        setAboutMe(details.about_me || '');
         setHeight(details.height_cm?.toString() || '');
         setWeight(details.weight_kg?.toString() || '');
         setEyeColor(details.eye_color || '');
@@ -173,6 +177,9 @@ const PersonalDetailsScreen = () => {
       
       // Prepare update data
       const updateData: UpdatePersonalDetailsData = {
+        // About Me
+        about_me: aboutMe.trim(),
+        
         // Physical Details
         height_cm: height ? parseInt(height) : undefined,
         weight_kg: weight ? parseInt(weight) : undefined,
@@ -358,6 +365,24 @@ const PersonalDetailsScreen = () => {
         )}
         
         <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollContainer}>
+          {/* About Me Section */}
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>About Me</Text>
+            <Text style={styles.sectionSubtitle}>Tell others about yourself</Text>
+            
+            <View style={styles.textAreaContainer}>
+              <TextInput
+                style={styles.textArea}
+                placeholder="Share a bit about yourself, your interests, and what you're looking for..."
+                value={aboutMe}
+                onChangeText={setAboutMe}
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+              />
+            </View>
+          </View>
+
           {/* Physical Details Section */}
           <View style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>Physical Details</Text>
@@ -588,6 +613,21 @@ const PersonalDetailsScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  textAreaContainer: {
+    marginBottom: getResponsiveSpacing(20),
+  },
+  textArea: {
+    borderWidth: 1,
+    borderColor: COLORS.greyscale500,
+    backgroundColor: COLORS.greyscale500,
+    borderRadius: 12,
+    padding: getResponsiveSpacing(16),
+    minHeight: 120,
+    fontSize: getResponsiveFontSize(16),
+    fontFamily: 'regular',
+    color: COLORS.black,
+    textAlignVertical: 'top',
+  },
   area: {
     flex: 1,
     backgroundColor: COLORS.white

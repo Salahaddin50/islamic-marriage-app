@@ -26,10 +26,22 @@ LogBox.ignoreAllLogs();
 if (Platform.OS === 'web') {
   const originalWarn = console.warn;
   console.warn = (...args) => {
-    if (args[0]?.includes?.('"shadow*" style props are deprecated')) return;
-    if (args[0]?.includes?.('style.tintColor is deprecated')) return;
-    if (args[0]?.includes?.('props.pointerEvents is deprecated')) return;
+    const message = args[0]?.toString?.() || '';
+    if (message.includes('"shadow*" style props are deprecated')) return;
+    if (message.includes('"textShadow*" style props are deprecated')) return;
+    if (message.includes('style.tintColor is deprecated')) return;
+    if (message.includes('props.pointerEvents is deprecated')) return;
+    if (message.includes('TouchableWithoutFeedback is deprecated')) return;
     originalWarn(...args);
+  };
+  
+  // Also suppress the preload href errors
+  const originalError = console.error;
+  console.error = (...args) => {
+    const message = args[0]?.toString?.() || '';
+    if (message.includes('has an invalid `href` value')) return;
+    if (message.includes('<link rel=preload>')) return;
+    originalError(...args);
   };
 }
 
