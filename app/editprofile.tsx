@@ -16,6 +16,7 @@ import { useNavigation, router } from 'expo-router';
 import { NavigationProp } from '@react-navigation/native';
 import ProfileService, { UserProfile, UpdateProfileData } from '../src/services/profile.service';
 import { phoneCodesData } from '../data/phoneCodes';
+import { useProfilePicture } from '../hooks/useProfilePicture';
 import { getCountriesAsDropdownItems, getCitiesForCountry } from '../data/countries';
 import type { GenderType } from '../src/types/database.types';
 
@@ -31,6 +32,8 @@ const EditProfile = () => {
   // Profile data
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileImage, setProfileImage] = useState<any>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const { profilePicture: fetchedProfilePicture, isLoading: profilePictureLoading, hasCustomImage } = useProfilePicture(refreshTrigger);
   
   // Form fields
   const [firstName, setFirstName] = useState('');
@@ -237,11 +240,21 @@ const EditProfile = () => {
           {/* Profile Picture */}
           <View style={{ alignItems: "center", marginVertical: 12 }}>
             <View style={styles.avatarContainer}>
-              <Image
-                source={profileImage || (profile?.profile_picture_url ? { uri: profile.profile_picture_url } : images.user1)}
-                contentFit="cover"
-                style={styles.avatar} 
-              />
+              {profilePictureLoading ? (
+                <View style={[styles.avatar, styles.loadingAvatar]}>
+                  <ActivityIndicator size="small" color={COLORS.primary} />
+                </View>
+              ) : (
+                <Image
+                  source={profileImage || fetchedProfilePicture}
+                  contentFit="cover"
+                  style={styles.avatar}
+                  // Add key to force re-render when the image source changes
+                  key={`edit-profile-image-${hasCustomImage ? 'custom' : 'default'}-${profileImage ? 'selected' : 'fetched'}-${Date.now()}`}
+                  onLoad={() => console.log('Edit profile image loaded successfully')}
+                  onError={(error) => console.log('Edit profile image load error:', error)}
+                />
+              )}
               <TouchableOpacity
                 onPress={pickImage}
                 style={styles.pickImage}
@@ -412,11 +425,18 @@ const styles = StyleSheet.create({
     width: 130,
     height: 130,
     borderRadius: 65,
+    overflow: 'hidden',
+    backgroundColor: COLORS.grayscale200,
   },
   avatar: {
-    height: 130,
-    width: 130,
+    height: '100%',
+    width: '100%',
     borderRadius: 65,
+  },
+  loadingAvatar: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.grayscale200,
   },
   pickImage: {
     height: 42,

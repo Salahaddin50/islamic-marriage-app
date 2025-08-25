@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, Animated, PanResponder } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Animated, PanResponder, ActivityIndicator } from 'react-native';
 import React, { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, icons, images, SIZES } from '@/constants';
@@ -60,7 +60,8 @@ const HomeScreen = () => {
   const [ageRange, setAgeRange] = useState([20, 50]); // Initial age range values
   const [formState, dispatchFormState] = useReducer(reducer, initialState);
   const [displayName, setDisplayName] = useState<string>('');
-  const profilePicture = useProfilePicture();
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const { profilePicture, isLoading: profileLoading, hasCustomImage } = useProfilePicture(refreshTrigger);
 
   const inputChangedHandler = useCallback(
     (inputId: string, inputValue: string) => {
@@ -179,14 +180,33 @@ const HomeScreen = () => {
  * render header
  */
   const renderHeader = () => {
+    // Function to refresh profile data
+    const refreshProfile = () => {
+      setRefreshTrigger(prev => prev + 1);
+    };
+    
     return (
       <View style={styles.headerContainer}>
         <View style={styles.viewLeft}>
-          <Image
-            source={profilePicture}
-            resizeMode='contain'
-            style={styles.userIcon}
-          />
+          <TouchableOpacity onLongPress={refreshProfile}>
+            {profileLoading ? (
+              <View style={[styles.userIcon, styles.loadingIcon]}>
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              </View>
+            ) : (
+              <View style={styles.userIconContainer}>
+                <Image
+                  source={profilePicture}
+                  resizeMode='cover'
+                  style={styles.userIcon}
+                  // Add key to force re-render when the image source changes
+                  key={`header-image-${hasCustomImage ? 'custom' : 'default'}-${Date.now()}`}
+                  onLoad={() => console.log('Header image loaded successfully')}
+                  onError={(error) => console.log('Header image load error:', error)}
+                />
+              </View>
+            )}
+          </TouchableOpacity>
           <View style={styles.viewNameContainer}>
             <Text style={styles.greeeting}>Salam Aleykoum 👋</Text>
             <Text style={[styles.title, {
@@ -369,10 +389,22 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center"
   },
-  userIcon: {
+  userIconContainer: {
     width: 48,
     height: 48,
+    borderRadius: 32,
+    overflow: 'hidden',
+    backgroundColor: COLORS.grayscale200,
+  },
+  userIcon: {
+    width: '100%',
+    height: '100%',
     borderRadius: 32
+  },
+  loadingIcon: {
+    backgroundColor: COLORS.grayscale200,
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   viewLeft: {
     flexDirection: "row",

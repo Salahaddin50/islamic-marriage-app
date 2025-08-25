@@ -194,8 +194,8 @@ export class PhotosVideosService {
       const { error: updateError } = await supabase
         .from('media_references')
         .update({ 
-          is_profile_picture: true,
-          updated_at: new Date().toISOString()
+          is_profile_picture: true
+          // Removed updated_at field as it might not exist in the table
         })
         .eq('id', photoId)
         .eq('user_id', user.id)
@@ -219,8 +219,8 @@ export class PhotosVideosService {
         await supabase
           .from('user_profiles')
           .update({ 
-            profile_picture_url: mediaRef.external_url,
-            updated_at: new Date().toISOString()
+            profile_picture_url: mediaRef.external_url
+            // Removed updated_at field as it might not exist in the table
           })
           .eq('user_id', user.id);
       }

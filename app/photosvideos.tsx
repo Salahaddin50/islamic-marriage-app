@@ -291,8 +291,36 @@ const PhotosVideos = () => {
       {/* Set as Main Button */}
       <TouchableOpacity
         style={styles.avatarButton}
-        onPress={() => setAsAvatar(item.id)}
-        activeOpacity={0.7}
+        onPress={() => {
+          console.log('Main button pressed directly with ID:', item.id);
+          // For direct testing, bypass the confirmation dialog
+          try {
+            setLoading(true);
+            console.log(`Directly setting photo with ID: ${item.id} as avatar`);
+            PhotosVideosAPI.setProfilePicture(item.id)
+              .then(result => {
+                console.log('Set avatar direct result:', result);
+                if (result.success) {
+                  loadMediaItems().then(() => {
+                    Alert.alert('Success', 'Photo set as profile avatar!');
+                  });
+                } else {
+                  Alert.alert('Error', result.error || 'Failed to set avatar');
+                }
+              })
+              .catch(err => {
+                console.error('Direct set avatar error:', err);
+                Alert.alert('Error', 'Failed to set profile avatar');
+              })
+              .finally(() => {
+                setLoading(false);
+              });
+          } catch (error) {
+            console.error('Main button click error:', error);
+            setLoading(false);
+          }
+        }}
+        activeOpacity={0.5}
       >
         <Text style={styles.buttonText}>Main</Text>
       </TouchableOpacity>

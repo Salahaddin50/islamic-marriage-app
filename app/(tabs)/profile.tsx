@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Switch, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Switch, Platform, ActivityIndicator } from 'react-native';
 import React, { useState, useRef, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView } from 'react-native-virtualized-view';
@@ -50,18 +50,30 @@ const Profile = () => {
   /**
    * Render user profile
    */
-  const profilePicture = useProfilePicture();
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const { profilePicture, isLoading: profileLoading, hasCustomImage } = useProfilePicture(refreshTrigger);
   
   const renderProfile = () => {
     const [displayName, setDisplayName] = useState<string>('');
     const [email, setEmail] = useState<string>('');
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+
+    // Function to refresh profile data
+    const refreshProfile = () => {
+      setRefreshTrigger(prev => prev + 1);
+    };
 
     useEffect(() => {
       (async () => {
+        setIsLoading(true);
         try {
           const { data: { user } } = await supabase.auth.getUser();
-          if (!user) return;
+          if (!user) {
+            setIsLoading(false);
+            return;
+          }
           setEmail(user.email || '');
+          
           // Try to get user profile data, handling the case where the table or column might not exist
           try {
             const { data: profile, error } = await supabase
@@ -74,15 +86,13 @@ const Profile = () => {
               console.log('Error fetching profile in profile.tsx:', error);
             }
           
-          // Profile picture is handled by useProfilePicture hook
-          
-          // Set display name
-          if (profile?.first_name || profile?.last_name) {
-            const name = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ');
-            setDisplayName(name);
-          } else if (user.email) {
-            setDisplayName(user.email.split('@')[0]);
-          }
+            // Set display name
+            if (profile?.first_name || profile?.last_name) {
+              const name = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ');
+              setDisplayName(name);
+            } else if (user.email) {
+              setDisplayName(user.email.split('@')[0]);
+            }
           } catch (profileError) {
             console.log('Error in profile data fetch:', profileError);
             // Fallback to email username if profile fetch fails
@@ -91,20 +101,36 @@ const Profile = () => {
             }
           }
         } catch (e) {
-          // ignore
+          console.log('Error fetching user:', e);
+        } finally {
+          setIsLoading(false);
         }
       })();
-    }, []);
+    }, [refreshTrigger]); // Also refresh when refreshTrigger changes
 
-    // Removed pickImage function as it's no longer needed
     return (
       <View style={styles.profileContainer}>
-        <TouchableOpacity onPress={() => navigate("photosvideos")}>
-          <Image
-            source={profilePicture}
-            contentFit='cover'
-            style={styles.avatar}
-          />
+        <TouchableOpacity 
+          onPress={() => navigate("photosvideos")}
+          onLongPress={refreshProfile} // Allow manual refresh with long press
+        >
+          {profileLoading || isLoading ? (
+            <View style={[styles.avatar, styles.loadingAvatar]}>
+              <ActivityIndicator size="small" color={COLORS.primary} />
+            </View>
+          ) : (
+            <View style={styles.avatarContainer}>
+              <Image
+                source={profilePicture}
+                contentFit='cover'
+                style={styles.avatar}
+                onLoad={() => console.log('Profile image loaded successfully')}
+                onError={(error) => console.log('Profile image load error:', error)}
+                // Add key to force re-render when the image source changes
+                key={`profile-image-${hasCustomImage ? 'custom' : 'default'}-${Date.now()}`}
+              />
+            </View>
+          )}
         </TouchableOpacity>
         <Text style={[styles.title, { color: COLORS.greyscale900 }]}>{displayName || 'Profile'}</Text>
         <Text style={[styles.subtitle, { color: COLORS.greyscale900 }]}>{email}</Text>
@@ -366,10 +392,22 @@ const styles = StyleSheet.create({
     borderBottomWidth: .4,
     paddingVertical: getResponsiveSpacing(20)
   },
-  avatar: {
+  avatarContainer: {
     width: isMobileWeb() ? 100 : 120,
     height: isMobileWeb() ? 100 : 120,
+    borderRadius: 999,
+    overflow: 'hidden',
+    backgroundColor: COLORS.grayscale200,
+  },
+  avatar: {
+    width: '100%',
+    height: '100%',
     borderRadius: 999
+  },
+  loadingAvatar: {
+    backgroundColor: COLORS.grayscale200,
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   picContainer: {
     width: 28,

@@ -311,22 +311,53 @@ export class MediaIntegrationService {
     try {
       console.log(`Setting photo ${photoId} as profile picture for user ${userId}`);
       
+      // Verify the photo exists and belongs to the user
+      const { data: photoCheck, error: checkError } = await supabase
+        .from('media_references')
+        .select('*')
+        .eq('id', photoId)
+        .eq('user_id', userId)
+        .eq('media_type', 'photo')
+        .maybeSingle();
+        
+      if (checkError) {
+        console.error('Error checking photo existence:', checkError);
+        return {
+          success: false,
+          error: `Photo check error: ${checkError.message}`
+        };
+      }
+      
+      if (!photoCheck) {
+        console.error('Photo not found or does not belong to user');
+        return {
+          success: false,
+          error: 'Photo not found or access denied'
+        };
+      }
+      
+      console.log('Found photo to set as profile picture:', photoCheck);
+      
       // 1. Clear current profile picture
       await this.clearCurrentProfilePicture(userId);
       console.log('Cleared current profile picture');
 
       // 2. Set new profile picture
-      const { data: updatedPhoto, error: updateError } = await supabase
+      console.log('Setting is_profile_picture=true for photo:', photoId);
+      const updateResponse = await supabase
         .from('media_references')
         .update({
-          is_profile_picture: true,
-          updated_at: new Date().toISOString()
+          is_profile_picture: true
+          // Removed updated_at field as it doesn't exist in the table
         })
         .eq('id', photoId)
         .eq('user_id', userId)
         .eq('media_type', 'photo')
         .select()
         .single();
+        
+      const { data: updatedPhoto, error: updateError } = updateResponse;
+      console.log('Update response:', updateResponse);
 
       if (updateError) {
         console.error('Error updating media_references:', updateError);
@@ -354,8 +385,8 @@ export class MediaIntegrationService {
       const { error: profileUpdateError } = await supabase
         .from('user_profiles')
         .update({
-          profile_picture_url: profilePictureUrl,
-          updated_at: new Date().toISOString()
+          profile_picture_url: profilePictureUrl
+          // Removed updated_at field as it might not exist in all versions of the table
         })
         .eq('user_id', userId);
         
@@ -469,12 +500,25 @@ export class MediaIntegrationService {
   // Private helper methods
 
   private static async clearCurrentProfilePicture(userId: string): Promise<void> {
-    await supabase
-      .from('media_references')
-      .update({ is_profile_picture: false })
-      .eq('user_id', userId)
-      .eq('media_type', 'photo')
-      .eq('is_profile_picture', true);
+    console.log('Clearing current profile picture for user:', userId);
+    try {
+      const response = await supabase
+        .from('media_references')
+        .update({ is_profile_picture: false })
+        .eq('user_id', userId)
+        .eq('media_type', 'photo')
+        .eq('is_profile_picture', true);
+        
+      console.log('Clear profile picture response:', response);
+      
+      if (response.error) {
+        console.error('Error clearing current profile picture:', response.error);
+      } else {
+        console.log('Successfully cleared current profile picture');
+      }
+    } catch (err) {
+      console.error('Exception in clearCurrentProfilePicture:', err);
+    }
   }
 
   private static async getNextMediaOrder(
