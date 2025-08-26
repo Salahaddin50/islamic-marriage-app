@@ -191,6 +191,7 @@ const initialState = {
 
 type UserProfileWithMedia = {
   id: string;
+  user_id: string; // Add user_id for navigation
   name: string;
   age: number;
   // presentation fields per latest request
@@ -287,6 +288,7 @@ const HomeScreen = () => {
   const [selectedCoveringLevel, setSelectedCoveringLevel] = useState<string[]>([]);
   const [selectedBeardPractice, setSelectedBeardPractice] = useState<string[]>([]);
   const [selectedAcceptedWifePositions, setSelectedAcceptedWifePositions] = useState<string[]>([]);
+  const [selectedSeekingWifeNumber, setSelectedSeekingWifeNumber] = useState<string[]>([]);
   const [displayName, setDisplayName] = useState<string>('');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [oppositeGender, setOppositeGender] = useState<string | null>(null);
@@ -388,6 +390,7 @@ const HomeScreen = () => {
       selectedCoveringLevel,
       selectedBeardPractice,
       selectedAcceptedWifePositions,
+      selectedSeekingWifeNumber,
     };
     
     cachedFilters = filters;
@@ -444,6 +447,7 @@ const HomeScreen = () => {
     setSelectedCoveringLevel(filters.selectedCoveringLevel || []);
     setSelectedBeardPractice(filters.selectedBeardPractice || []);
     setSelectedAcceptedWifePositions(filters.selectedAcceptedWifePositions || []);
+    setSelectedSeekingWifeNumber(filters.selectedSeekingWifeNumber || []);
   };
 
   const getActiveFiltersCount = (): number => {
@@ -479,6 +483,7 @@ const HomeScreen = () => {
     if (selectedCoveringLevel.length > 0) count++;
     if (selectedBeardPractice.length > 0) count++;
     if (selectedAcceptedWifePositions.length > 0) count++;
+    if (selectedSeekingWifeNumber.length > 0) count++;
     
     return count;
   };
@@ -507,6 +512,7 @@ const HomeScreen = () => {
     setSelectedCoveringLevel([]);
     setSelectedBeardPractice([]);
     setSelectedAcceptedWifePositions([]);
+    setSelectedSeekingWifeNumber([]);
     // Clear cached filters
     cachedFilters = null;
     
@@ -556,7 +562,8 @@ const HomeScreen = () => {
           city,
           country,
           gender,
-          profile_picture_url
+          profile_picture_url,
+          islamic_questionnaire
         `)
         .limit(50);
 
@@ -623,23 +630,31 @@ const HomeScreen = () => {
         query = query.in('work_status', selectedWorkStatus);
       }
 
-      // Apply religious filters
+      // Apply religious filters (from islamic_questionnaire JSON)
       if (shouldApplyFilters && selectedReligiousLevel.length) {
-        query = query.in('religious_level', selectedReligiousLevel);
+        console.log('🔍 Filtering by religious_level:', selectedReligiousLevel);
+        query = query.filter('islamic_questionnaire->>religious_level', 'in', `(${selectedReligiousLevel.join(',')})`);
       }
       if (shouldApplyFilters && selectedPrayerFrequency.length) {
-        query = query.in('prayer_frequency', selectedPrayerFrequency);
+        console.log('🔍 Filtering by prayer_frequency:', selectedPrayerFrequency);
+        query = query.filter('islamic_questionnaire->>prayer_frequency', 'in', `(${selectedPrayerFrequency.join(',')})`);
       }
       if (shouldApplyFilters && selectedQuranReading.length) {
-        query = query.in('quran_reading_level', selectedQuranReading);
+        console.log('🔍 Filtering by quran_reading_level:', selectedQuranReading);
+        query = query.filter('islamic_questionnaire->>quran_reading_level', 'in', `(${selectedQuranReading.join(',')})`);
       }
       // Apply gender-specific filters
       if (oppositeGender === 'female') {
         if (shouldApplyFilters && selectedCoveringLevel.length) {
-          query = query.in('covering_level', selectedCoveringLevel);
+          console.log('🔍 Filtering by covering_level:', selectedCoveringLevel);
+          query = query.filter('islamic_questionnaire->>covering_level', 'in', `(${selectedCoveringLevel.join(',')})`);
         }
         if (shouldApplyFilters && selectedAcceptedWifePositions.length) {
-          query = query.contains('accepted_wife_positions', selectedAcceptedWifePositions);
+          console.log('🔍 Filtering by accepted_wife_positions:', selectedAcceptedWifePositions);
+          // For arrays, we need to check if the JSON array contains any of the selected values
+          selectedAcceptedWifePositions.forEach(position => {
+            query = query.filter('islamic_questionnaire->accepted_wife_positions', 'cs', `["${position}"]`);
+          });
         }
         if (shouldApplyFilters && selectedWorkStatus.length) {
           query = query.in('work_status', selectedWorkStatus);
@@ -647,7 +662,12 @@ const HomeScreen = () => {
       }
       if (oppositeGender === 'male') {
         if (shouldApplyFilters && selectedBeardPractice.length) {
-          query = query.in('beard_practice', selectedBeardPractice);
+          console.log('🔍 Filtering by beard_practice:', selectedBeardPractice);
+          query = query.filter('islamic_questionnaire->>beard_practice', 'in', `(${selectedBeardPractice.join(',')})`);
+        }
+        if (shouldApplyFilters && selectedSeekingWifeNumber.length) {
+          console.log('🔍 Filtering by seeking_wife_number:', selectedSeekingWifeNumber);
+          query = query.filter('islamic_questionnaire->>seeking_wife_number', 'in', `(${selectedSeekingWifeNumber.join(',')})`);
         }
         if (shouldApplyFilters && selectedSocialCondition.length) {
           query = query.in('social_condition', selectedSocialCondition);
@@ -662,12 +682,25 @@ const HomeScreen = () => {
       const { data: profilesData, error } = await query;
 
       if (error) {
+        console.error('❌ Query Error:', error);
         // Show no results on error
         setUsers([]);
         cachedUsers = [];
         cachedAt = Date.now();
         return;
       }
+
+      console.log('🔍 Query Results:', {
+        totalProfiles: profilesData?.length || 0,
+        sampleProfile: profilesData?.[0]?.islamic_questionnaire,
+        appliedFilters: {
+          selectedReligiousLevel,
+          selectedSeekingWifeNumber,
+          selectedAcceptedWifePositions,
+          selectedBeardPractice,
+          selectedCoveringLevel
+        }
+      });
 
       // Build a fallback map of profile picture URLs from media_references for users
       // who don't have profile_picture_url set in user_profiles
@@ -721,6 +754,7 @@ const HomeScreen = () => {
 
           const processedProfile = {
             id: profile.id,
+            user_id: profile.user_id, // Add user_id for navigation
             name: `${profile.first_name}`.trim(),
             age: age,
             height: profile.height_cm ? `${profile.height_cm}cm` : undefined,
@@ -895,7 +929,7 @@ const HomeScreen = () => {
         weight={item.weight}
         country={item.country}
         city={item.city}
-        onPress={() => navigation.navigate("matchdetails")}
+        onPress={() => navigation.navigate("matchdetails", { userId: item.user_id })}
         containerStyle={[styles.cardContainer, { width: cardWidth, height: baseHeight }]}
       />
     );
@@ -1285,18 +1319,39 @@ const HomeScreen = () => {
                 </>
               )}
 
-              {/* Accepted Wife Positions (for females) */}
-              <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Accept To Be Which Wife</Text>
-              <View style={styles.horizontalMultiSelect}>
-                {acceptedWifeOptions.map((option: string) => {
-                  const selected = selectedAcceptedWifePositions.includes(option);
-                  return (
-                    <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedAcceptedWifePositions, setSelectedAcceptedWifePositions)}>
-                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
+              {/* Male Seeking Wife Preferences (show when filtering male profiles) */}
+              {oppositeGender === 'male' && (
+                <>
+                  <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Looking For Which Wife</Text>
+                  <View style={styles.horizontalMultiSelect}>
+                    {acceptedWifeOptions.map((option: string) => {
+                      const selected = selectedSeekingWifeNumber.includes(option);
+                      return (
+                        <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedSeekingWifeNumber, setSelectedSeekingWifeNumber)}>
+                          <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </>
+              )}
+
+              {/* Female Accepted Wife Positions (show when filtering female profiles) */}
+              {oppositeGender === 'female' && (
+                <>
+                  <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Accept To Be Which Wife</Text>
+                  <View style={styles.horizontalMultiSelect}>
+                    {acceptedWifeOptions.map((option: string) => {
+                      const selected = selectedAcceptedWifePositions.includes(option);
+                      return (
+                        <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedAcceptedWifePositions, setSelectedAcceptedWifePositions)}>
+                          <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </>
+              )}
 
             </View>
             </ScrollView>
@@ -1716,18 +1771,39 @@ const HomeScreen = () => {
               </>
             )}
 
-            {/* Accepted Wife Positions (for females) */}
-            <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Accept To Be Which Wife</Text>
-            <View style={styles.horizontalMultiSelect}>
-              {acceptedWifeOptions.map((option: string) => {
-                const selected = selectedAcceptedWifePositions.includes(option);
-                return (
-                  <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedAcceptedWifePositions, setSelectedAcceptedWifePositions)}>
-                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+            {/* Male Seeking Wife Preferences (show when filtering male profiles) */}
+            {oppositeGender === 'male' && (
+              <>
+                <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Looking For Which Wife</Text>
+                <View style={styles.horizontalMultiSelect}>
+                  {acceptedWifeOptions.map((option: string) => {
+                    const selected = selectedSeekingWifeNumber.includes(option);
+                    return (
+                      <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedSeekingWifeNumber, setSelectedSeekingWifeNumber)}>
+                        <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </>
+            )}
+
+            {/* Female Accepted Wife Positions (show when filtering female profiles) */}
+            {oppositeGender === 'female' && (
+              <>
+                <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Accept To Be Which Wife</Text>
+                <View style={styles.horizontalMultiSelect}>
+                  {acceptedWifeOptions.map((option: string) => {
+                    const selected = selectedAcceptedWifePositions.includes(option);
+                    return (
+                      <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedAcceptedWifePositions, setSelectedAcceptedWifePositions)}>
+                        <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </>
+            )}
 
           </View>
           </ScrollView>

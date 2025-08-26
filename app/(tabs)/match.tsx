@@ -63,7 +63,7 @@ const Match = () => {
               age={item.age}
               image={item.image}
               position={item.position}
-              onPress={() => navigation.navigate("matchdetails")}
+              onPress={() => navigation.navigate("matchdetails", { userId: item.user_id || item.id })}
             />
           )}
         />

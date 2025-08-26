@@ -37,7 +37,7 @@ const NewMatch = () => {
                   width: (SIZES.width - 48) / 2,
                   height: 272,
                 }}
-                onPress={() => navigation.navigate("matchdetails")}
+                onPress={() => navigation.navigate("matchdetails", { userId: item.user_id || item.id })}
               />
             )}
           />
