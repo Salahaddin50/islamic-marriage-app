@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.white,
-    padding: getResponsiveSpacing(16),
+    paddingVertical: getResponsiveSpacing(16),
   },
   scrollContent: {
     paddingBottom: getResponsiveSpacing(100), // Extra space for tab bar
@@ -469,7 +469,8 @@ const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between"
+    justifyContent: "space-between",
+    paddingHorizontal: getResponsiveSpacing(16),
   },
   headerLeft: {
     flexDirection: "row",
@@ -495,7 +496,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderBottomColor: COLORS.grayscale400,
     borderBottomWidth: .4,
-    paddingVertical: getResponsiveSpacing(20)
+    paddingVertical: getResponsiveSpacing(20),
+    paddingHorizontal: getResponsiveSpacing(16),
   },
 
   picContainer: {
@@ -530,10 +532,11 @@ const styles = StyleSheet.create({
     marginTop: getResponsiveSpacing(4)
   },
   settingsContainer: {
-    marginVertical: 12
+    marginVertical: 12,
+    paddingHorizontal: getResponsiveSpacing(16),
   },
   settingsItemContainer: {
-    width: SIZES.width - 32,
+    width: '100%',
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",

@@ -1,4 +1,5 @@
 // Use direct require for proper asset bundling by Metro/Expo
+
 export default {
     ornament: require("../assets/images/ornament.png"),
     logo: require("../assets/images/logo.png"),
@@ -37,5 +38,8 @@ export default {
     face: require("../assets/images/face.png"),
     scanCard: require("../assets/images/scan_card.png"),
     matchCover: require("../assets/images/match_cover.png"),
-    videoThumbnail: require("../assets/images/video-thumbnail.svg")
+    videoThumbnail: require("../assets/images/video-thumbnail.svg"),
+    // Gender fallback silhouettes
+    femaleSilhouette: require("../assets/images/female_silhouette.jpg"),
+    maleSilhouette: require("../assets/images/male_silhouette.png")
 };

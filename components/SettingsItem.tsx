@@ -45,7 +45,7 @@ const SettingsItem: React.FC<SettingsItemProps> = ({ icon, name, onPress, hasArr
 
 const styles = StyleSheet.create({
     container: {
-        width: SIZES.width - 32,
+        width: '100%',
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",

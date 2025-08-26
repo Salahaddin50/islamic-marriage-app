@@ -372,7 +372,8 @@ export const menbers = [
         location: "Portland illinois",
         distance: 5,
         age: 23,
-        image: images.menber1
+        image: images.menber1,
+        height: "5'8\"",
     }, 
     {
         id: 2,
@@ -380,7 +381,8 @@ export const menbers = [
         location: "Portland illinois",
         distance: 8,
         age: 24,
-        image: images.menber2
+        image: images.menber2,
+        height: "6'1\"",
     },
     {
         id: 3,
@@ -388,7 +390,8 @@ export const menbers = [
         location: "Portland illinois",
         distance: 18,
         age: 24,
-        image: images.menber3
+        image: images.menber3,
+        height: "5'6\"",
     },
     {
         id: 4,
@@ -396,7 +399,8 @@ export const menbers = [
         location: "Portland illinois",
         distance: 9,
         age: 24,
-        image: images.menber4
+        image: images.menber4,
+        height: "5'9\"",
     },
     {
         id: 5,
@@ -404,7 +408,8 @@ export const menbers = [
         location: "Portland illinois",
         distance: 29,
         age: 24,
-        image: images.menber5
+        image: images.menber5,
+        height: "5'7\"",
     },
     {
         id: 6,
@@ -412,7 +417,8 @@ export const menbers = [
         location: "Portland illinois",
         distance: 21,
         age: 24,
-        image: images.menber6
+        image: images.menber6,
+        height: "5'10\"",
     },
     {
         id: 7,
@@ -420,7 +426,8 @@ export const menbers = [
         location: "Portland illinois",
         distance: 10,
         age: 24,
-        image: images.menber7
+        image: images.menber7,
+        height: "5'5\"",
     },
     {
         id: 8,
@@ -428,7 +435,8 @@ export const menbers = [
         location: "Portland illinois",
         distance: 15,
         age: 24,
-        image: images.menber8
+        image: images.menber8,
+        height: "6'0\"",
     }
 ]
 
