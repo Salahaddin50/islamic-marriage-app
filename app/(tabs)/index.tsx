@@ -10,6 +10,7 @@ import { supabase } from '@/src/config/supabase';
 import { useProfilePicture } from '@/hooks/useProfilePicture';
 import MatchCard from '@/components/MatchCard';
 import { Database } from '@/src/types/database.types';
+import * as SecureStore from 'expo-secure-store';
 import { useMatchStore } from '@/src/store';
 
 // Simple Header Avatar Component with Profile Picture Support
@@ -197,6 +198,10 @@ let cachedUsers: UserProfileWithMedia[] | null = null;
 let cachedAt = 0;
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
+// Cache for filter states to survive page refresh and auth redirects
+let cachedFilters: any = null;
+const FILTERS_CACHE_KEY = 'hume_filters_cache';
+
 const HomeScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
   const [users, setUsers] = useState<UserProfileWithMedia[]>([]);
@@ -309,6 +314,89 @@ const HomeScreen = () => {
     return value; // Values are already properly formatted
   };
 
+  // Save current filter state to cache
+  const saveFiltersToCache = async () => {
+    const filters = {
+      ageRange,
+      selectedCountry,
+      selectedCity,
+      availableCities,
+      heightRange,
+      weightRange,
+      selectedEyeColor,
+      selectedHairColor,
+      selectedSkinTone,
+      selectedBodyType,
+      selectedEducation,
+      selectedLanguages,
+      selectedHousingType,
+      selectedLivingCondition,
+      selectedSocialCondition,
+      selectedWorkStatus,
+      selectedReligiousLevel,
+      selectedPrayerFrequency,
+      selectedQuranReading,
+      selectedCoveringLevel,
+      selectedBeardPractice,
+      selectedAcceptedWifePositions,
+    };
+    
+    cachedFilters = filters;
+    
+    try {
+      await SecureStore.setItemAsync(FILTERS_CACHE_KEY, JSON.stringify(filters));
+    } catch (error) {
+      console.log('Error saving filters to SecureStore:', error);
+    }
+  };
+
+  // Restore filter state from cache
+  const restoreFiltersFromCache = async () => {
+    try {
+      // First try in-memory cache
+      if (cachedFilters) {
+        applyFiltersToState(cachedFilters);
+        return;
+      }
+      
+      // Then try SecureStore
+      const savedFilters = await SecureStore.getItemAsync(FILTERS_CACHE_KEY);
+      if (savedFilters) {
+        const filters = JSON.parse(savedFilters);
+        cachedFilters = filters;
+        applyFiltersToState(filters);
+      }
+    } catch (error) {
+      console.log('Error restoring filters from SecureStore:', error);
+    }
+  };
+  
+  // Helper function to apply filters to state
+  const applyFiltersToState = (filters: any) => {
+    setAgeRange(filters.ageRange || [20, 50]);
+    setSelectedCountry(filters.selectedCountry || '');
+    setSelectedCity(filters.selectedCity || '');
+    setAvailableCities(filters.availableCities || []);
+    setHeightRange(filters.heightRange || [150, 200]);
+    setWeightRange(filters.weightRange || [40, 120]);
+    setSelectedEyeColor(filters.selectedEyeColor || []);
+    setSelectedHairColor(filters.selectedHairColor || []);
+    setSelectedSkinTone(filters.selectedSkinTone || []);
+    setSelectedBodyType(filters.selectedBodyType || []);
+    setSelectedEducation(filters.selectedEducation || []);
+    setSelectedLanguages(filters.selectedLanguages || []);
+    setSelectedHousingType(filters.selectedHousingType || []);
+    setSelectedLivingCondition(filters.selectedLivingCondition || []);
+    setSelectedSocialCondition(filters.selectedSocialCondition || []);
+    setSelectedWorkStatus(filters.selectedWorkStatus || []);
+    setSelectedReligiousLevel(filters.selectedReligiousLevel || []);
+    setSelectedPrayerFrequency(filters.selectedPrayerFrequency || []);
+    setSelectedQuranReading(filters.selectedQuranReading || []);
+    setSelectedCoveringLevel(filters.selectedCoveringLevel || []);
+    setSelectedBeardPractice(filters.selectedBeardPractice || []);
+    setSelectedAcceptedWifePositions(filters.selectedAcceptedWifePositions || []);
+  };
+
   const getActiveFiltersCount = (): number => {
     let count = 0;
     
@@ -346,7 +434,7 @@ const HomeScreen = () => {
     return count;
   };
 
-  const resetAllFilters = useCallback(() => {
+  const resetAllFilters = useCallback(async () => {
     // Reset all filter states
     setSelectedCountry('');
     setSelectedCity('');
@@ -370,6 +458,14 @@ const HomeScreen = () => {
     setSelectedCoveringLevel([]);
     setSelectedBeardPractice([]);
     setSelectedAcceptedWifePositions([]);
+    // Clear cached filters
+    cachedFilters = null;
+    
+    try {
+      await SecureStore.deleteItemAsync(FILTERS_CACHE_KEY);
+    } catch (error) {
+      console.log('Error clearing filters from SecureStore:', error);
+    }
   }, []);
 
 
@@ -612,22 +708,28 @@ const HomeScreen = () => {
     }
   };
 
-  // Render instantly from cache when available; fetch only when needed
+    // Render instantly from cache when available; fetch only when needed
   useFocusEffect(
     React.useCallback(() => {
-      const isFresh = cachedUsers && (Date.now() - cachedAt) < CACHE_TTL_MS;
-      if (isFresh) {
-        setUsers(cachedUsers as UserProfileWithMedia[]);
-        setLoading(false);
-        return;
-      }
-    fetchUserProfiles();
-  }, [])
+      const initializeScreen = async () => {
+        // Restore filters first
+        await restoreFiltersFromCache();
+        
+        const isFresh = cachedUsers && (Date.now() - cachedAt) < CACHE_TTL_MS;
+        if (isFresh) {
+          setUsers(cachedUsers as UserProfileWithMedia[]);
+          setLoading(false);
+          return;
+        }
+        fetchUserProfiles();
+      };
+      
+      initializeScreen();
+    }, [])
   );
 
   // Add a manual refresh function for testing
   const handleRefresh = () => {
-    console.log('Manual refresh triggered');
     fetchUserProfiles();
   };
 
@@ -1157,9 +1259,9 @@ const HomeScreen = () => {
                 style={[styles.cancelButton, filterLoading && { opacity: 0.7 }]}
                 textColor={COLORS.primary}
                 disabled={filterLoading}
-                onPress={() => {
+                onPress={async () => {
                   if (!filterLoading) {
-                    resetAllFilters();
+                    await resetAllFilters();
                     // Immediately fetch ignoring filters so user sees results without reopening
                     fetchUserProfiles(true, true);
                     refRBSheet.current?.close();
@@ -1171,8 +1273,9 @@ const HomeScreen = () => {
                 filled
                 style={[styles.logoutButton, filterLoading && { opacity: 0.7 }]}
                 disabled={filterLoading}
-                onPress={() => {
+                onPress={async () => {
                   if (!filterLoading) {
+                    await saveFiltersToCache();
                     fetchUserProfiles(false, true);
                     refRBSheet.current?.close();
                   }
@@ -1587,27 +1690,28 @@ const HomeScreen = () => {
               style={[styles.cancelButton, filterLoading && { opacity: 0.7 }]}
               textColor={COLORS.primary}
               disabled={filterLoading}
-              onPress={() => {
+              onPress={async () => {
                 if (!filterLoading) {
-                  resetAllFilters();
+                  await resetAllFilters();
                   // Immediately fetch ignoring filters so user sees results without reopening
                   fetchUserProfiles(true, true);
                   refRBSheet.current?.close();
                 }
               }}
             />
-            <Button
-              title="Apply"
-              filled
-              style={[styles.logoutButton, filterLoading && { opacity: 0.7 }]}
-              disabled={filterLoading}
-              onPress={() => {
-                if (!filterLoading) {
-                  fetchUserProfiles(false, true);
-                  refRBSheet.current?.close();
-                }
-              }}
-            />
+                          <Button
+                title="Apply"
+                filled
+                style={[styles.logoutButton, filterLoading && { opacity: 0.7 }]}
+                disabled={filterLoading}
+                onPress={async () => {
+                  if (!filterLoading) {
+                    await saveFiltersToCache();
+                    fetchUserProfiles(false, true);
+                    refRBSheet.current?.close();
+                  }
+                }}
+              />
           </View>
         </RBSheet>
       </View>

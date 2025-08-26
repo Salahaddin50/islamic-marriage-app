@@ -23,14 +23,44 @@ const Index = () => {
   useEffect(() => {
     const checkInitialAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          navigatingRef.current = true;
-          if (intervalRef.current) clearInterval(intervalRef.current);
-          router.replace('/(tabs)');
+        // Add a small delay to ensure Supabase is fully initialized
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (!error && session?.user) {
+          // Verify the session is still valid by checking user
+          const { data: { user }, error: userError } = await supabase.auth.getUser();
+          
+          if (!userError && user) {
+            navigatingRef.current = true;
+            if (intervalRef.current) clearInterval(intervalRef.current);
+            router.replace('/(tabs)');
+            return;
+          }
         }
-      } catch {}
+        
+        // Also listen for auth state changes in case of delayed authentication
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            if (event === 'SIGNED_IN' && session?.user && !navigatingRef.current) {
+              navigatingRef.current = true;
+              if (intervalRef.current) clearInterval(intervalRef.current);
+              router.replace('/(tabs)');
+            }
+          }
+        );
+
+        // Clean up subscription after 5 seconds to avoid memory leaks
+        setTimeout(() => {
+          subscription?.unsubscribe();
+        }, 5000);
+        
+      } catch (error) {
+        console.log('Auth check error:', error);
+      }
     };
+    
     checkInitialAuth();
   }, []);
 
