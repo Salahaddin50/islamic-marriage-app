@@ -534,6 +534,11 @@ const HomeScreen = () => {
       setLoading(true);
       }
       
+      // Clear cache when gender filtering issues occur - temporary debug
+      console.log('🔧 Clearing user cache for gender debug');
+      cachedUsers = [];
+      cachedAt = 0;
+      
       // Get current user to exclude them from results and determine their gender
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       
@@ -577,8 +582,15 @@ const HomeScreen = () => {
       // Apply gender filter based on current user's gender to show opposite gender
       if (currentUserGender) {
         const og = currentUserGender.toLowerCase() === 'male' ? 'female' : 'male';
+        console.log('🔍 Gender Filter Debug:', {
+          currentUserGender: currentUserGender,
+          oppositeGender: og,
+          currentUserLowercase: currentUserGender.toLowerCase()
+        });
         setOppositeGender(og);
         query = query.eq('gender', og);
+      } else {
+        console.log('❌ No current user gender found');
       }
 
       const shouldApplyFilters = !ignoreFilters;
@@ -693,7 +705,13 @@ const HomeScreen = () => {
       console.log('🔍 Query Results:', {
         totalProfiles: profilesData?.length || 0,
         sampleProfile: profilesData?.[0]?.islamic_questionnaire,
+        genderBreakdown: profilesData?.reduce((acc: any, profile: any) => {
+          acc[profile.gender] = (acc[profile.gender] || 0) + 1;
+          return acc;
+        }, {}),
         appliedFilters: {
+          currentUserGender,
+          oppositeGender,
           selectedReligiousLevel,
           selectedSeekingWifeNumber,
           selectedAcceptedWifePositions,
