@@ -206,7 +206,7 @@ const ProfileSetup: React.FC = () => {
         [
           {
             text: 'Start Browsing',
-            onPress: () => router.replace('/(tabs)')
+            onPress: () => router.replace('/(tabs)/home')
           }
         ],
         { cancelable: false }
@@ -214,7 +214,7 @@ const ProfileSetup: React.FC = () => {
       
       // Automatic navigation after 2 seconds as backup
       setTimeout(() => {
-        router.replace('/(tabs)');
+        router.replace('/(tabs)/home');
       }, 2000);
     } catch (error: any) {
       console.error('Profile completion error:', error);

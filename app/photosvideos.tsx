@@ -14,6 +14,11 @@ import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '../uti
   import { PhotoVideoItem } from '../src/services/photos-videos.service';
   import { clearProfilePictureCache } from '../hooks/useProfilePicture';
 
+// Cache for media items to prevent reloading
+let cachedMediaData: { photos: PhotoVideoItem[], videos: PhotoVideoItem[] } | null = null;
+let mediaLoadTime = 0;
+const MEDIA_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 const PhotosVideos = () => {
   const [selectedTab, setSelectedTab] = useState<'photos' | 'videos'>('photos');
   const [photos, setPhotos] = useState<PhotoVideoItem[]>([]);
@@ -27,24 +32,34 @@ const PhotosVideos = () => {
     loadMediaItems();
   }, []);
 
-  const loadMediaItems = async () => {
+  const loadMediaItems = async (forceRefresh: boolean = false) => {
     try {
       setLoading(true);
-      console.log('Loading media items...');
+      
+      // Check cache first unless force refresh
+      if (!forceRefresh && cachedMediaData && (Date.now() - mediaLoadTime) < MEDIA_CACHE_TTL) {
+        setPhotos(cachedMediaData.photos);
+        setVideos(cachedMediaData.videos);
+        setLoading(false);
+        return;
+      }
+      
       const result = await PhotosVideosAPI.getMyMedia();
-      console.log('Load media result:', result);
       
       if (result.success && result.data) {
-        console.log('Photos:', result.data.photos.length, 'Videos:', result.data.videos.length);
-        console.log('Photo URLs:', result.data.photos.map(p => p.external_url));
+        // Cache the data
+        cachedMediaData = {
+          photos: result.data.photos,
+          videos: result.data.videos
+        };
+        mediaLoadTime = Date.now();
+        
         setPhotos(result.data.photos);
         setVideos(result.data.videos);
       } else {
-        console.log('Load media failed:', result.error);
         Alert.alert('Error', result.error || 'Failed to load media');
       }
     } catch (error) {
-      console.error('Load media error:', error);
       Alert.alert('Error', 'Failed to load media');
     } finally {
       setLoading(false);
@@ -61,7 +76,7 @@ const PhotosVideos = () => {
         return;
       }
 
-      console.log('Picked media:', mediaResult);
+// Media picked for upload
 
       // Convert URI to File/Blob for upload
       const response = await fetch(mediaResult.uri);
@@ -72,38 +87,25 @@ const PhotosVideos = () => {
         blob = new Blob([blob], { type: mediaResult.mimeType });
       }
       
-      console.log('Blob ready for upload - type:', blob.type, 'size:', blob.size);
-      
       let result;
       if (type === 'photo') {
-        console.log('Uploading photo...');
         result = await PhotosVideosAPI.uploadPhoto(blob, {
           visibility: 'private'
         });
       } else {
-        console.log('Uploading video...');
         result = await PhotosVideosAPI.uploadVideo(blob, {
           visibility: 'private'
         });
       }
 
-      console.log('Upload result:', result);
-      // Log detailed error information
-      if (!result.success) {
-        console.error('Upload failed details:', JSON.stringify(result));
-      }
-
       if (result.success && result.data) {
-        console.log('Upload successful, refreshing media list...');
-        // Refresh the media list
-        await loadMediaItems();
+        // Refresh the media list with force refresh
+        await loadMediaItems(true);
         Alert.alert('Success', `${type === 'photo' ? 'Photo' : 'Video'} uploaded successfully!`);
       } else {
-        console.log('Upload failed:', result.error);
         Alert.alert('Error', result.error || 'Upload failed');
       }
     } catch (error) {
-      console.error('Media picker error:', error);
       Alert.alert('Error', 'Failed to upload media');
     } finally {
       setUploading(false);
@@ -115,29 +117,23 @@ const PhotosVideos = () => {
     try {
       // Show loading indicator
       setLoading(true);
-      console.log(`Actually deleting ${type} with ID: ${id}`);
       
       // Call the API to delete the media
       const result = await PhotosVideosAPI.deleteMedia(id);
-      console.log('Delete API result:', result);
       
       if (result.success) {
-        console.log('Delete successful, refreshing media list');
-        // Refresh the list to show updated data
-        await loadMediaItems();
+        // Refresh the list to show updated data with force refresh
+        await loadMediaItems(true);
         Alert.alert('Success', `${type === 'photo' ? 'Photo' : 'Video'} deleted successfully!`);
         
-        // If this was a profile picture, we need to make sure the UI updates
+        // If this was a profile picture, clear the cache
         if (type === 'photo') {
-          // You could implement a global event or state update here
-          console.log('Photo deleted, checking if it was the profile picture');
+          clearProfilePictureCache();
         }
       } else {
-        console.error('Delete failed with error:', result.error);
         Alert.alert('Error', result.error || 'Delete failed');
       }
     } catch (error) {
-      console.error('Delete error:', error);
       Alert.alert('Error', 'Failed to delete media');
     } finally {
       setLoading(false);
@@ -145,12 +141,9 @@ const PhotosVideos = () => {
   };
   
   // Function to show the delete confirmation dialog
-  const deleteMedia = async (id: string, type: 'photo' | 'video') => {
-    console.log(`Delete button clicked for ${type} with ID: ${id}`);
-    
+  const deleteMedia = async (id: string, type: 'photo' | 'video') => {    
     // Ensure we have a valid ID
     if (!id) {
-      console.error('Attempted to delete media with invalid ID:', id);
       Alert.alert('Error', 'Invalid media ID');
       return;
     }
@@ -173,7 +166,6 @@ const PhotosVideos = () => {
   };
 
   const setAsAvatar = async (id: string) => {
-    console.log(`Main button clicked for photo with ID: ${id}`);
     Alert.alert(
       'Set as Avatar',
       'Do you want to set this photo as your profile avatar?',
@@ -185,25 +177,18 @@ const PhotosVideos = () => {
             try {
               // Show loading indicator
               setLoading(true);
-              console.log(`Setting photo with ID: ${id} as avatar`);
               const result = await PhotosVideosAPI.setProfilePicture(id);
-              console.log('Set avatar result:', result);
               
               if (result.success) {
-                await loadMediaItems(); // Refresh the list
+                await loadMediaItems(true); // Refresh the list with force refresh
                 Alert.alert('Success', 'Photo set as profile avatar! The avatar will be updated across the app.');
                 
-                // Force refresh of profile picture in app
-                // This helps ensure the UI updates immediately
-                setTimeout(() => {
-                  console.log('Forcing app refresh to update avatar display');
-                  // You could implement a global event or state update here
-                }, 500);
+                // Clear profile picture cache to force refresh
+                clearProfilePictureCache();
               } else {
                 Alert.alert('Error', result.error || 'Failed to set avatar');
               }
             } catch (error) {
-              console.error('Set avatar error:', error);
               Alert.alert('Error', 'Failed to set profile avatar');
             } finally {
               setLoading(false);
@@ -270,7 +255,7 @@ const PhotosVideos = () => {
     const imageUrl = getDirectUrl(item.external_url);
 
     const handleImageError = (error: any) => {
-      console.log('Image load error for (direct URL):', imageUrl, error);
+      // Image load error handled
     };
 
     return (
@@ -284,8 +269,10 @@ const PhotosVideos = () => {
             source={{ uri: imageUrl }}
             contentFit="cover"
             style={styles.photoItem}
+            cachePolicy="memory-disk"
+            transition={200}
             onError={handleImageError}
-            onLoad={() => console.log('Image loaded:', imageUrl)}
+            onLoad={() => {}}
           />
         </TouchableOpacity>
       
@@ -293,38 +280,35 @@ const PhotosVideos = () => {
       <TouchableOpacity
         style={styles.avatarButton}
         onPress={() => {
-          console.log('Main button pressed directly with ID:', item.id);
-          // For direct testing, bypass the confirmation dialog
+          // Set photo as avatar directly
           try {
             setLoading(true);
-            console.log(`Directly setting photo with ID: ${item.id} as avatar`);
             
             // Removed test code to fix the error
             
             PhotosVideosAPI.setProfilePicture(item.id)
               .then(result => {
-                console.log('Set avatar direct result:', result);
                 if (result.success) {
-                                      // Clear cache and trigger refresh
-                    clearProfilePictureCache();
-                    loadMediaItems().then(() => {
-                      Alert.alert('Success', 'Photo set as profile avatar!');
-                      // Trigger profile picture refresh across the app
+                  // Clear cache and trigger refresh
+                  clearProfilePictureCache();
+                  loadMediaItems(true).then(() => {
+                    Alert.alert('Success', 'Photo set as profile avatar!');
+                    // Trigger profile picture refresh across the app
+                    if (typeof window !== 'undefined') {
                       window.dispatchEvent(new CustomEvent('profilePictureUpdated'));
-                    });
+                    }
+                  });
                 } else {
                   Alert.alert('Error', result.error || 'Failed to set avatar');
                 }
               })
               .catch(err => {
-                console.error('Direct set avatar error:', err);
                 Alert.alert('Error', 'Failed to set profile avatar');
               })
               .finally(() => {
                 setLoading(false);
               });
           } catch (error) {
-            console.error('Main button click error:', error);
             setLoading(false);
           }
         }}
@@ -337,8 +321,6 @@ const PhotosVideos = () => {
       <TouchableOpacity
         style={[styles.deleteButton, { zIndex: 99 }]}
         onPress={() => {
-          console.log('Delete photo button pressed with ID:', item.id);
-          // For direct testing, bypass the confirmation dialog
           handleDeleteMedia(item.id, 'photo');
         }}
         activeOpacity={0.5}
@@ -368,7 +350,6 @@ const PhotosVideos = () => {
     const videoThumbnailUrl = getDirectUrl(item.thumbnail_url || item.external_url);
 
     const handleVideoImageError = (error: any) => {
-      console.log('Video thumbnail load error for (direct URL):', videoThumbnailUrl, error);
       setThumbnailErrors(prev => ({ ...prev, [item.id]: true }));
     };
 
@@ -379,8 +360,10 @@ const PhotosVideos = () => {
             source={thumbnailErrors[item.id] ? { uri: DEFAULT_VIDEO_THUMBNAIL } : { uri: videoThumbnailUrl }}
             contentFit="cover"
             style={styles.videoItem}
+            cachePolicy="memory-disk"
+            transition={200}
             onError={handleVideoImageError}
-            onLoad={() => console.log('Video thumbnail loaded:', thumbnailErrors[item.id] ? 'default thumbnail' : videoThumbnailUrl)}
+            onLoad={() => {}}
           />
           <View style={styles.playButton}>
             <Text style={[styles.playButtonText, { color: COLORS.white }]}>Play</Text>
@@ -391,8 +374,6 @@ const PhotosVideos = () => {
         <TouchableOpacity
           style={[styles.deleteButton, { zIndex: 99 }]} 
           onPress={() => {
-            console.log('Delete video button pressed with ID:', item.id);
-            // For direct testing, bypass the confirmation dialog
             handleDeleteMedia(item.id, 'video');
           }}
           activeOpacity={0.5}
@@ -429,7 +410,7 @@ const PhotosVideos = () => {
       <View style={[styles.container, { backgroundColor: COLORS.white }]}>
         <Header 
           title="My Photos and Videos" 
-          onBackPress={() => router.push('/(tabs)/profile')}
+          onBackPress={() => router.back()}
         />
         
         {/* Tab Navigation */}

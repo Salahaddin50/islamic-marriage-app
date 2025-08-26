@@ -21,13 +21,30 @@ import { supabase } from '../src/config/supabase';
 import { getCountriesAsDropdownItems, getCitiesForCountry } from '../data/countries';
 import type { GenderType } from '../src/types/database.types';
 
+// Cache for edit profile page to prevent reloading
+let cachedEditProfileImageUrl: string | null = null;
+let editProfileImageLoadTime = 0;
+const EDIT_PROFILE_IMAGE_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+// Cache for profile data
+let cachedUserProfile: UserProfile | null = null;
+let userProfileLoadTime = 0;
+const USER_PROFILE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 // Simple Edit Avatar Component with Profile Picture Support
 const SimpleEditAvatar = ({ size, displayName, isLoading }: { size: number, displayName?: string, isLoading: boolean }) => {
-  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(cachedEditProfileImageUrl);
   const [imageLoadError, setImageLoadError] = useState(false);
   
   useEffect(() => {
     const fetchProfileImage = async () => {
+      // Check if we have a fresh cached image
+      const isCacheFresh = cachedEditProfileImageUrl && (Date.now() - editProfileImageLoadTime) < EDIT_PROFILE_IMAGE_CACHE_TTL;
+      if (isCacheFresh) {
+        setProfileImageUrl(cachedEditProfileImageUrl);
+        return;
+      }
+      
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
@@ -44,6 +61,8 @@ const SimpleEditAvatar = ({ size, displayName, isLoading }: { size: number, disp
         if (mediaRef) {
           const imageUrl = mediaRef.do_spaces_cdn_url || mediaRef.do_spaces_url || mediaRef.external_url;
           if (imageUrl) {
+            cachedEditProfileImageUrl = imageUrl;
+            editProfileImageLoadTime = Date.now();
             setProfileImageUrl(imageUrl);
             return;
           }
@@ -57,10 +76,14 @@ const SimpleEditAvatar = ({ size, displayName, isLoading }: { size: number, disp
           .maybeSingle();
 
         if (profile?.profile_picture_url) {
+          cachedEditProfileImageUrl = profile.profile_picture_url;
+          editProfileImageLoadTime = Date.now();
           setProfileImageUrl(profile.profile_picture_url);
+        } else {
+          cachedEditProfileImageUrl = null;
         }
       } catch (error) {
-        console.log('Error fetching edit profile image:', error);
+        // Error fetching edit profile image
       }
     };
 
@@ -101,13 +124,13 @@ const SimpleEditAvatar = ({ size, displayName, isLoading }: { size: number, disp
             height: size,
           }}
           contentFit="cover"
+          cachePolicy="memory-disk"
+          transition={200}
           onError={() => {
-            console.log('Edit profile image failed to load, showing initial');
             setImageLoadError(true);
+            cachedEditProfileImageUrl = null; // Clear cache on error
           }}
-          onLoad={() => {
-            console.log('Edit profile image loaded successfully');
-          }}
+          onLoad={() => {}}
         />
       </View>
     );
@@ -177,43 +200,59 @@ const EditProfile = () => {
     loadUserProfile();
   }, []);
 
-  const loadUserProfile = async () => {
+  const loadUserProfile = async (forceRefresh: boolean = false) => {
     try {
       setIsLoading(true);
       setError(null);
       
+      // Check cache first unless force refresh
+      if (!forceRefresh && cachedUserProfile && (Date.now() - userProfileLoadTime) < USER_PROFILE_CACHE_TTL) {
+        const userProfile = cachedUserProfile;
+        setProfile(userProfile);
+        populateProfileFields(userProfile);
+        setIsLoading(false);
+        return;
+      }
+      
       const userProfile = await ProfileService.getCurrentUserProfile();
       
       if (userProfile) {
+        // Cache the data
+        cachedUserProfile = userProfile;
+        userProfileLoadTime = Date.now();
+        
         setProfile(userProfile);
-        // Populate form fields with existing data
-        setFirstName(userProfile.first_name || '');
-        setLastName(userProfile.last_name || '');
-        setPhoneCode(userProfile.phone_code || '');
-        setMobileNumber(userProfile.mobile_number || '');
-        setOccupation(userProfile.occupation || '');
-        setAboutMe(userProfile.about_me || '');
-        setSelectedGender(userProfile.gender || '');
-        setSelectedCountry(userProfile.country || '');
-        setSelectedCity(userProfile.city || '');
-        
-        // Format date for display
-        if (userProfile.date_of_birth) {
-          const date = new Date(userProfile.date_of_birth);
-          setDateOfBirth(date.toLocaleDateString('en-GB'));
-        }
-        
-        // Load cities for selected country
-        if (userProfile.country) {
-          const cities = getCitiesForCountry(userProfile.country);
-          setAvailableCities(cities);
-        }
+        populateProfileFields(userProfile);
       }
     } catch (error) {
-      console.error('Failed to load profile:', error);
       setError('Failed to load profile data');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Helper function to populate form fields
+  const populateProfileFields = (userProfile: UserProfile) => {
+    setFirstName(userProfile.first_name || '');
+    setLastName(userProfile.last_name || '');
+    setPhoneCode(userProfile.phone_code || '');
+    setMobileNumber(userProfile.mobile_number || '');
+    setOccupation(userProfile.occupation || '');
+    setAboutMe(userProfile.about_me || '');
+    setSelectedGender(userProfile.gender || '');
+    setSelectedCountry(userProfile.country || '');
+    setSelectedCity(userProfile.city || '');
+    
+    // Format date for display
+    if (userProfile.date_of_birth) {
+      const date = new Date(userProfile.date_of_birth);
+      setDateOfBirth(date.toLocaleDateString('en-GB'));
+    }
+    
+    // Load cities for selected country
+    if (userProfile.country) {
+      const cities = getCitiesForCountry(userProfile.country);
+      setAvailableCities(cities);
     }
   };
 
@@ -292,11 +331,15 @@ const EditProfile = () => {
       if (profileImage?.uri) {
         try {
           await ProfileService.updateProfilePicture(profileImage.uri);
+          // Clear image cache when profile picture is updated
+          cachedEditProfileImageUrl = null;
         } catch (imageError) {
-          console.error('Profile image upload failed:', imageError);
           // Don't fail the entire update for image upload
         }
       }
+      
+      // Clear profile cache to force refresh on next load
+      cachedUserProfile = null;
       
       Alert.alert(
         'Success', 
@@ -310,7 +353,6 @@ const EditProfile = () => {
       );
       
     } catch (error) {
-      console.error('Save profile error:', error);
       setError('Failed to update profile');
       Alert.alert('Error', 'Failed to update profile. Please try again.');
     } finally {
@@ -335,7 +377,7 @@ const EditProfile = () => {
       <View style={[styles.container, { backgroundColor: COLORS.white }]}>
         <Header 
           title="Edit Profile" 
-          onBackPress={() => router.push('/(tabs)/profile')}
+          onBackPress={() => router.back()}
         />
         
         {error && (

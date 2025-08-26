@@ -54,7 +54,7 @@ const TabLayout = () => {
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="home"
         options={{
           title: "",
           // Keep Home tab state and avoid re-renders when switching tabs

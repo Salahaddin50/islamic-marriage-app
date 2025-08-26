@@ -18,17 +18,28 @@ type Nav = {
   navigate: (value: string) => void
 }
 
+// Cached profile image for the profile page to prevent reloading
+let cachedProfilePageImageUrl: string | null = null;
+let profilePageImageLoadTime = 0;
+const PROFILE_PAGE_IMAGE_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
 // Simple Avatar Component with Profile Picture Support
 const SimpleAvatar = ({ size, displayName, isLoading }: { size: number, displayName?: string, isLoading: boolean }) => {
-  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(cachedProfilePageImageUrl);
   const [imageLoadError, setImageLoadError] = useState(false);
   
   useEffect(() => {
     const fetchProfileImage = async () => {
+      // Check if we have a fresh cached image
+      const isCacheFresh = cachedProfilePageImageUrl && (Date.now() - profilePageImageLoadTime) < PROFILE_PAGE_IMAGE_CACHE_TTL;
+      if (isCacheFresh) {
+        setProfileImageUrl(cachedProfilePageImageUrl);
+        return;
+      }
+      
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-          console.log('SimpleAvatar: No user found');
           return;
         }
 
@@ -44,6 +55,8 @@ const SimpleAvatar = ({ size, displayName, isLoading }: { size: number, displayN
         if (mediaRef) {
           const imageUrl = mediaRef.do_spaces_cdn_url || mediaRef.do_spaces_url || mediaRef.external_url;
           if (imageUrl) {
+            cachedProfilePageImageUrl = imageUrl;
+            profilePageImageLoadTime = Date.now();
             setProfileImageUrl(imageUrl);
             return;
           }
@@ -57,10 +70,14 @@ const SimpleAvatar = ({ size, displayName, isLoading }: { size: number, displayN
           .maybeSingle();
 
         if (profile?.profile_picture_url) {
+          cachedProfilePageImageUrl = profile.profile_picture_url;
+          profilePageImageLoadTime = Date.now();
           setProfileImageUrl(profile.profile_picture_url);
+        } else {
+          cachedProfilePageImageUrl = null;
         }
       } catch (error) {
-        console.log('SimpleAvatar: Error fetching profile image:', error);
+// Error fetching profile image
       }
     };
 
@@ -101,13 +118,13 @@ const SimpleAvatar = ({ size, displayName, isLoading }: { size: number, displayN
             height: size,
           }}
           contentFit="cover"
+          cachePolicy="memory-disk"
+          transition={200}
           onError={() => {
-            console.log('Profile image failed to load, showing initial');
             setImageLoadError(true);
+            cachedProfilePageImageUrl = null; // Clear cache on error
           }}
-          onLoad={() => {
-            console.log('Profile image loaded successfully');
-          }}
+          onLoad={() => {}}
         />
       </View>
     );
@@ -177,6 +194,8 @@ const Profile = () => {
 
     // Function to refresh profile data
     const refreshProfile = () => {
+      // Clear profile image cache when manually refreshing
+      cachedProfilePageImageUrl = null;
       setRefreshTrigger(prev => prev + 1);
     };
 
@@ -200,7 +219,7 @@ const Profile = () => {
               .maybeSingle();
             
             if (error) {
-              console.log('Error fetching profile in profile.tsx:', error);
+              // Error fetching profile data
             }
           
             // Set display name
@@ -211,14 +230,13 @@ const Profile = () => {
               setDisplayName(user.email.split('@')[0]);
             }
           } catch (profileError) {
-            console.log('Error in profile data fetch:', profileError);
             // Fallback to email username if profile fetch fails
             if (user.email) {
               setDisplayName(user.email.split('@')[0]);
             }
           }
         } catch (e) {
-          console.log('Error fetching user:', e);
+          // Error fetching user
         } finally {
           setIsLoading(false);
         }

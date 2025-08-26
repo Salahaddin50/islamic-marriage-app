@@ -35,7 +35,7 @@ const Index = () => {
           if (!userError && user) {
             navigatingRef.current = true;
             if (intervalRef.current) clearInterval(intervalRef.current);
-            router.replace('/(tabs)');
+            router.replace('/(tabs)/home');
             return;
           }
         }
@@ -46,7 +46,7 @@ const Index = () => {
             if (event === 'SIGNED_IN' && session?.user && !navigatingRef.current) {
               navigatingRef.current = true;
               if (intervalRef.current) clearInterval(intervalRef.current);
-              router.replace('/(tabs)');
+              router.replace('/(tabs)/home');
             }
           }
         );

@@ -141,7 +141,7 @@ const Login = () => {
                 // Redirect based on profile existence
                 if (profile) {
                     // Has profile - go to main app
-                    router.replace('/(tabs)');
+                    router.replace('/(tabs)/home');
                 } else {
                     // No profile - go to profile setup
                     router.replace('/profile-setup');

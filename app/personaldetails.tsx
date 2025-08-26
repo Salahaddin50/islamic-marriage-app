@@ -10,6 +10,11 @@ import { NavigationProp } from '@react-navigation/native';
 import PersonalDetailsService, { PersonalDetails, UpdatePersonalDetailsData } from '../src/services/personalDetails.service';
 import { getResponsiveFontSize, getResponsiveSpacing } from '../utils/responsive';
 
+// Cache for personal details to prevent reloading
+let cachedPersonalDetails: PersonalDetails | null = null;
+let personalDetailsLoadTime = 0;
+const PERSONAL_DETAILS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 // Personal Details Screen
 const PersonalDetailsScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
@@ -112,50 +117,65 @@ const PersonalDetailsScreen = () => {
     loadPersonalDetails();
   }, []);
 
-  const loadPersonalDetails = async () => {
+  const loadPersonalDetails = async (forceRefresh: boolean = false) => {
     try {
       setIsLoading(true);
       setError(null);
       
+      // Check cache first unless force refresh
+      if (!forceRefresh && cachedPersonalDetails && (Date.now() - personalDetailsLoadTime) < PERSONAL_DETAILS_CACHE_TTL) {
+        const details = cachedPersonalDetails;
+        setPersonalDetails(details);
+        populateFormFields(details);
+        setIsLoading(false);
+        return;
+      }
+      
       const details = await PersonalDetailsService.getCurrentUserPersonalDetails();
       
       if (details) {
+        // Cache the data
+        cachedPersonalDetails = details;
+        personalDetailsLoadTime = Date.now();
+        
         setPersonalDetails(details);
-        
-        // Populate form fields with existing data
-        setAboutMe(details.about_me || '');
-        setHeight(details.height_cm?.toString() || '');
-        setWeight(details.weight_kg?.toString() || '');
-        setEyeColor(details.eye_color || '');
-        setHairColor(details.hair_color || '');
-        setSkinTone(details.skin_tone || '');
-        setBodyType(details.body_type || '');
-        
-        setEducation(details.education_level || '');
-        setLanguages(details.languages_spoken || []);
-        setOccupation(details.occupation || '');
-        setIncome(details.monthly_income || '');
-        setHousingType(details.housing_type || '');
-        setLivingCondition(details.living_condition || '');
-        setSocialCondition(details.social_condition || '');
-        setWorkStatus(details.work_status || '');
-        
-        setReligiousLevel(details.religious_level || '');
-        setPrayerFrequency(details.prayer_frequency || '');
-        setQuranReading(details.quran_reading_level || '');
-        setCoveringLevel(details.covering_level || '');
-        setBeardPractice(details.beard_practice || '');
-        
-        setSeekingWifeNumber(details.seeking_wife_number || '');
-        setAcceptedWifePositions(details.accepted_wife_positions || []);
-        setPolygamyPreference(details.polygamy_preference || '');
+        populateFormFields(details);
       }
     } catch (error) {
-      console.error('Failed to load personal details:', error);
       setError('Failed to load personal details');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Helper function to populate form fields
+  const populateFormFields = (details: PersonalDetails) => {
+    setAboutMe(details.about_me || '');
+    setHeight(details.height_cm?.toString() || '');
+    setWeight(details.weight_kg?.toString() || '');
+    setEyeColor(details.eye_color || '');
+    setHairColor(details.hair_color || '');
+    setSkinTone(details.skin_tone || '');
+    setBodyType(details.body_type || '');
+    
+    setEducation(details.education_level || '');
+    setLanguages(details.languages_spoken || []);
+    setOccupation(details.occupation || '');
+    setIncome(details.monthly_income || '');
+    setHousingType(details.housing_type || '');
+    setLivingCondition(details.living_condition || '');
+    setSocialCondition(details.social_condition || '');
+    setWorkStatus(details.work_status || '');
+    
+    setReligiousLevel(details.religious_level || '');
+    setPrayerFrequency(details.prayer_frequency || '');
+    setQuranReading(details.quran_reading_level || '');
+    setCoveringLevel(details.covering_level || '');
+    setBeardPractice(details.beard_practice || '');
+    
+    setSeekingWifeNumber(details.seeking_wife_number || '');
+    setAcceptedWifePositions(details.accepted_wife_positions || []);
+    setPolygamyPreference(details.polygamy_preference || '');
   };
 
   const validateForm = (): boolean => {
@@ -214,6 +234,9 @@ const PersonalDetailsScreen = () => {
       // Update personal details in database
       await PersonalDetailsService.updatePersonalDetails(updateData);
       
+      // Clear cache to force refresh on next load
+      cachedPersonalDetails = null;
+      
       Alert.alert(
         'Success', 
         'Personal details updated successfully!',
@@ -226,7 +249,6 @@ const PersonalDetailsScreen = () => {
       );
       
     } catch (error) {
-      console.error('Save personal details error:', error);
       setError('Failed to update personal details');
       Alert.alert('Error', 'Failed to update personal details. Please try again.');
     } finally {

@@ -10,16 +10,29 @@ import { supabase } from '@/src/config/supabase';
 import { useProfilePicture } from '@/hooks/useProfilePicture';
 import MatchCard from '@/components/MatchCard';
 import { Database } from '@/src/types/database.types';
+import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { useMatchStore } from '@/src/store';
 
+// Cached profile image to prevent reloading
+let cachedProfileImageUrl: string | null = null;
+let profileImageLoadTime = 0;
+const PROFILE_IMAGE_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
 // Simple Header Avatar Component with Profile Picture Support
 const SimpleHeaderAvatar = ({ size, displayName, isLoading }: { size: number, displayName?: string, isLoading: boolean }) => {
-  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(cachedProfileImageUrl);
   const [imageLoadError, setImageLoadError] = useState(false);
   
   useEffect(() => {
     const fetchProfileImage = async () => {
+      // Check if we have a fresh cached image
+      const isCacheFresh = cachedProfileImageUrl && (Date.now() - profileImageLoadTime) < PROFILE_IMAGE_CACHE_TTL;
+      if (isCacheFresh) {
+        setProfileImageUrl(cachedProfileImageUrl);
+        return;
+      }
+      
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
@@ -36,6 +49,8 @@ const SimpleHeaderAvatar = ({ size, displayName, isLoading }: { size: number, di
         if (mediaRef) {
           const imageUrl = mediaRef.do_spaces_cdn_url || mediaRef.do_spaces_url || mediaRef.external_url;
           if (imageUrl) {
+            cachedProfileImageUrl = imageUrl;
+            profileImageLoadTime = Date.now();
             setProfileImageUrl(imageUrl);
             return;
           }
@@ -49,7 +64,11 @@ const SimpleHeaderAvatar = ({ size, displayName, isLoading }: { size: number, di
           .maybeSingle();
 
         if (profile?.profile_picture_url) {
+          cachedProfileImageUrl = profile.profile_picture_url;
+          profileImageLoadTime = Date.now();
           setProfileImageUrl(profile.profile_picture_url);
+        } else {
+          cachedProfileImageUrl = null;
         }
       } catch (error) {
         console.log('Error fetching header profile image:', error);
@@ -93,7 +112,10 @@ const SimpleHeaderAvatar = ({ size, displayName, isLoading }: { size: number, di
             height: size,
           }}
           resizeMode="cover"
-          onError={() => setImageLoadError(true)}
+          onError={() => {
+            setImageLoadError(true);
+            cachedProfileImageUrl = null; // Clear cache on error
+          }}
           onLoad={() => {}}
         />
       </View>
@@ -201,6 +223,33 @@ const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 // Cache for filter states to survive page refresh and auth redirects
 let cachedFilters: any = null;
 const FILTERS_CACHE_KEY = 'hume_filters_cache';
+
+// Cross-platform storage utility
+const Storage = {
+  async setItem(key: string, value: string) {
+    if (Platform.OS === 'web') {
+      localStorage.setItem(key, value);
+    } else {
+      await SecureStore.setItemAsync(key, value);
+    }
+  },
+  
+  async getItem(key: string): Promise<string | null> {
+    if (Platform.OS === 'web') {
+      return localStorage.getItem(key);
+    } else {
+      return await SecureStore.getItemAsync(key);
+    }
+  },
+  
+  async removeItem(key: string) {
+    if (Platform.OS === 'web') {
+      localStorage.removeItem(key);
+    } else {
+      await SecureStore.deleteItemAsync(key);
+    }
+  }
+};
 
 const HomeScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
@@ -344,9 +393,9 @@ const HomeScreen = () => {
     cachedFilters = filters;
     
     try {
-      await SecureStore.setItemAsync(FILTERS_CACHE_KEY, JSON.stringify(filters));
+      await Storage.setItem(FILTERS_CACHE_KEY, JSON.stringify(filters));
     } catch (error) {
-      console.log('Error saving filters to SecureStore:', error);
+      console.log('Error saving filters to storage:', error);
     }
   };
 
@@ -359,15 +408,15 @@ const HomeScreen = () => {
         return;
       }
       
-      // Then try SecureStore
-      const savedFilters = await SecureStore.getItemAsync(FILTERS_CACHE_KEY);
+      // Then try storage
+      const savedFilters = await Storage.getItem(FILTERS_CACHE_KEY);
       if (savedFilters) {
         const filters = JSON.parse(savedFilters);
         cachedFilters = filters;
         applyFiltersToState(filters);
       }
     } catch (error) {
-      console.log('Error restoring filters from SecureStore:', error);
+      console.log('Error restoring filters from storage:', error);
     }
   };
   
@@ -462,9 +511,9 @@ const HomeScreen = () => {
     cachedFilters = null;
     
     try {
-      await SecureStore.deleteItemAsync(FILTERS_CACHE_KEY);
+      await Storage.removeItem(FILTERS_CACHE_KEY);
     } catch (error) {
-      console.log('Error clearing filters from SecureStore:', error);
+      console.log('Error clearing filters from storage:', error);
     }
   }, []);
 
@@ -476,7 +525,7 @@ const HomeScreen = () => {
       if (isFilter) {
         setFilterLoading(true);
       } else {
-        setLoading(true);
+      setLoading(true);
       }
       
       // Get current user to exclude them from results and determine their gender
@@ -703,7 +752,7 @@ const HomeScreen = () => {
       if (isFilter) {
         setFilterLoading(false);
       } else {
-        setLoading(false);
+      setLoading(false);
       }
     }
   };
@@ -721,11 +770,11 @@ const HomeScreen = () => {
           setLoading(false);
           return;
         }
-        fetchUserProfiles();
+    fetchUserProfiles();
       };
       
       initializeScreen();
-    }, [])
+  }, [])
   );
 
   // Add a manual refresh function for testing
@@ -809,11 +858,11 @@ const HomeScreen = () => {
             {filterLoading ? (
               <ActivityIndicator size="small" color={COLORS.primary} />
             ) : (
-              <Image
-                source={icons.filter}
-                resizeMode='contain'
-                style={[styles.bellIcon, { tintColor: COLORS.greyscale900 }]}
-              />
+            <Image
+              source={icons.filter}
+              resizeMode='contain'
+              style={[styles.bellIcon, { tintColor: COLORS.greyscale900 }]}
+            />
             )}
             {!filterLoading && getActiveFiltersCount() > 0 && (
               <View style={styles.filterBadge}>
@@ -860,10 +909,10 @@ const HomeScreen = () => {
   }, [baseHeight]);
 
   if (loading) {
-    return (
-      <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
-        <View style={[styles.container, { backgroundColor: COLORS.white }]}>
-          {renderHeader()}
+  return (
+    <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
+      <View style={[styles.container, { backgroundColor: COLORS.white }]}>
+        {renderHeader()}
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={COLORS.primary} />
             <Text style={styles.loadingText}>Finding matches for you...</Text>
@@ -874,10 +923,10 @@ const HomeScreen = () => {
   }
 
   if (!loading && users.length === 0) {
-    return (
-      <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
-        <View style={[styles.container, { backgroundColor: COLORS.white }]}>
-          {renderHeader()}
+              return (
+    <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
+      <View style={[styles.container, { backgroundColor: COLORS.white }]}>
+        {renderHeader()}
           <View style={styles.loadingContainer}>
             <Text style={styles.loadingText}>No matches found with current filters</Text>
             <Text style={[styles.loadingText, { fontSize: 14, marginTop: 8, opacity: 0.7 }]}>
@@ -1293,14 +1342,14 @@ const HomeScreen = () => {
       <View style={[styles.container, { backgroundColor: COLORS.white }]}>
         {renderHeader()}
         <View style={{ flex: 1 }}>
-          <FlatList
-            data={users}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-            numColumns={2}
-            columnWrapperStyle={styles.columnWrapper}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.listContainer}
+        <FlatList
+          data={users}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          columnWrapperStyle={styles.columnWrapper}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContainer}
             initialNumToRender={8}
             maxToRenderPerBatch={8}
             windowSize={7}
@@ -1693,25 +1742,25 @@ const HomeScreen = () => {
               onPress={async () => {
                 if (!filterLoading) {
                   await resetAllFilters();
-                  // Immediately fetch ignoring filters so user sees results without reopening
+                // Immediately fetch ignoring filters so user sees results without reopening
                   fetchUserProfiles(true, true);
-                  refRBSheet.current?.close();
+                refRBSheet.current?.close();
                 }
               }}
             />
-                          <Button
-                title="Apply"
-                filled
+            <Button
+              title="Apply"
+              filled
                 style={[styles.logoutButton, filterLoading && { opacity: 0.7 }]}
                 disabled={filterLoading}
                 onPress={async () => {
                   if (!filterLoading) {
                     await saveFiltersToCache();
                     fetchUserProfiles(false, true);
-                    refRBSheet.current?.close();
+                refRBSheet.current?.close();
                   }
-                }}
-              />
+              }}
+            />
           </View>
         </RBSheet>
       </View>
