@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView
 import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { COLORS, icons, images, SIZES } from '@/constants';
-import AutoSlider from '@/components/AutoSlider';
+// import AutoSlider from '@/components/AutoSlider'; // Removed to ensure we only use custom implementation
 import { useNavigation, useLocalSearchParams } from 'expo-router';
 import { NavigationProp } from '@react-navigation/native';
 import { Image } from 'expo-image';
@@ -206,17 +206,29 @@ const MatchDetails = () => {
     // Filter to only photos for the main slider (videos work better in the gallery)
     const userPhotos = userMedia.filter(media => media.media_type === 'photo');
     
+    console.log('🖼️ Debug Match Details Images:', {
+      userPhotosCount: userPhotos.length,
+      hasProfilePicture: !!userProfile?.profile_picture_url,
+      gender: userProfile?.gender,
+      userMediaLength: userMedia.length
+    });
+    
     if (userPhotos.length > 0) {
+      console.log('✅ Using real user photos');
       return userPhotos.map(photo => ({ uri: photo.external_url }));
     }
     
     // If no photos but user has profile picture, use that
     if (userProfile?.profile_picture_url) {
+      console.log('✅ Using profile picture URL');
       return [{ uri: userProfile.profile_picture_url }];
     }
     
-    // Only fallback to default images if no real photos exist
-    return [images.model1, images.model2, images.model3, images.model4];
+    // Fallback to gender-specific silhouette if no real photos exist
+    const isFemale = userProfile?.gender?.toLowerCase() === 'female';
+    const silhouetteImage = isFemale ? images.femaleSilhouette : images.maleSilhouette;
+    console.log('✅ Using gender silhouette:', isFemale ? 'female' : 'male');
+    return [silhouetteImage];
   };
 
   // Custom AutoSlider component with tap functionality
