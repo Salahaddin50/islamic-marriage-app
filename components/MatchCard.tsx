@@ -1,7 +1,9 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, ImageSourcePropType, TouchableOpacity, ViewStyle, ImageStyle, TextStyle } from 'react-native';
+import React, { useState, memo, useEffect } from 'react';
+import { View, Text, StyleSheet, ImageSourcePropType, TouchableOpacity, ViewStyle, ImageStyle, TextStyle, ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
 import type { StyleProp } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS } from '@/constants';
 
 interface MatchCardProps {
   name: string;
@@ -40,12 +42,28 @@ const MatchCard: React.FC<MatchCardProps> = ({
   positionStyle,
   viewContainerStyle,
 }) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+  
   return (
     <TouchableOpacity onPress={onPress} style={[styles.container, containerStyle]}>
+      {isLoading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color={COLORS.primary} />
+        </View>
+      )}
       <Image
         source={image}
-        resizeMode="cover"
+        contentFit="cover"
         style={[styles.image, imageStyle]}
+        cachePolicy="memory-disk"
+        transition={200}
+        onLoadStart={() => setIsLoading(true)}
+        onLoad={() => setIsLoading(false)}
+        onError={() => {
+          setIsLoading(false);
+          setHasError(true);
+        }}
       />
       <LinearGradient
         colors={['transparent', 'rgba(150, 16, 255, 0.8)', 'rgba(150, 16, 255, 0.9)']}
@@ -72,6 +90,17 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     marginRight: 12,
     overflow: 'hidden',
+  },
+  loadingContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.grayscale200,
+    zIndex: 1,
   },
   image: {
     width: '100%',
@@ -112,4 +141,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MatchCard;
+export default memo(MatchCard);

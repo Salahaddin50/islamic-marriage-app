@@ -4,12 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, icons, images, SIZES } from '@/constants';
 import { getResponsiveWidth, getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '@/utils/responsive';
 import { useNavigation } from 'expo-router';
-import { NavigationProp } from '@react-navigation/native';
+import { NavigationProp, useFocusEffect } from '@react-navigation/native';
 import { menbers } from '@/data';
 import { supabase } from '@/src/config/supabase';
 import { useProfilePicture } from '@/hooks/useProfilePicture';
 import MatchCard from '@/components/MatchCard';
 import { Database } from '@/src/types/database.types';
+import { useMatchStore } from '@/src/store';
 
 // Simple Header Avatar Component with Profile Picture Support
 const SimpleHeaderAvatar = ({ size, displayName, isLoading }: { size: number, displayName?: string, isLoading: boolean }) => {
@@ -91,13 +92,8 @@ const SimpleHeaderAvatar = ({ size, displayName, isLoading }: { size: number, di
             height: size,
           }}
           resizeMode="cover"
-          onError={() => {
-            console.log('Header profile image failed to load, showing initial');
-            setImageLoadError(true);
-          }}
-          onLoad={() => {
-            console.log('Header profile image loaded successfully');
-          }}
+          onError={() => setImageLoadError(true)}
+          onLoad={() => {}}
         />
       </View>
     );
@@ -158,7 +154,7 @@ const CustomSliderHandle: React.FC<SliderHandleProps> = ({ enabled, markerStyle 
   );
 };
 
-const isTestMode = true;
+const isTestMode = false;
 
 const initialState = {
   inputValues: {
@@ -196,10 +192,16 @@ type DatabaseProfile = {
   profile_picture_url: string | null;
 };
 
+// Lightweight in-memory cache for instant home resume
+let cachedUsers: UserProfileWithMedia[] | null = null;
+let cachedAt = 0;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
 const HomeScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
   const [users, setUsers] = useState<UserProfileWithMedia[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterLoading, setFilterLoading] = useState(false);
   const refRBSheet = useRef<any>(null);
 
   const [ageRange, setAgeRange] = useState([20, 50]); // Initial age range values
@@ -240,11 +242,11 @@ const HomeScreen = () => {
   const baseHeight = baseWidth / (212 / 316); // keep this height
   const cardWidth = baseWidth * 1.155 * 1.05; // increase width by 15.5% + 5% = 21.275%
 
-  // Options arrays (from personal details)
-  const eyeColorOptions = ['Brown', 'Black', 'Blue', 'Green', 'Hazel', 'Gray', 'Other'];
-  const hairColorOptions = ['Black', 'Brown', 'Blonde', 'Red', 'Gray', 'White', 'Other'];
-  const skinToneOptions = ['Very Fair', 'Fair', 'Medium', 'Olive', 'Brown', 'Dark'];
-  const bodyTypeOptions = ['Slim', 'Athletic', 'Average', 'Curvy', 'Plus Size', 'Muscular'];
+  // Options arrays (matching database enums)
+  const eyeColorOptions = ['Brown', 'Black', 'Hazel', 'Green', 'Blue', 'Gray', 'Amber'];
+  const hairColorOptions = ['Black', 'Dark Brown', 'Brown', 'Light Brown', 'Blonde', 'Red', 'Gray', 'White'];
+  const skinToneOptions = ['Very Fair', 'Fair', 'Medium', 'Olive', 'Dark', 'Very Dark'];
+  const bodyTypeOptions = ['Slim', 'Athletic', 'Average', 'Curvy', 'Muscular'];
   const educationOptions = ['High School', 'Some College', 'Associate Degree', 'Bachelor\'s Degree', 'Master\'s Degree', 'Doctorate', 'Trade School', 'Other'];
   const languageOptions = ['Arabic', 'English', 'Turkish', 'Russian', 'Spanish', 'French', 'Urdu'];
   const housingOptions = ['Own House', 'Rent Apartment', 'Family Home', 'Shared Accommodation', 'Other'];
@@ -300,6 +302,11 @@ const HomeScreen = () => {
       .toString()
       .replace(/_/g, ' ')
       .replace(/\b\w/g, (m) => m.toUpperCase());
+  };
+
+  // Format enum values for display (already in proper format)
+  const formatEnumLabel = (value: string) => {
+    return value; // Values are already properly formatted
   };
 
   const getActiveFiltersCount = (): number => {
@@ -368,14 +375,16 @@ const HomeScreen = () => {
 
 
   // Fetch user profiles from database
-  const fetchUserProfiles = async (ignoreFilters: boolean = false) => {
+  const fetchUserProfiles = async (ignoreFilters: boolean = false, isFilter: boolean = false) => {
     try {
-      setLoading(true);
-      console.log('Starting to fetch user profiles...');
+      if (isFilter) {
+        setFilterLoading(true);
+      } else {
+        setLoading(true);
+      }
       
       // Get current user to exclude them from results and determine their gender
       const { data: { user: currentUser } } = await supabase.auth.getUser();
-      console.log('Current user:', currentUser?.id);
       
       // Get current user's gender to show opposite gender profiles
       let currentUserGender = null;
@@ -387,53 +396,7 @@ const HomeScreen = () => {
           .single();
         
         currentUserGender = currentUserProfile?.gender;
-        console.log('Current user gender:', currentUserGender);
       }
-      
-      // First, let's check if there are any profiles at all
-      const { data: allProfiles, error: countError } = await supabase
-        .from('user_profiles')
-        .select('id, user_id, first_name, gender, city, country, height_cm, weight_kg')
-        .limit(10);
-        
-      console.log('=== DATABASE CHECK ===');
-      console.log('Total profiles in database:', allProfiles?.length || 0);
-      console.log('Sample profiles with height/weight:', allProfiles);
-      console.log('Database connection error:', countError);
-      
-      if (countError) {
-        console.error('Error checking profiles:', countError);
-      }
-
-      // Additional direct query to test - try to get ALL profiles
-      const { data: testData, error: testError } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .limit(20);
-      
-      console.log('=== TEST QUERY (EXPANDED) ===');  
-      console.log('Test data result count:', testData?.length);
-      console.log('Test data result:', testData);
-      console.log('Test error:', testError);
-
-      // Try a count query to see total records
-      const { count, error: countError2 } = await supabase
-        .from('user_profiles')
-        .select('*', { count: 'exact', head: true });
-      
-      console.log('=== COUNT QUERY ===');
-      console.log('Total count:', count);
-      console.log('Count error:', countError2);
-
-      // Try without authentication context
-      const { data: allDataTest, error: allDataError } = await supabase
-        .from('user_profiles')
-        .select('id, user_id, first_name, last_name, gender, city, country, height_cm, weight_kg');
-      
-      console.log('=== ALL DATA TEST ===');
-      console.log('All data count:', allDataTest?.length);
-      console.log('All data sample:', allDataTest?.slice(0, 3));
-      console.log('All data error:', allDataError);
 
       let query = supabase
         .from('user_profiles')
@@ -454,7 +417,6 @@ const HomeScreen = () => {
 
       // Exclude current user if exists
       if (currentUser?.id) {
-        console.log('Excluding current user:', currentUser.id);
         query = query.neq('user_id', currentUser.id);
       }
 
@@ -464,24 +426,18 @@ const HomeScreen = () => {
       if (currentUserGender) {
         const og = currentUserGender.toLowerCase() === 'male' ? 'female' : 'male';
         setOppositeGender(og);
-        console.log('Showing opposite gender profiles:', og);
         query = query.eq('gender', og);
-      } else {
-        console.log('Current user gender unknown, showing all profiles');
-        // If we can't determine gender, show all profiles
       }
 
       const shouldApplyFilters = !ignoreFilters;
 
       // Apply country filter if selected
       if (shouldApplyFilters && selectedCountry) {
-        console.log('Applying country filter:', selectedCountry);
         query = query.eq('country', selectedCountry);
       }
 
       // Apply city filter if selected
       if (shouldApplyFilters && selectedCity) {
-        console.log('Applying city filter:', selectedCity);
         query = query.eq('city', selectedCity);
       }
 
@@ -558,108 +514,49 @@ const HomeScreen = () => {
         query = query.contains('languages_spoken', selectedLanguages);
       }
 
-      // Test query without filters first
-      const { data: testProfilesData, error: testProfilesError } = await supabase
-        .from('user_profiles')
-        .select('id, user_id, first_name, gender')
-        .limit(10);
-      
-      console.log('=== UNFILTERED TEST QUERY ===');
-      console.log('Unfiltered profiles count:', testProfilesData?.length || 0);
-      console.log('Unfiltered profiles:', testProfilesData);
-      
-      console.log('Executing query with filters:', { ageRange, currentUserId: currentUser?.id });
       const { data: profilesData, error } = await query;
 
-      console.log('Query result:', { 
-        count: profilesData?.length || 0, 
-        error: error?.message,
-        profilesData: profilesData
-      });
-
-      // Log each profile for debugging
-      if (profilesData && profilesData.length > 0) {
-        console.log('=== PROFILES RETURNED FROM QUERY ===');
-        profilesData.forEach((profile, index) => {
-          console.log(`Profile ${index + 1}:`, {
-            id: profile.id,
-            user_id: profile.user_id,
-            name: `${profile.first_name} ${profile.last_name}`,
-            gender: profile.gender,
-            height_cm: profile.height_cm,
-            weight_kg: profile.weight_kg,
-            city: profile.city,
-            country: profile.country
-          });
-        });
-      }
-
       if (error) {
-        console.error('Error fetching profiles:', error);
-        // Fallback to mock data
-        console.log('Falling back to mock data');
-        // Convert mock data to match new interface
-        const convertedMockData = menbers.map(item => ({
-          id: item.id.toString(),
-          name: item.name,
-          age: item.age ?? 25,
-          height: item.height,
-          weight: '80kg',
-          country: item.location.split(',')[0],
-          city: item.location.split(',')[1]?.trim(),
-          image: item.image
-        }));
-        setUsers(convertedMockData);
+        // Show no results on error
+        setUsers([]);
+        cachedUsers = [];
+        cachedAt = Date.now();
         return;
       }
 
       // Build a fallback map of profile picture URLs from media_references for users
       // who don't have profile_picture_url set in user_profiles
       let userIdToProfilePic: Record<string, string> = {};
-      if (testProfilesData && testProfilesData.length > 0) {
+      if (profilesData && profilesData.length > 0) {
         try {
-          const missingUserIds = testProfilesData
+          const missingUserIds = profilesData
             .filter((p: any) => !p.profile_picture_url)
             .map((p: any) => p.user_id);
 
           if (missingUserIds.length > 0) {
-            const { data: mediaRows, error: mediaRowsError } = await supabase
+            const { data: mediaRows } = await supabase
               .from('media_references')
               .select('user_id, do_spaces_cdn_url, do_spaces_url, external_url, is_profile_picture, media_type')
               .in('user_id', missingUserIds)
               .eq('is_profile_picture', true)
               .eq('media_type', 'photo');
 
-            if (mediaRowsError) {
-              console.log('Error fetching media_references for list:', mediaRowsError);
-            } else if (mediaRows && mediaRows.length > 0) {
+            if (mediaRows && mediaRows.length > 0) {
               mediaRows.forEach((row: any) => {
                 const url = row.do_spaces_cdn_url || row.do_spaces_url || row.external_url;
                 if (url) {
                   userIdToProfilePic[row.user_id] = url;
                 }
               });
-              console.log('Built media reference map for', Object.keys(userIdToProfilePic).length, 'users');
             }
           }
         } catch (e) {
-          console.log('Exception while building media reference map:', e);
+          // Silent error handling for media references
         }
       }
 
       if (profilesData && profilesData.length > 0) {
         const usersWithMedia = profilesData.map((profile) => {
-          console.log('Processing real profile from DB:', {
-            id: profile.id, 
-            name: profile.first_name,
-            height_cm: profile.height_cm,
-            weight_kg: profile.weight_kg,
-            gender: profile.gender,
-            city: profile.city,
-            country: profile.country,
-            profile_picture_url: profile.profile_picture_url
-          });
-
           // Calculate age from date_of_birth
           const birthDate = new Date(profile.date_of_birth);
           const today = new Date();
@@ -668,9 +565,7 @@ const HomeScreen = () => {
                       (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate()) ? 1 : 0);
 
           // Apply age filter
-          console.log('Age check:', { age, ageRange, ageRange0: ageRange[0], ageRange1: ageRange[1] });
           if (shouldApplyFilters && ageRange[0] && ageRange[1] && ageRange[0] > 0 && ageRange[1] > 0 && (age < ageRange[0] || age > ageRange[1])) {
-            console.log('Profile filtered out by age:', age, 'not in range', ageRange);
             return null; // Will be filtered out
           }
 
@@ -690,54 +585,45 @@ const HomeScreen = () => {
             image: imageUrl ? { uri: imageUrl } : (isFemale ? images.femaleSilhouette : images.maleSilhouette)
           };
 
-          console.log('Final processed profile:', processedProfile);
           return processedProfile;
         }).filter(profile => profile !== null) as UserProfileWithMedia[]; // Remove null entries
 
-        console.log('Successfully processed profiles:', usersWithMedia.length);
         setUsers(usersWithMedia);
+        // cache results for instant navigation back
+        cachedUsers = usersWithMedia;
+        cachedAt = Date.now();
       } else {
-        console.log('No profiles found, using mock data');
-        // Show a message if no real profiles exist
-        if (allProfiles && allProfiles.length === 0) {
-          console.log('Database is empty - no user profiles exist');
-        }
-        // Convert mock data to match new interface
-        const convertedMockData = menbers.map(item => ({
-          id: item.id.toString(),
-          name: item.name,
-          age: item.age ?? 25,
-          height: item.height,
-          weight: '80kg',
-          country: item.location.split(',')[0],
-          city: item.location.split(',')[1]?.trim(),
-          image: item.image
-        }));
-        setUsers(convertedMockData);
+        // No profiles found
+        setUsers([]);
+        cachedUsers = [];
+        cachedAt = Date.now();
       }
     } catch (error) {
-      console.error('Error in fetchUserProfiles:', error);
-      // Fallback to mock data
-      console.log('Exception occurred, falling back to mock data');
-      // Convert mock data to match new interface
-      const convertedMockData = menbers.map(item => ({
-        id: item.id.toString(),
-        name: item.name,
-        age: item.age ?? 25,
-        height: item.height,
-        weight: '80kg',
-        country: item.location.split(',')[0],
-        image: item.image
-      }));
-      setUsers(convertedMockData);
+      // Show no results on exception
+      setUsers([]);
+      cachedUsers = [];
+      cachedAt = Date.now();
     } finally {
-      setLoading(false);
+      if (isFilter) {
+        setFilterLoading(false);
+      } else {
+        setLoading(false);
+      }
     }
   };
 
-  useEffect(() => {
+  // Render instantly from cache when available; fetch only when needed
+  useFocusEffect(
+    React.useCallback(() => {
+      const isFresh = cachedUsers && (Date.now() - cachedAt) < CACHE_TTL_MS;
+      if (isFresh) {
+        setUsers(cachedUsers as UserProfileWithMedia[]);
+        setLoading(false);
+        return;
+      }
     fetchUserProfiles();
   }, [])
+  );
 
   // Add a manual refresh function for testing
   const handleRefresh = () => {
@@ -815,14 +701,19 @@ const HomeScreen = () => {
         </View>
         <View style={styles.viewRight}>
           <TouchableOpacity
-            onPress={() => refRBSheet.current?.open()}
-            style={styles.filterButton}>
-            <Image
-              source={icons.filter}
-              resizeMode='contain'
-              style={[styles.bellIcon, { tintColor: COLORS.greyscale900 }]}
-            />
-            {getActiveFiltersCount() > 0 && (
+            onPress={() => !filterLoading && refRBSheet.current?.open()}
+            disabled={filterLoading}
+            style={[styles.filterButton, filterLoading && { opacity: 0.7 }]}>
+            {filterLoading ? (
+              <ActivityIndicator size="small" color={COLORS.primary} />
+            ) : (
+              <Image
+                source={icons.filter}
+                resizeMode='contain'
+                style={[styles.bellIcon, { tintColor: COLORS.greyscale900 }]}
+              />
+            )}
+            {!filterLoading && getActiveFiltersCount() > 0 && (
               <View style={styles.filterBadge}>
                 <Text style={styles.filterBadgeText}>{getActiveFiltersCount()}</Text>
               </View>
@@ -843,7 +734,7 @@ const HomeScreen = () => {
   };
 
 
-  const renderItem = ({ item }: { item: UserProfileWithMedia }) => {
+  const renderItem = React.useCallback(({ item }: { item: UserProfileWithMedia }) => {
     return (
       <MatchCard
         name={item.name}
@@ -857,13 +748,20 @@ const HomeScreen = () => {
         containerStyle={[styles.cardContainer, { width: cardWidth, height: baseHeight }]}
       />
     );
-  };
+  }, [navigation, cardWidth, baseHeight]);
+
+  const getItemLayout = React.useCallback((_: any, index: number) => {
+    const rowIndex = Math.floor(index / 2);
+    const rowHeight = baseHeight + 24; // card height + marginBottom
+    const offset = 16 + rowIndex * rowHeight; // list paddingTop = 16
+    return { length: rowHeight, offset, index };
+  }, [baseHeight]);
 
   if (loading) {
-  return (
-    <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
-      <View style={[styles.container, { backgroundColor: COLORS.white }]}>
-        {renderHeader()}
+    return (
+      <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
+        <View style={[styles.container, { backgroundColor: COLORS.white }]}>
+          {renderHeader()}
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={COLORS.primary} />
             <Text style={styles.loadingText}>Finding matches for you...</Text>
@@ -873,19 +771,447 @@ const HomeScreen = () => {
     );
   }
 
+  if (!loading && users.length === 0) {
+    return (
+      <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
+        <View style={[styles.container, { backgroundColor: COLORS.white }]}>
+          {renderHeader()}
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>No matches found with current filters</Text>
+            <Text style={[styles.loadingText, { fontSize: 14, marginTop: 8, opacity: 0.7 }]}>
+              Try adjusting your filters to see more results
+            </Text>
+          </View>
+
+          <RBSheet
+            ref={refRBSheet}
+            closeOnPressMask={true}
+            height={Math.min(windowHeight * 0.9, 1000)}
+            customStyles={{
+              wrapper: {
+                backgroundColor: "rgba(0,0,0,0.5)",
+              },
+              draggableIcon: {
+                backgroundColor: "#000",
+              },
+              container: {
+                borderTopRightRadius: 32,
+                borderTopLeftRadius: 32,
+                height: Math.min(windowHeight * 0.9, 1000),
+                backgroundColor: COLORS.white,
+              }
+            }}
+          >
+            <Text style={[styles.bottomTitle, {
+              color: COLORS.greyscale900
+            }]}>Filter ({users.length})</Text>
+            <View style={styles.separateLine} />
+            <ScrollView style={{ flex: 1, maxHeight: windowHeight * 0.9 - 150 }} showsVerticalScrollIndicator={false}>
+            <View style={{ marginHorizontal: 16 }}>
+              {/* Country first */}
+              <Text style={[styles.subtitle, {
+                color: COLORS.greyscale900,
+              }]}>Country</Text>
+              <SearchableDropdown
+                data={countriesData.map(country => ({ label: country.name, value: country.name }))}
+                onSelect={(item: any) => handleCountrySelect(item.value)}
+                placeholder="Select Country"
+                selectedValue={selectedCountry}
+              />
+              
+              {selectedCountry && (
+                <>
+                  <Text style={[styles.subtitle, {
+                    color: COLORS.greyscale900,
+                    marginTop: 16,
+                  }]}>City</Text>
+                  <SearchableDropdown
+                    data={availableCities.map(city => ({ label: city, value: city }))}
+                    onSelect={(item: any) => handleCitySelect(item.value)}
+                    placeholder="Select City"
+                    selectedValue={selectedCity}
+                  />
+                </>
+              )}
+
+              {/* Age after location */}
+              <Text style={[styles.subtitle, {
+                color: COLORS.greyscale900,
+              }]}>Age</Text>
+              <MultiSlider
+                values={ageRange}
+                sliderLength={SIZES.width - 32}
+                onValuesChange={handleSliderChange}
+                min={0}
+                max={100}
+                step={1}
+                allowOverlap={false}
+                snapped
+                minMarkerOverlapDistance={10}
+                selectedStyle={styles.selectedTrack}
+                unselectedStyle={styles.unselectedTrack}
+                containerStyle={styles.sliderContainer}
+                trackStyle={styles.trackStyle}
+                customMarker={(e) => <CustomMarker {...e} />}
+              />
+
+              {/* Physical Characteristics */}
+              <Text style={[styles.subtitle, {
+                color: COLORS.greyscale900,
+                marginTop: 16,
+              }]}>Height Range (cm)</Text>
+              <MultiSlider
+                values={heightRange}
+                sliderLength={SIZES.width - 32}
+                onValuesChange={(values) => setHeightRange(values)}
+                min={140}
+                max={210}
+                step={1}
+                allowOverlap={false}
+                snapped
+                minMarkerOverlapDistance={10}
+                selectedStyle={styles.selectedTrack}
+                unselectedStyle={styles.unselectedTrack}
+                containerStyle={styles.sliderContainer}
+                trackStyle={styles.trackStyle}
+                customMarker={(e) => <CustomMarker {...e} />}
+              />
+
+              <Text style={[styles.subtitle, {
+                color: COLORS.greyscale900,
+                marginTop: 16,
+              }]}>Weight Range (kg)</Text>
+              <MultiSlider
+                values={weightRange}
+                sliderLength={SIZES.width - 32}
+                onValuesChange={(values) => setWeightRange(values)}
+                min={40}
+                max={150}
+                step={1}
+                allowOverlap={false}
+                snapped
+                minMarkerOverlapDistance={10}
+                selectedStyle={styles.selectedTrack}
+                unselectedStyle={styles.unselectedTrack}
+                containerStyle={styles.sliderContainer}
+                trackStyle={styles.trackStyle}
+                customMarker={(e) => <CustomMarker {...e} />}
+              />
+
+              <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Eye Color</Text>
+              <View style={styles.horizontalMultiSelect}>
+                {eyeColorOptions.map((option: string) => {
+                  const selected = selectedEyeColor.includes(option);
+                  return (
+                    <TouchableOpacity
+                      key={option}
+                      style={[styles.optionChip, selected && styles.optionChipSelected]}
+                      onPress={() => toggleSelection(option, selectedEyeColor, setSelectedEyeColor)}
+                    >
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{formatEnumLabel(option)}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+            </View>
+
+              <Text style={[styles.subtitle, {
+                color: COLORS.greyscale900,
+                marginTop: 16,
+              }]}>Hair Color</Text>
+              <View style={styles.horizontalMultiSelect}>
+                {hairColorOptions.map((option: string) => {
+                  const selected = selectedHairColor.includes(option);
+                  return (
+                    <TouchableOpacity
+                      key={option}
+                      style={[styles.optionChip, selected && styles.optionChipSelected]}
+                      onPress={() => toggleSelection(option, selectedHairColor, setSelectedHairColor)}
+                    >
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{formatEnumLabel(option)}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <Text style={[styles.subtitle, {
+                color: COLORS.greyscale900,
+                marginTop: 16,
+              }]}>Skin Tone</Text>
+              <View style={styles.horizontalMultiSelect}>
+                {skinToneOptions.map((option: string) => {
+                  const selected = selectedSkinTone.includes(option);
+                  return (
+                    <TouchableOpacity
+                      key={option}
+                      style={[styles.optionChip, selected && styles.optionChipSelected]}
+                      onPress={() => toggleSelection(option, selectedSkinTone, setSelectedSkinTone)}
+                    >
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{formatEnumLabel(option)}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <Text style={[styles.subtitle, {
+                color: COLORS.greyscale900,
+                marginTop: 16,
+              }]}>Body Type</Text>
+              <View style={styles.horizontalMultiSelect}>
+                {bodyTypeOptions.map((option: string) => {
+                  const selected = selectedBodyType.includes(option);
+                  return (
+                    <TouchableOpacity
+                      key={option}
+                      style={[styles.optionChip, selected && styles.optionChipSelected]}
+                      onPress={() => toggleSelection(option, selectedBodyType, setSelectedBodyType)}
+                    >
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{formatEnumLabel(option)}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <Text style={[styles.subtitle, {
+                color: COLORS.greyscale900,
+                marginTop: 16,
+              }]}>Education Level</Text>
+              <View style={styles.horizontalMultiSelect}>
+                {educationOptions.map((option: string) => {
+                  const selected = selectedEducation.includes(option);
+                  return (
+                    <TouchableOpacity
+                      key={option}
+                      style={[styles.optionChip, selected && styles.optionChipSelected]}
+                      onPress={() => toggleSelection(option, selectedEducation, setSelectedEducation)}
+                    >
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {/* Languages */}
+              <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Languages</Text>
+              <View style={styles.horizontalMultiSelect}>
+                {languageOptions.map((option: string) => {
+                  const selected = selectedLanguages.includes(option);
+                  return (
+                    <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedLanguages, setSelectedLanguages)}>
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {/* Housing Type */}
+              <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Housing Type</Text>
+              <View style={styles.horizontalMultiSelect}>
+                {housingOptions.map((option: string) => {
+                  const selected = selectedHousingType.includes(option);
+                  return (
+                    <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedHousingType, setSelectedHousingType)}>
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {/* Living Condition / Social / Work are gender-specific – still selectable here, but applied conditionally in query */}
+              <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Living Condition</Text>
+              <View style={styles.horizontalMultiSelect}>
+                {livingConditionOptions.map((option: string) => {
+                  const label = formatLabel(option);
+                  const selected = selectedLivingCondition.includes(option);
+                  return (
+                    <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedLivingCondition, setSelectedLivingCondition)}>
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{label}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Social Condition</Text>
+              <View style={styles.horizontalMultiSelect}>
+                {socialConditionOptions.map((option: string) => {
+                  const label = formatLabel(option);
+                  const selected = selectedSocialCondition.includes(option);
+                  return (
+                    <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedSocialCondition, setSelectedSocialCondition)}>
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{label}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Work Status</Text>
+              <View style={styles.horizontalMultiSelect}>
+                {workStatusOptions.map((option: string) => {
+                  const label = formatLabel(option);
+                  const selected = selectedWorkStatus.includes(option);
+                  return (
+                    <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedWorkStatus, setSelectedWorkStatus)}>
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{label}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <Text style={[styles.subtitle, {
+                color: COLORS.greyscale900,
+                marginTop: 16,
+              }]}>Religious Level</Text>
+              <View style={styles.horizontalMultiSelect}>
+                {religiousLevelOptions.map((option: string) => {
+                  const selected = selectedReligiousLevel.includes(option);
+                  return (
+                    <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedReligiousLevel, setSelectedReligiousLevel)}>
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <Text style={[styles.subtitle, {
+                color: COLORS.greyscale900,
+                marginTop: 16,
+              }]}>Prayer Frequency</Text>
+              <View style={styles.horizontalMultiSelect}>
+                {prayerFrequencyOptions.map((option: string) => {
+                  const selected = selectedPrayerFrequency.includes(option);
+                  return (
+                    <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedPrayerFrequency, setSelectedPrayerFrequency)}>
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {/* Quran Reading Level */}
+              <Text style={[styles.subtitle, {
+                color: COLORS.greyscale900,
+                marginTop: 16,
+              }]}>Quran Reading Level</Text>
+              <View style={styles.horizontalMultiSelect}>
+                {quranReadingOptions.map((option: string) => {
+                  const selected = selectedQuranReading.includes(option);
+                  return (
+                    <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedQuranReading, setSelectedQuranReading)}>
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {/* Gender-specific: Covering Level or Beard Practice */}
+              {oppositeGender === 'female' && (
+                <>
+                  <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Covering Level</Text>
+                  <View style={styles.horizontalMultiSelect}>
+                    {coveringLevelOptions.map((option: string) => {
+                      const selected = selectedCoveringLevel.includes(option);
+                      return (
+                        <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedCoveringLevel, setSelectedCoveringLevel)}>
+                          <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{formatLabel(option)}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </>
+              )}
+              {oppositeGender === 'male' && (
+                <>
+                  <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Beard Practice</Text>
+                  <View style={styles.horizontalMultiSelect}>
+                    {beardPracticeOptions.map((option: string) => {
+                      const selected = selectedBeardPractice.includes(option);
+                      return (
+                        <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedBeardPractice, setSelectedBeardPractice)}>
+                          <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </>
+              )}
+
+              {/* Accepted Wife Positions (for females) */}
+              <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Accept To Be Which Wife</Text>
+              <View style={styles.horizontalMultiSelect}>
+                {acceptedWifeOptions.map((option: string) => {
+                  const selected = selectedAcceptedWifePositions.includes(option);
+                  return (
+                    <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedAcceptedWifePositions, setSelectedAcceptedWifePositions)}>
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+            </View>
+            </ScrollView>
+            <View style={styles.separateLine} />
+
+            <View style={styles.bottomContainer}>
+              <Button
+                title="Reset"
+                style={[styles.cancelButton, filterLoading && { opacity: 0.7 }]}
+                textColor={COLORS.primary}
+                disabled={filterLoading}
+                onPress={() => {
+                  if (!filterLoading) {
+                    resetAllFilters();
+                    // Immediately fetch ignoring filters so user sees results without reopening
+                    fetchUserProfiles(true, true);
+                    refRBSheet.current?.close();
+                  }
+                }}
+              />
+              <Button
+                title="Apply"
+                filled
+                style={[styles.logoutButton, filterLoading && { opacity: 0.7 }]}
+                disabled={filterLoading}
+                onPress={() => {
+                  if (!filterLoading) {
+                    fetchUserProfiles(false, true);
+                    refRBSheet.current?.close();
+                  }
+                }}
+              />
+            </View>
+          </RBSheet>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
               return (
     <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
       <View style={[styles.container, { backgroundColor: COLORS.white }]}>
         {renderHeader()}
-        <FlatList
-          data={users}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          numColumns={2}
-          columnWrapperStyle={styles.columnWrapper}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContainer}
-        />
+        <View style={{ flex: 1 }}>
+          <FlatList
+            data={users}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            columnWrapperStyle={styles.columnWrapper}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContainer}
+            initialNumToRender={8}
+            maxToRenderPerBatch={8}
+            windowSize={7}
+            removeClippedSubviews
+            updateCellsBatchingPeriod={50}
+            getItemLayout={getItemLayout}
+          />
+          {filterLoading && (
+            <View style={styles.filterLoadingOverlay}>
+              <ActivityIndicator size="large" color={COLORS.primary} />
+              <Text style={styles.filterLoadingText}>Applying filters...</Text>
+            </View>
+          )}
+        </View>
 
         <RBSheet
           ref={refRBSheet}
@@ -1012,7 +1338,7 @@ const HomeScreen = () => {
                     style={[styles.optionChip, selected && styles.optionChipSelected]}
                     onPress={() => toggleSelection(option, selectedEyeColor, setSelectedEyeColor)}
                   >
-                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{formatEnumLabel(option)}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -1031,7 +1357,7 @@ const HomeScreen = () => {
                     style={[styles.optionChip, selected && styles.optionChipSelected]}
                     onPress={() => toggleSelection(option, selectedHairColor, setSelectedHairColor)}
                   >
-                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{formatEnumLabel(option)}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -1050,7 +1376,7 @@ const HomeScreen = () => {
                     style={[styles.optionChip, selected && styles.optionChipSelected]}
                     onPress={() => toggleSelection(option, selectedSkinTone, setSelectedSkinTone)}
                   >
-                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{formatEnumLabel(option)}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -1069,7 +1395,7 @@ const HomeScreen = () => {
                     style={[styles.optionChip, selected && styles.optionChipSelected]}
                     onPress={() => toggleSelection(option, selectedBodyType, setSelectedBodyType)}
                   >
-                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{formatEnumLabel(option)}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -1258,22 +1584,28 @@ const HomeScreen = () => {
           <View style={styles.bottomContainer}>
             <Button
               title="Reset"
-              style={styles.cancelButton}
+              style={[styles.cancelButton, filterLoading && { opacity: 0.7 }]}
               textColor={COLORS.primary}
+              disabled={filterLoading}
               onPress={() => {
-                resetAllFilters();
-                // Immediately fetch ignoring filters so user sees results without reopening
-                fetchUserProfiles(true);
-                refRBSheet.current?.close();
+                if (!filterLoading) {
+                  resetAllFilters();
+                  // Immediately fetch ignoring filters so user sees results without reopening
+                  fetchUserProfiles(true, true);
+                  refRBSheet.current?.close();
+                }
               }}
             />
             <Button
               title="Apply"
               filled
-              style={styles.logoutButton}
+              style={[styles.logoutButton, filterLoading && { opacity: 0.7 }]}
+              disabled={filterLoading}
               onPress={() => {
-                fetchUserProfiles();
-                refRBSheet.current?.close();
+                if (!filterLoading) {
+                  fetchUserProfiles(false, true);
+                  refRBSheet.current?.close();
+                }
               }}
             />
           </View>
@@ -1530,6 +1862,24 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 10,
     fontWeight: 'bold',
+  },
+  filterLoadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  filterLoadingText: {
+    fontSize: 16,
+    fontFamily: 'medium',
+    color: COLORS.greyscale900,
+    marginTop: 12,
+    textAlign: 'center',
   },
 })
 

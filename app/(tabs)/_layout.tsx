@@ -57,6 +57,9 @@ const TabLayout = () => {
         name="index"
         options={{
           title: "",
+          // Keep Home tab state and avoid re-renders when switching tabs
+          freezeOnBlur: true,
+          unmountOnBlur: false,
           tabBarIcon: ({ focused }: { focused: boolean }) => {
             return (
               <View style={{
@@ -177,6 +180,9 @@ const TabLayout = () => {
         name="profile"
         options={{
           title: "",
+          // Keep Profile tab state as well for quick back navigation
+          freezeOnBlur: true,
+          unmountOnBlur: false,
           tabBarIcon: ({ focused }: { focused: boolean }) => {
             return (
               <View style={{
