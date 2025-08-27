@@ -637,9 +637,8 @@ const PhotosVideos = () => {
                 }}
               >
                 <View style={styles.actionButtonBackground}>
-                  <MaterialCommunityIcons name="account" size={28} color={COLORS.white} />
+                  <Text style={styles.fullScreenActionButtonText}>Main</Text>
                 </View>
-                <Text style={styles.fullScreenActionText}>Set as Avatar</Text>
               </TouchableOpacity>
             )}
             <TouchableOpacity 
@@ -650,9 +649,8 @@ const PhotosVideos = () => {
               }}
             >
               <View style={styles.actionButtonBackground}>
-                <MaterialCommunityIcons name="delete" size={28} color={COLORS.white} />
+                <Text style={styles.fullScreenActionButtonText}>Delete</Text>
               </View>
-              <Text style={styles.fullScreenActionText}>Delete</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -1172,6 +1170,12 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: getResponsiveFontSize(14),
     fontFamily: 'medium',
+    textAlign: 'center',
+  },
+  fullScreenActionButtonText: {
+    color: COLORS.white,
+    fontSize: getResponsiveFontSize(12),
+    fontFamily: 'semibold',
     textAlign: 'center',
   },
 });
