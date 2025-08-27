@@ -1000,7 +1000,7 @@ const styles = StyleSheet.create({
   },
   photoItem: {
     width: '100%',
-    height: (SIZES.width - 56) / 2, // Square aspect ratio for photos
+    aspectRatio: 1, // Square aspect ratio for photos (works well for both landscape and portrait)
     borderRadius: 12,
     backgroundColor: COLORS.grayscale200,
   },
@@ -1009,7 +1009,7 @@ const styles = StyleSheet.create({
   },
   videoItem: {
     width: '100%',
-    aspectRatio: 1, // Square container that maintains aspect ratio
+    aspectRatio: 0.5625, // Vertical rectangle (9:16 ratio) for modern phone videos
     borderRadius: 12,
     backgroundColor: COLORS.grayscale200,
   },
