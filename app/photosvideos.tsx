@@ -11,9 +11,9 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { launchMediaPicker } from '../utils/ImagePickerHelper';
 import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '../utils/responsive';
   import { PhotosVideosAPI } from '../src/api/photos-videos.api';
-  import { PhotoVideoItem } from '../src/services/photos-videos.service';
-  import { clearProfilePictureCache } from '../hooks/useProfilePicture';
-  import { ThumbnailAPI } from '../src/api/thumbnail.api';
+import { PhotoVideoItem } from '../src/services/photos-videos.service';
+import { clearProfilePictureCache } from '../hooks/useProfilePicture';
+import { generateVideoThumbnail } from '../utils/videoThumbnailGenerator';
 
 // Cache for media items to prevent reloading
 let cachedMediaData: { photos: PhotoVideoItem[], videos: PhotoVideoItem[] } | null = null;
@@ -93,41 +93,44 @@ const PhotosVideos = () => {
 
 
 
-  // Generate and store permanent thumbnails for videos
+  // Generate thumbnails for videos when videos change - hybrid approach
   useEffect(() => {
     if (videos.length > 0) {
-      // Filter videos that need permanent thumbnails
+      // Filter videos that need thumbnail generation
       const videosNeedingThumbnails = videos.filter(video => 
         video.external_url && 
-        !video.thumbnail_url?.includes('.png') && // No permanent PNG thumbnail
-        !video.thumbnail_url?.includes('.jpg') && // No permanent JPG thumbnail
-        !video.thumbnail_url?.includes('.jpeg') && // No permanent JPEG thumbnail
-        !thumbnailErrors[video.id]
+        !generatedThumbnails[video.id] && 
+        !thumbnailErrors[video.id] &&
+        // Only generate if no working thumbnail exists
+        (!video.thumbnail_url || 
+         video.thumbnail_url.includes('?thumbnail=true') || // DigitalOcean parameter URLs
+         video.thumbnail_url.includes('.mp4')) // Video files as thumbnails
       );
 
       if (videosNeedingThumbnails.length > 0) {
         // Set initial progress
         setThumbnailGenerationProgress({completed: 0, total: videosNeedingThumbnails.length});
 
-        // Generate permanent thumbnails for each video
+        // Use local thumbnail generation for immediate display
         videosNeedingThumbnails.forEach(async (video, index) => {
           try {
-            const result = await ThumbnailAPI.generateAndStoreThumbnail({
-              videoId: video.id,
-              videoUrl: getDirectUrl(video.external_url)
+            const thumbnailDataUrl = await generateVideoThumbnail(getDirectUrl(video.external_url), {
+              time: 3,
+              width: 400,
+              height: 300,
+              quality: 0.8,
+              retries: 2
             });
 
-            if (result.success && result.data) {
+            if (thumbnailDataUrl && thumbnailDataUrl !== 'data:image/png;base64,') {
+              // Store locally for immediate use
+              setGeneratedThumbnails(prev => ({ ...prev, [video.id]: thumbnailDataUrl }));
+              
               // Update progress
               setThumbnailGenerationProgress(prev => ({
                 completed: prev.completed + 1,
                 total: prev.total
               }));
-
-              // Refresh media items to get updated thumbnail URLs
-              setTimeout(() => {
-                loadMediaItems(true);
-              }, 1000); // Small delay to ensure database update
             } else {
               // Mark as error
               setThumbnailErrors(prev => ({ ...prev, [video.id]: true }));
@@ -146,11 +149,11 @@ const PhotosVideos = () => {
           }
         });
       } else {
-        // All videos have permanent thumbnails
+        // All videos have thumbnails
         setThumbnailGenerationProgress({completed: 0, total: 0});
       }
     }
-  }, [videos, thumbnailErrors]);
+  }, [videos, generatedThumbnails, thumbnailErrors]);
 
   // Load media items on component mount
   useEffect(() => {
@@ -497,9 +500,14 @@ const PhotosVideos = () => {
   };
 
   const renderVideoItem = ({ item }: { item: PhotoVideoItem }) => {
-    // Get the thumbnail URL - now using permanent stored thumbnails
+    // Get the thumbnail URL - hybrid approach
     const getVideoThumbnail = () => {
-      // Priority 1: Use permanent stored thumbnail from database
+      // Priority 1: Use locally generated thumbnail (most reliable)
+      if (generatedThumbnails[item.id]) {
+        return generatedThumbnails[item.id];
+      }
+      
+      // Priority 2: Use permanent stored thumbnail from database
       if (item.thumbnail_url && item.thumbnail_url.trim() !== '') {
         const thumbnailUrl = item.thumbnail_url;
         // Check if it's a real thumbnail image (PNG, JPG, etc.)
@@ -509,7 +517,7 @@ const PhotosVideos = () => {
         }
       }
       
-      // Priority 2: Fallback to default thumbnail
+      // Priority 3: Fallback to default thumbnail
       return DEFAULT_VIDEO_THUMBNAIL;
     };
 
