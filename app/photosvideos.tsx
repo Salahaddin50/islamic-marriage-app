@@ -81,18 +81,35 @@ const PhotosVideos = () => {
     }
   };
 
+  // Debug media data to identify thumbnail issues
+  useEffect(() => {
+    if (videos.length > 0) {
+      console.log('🔍 Debug Videos Data:', {
+        videoCount: videos.length,
+        videoDetails: videos.map(v => ({
+          id: v.id,
+          external_url: v.external_url,
+          thumbnail_url: v.thumbnail_url,
+          hasThumbnail: !!v.thumbnail_url,
+          thumbnailLength: v.thumbnail_url?.length || 0
+        }))
+      });
+    }
+  }, [videos]);
+
   // Generate thumbnails for videos when videos change - improved batch processing
   useEffect(() => {
     if (videos.length > 0) {
-      // Filter videos that need thumbnail generation
+      // Filter videos that need thumbnail generation (only if no database thumbnail exists)
       const videosNeedingThumbnails = videos.filter(video => 
         video.external_url && 
+        !video.thumbnail_url && // Only generate if no database thumbnail
         !generatedThumbnails[video.id] && 
         !thumbnailErrors[video.id]
       );
 
       if (videosNeedingThumbnails.length > 0) {
-        console.log(`Generating thumbnails for ${videosNeedingThumbnails.length} videos...`);
+        console.log(`🔄 Generating thumbnails for ${videosNeedingThumbnails.length} videos (no database thumbnails)...`);
         
         // Set initial progress
         setThumbnailGenerationProgress({completed: 0, total: videosNeedingThumbnails.length});
@@ -125,7 +142,7 @@ const PhotosVideos = () => {
             }
           }
         ).then(results => {
-          console.log('Batch thumbnail generation completed:', Object.keys(results).length, 'thumbnails generated');
+          console.log('✅ Batch thumbnail generation completed:', Object.keys(results).length, 'thumbnails generated');
           
           // Update all results at once for any that weren't updated via progress callback
           setGeneratedThumbnails(prev => ({ ...prev, ...results }));
@@ -140,13 +157,15 @@ const PhotosVideos = () => {
           // Reset progress
           setThumbnailGenerationProgress({completed: 0, total: 0});
         }).catch(error => {
-          console.error('Batch thumbnail generation failed:', error);
+          console.error('❌ Batch thumbnail generation failed:', error);
           // Mark all videos as errored if batch fails
           videosNeedingThumbnails.forEach(video => {
             setThumbnailErrors(prev => ({ ...prev, [video.id]: true }));
           });
           setThumbnailGenerationProgress({completed: 0, total: 0});
         });
+      } else {
+        console.log('✅ All videos have database thumbnails, no generation needed');
       }
     }
   }, [videos, generatedThumbnails, thumbnailErrors]); // Added dependencies to prevent unnecessary re-runs
@@ -171,6 +190,24 @@ const PhotosVideos = () => {
       const result = await PhotosVideosAPI.getMyMedia();
       
       if (result.success && result.data) {
+        // Debug the fetched data
+        console.log('🔍 Loaded media from database:', {
+          photosCount: result.data.photos.length,
+          videosCount: result.data.videos.length,
+          photos: result.data.photos.map(p => ({
+            id: p.id,
+            external_url: p.external_url,
+            thumbnail_url: p.thumbnail_url,
+            hasThumbnail: !!p.thumbnail_url
+          })),
+          videos: result.data.videos.map(v => ({
+            id: v.id,
+            external_url: v.external_url,
+            thumbnail_url: v.thumbnail_url,
+            hasThumbnail: !!v.thumbnail_url
+          }))
+        });
+        
         // Cache the data
         cachedMediaData = {
           photos: result.data.photos,
@@ -382,8 +419,21 @@ const PhotosVideos = () => {
   const renderPhotoItem = ({ item }: { item: PhotoVideoItem }) => {
     const imageUrl = getDirectUrl(item.external_url);
 
+    // Debug photo data
+    console.log('🖼️ Rendering photo:', {
+      id: item.id,
+      external_url: item.external_url,
+      thumbnail_url: item.thumbnail_url,
+      hasThumbnail: !!item.thumbnail_url,
+      imageUrl: imageUrl
+    });
+
     const handleImageError = (error: any) => {
-      // Image load error handled
+      console.log('❌ Photo load error:', {
+        id: item.id,
+        url: imageUrl,
+        error: error
+      });
     };
 
     return (
@@ -468,22 +518,33 @@ const PhotosVideos = () => {
   };
 
   const renderVideoItem = ({ item }: { item: PhotoVideoItem }) => {
-    // Get the thumbnail URL with proper handling
+    // Get the thumbnail URL with proper handling - PRIORITIZE DATABASE THUMBNAILS
     const getVideoThumbnail = () => {
-      // First check if we have a generated thumbnail for this video
-      if (generatedThumbnails[item.id]) {
-        return generatedThumbnails[item.id];
-      }
-      
-      // Check if we have a specific thumbnail URL
-      if (item.thumbnail_url) {
+      console.log('🎯 Getting thumbnail for video:', {
+        id: item.id,
+        hasDatabaseThumbnail: !!item.thumbnail_url,
+        databaseThumbnail: item.thumbnail_url,
+        hasGeneratedThumbnail: !!generatedThumbnails[item.id],
+        generatedThumbnail: generatedThumbnails[item.id]
+      });
+
+      // Priority 1: Use database thumbnail_url if it exists
+      if (item.thumbnail_url && item.thumbnail_url.trim() !== '') {
+        console.log('✅ Using database thumbnail:', item.thumbnail_url);
+        const url = getDirectUrl(item.thumbnail_url);
         // Add timestamp to prevent caching issues if not already present
         const timestamp = Date.now();
-        const url = getDirectUrl(item.thumbnail_url);
         return url.includes('?') ? `${url}&t=${timestamp}` : `${url}?t=${timestamp}`;
       }
       
-      // Fallback to default thumbnail
+      // Priority 2: Use locally generated thumbnail if available
+      if (generatedThumbnails[item.id]) {
+        console.log('✅ Using generated thumbnail:', generatedThumbnails[item.id]);
+        return generatedThumbnails[item.id];
+      }
+      
+      // Priority 3: Fallback to default thumbnail
+      console.log('⚠️ No thumbnail available, using default');
       return DEFAULT_VIDEO_THUMBNAIL;
     };
 
