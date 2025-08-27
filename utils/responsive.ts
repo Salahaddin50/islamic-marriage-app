@@ -129,3 +129,41 @@ export const RESPONSIVE_SIZES = {
   screenWidth,
   screenHeight,
 };
+
+// Safe navigation utility for handling back navigation when history is lost
+export const safeGoBack = (navigation: any, router: any, fallbackRoute: string = '/(tabs)') => {
+  try {
+    // First try the standard navigation back
+    if (navigation?.canGoBack && navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+    
+    // If navigation doesn't work, try router back
+    if (router?.canGoBack && router.canGoBack()) {
+      router.back();
+      return;
+    }
+    
+    // If both fail, navigate to fallback route
+    if (router?.replace) {
+      router.replace(fallbackRoute);
+    } else if (router?.push) {
+      router.push(fallbackRoute);
+    } else if (navigation?.navigate) {
+      navigation.navigate(fallbackRoute);
+    }
+  } catch (error) {
+    // Last resort: redirect to home on web or navigate to fallback
+    console.warn('Navigation failed, using fallback:', error);
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      try {
+        window.history.length > 1 ? window.history.back() : window.location.href = '/';
+      } catch {
+        window.location.href = '/';
+      }
+    } else if (router?.replace) {
+      router.replace(fallbackRoute);
+    }
+  }
+};

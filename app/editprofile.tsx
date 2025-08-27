@@ -377,7 +377,7 @@ const EditProfile = () => {
       <View style={[styles.container, { backgroundColor: COLORS.white }]}>
         <Header 
           title="Edit Profile" 
-          onBackPress={() => router.back()}
+          fallbackRoute="/(tabs)/profile"
         />
         
         {error && (

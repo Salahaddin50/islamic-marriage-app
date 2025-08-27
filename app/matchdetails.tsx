@@ -3,11 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { COLORS, icons, images, SIZES } from '@/constants';
 // import AutoSlider from '@/components/AutoSlider'; // Removed to ensure we only use custom implementation
-import { useNavigation, useLocalSearchParams } from 'expo-router';
+import { useNavigation, useLocalSearchParams, useRouter } from 'expo-router';
 import { NavigationProp } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { supabase } from '@/src/config/supabase';
-import { getResponsiveFontSize, getResponsiveSpacing } from '@/utils/responsive';
+import { getResponsiveFontSize, getResponsiveSpacing, safeGoBack } from '@/utils/responsive';
 
 // Types for user profile data (comprehensive - matches database)
 interface UserProfile {
@@ -63,6 +63,7 @@ const MatchDetails = () => {
   const params = useLocalSearchParams();
   const userId = params.userId as string;
   const navigation = useNavigation<NavigationProp<any>>();
+  const router = useRouter();
 
 
 
@@ -279,7 +280,7 @@ const MatchDetails = () => {
     const renderHeader = () => {
         return (
             <View style={styles.headerContainer}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => safeGoBack(navigation, router, '/(tabs)/match')}>
                     <Image
                         source={icons.back}
             contentFit="contain"
@@ -315,7 +316,7 @@ const MatchDetails = () => {
     return (
       <View style={[styles.area, { backgroundColor: COLORS.white, justifyContent: 'center', alignItems: 'center' }]}>
         <Text style={styles.errorText}>{error || 'User not found'}</Text>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={styles.backButton} onPress={() => safeGoBack(navigation, router, '/(tabs)/match')}>
           <Text style={styles.backButtonText}>Go Back</Text>
         </TouchableOpacity>
       </View>

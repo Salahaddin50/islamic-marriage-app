@@ -19,7 +19,7 @@ import Button from '../components/Button';
 import DatePickerModal from '../components/DatePickerModal';
 import SearchableDropdown from '../components/SearchableDropdown';
 // Import removed - we'll implement steps directly
-import { getResponsiveFontSize, getResponsiveSpacing } from '../utils/responsive';
+import { getResponsiveFontSize, getResponsiveSpacing, safeGoBack } from '../utils/responsive';
 import { phoneCodesData } from '../data/phoneCodes';
 import { getCountriesAsDropdownItems, getCitiesForCountry } from '../data/countries';
 import RegistrationService, { RegistrationData } from '../src/services/registration.service';
@@ -228,8 +228,8 @@ const ProfileSetup: React.FC = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     } else {
-      // If on first step, go back to previous screen
-      router.back();
+      // If on first step, go back to previous screen with safe navigation
+      safeGoBack(navigation, router, '/welcome');
     }
   };
 

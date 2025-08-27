@@ -2,27 +2,31 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ImageSourcePropType, ViewStyle, TextStyle, ImageStyle } from 'react-native';
 import { SIZES, COLORS, icons } from '../constants';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
-import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '../utils/responsive';
+import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb, safeGoBack } from '../utils/responsive';
 
 interface HeaderProps {
     title?: string;
     showBackButton?: boolean;
     onBackPress?: () => void;
+    fallbackRoute?: string;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
     title = "", 
     showBackButton = true, 
-    onBackPress 
+    onBackPress,
+    fallbackRoute = '/(tabs)'
 }) => {
     const navigation = useNavigation<NavigationProp<any>>();
+    const router = useRouter();
 
     const handleBackPress = () => {
         if (onBackPress) {
             onBackPress();
         } else {
-            navigation.goBack();
+            safeGoBack(navigation, router, fallbackRoute);
         }
     };
 

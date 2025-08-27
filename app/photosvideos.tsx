@@ -663,7 +663,7 @@ const PhotosVideos = () => {
       <View style={[styles.container, { backgroundColor: COLORS.white }]}>
         <Header 
           title="My Photos and Videos" 
-          onBackPress={() => router.back()}
+          fallbackRoute="/(tabs)/profile"
         />
         
         {/* Tab Navigation */}
