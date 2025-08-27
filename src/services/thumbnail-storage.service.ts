@@ -135,4 +135,71 @@ export class ThumbnailStorageService {
       return false;
     }
   }
+
+  /**
+   * Clean up orphaned thumbnails (thumbnails without associated videos)
+   */
+  static async cleanupOrphanedThumbnails(userId: string): Promise<{
+    success: boolean;
+    data?: {
+      deletedCount: number;
+      totalSize: number;
+    };
+    error?: string;
+  }> {
+    try {
+      // List all thumbnails for the user
+      const listParams: AWS.S3.ListObjectsV2Request = {
+        Bucket: this.spaceName,
+        Prefix: `users/${userId}/thumbnails/`,
+        MaxKeys: 1000
+      };
+
+      const listResult = await s3.listObjectsV2(listParams).promise();
+      const thumbnails = listResult.Contents || [];
+
+      if (thumbnails.length === 0) {
+        return {
+          success: true,
+          data: { deletedCount: 0, totalSize: 0 }
+        };
+      }
+
+      let deletedCount = 0;
+      let totalSize = 0;
+
+      // Delete each thumbnail
+      for (const thumbnail of thumbnails) {
+        if (thumbnail.Key) {
+          try {
+            await s3.deleteObject({
+              Bucket: this.spaceName,
+              Key: thumbnail.Key
+            }).promise();
+            
+            deletedCount++;
+            totalSize += thumbnail.Size || 0;
+          } catch (error) {
+            console.error(`Failed to delete thumbnail ${thumbnail.Key}:`, error);
+            // Continue with other thumbnails
+          }
+        }
+      }
+
+      return {
+        success: true,
+        data: {
+          deletedCount,
+          totalSize
+        }
+      };
+
+    } catch (error) {
+      console.error('Cleanup orphaned thumbnails failed:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Cleanup failed'
+      };
+    }
+  }
 }

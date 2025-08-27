@@ -194,15 +194,37 @@ export class MediaIntegrationService {
 
       console.log('Found media record:', mediaRecord);
 
-      // 2. Delete from DigitalOcean Spaces
+      // 2. Delete from DigitalOcean Spaces (video + thumbnail)
       if (mediaRecord.do_spaces_key) {
         console.log('Deleting from DigitalOcean Spaces:', mediaRecord.do_spaces_key);
+        
+        // Delete main video file
         const deleteResult = await DigitalOceanMediaService.deleteMedia(mediaRecord.do_spaces_key);
         if (!deleteResult.success) {
-          console.warn('Failed to delete from DigitalOcean:', deleteResult.error);
+          console.warn('Failed to delete video from DigitalOcean:', deleteResult.error);
           // Continue with database deletion even if DigitalOcean deletion fails
         } else {
-          console.log('Successfully deleted from DigitalOcean Spaces');
+          console.log('Successfully deleted video from DigitalOcean Spaces');
+        }
+
+        // Delete associated thumbnail if it exists
+        if (mediaRecord.thumbnail_url && 
+            (mediaRecord.thumbnail_url.includes('.png') || 
+             mediaRecord.thumbnail_url.includes('.jpg') || 
+             mediaRecord.thumbnail_url.includes('.jpeg'))) {
+          
+          // Extract thumbnail key from URL
+          const thumbnailKey = this.extractThumbnailKeyFromUrl(mediaRecord.thumbnail_url);
+          if (thumbnailKey) {
+            console.log('Deleting thumbnail from DigitalOcean Spaces:', thumbnailKey);
+            const thumbnailDeleteResult = await DigitalOceanMediaService.deleteMedia(thumbnailKey);
+            if (!thumbnailDeleteResult.success) {
+              console.warn('Failed to delete thumbnail from DigitalOcean:', thumbnailDeleteResult.error);
+              // Don't fail the operation if only thumbnail deletion fails
+            } else {
+              console.log('Successfully deleted thumbnail from DigitalOcean Spaces');
+            }
+          }
         }
       } else {
         console.log('No DO Spaces key found, skipping storage deletion');
@@ -479,6 +501,43 @@ export class MediaIntegrationService {
   }
 
   // Private helper methods
+
+  /**
+   * Extract thumbnail key from DigitalOcean CDN URL
+   * Converts: https://cdn.com/users/123/thumbnails/video456-789.png
+   * To: users/123/thumbnails/video456-789.png
+   */
+  private static extractThumbnailKeyFromUrl(thumbnailUrl: string): string | null {
+    try {
+      // Check if it's a DigitalOcean CDN URL
+      if (thumbnailUrl.includes(process.env.EXPO_PUBLIC_DO_SPACES_CDN || '')) {
+        // Extract the path after the CDN domain
+        const url = new URL(thumbnailUrl);
+        const path = url.pathname;
+        
+        // Remove leading slash if present
+        return path.startsWith('/') ? path.substring(1) : path;
+      }
+      
+      // If it's a direct DigitalOcean URL, extract the key
+      if (thumbnailUrl.includes(process.env.EXPO_PUBLIC_DO_SPACES_ENDPOINT || '')) {
+        const url = new URL(thumbnailUrl);
+        const path = url.pathname;
+        
+        // Remove leading slash and bucket name
+        const pathParts = path.split('/');
+        if (pathParts.length > 2) {
+          // Skip bucket name and return the rest
+          return pathParts.slice(2).join('/');
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Failed to extract thumbnail key from URL:', error);
+      return null;
+    }
+  }
 
   private static async clearCurrentProfilePicture(userId: string): Promise<void> {
     await supabase

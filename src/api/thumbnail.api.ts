@@ -147,4 +147,49 @@ export class ThumbnailAPI {
       };
     }
   }
+
+  /**
+   * Clean up orphaned thumbnails for a user
+   */
+  static async cleanupOrphanedThumbnails(): Promise<{
+    success: boolean;
+    data?: {
+      deletedCount: number;
+      totalSize: number;
+    };
+    error?: string;
+  }> {
+    try {
+      // Get current user
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+      if (authError || !authUser) {
+        return {
+          success: false,
+          error: 'Please login first'
+        };
+      }
+
+      // Clean up orphaned thumbnails
+      const result = await ThumbnailStorageService.cleanupOrphanedThumbnails(authUser.id);
+
+      if (!result.success) {
+        return {
+          success: false,
+          error: result.error || 'Cleanup failed'
+        };
+      }
+
+      return {
+        success: true,
+        data: result.data
+      };
+
+    } catch (error) {
+      console.error('Cleanup orphaned thumbnails API error:', error);
+      return {
+        success: false,
+        error: 'Failed to cleanup orphaned thumbnails'
+      };
+    }
+  }
 }
