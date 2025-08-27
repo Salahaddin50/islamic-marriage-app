@@ -253,32 +253,64 @@ const MatchDetails = () => {
   };
 
   const getSliderImages = () => {
-    // Filter to only photos for the main slider (videos work better in the gallery)
+    // Include both photos and videos in the main slider
     const userPhotos = userMedia.filter(media => media.media_type === 'photo');
+    const userVideos = userMedia.filter(media => media.media_type === 'video');
     
     console.log('🖼️ Debug Match Details Images:', {
       userPhotosCount: userPhotos.length,
+      userVideosCount: userVideos.length,
       hasProfilePicture: !!userProfile?.profile_picture_url,
       gender: userProfile?.gender,
       userMediaLength: userMedia.length
     });
     
+    let sliderImages = [];
+    
+    // Add photos first
     if (userPhotos.length > 0) {
-      console.log('✅ Using real user photos');
-      return userPhotos.map(photo => ({ uri: photo.external_url }));
+      console.log('✅ Adding photos to slider');
+      sliderImages.push(...userPhotos.map(photo => ({ 
+        uri: photo.external_url, 
+        type: 'photo' as const,
+        id: photo.id 
+      })));
     }
     
-    // If no photos but user has profile picture, use that
-    if (userProfile?.profile_picture_url) {
+    // Add videos with thumbnails
+    if (userVideos.length > 0) {
+      console.log('✅ Adding videos with thumbnails to slider');
+      sliderImages.push(...userVideos.map(video => ({ 
+        uri: getThumbnailUrl(video), 
+        type: 'video' as const,
+        id: video.id,
+        videoUrl: video.external_url
+      })));
+    }
+    
+    // If no media but user has profile picture, use that
+    if (sliderImages.length === 0 && userProfile?.profile_picture_url) {
       console.log('✅ Using profile picture URL');
-      return [{ uri: userProfile.profile_picture_url }];
+      sliderImages.push({ 
+        uri: userProfile.profile_picture_url, 
+        type: 'photo' as const,
+        id: 'profile'
+      });
     }
     
-    // Fallback to gender-specific silhouette if no real photos exist
-    const isFemale = userProfile?.gender?.toLowerCase() === 'female';
-    const silhouetteImage = isFemale ? images.femaleSilhouette : images.maleSilhouette;
-    console.log('✅ Using gender silhouette:', isFemale ? 'female' : 'male');
-    return [silhouetteImage];
+    // Fallback to gender-specific silhouette if no real media exists
+    if (sliderImages.length === 0) {
+      const isFemale = userProfile?.gender?.toLowerCase() === 'female';
+      const silhouetteImage = isFemale ? images.femaleSilhouette : images.maleSilhouette;
+      console.log('✅ Using gender silhouette:', isFemale ? 'female' : 'male');
+      sliderImages.push({ 
+        uri: silhouetteImage, 
+        type: 'photo' as const,
+        id: 'silhouette'
+      });
+    }
+    
+    return sliderImages;
   };
 
   // Custom AutoSlider component with tap functionality
@@ -293,19 +325,43 @@ const MatchDetails = () => {
           showsHorizontalScrollIndicator={false}
           style={styles.autoSliderScroll}
         >
-          {sliderImages.map((image, index) => (
+          {sliderImages.map((media, index) => (
             <TouchableOpacity 
-              key={index} 
-              onPress={() => openFullscreenImage(image.uri)}
+              key={media.id} 
+              onPress={() => {
+                if (media.type === 'video') {
+                  // Open video in new page - use a valid route
+                  router.push({
+                    pathname: '/(tabs)/match',
+                    params: { 
+                      videoUrl: media.videoUrl || '',
+                      title: fullName,
+                      showVideo: 'true'
+                    }
+                  });
+                } else {
+                  // Open photo in fullscreen modal
+                  openFullscreenImage(media.uri);
+                }
+              }}
               style={styles.autoSliderImageContainer}
             >
               <Image
-                source={image}
+                source={{ uri: media.uri }}
                 style={styles.autoSliderImage}
                 contentFit="cover"
                 cachePolicy="memory-disk"
                 transition={200}
               />
+              
+              {/* Video indicator overlay */}
+              {media.type === 'video' && (
+                <View style={styles.autoSliderVideoIndicator}>
+                  <View style={styles.autoSliderPlayIconContainer}>
+                    <Text style={styles.autoSliderPlayIconText}>▶</Text>
+                  </View>
+                </View>
+              )}
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -1005,6 +1061,37 @@ const styles = StyleSheet.create({
         fontSize: getResponsiveFontSize(14),
         fontFamily: 'semibold',
         textAlign: 'center',
+    },
+    
+    // AutoSlider video indicator styles
+    autoSliderVideoIndicator: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    },
+    autoSliderPlayIconContainer: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    autoSliderPlayIconText: {
+        fontSize: getResponsiveFontSize(20),
+        color: COLORS.primary,
+        fontFamily: 'bold',
+        marginLeft: 2, // Slight offset to center the triangle visually
     }
 })
 
