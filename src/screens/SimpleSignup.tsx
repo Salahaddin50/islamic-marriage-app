@@ -415,8 +415,8 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: 'center',
-    marginTop: getResponsiveSpacing(20),
-    marginBottom: getResponsiveSpacing(32),
+    marginTop: getResponsiveSpacing(10),
+    marginBottom: getResponsiveSpacing(16),
   },
   logo: {
     width: getResponsiveSpacing(120),
@@ -427,14 +427,14 @@ const styles = StyleSheet.create({
     fontFamily: 'bold',
     color: COLORS.black,
     textAlign: 'center',
-    marginBottom: getResponsiveSpacing(8),
+    marginBottom: getResponsiveSpacing(4),
   },
   subtitle: {
     fontSize: getResponsiveFontSize(16),
     fontFamily: 'regular',
     color: COLORS.gray,
     textAlign: 'center',
-    marginBottom: getResponsiveSpacing(32),
+    marginBottom: getResponsiveSpacing(16),
     paddingHorizontal: getResponsiveSpacing(32),
     lineHeight: getResponsiveFontSize(22),
   },
@@ -442,12 +442,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: getResponsiveSpacing(24),
   },
   checkboxContainer: {
-    marginBottom: getResponsiveSpacing(24),
+    marginBottom: getResponsiveSpacing(12),
   },
   checkboxRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: getResponsiveSpacing(8),
+    marginBottom: getResponsiveSpacing(4),
   },
   checkbox: {
     width: getResponsiveSpacing(20),
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
     marginLeft: getResponsiveSpacing(32),
   },
   signupButton: {
-    marginBottom: getResponsiveSpacing(24),
+    marginBottom: getResponsiveSpacing(12),
   },
   socialContainer: {
     marginBottom: getResponsiveSpacing(24),
@@ -499,7 +499,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: getResponsiveSpacing(16),
     paddingHorizontal: getResponsiveSpacing(20),
-    marginTop: getResponsiveSpacing(16),
+    marginTop: getResponsiveSpacing(8),
   },
   googleIcon: {
     width: getResponsiveSpacing(20),

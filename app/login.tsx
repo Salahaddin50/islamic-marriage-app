@@ -289,13 +289,13 @@ const styles = StyleSheet.create({
     scrollContent: {
         flexGrow: 1,
         paddingHorizontal: getResponsiveSpacing(20),
-        paddingBottom: getResponsiveSpacing(100), // Space for bottom container
+        paddingBottom: getResponsiveSpacing(60), // Space for bottom container
     },
     logoContainer: {
         alignItems: "center",
         justifyContent: "center",
-        marginTop: getResponsiveSpacing(20),
-        marginBottom: getResponsiveSpacing(30),
+        marginTop: getResponsiveSpacing(10),
+        marginBottom: getResponsiveSpacing(15),
     },
     logo: {
         width: isMobileWeb() ? 80 : 100,
@@ -307,14 +307,14 @@ const styles = StyleSheet.create({
         fontFamily: "semiBold",
         color: COLORS.black,
         textAlign: "center",
-        marginBottom: getResponsiveSpacing(8),
+        marginBottom: getResponsiveSpacing(4),
     },
     subtitle: {
         fontSize: getResponsiveFontSize(16),
         fontFamily: "regular",
         color: COLORS.gray,
         textAlign: "center",
-        marginBottom: getResponsiveSpacing(32),
+        marginBottom: getResponsiveSpacing(16),
         paddingHorizontal: getResponsiveSpacing(20),
     },
     formContainer: {
@@ -323,10 +323,10 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
     },
     input: {
-        marginBottom: getResponsiveSpacing(16),
+        marginBottom: getResponsiveSpacing(8),
     },
     checkBoxContainer: {
-        marginVertical: getResponsiveSpacing(20),
+        marginVertical: getResponsiveSpacing(12),
     },
     checkboxRow: {
         flexDirection: 'row',
@@ -346,14 +346,14 @@ const styles = StyleSheet.create({
         color: COLORS.black,
     },
     loginButton: {
-        marginVertical: getResponsiveSpacing(8),
+        marginVertical: getResponsiveSpacing(4),
         borderRadius: 30,
         height: isMobileWeb() ? 48 : 52,
     },
     forgotPasswordContainer: {
         alignItems: 'center',
-        marginTop: getResponsiveSpacing(12),
-        marginBottom: getResponsiveSpacing(4),
+        marginTop: getResponsiveSpacing(6),
+        marginBottom: getResponsiveSpacing(2),
     },
     forgotPasswordText: {
         fontSize: getResponsiveFontSize(16),
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
         width: '100%',
         maxWidth: isMobileWeb() ? '100%' : 400,
         alignSelf: 'center',
-        marginTop: getResponsiveSpacing(4),
+        marginTop: getResponsiveSpacing(2),
     },
     googleButton: {
         flexDirection: 'row',
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
         borderRadius: 30,
         paddingVertical: getResponsiveSpacing(12),
         paddingHorizontal: getResponsiveSpacing(20),
-        marginTop: getResponsiveSpacing(4),
+        marginTop: getResponsiveSpacing(2),
         height: isMobileWeb() ? 48 : 52,
         shadowColor: '#000',
         shadowOffset: {

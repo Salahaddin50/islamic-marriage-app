@@ -346,21 +346,16 @@ const MatchDetails = () => {
           </Text>
         )}
 
-                          {/* Photos & Videos Gallery Section */}
-         {userMedia && userMedia.length > 0 && (
+                          {/* Photos Gallery Section (Photos only) */}
+         {userMedia && userMedia.filter(media => media.media_type === 'photo').length > 0 && (
            <>
-             <Text style={[styles.subtitle, { color: COLORS.primary }]}>Photos & Videos</Text>
+             <Text style={[styles.subtitle, { color: COLORS.primary }]}>Photos</Text>
              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.mediaScroll}>
-               {userMedia.map((media, index) => (
-                 <TouchableOpacity 
+               {userMedia.filter(media => media.media_type === 'photo').map((media, index) => (
+                            <TouchableOpacity
                    key={media.id} 
                    style={styles.mediaItem}
-                   onPress={() => {
-                     if (media.media_type === 'photo') {
-                       openFullscreenImage(media.external_url);
-                     }
-                     // For videos, we could add video player functionality later
-                   }}
+                   onPress={() => openFullscreenImage(media.external_url)}
                  >
                    <Image
                      source={{ uri: media.thumbnail_url || media.external_url }}
@@ -369,11 +364,6 @@ const MatchDetails = () => {
                      cachePolicy="memory-disk"
                      transition={200}
                    />
-                   {media.media_type === 'video' && (
-                     <View style={styles.videoOverlay}>
-                       <Text style={styles.playIcon}>▶️</Text>
-                </View>
-                   )}
                             </TouchableOpacity>
                         ))}
              </ScrollView>
@@ -760,21 +750,7 @@ const styles = StyleSheet.create({
         height: getResponsiveSpacing(100),
         borderRadius: 12
     },
-    videoOverlay: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.3)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 12
-    },
-    playIcon: {
-        fontSize: getResponsiveFontSize(24),
-        color: COLORS.white
-    },
+
     // AutoSlider styles
     autoSliderContainer: {
         width: SIZES.width,
