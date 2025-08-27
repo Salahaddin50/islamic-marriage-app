@@ -75,22 +75,27 @@ const PhotosVideos = () => {
     console.log('🎬 Play video called');
     setIsVideoPlaying(true);
     
-    // Force video element to load and play
+    // Don't call load() again - just play the already loaded video
     setTimeout(() => {
       if (videoRef.current) {
         console.log('🎬 Video element found, attempting to play');
-        videoRef.current.load(); // Force reload
-        videoRef.current.play().catch(error => {
-          console.error('❌ Video play failed:', error);
-          // Fallback to thumbnail if video can't play
-          setIsVideoPlaying(false);
-          Alert.alert('Video Error', 'Unable to play video. Please try again.');
-        });
+        // Check if video is ready to play
+        if (videoRef.current.readyState >= 2) { // HAVE_CURRENT_DATA
+          videoRef.current.play().catch(error => {
+            console.error('❌ Video play failed:', error);
+            // Fallback to thumbnail if video can't play
+            setIsVideoPlaying(false);
+            Alert.alert('Video Error', 'Unable to play video. Please try again.');
+          });
+        } else {
+          console.log('🎬 Video not ready, waiting for canplay event');
+          // Video will auto-play when ready due to autoPlay attribute
+        }
       } else {
         console.error('❌ Video element not found');
         setIsVideoPlaying(false);
       }
-    }, 200); // Increased delay for better reliability
+    }, 100); // Reduced delay since we're not reloading
   };
 
   // Pause video
@@ -554,12 +559,11 @@ const PhotosVideos = () => {
           )}
           <Image
             source={thumbnailErrors[item.id] ? { uri: DEFAULT_VIDEO_THUMBNAIL } : { uri: videoThumbnailUrl }}
-            contentFit="cover"
-            style={styles.videoItem}
+            contentFit="contain"
+            style={[styles.videoItem, { objectFit: 'contain' }]}
             cachePolicy="none" // Disable cache to ensure fresh thumbnails
             transition={200}
             onError={handleVideoImageError}
-
             placeholder={{ uri: DEFAULT_VIDEO_THUMBNAIL }}
           />
           <View style={styles.playButton}>
@@ -647,7 +651,9 @@ const PhotosVideos = () => {
                           width: '100%',
                           height: '100%',
                           objectFit: 'contain',
-                          backgroundColor: 'transparent'
+                          backgroundColor: 'transparent',
+                          maxHeight: '100%',
+                          maxWidth: '100%'
                         }}
                         controls
                         autoPlay
@@ -655,16 +661,20 @@ const PhotosVideos = () => {
                         onEnded={() => setIsVideoPlaying(false)}
                         onLoadStart={() => {
                           console.log('🎬 Video load started, URL:', mediaUrl);
-                          // Force video to load and display
-                          if (videoRef.current) {
-                            videoRef.current.load();
-                          }
+                          // Video is loading - no need to call load() again
                         }}
                         onCanPlay={() => {
                           console.log('🎬 Video can play, ready to play');
                           // Video is ready to play
                           if (videoRef.current) {
                             videoRef.current.style.backgroundColor = 'transparent';
+                            // Auto-play if user clicked play button
+                            if (isVideoPlaying) {
+                              videoRef.current.play().catch(error => {
+                                console.error('❌ Auto-play failed:', error);
+                                setIsVideoPlaying(false);
+                              });
+                            }
                           }
                         }}
                         onLoadedData={() => {
@@ -679,7 +689,7 @@ const PhotosVideos = () => {
                         crossOrigin="anonymous"
                         preload="metadata"
                         muted={false}
-                        playsInline={false}
+                        playsInline={true}
                       />
                     ) : (
                       <View style={styles.nativeVideoPlaceholder}>
@@ -698,7 +708,7 @@ const PhotosVideos = () => {
                     <Image
                       source={{ uri: generatedThumbnails[fullScreenItem.id] || DEFAULT_VIDEO_THUMBNAIL }}
                       contentFit="contain"
-                      style={styles.fullScreenVideo}
+                      style={[styles.fullScreenVideo, { objectFit: 'contain' }]}
                     />
                     <View style={styles.fullScreenPlayButton}>
                       <View style={styles.playButtonBackground}>
@@ -999,7 +1009,7 @@ const styles = StyleSheet.create({
   },
   videoItem: {
     width: '100%',
-    height: ((SIZES.width - 56) / 2) * 1.4, // Increased height for vertical videos (5:7 ratio)
+    aspectRatio: 1, // Square container that maintains aspect ratio
     borderRadius: 12,
     backgroundColor: COLORS.grayscale200,
   },
@@ -1190,6 +1200,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     borderRadius: 8,
+    objectFit: 'contain', // Ensure proper aspect ratio
   },
   fullScreenPlayButton: {
     position: 'absolute',
