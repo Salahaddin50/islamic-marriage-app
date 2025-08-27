@@ -20,6 +20,11 @@ let cachedMediaData: { photos: PhotoVideoItem[], videos: PhotoVideoItem[] } | nu
 let mediaLoadTime = 0;
 const MEDIA_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+// Cache for generated thumbnails to prevent regeneration
+let cachedThumbnails: Record<string, string> = {};
+let thumbnailCacheTime = 0;
+const THUMBNAIL_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours - thumbnails don't change often
+
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const PhotosVideos = () => {
@@ -69,7 +74,17 @@ const PhotosVideos = () => {
   const playVideo = () => {
     setIsVideoPlaying(true);
     if (videoRef.current) {
-      videoRef.current.play();
+      // Add a small delay to ensure video element is ready
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.play().catch(error => {
+            console.error('Video play failed:', error);
+            // Fallback to thumbnail if video can't play
+            setIsVideoPlaying(false);
+            Alert.alert('Video Error', 'Unable to play video. Please try again.');
+          });
+        }
+      }, 100);
     }
   };
 
@@ -83,12 +98,22 @@ const PhotosVideos = () => {
 
 
 
-  // Generate thumbnails for videos when videos change - improved batch processing
+  // Generate thumbnails for videos when videos change - improved batch processing with caching
   useEffect(() => {
     if (videos.length > 0) {
+      // Check if we have cached thumbnails and they're still valid
+      const isThumbnailCacheValid = (Date.now() - thumbnailCacheTime) < THUMBNAIL_CACHE_TTL;
+      
+      if (isThumbnailCacheValid && Object.keys(cachedThumbnails).length > 0) {
+        // Use cached thumbnails
+        setGeneratedThumbnails(cachedThumbnails);
+        return;
+      }
+
       // Filter videos that need thumbnail generation (always generate for videos since DB thumbnails are not images)
       const videosNeedingThumbnails = videos.filter(video => 
         video.external_url && 
+        !cachedThumbnails[video.id] && 
         !generatedThumbnails[video.id] && 
         !thumbnailErrors[video.id]
       );
@@ -119,21 +144,30 @@ const PhotosVideos = () => {
             setThumbnailGenerationProgress({completed, total});
             
             if (thumbnail !== DEFAULT_VIDEO_THUMBNAIL) {
-              setGeneratedThumbnails(prev => ({ ...prev, [videoId]: thumbnail }));
+              const newThumbnails = { ...generatedThumbnails, [videoId]: thumbnail };
+              setGeneratedThumbnails(newThumbnails);
+              // Update cache
+              cachedThumbnails[videoId] = thumbnail;
             } else {
               setThumbnailErrors(prev => ({ ...prev, [videoId]: true }));
             }
           }
         ).then(results => {
           // Update all results at once for any that weren't updated via progress callback
-          setGeneratedThumbnails(prev => ({ ...prev, ...results }));
+          const allThumbnails = { ...generatedThumbnails, ...results };
+          setGeneratedThumbnails(allThumbnails);
           
-          // Mark any failed ones as errors
+          // Update cache with all successful thumbnails
           Object.entries(results).forEach(([videoId, thumbnail]) => {
-            if (thumbnail === DEFAULT_VIDEO_THUMBNAIL) {
+            if (thumbnail !== DEFAULT_VIDEO_THUMBNAIL) {
+              cachedThumbnails[videoId] = thumbnail;
+            } else {
               setThumbnailErrors(prev => ({ ...prev, [videoId]: true }));
             }
           });
+          
+          // Update cache timestamp
+          thumbnailCacheTime = Date.now();
           
           // Reset progress
           setThumbnailGenerationProgress({completed: 0, total: 0});
@@ -145,6 +179,9 @@ const PhotosVideos = () => {
           });
           setThumbnailGenerationProgress({completed: 0, total: 0});
         });
+      } else if (Object.keys(cachedThumbnails).length > 0) {
+        // Use cached thumbnails if no new ones needed
+        setGeneratedThumbnails(cachedThumbnails);
       }
     }
   }, [videos, generatedThumbnails, thumbnailErrors]); // Added dependencies to prevent unnecessary re-runs
@@ -157,6 +194,14 @@ const PhotosVideos = () => {
   const loadMediaItems = async (forceRefresh: boolean = false) => {
     try {
       setLoading(true);
+      
+      // Clear thumbnail cache if force refresh
+      if (forceRefresh) {
+        cachedThumbnails = {};
+        thumbnailCacheTime = 0;
+        setGeneratedThumbnails({});
+        setThumbnailErrors({});
+      }
       
       // Check cache first unless force refresh
       if (!forceRefresh && cachedMediaData && (Date.now() - mediaLoadTime) < MEDIA_CACHE_TTL) {
@@ -634,6 +679,25 @@ const PhotosVideos = () => {
                         autoPlay
                         onPause={pauseVideo}
                         onEnded={() => setIsVideoPlaying(false)}
+                        onLoadStart={() => {
+                          // Force video to load and display
+                          if (videoRef.current) {
+                            videoRef.current.load();
+                          }
+                        }}
+                        onCanPlay={() => {
+                          // Video is ready to play
+                          if (videoRef.current) {
+                            videoRef.current.style.backgroundColor = 'transparent';
+                          }
+                        }}
+                        onError={(e) => {
+                          console.error('Video playback error:', e);
+                          // Fallback to thumbnail if video fails
+                          setIsVideoPlaying(false);
+                        }}
+                        crossOrigin="anonymous"
+                        preload="metadata"
                       />
                     ) : (
                       <View style={styles.nativeVideoPlaceholder}>
