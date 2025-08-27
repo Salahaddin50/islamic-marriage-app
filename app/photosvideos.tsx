@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, FlatList, ActivityIndicator, Modal, Dimensions } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, SIZES, icons, images } from '../constants';
@@ -13,12 +13,14 @@ import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '../uti
   import { PhotosVideosAPI } from '../src/api/photos-videos.api';
   import { PhotoVideoItem } from '../src/services/photos-videos.service';
   import { clearProfilePictureCache } from '../hooks/useProfilePicture';
-  import { generateVideoThumbnailWithFallback } from '../utils/videoThumbnailGenerator';
+  import { generateMultipleVideoThumbnails } from '../utils/videoThumbnailGenerator';
 
 // Cache for media items to prevent reloading
 let cachedMediaData: { photos: PhotoVideoItem[], videos: PhotoVideoItem[] } | null = null;
 let mediaLoadTime = 0;
 const MEDIA_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const PhotosVideos = () => {
   const [selectedTab, setSelectedTab] = useState<'photos' | 'videos'>('photos');
@@ -28,37 +30,103 @@ const PhotosVideos = () => {
   const [uploading, setUploading] = useState(false);
   const [thumbnailErrors, setThumbnailErrors] = useState<Record<string, boolean>>({});
   const [generatedThumbnails, setGeneratedThumbnails] = useState<Record<string, string>>({});
+  const [thumbnailGenerationProgress, setThumbnailGenerationProgress] = useState<{completed: number, total: number}>({completed: 0, total: 0});
+  
+  // Full screen modal states
+  const [fullScreenVisible, setFullScreenVisible] = useState(false);
+  const [fullScreenItem, setFullScreenItem] = useState<PhotoVideoItem | null>(null);
+  const [fullScreenType, setFullScreenType] = useState<'photo' | 'video'>('photo');
 
-  // Generate thumbnails for videos when videos change
+  // Helper function to get direct URL
+  const getDirectUrl = (url: string) => {
+    if (url && url.includes('.cdn.')) {
+      return url.replace('.cdn.digitaloceanspaces.com', '.digitaloceanspaces.com');
+    }
+    return url;
+  };
+
+  // Open full screen modal
+  const openFullScreen = (item: PhotoVideoItem, type: 'photo' | 'video') => {
+    setFullScreenItem(item);
+    setFullScreenType(type);
+    setFullScreenVisible(true);
+  };
+
+  // Close full screen modal
+  const closeFullScreen = () => {
+    setFullScreenVisible(false);
+    setFullScreenItem(null);
+  };
+
+  // Generate thumbnails for videos when videos change - improved batch processing
   useEffect(() => {
     if (videos.length > 0) {
-      videos.forEach(video => {
-        if (video.external_url && !generatedThumbnails[video.id] && !thumbnailErrors[video.id]) {
-          const getDirectUrl = (url: string) => {
-            if (url && url.includes('.cdn.')) {
-              return url.replace('.cdn.digitaloceanspaces.com', '.digitaloceanspaces.com');
-            }
-            return url;
-          };
+      // Filter videos that need thumbnail generation
+      const videosNeedingThumbnails = videos.filter(video => 
+        video.external_url && 
+        !generatedThumbnails[video.id] && 
+        !thumbnailErrors[video.id]
+      );
 
-          const videoUrl = getDirectUrl(video.external_url);
-          generateVideoThumbnailWithFallback(videoUrl, DEFAULT_VIDEO_THUMBNAIL, {
-            time: 1,
+      if (videosNeedingThumbnails.length > 0) {
+        console.log(`Generating thumbnails for ${videosNeedingThumbnails.length} videos...`);
+        
+        // Set initial progress
+        setThumbnailGenerationProgress({completed: 0, total: videosNeedingThumbnails.length});
+
+        // Prepare video data for batch processing
+        const videoData = videosNeedingThumbnails.map(video => ({
+          id: video.id,
+          url: getDirectUrl(video.external_url)
+        }));
+
+        // Use batch thumbnail generation with progress callback
+        generateMultipleVideoThumbnails(
+          videoData,
+          DEFAULT_VIDEO_THUMBNAIL,
+          {
+            time: 3, // Use 3 seconds as requested
             width: 400,
-            height: 300,
-            quality: 0.8
-          }).then(thumbnail => {
+            height: 600, // Increased height for better vertical video display
+            quality: 0.8,
+            retries: 2 // Reduce retries for faster processing
+          },
+          (completed, total, videoId, thumbnail) => {
+            // Progress callback - update state as each thumbnail is generated
+            setThumbnailGenerationProgress({completed, total});
+            
             if (thumbnail !== DEFAULT_VIDEO_THUMBNAIL) {
-              setGeneratedThumbnails(prev => ({ ...prev, [video.id]: thumbnail }));
+              setGeneratedThumbnails(prev => ({ ...prev, [videoId]: thumbnail }));
+            } else {
+              setThumbnailErrors(prev => ({ ...prev, [videoId]: true }));
             }
-          }).catch(error => {
-            console.warn('Failed to generate thumbnail for video:', video.id, error);
+          }
+        ).then(results => {
+          console.log('Batch thumbnail generation completed:', Object.keys(results).length, 'thumbnails generated');
+          
+          // Update all results at once for any that weren't updated via progress callback
+          setGeneratedThumbnails(prev => ({ ...prev, ...results }));
+          
+          // Mark any failed ones as errors
+          Object.entries(results).forEach(([videoId, thumbnail]) => {
+            if (thumbnail === DEFAULT_VIDEO_THUMBNAIL) {
+              setThumbnailErrors(prev => ({ ...prev, [videoId]: true }));
+            }
+          });
+          
+          // Reset progress
+          setThumbnailGenerationProgress({completed: 0, total: 0});
+        }).catch(error => {
+          console.error('Batch thumbnail generation failed:', error);
+          // Mark all videos as errored if batch fails
+          videosNeedingThumbnails.forEach(video => {
             setThumbnailErrors(prev => ({ ...prev, [video.id]: true }));
           });
-        }
-      });
+          setThumbnailGenerationProgress({completed: 0, total: 0});
+        });
+      }
     }
-  }, [videos]);
+  }, [videos, generatedThumbnails, thumbnailErrors]); // Added dependencies to prevent unnecessary re-runs
 
   // Load media items on component mount
   useEffect(() => {
@@ -264,6 +332,10 @@ const PhotosVideos = () => {
       [
         { text: 'Cancel', style: 'cancel' },
         {
+          text: 'View Full Screen',
+          onPress: () => openFullScreen(item, 'photo')
+        },
+        {
           text: 'Set as Avatar',
           onPress: () => setAsAvatar(item.id)
         },
@@ -277,14 +349,6 @@ const PhotosVideos = () => {
   };
 
   const renderPhotoItem = ({ item }: { item: PhotoVideoItem }) => {
-    // Try direct Spaces URL first (more reliable than CDN)
-    const getDirectUrl = (url: string) => {
-      if (url && url.includes('.cdn.')) {
-        return url.replace('.cdn.digitaloceanspaces.com', '.digitaloceanspaces.com');
-      }
-      return url;
-    };
-
     const imageUrl = getDirectUrl(item.external_url);
 
     const handleImageError = (error: any) => {
@@ -295,6 +359,7 @@ const PhotosVideos = () => {
       <View style={styles.mediaItem}>
         <TouchableOpacity 
           style={styles.imageContainer}
+          onPress={() => openFullScreen(item, 'photo')} // Single tap to open full screen
           onLongPress={() => showPhotoOptions(item)}
           activeOpacity={0.8}
         >
@@ -372,14 +437,6 @@ const PhotosVideos = () => {
   };
 
   const renderVideoItem = ({ item }: { item: PhotoVideoItem }) => {
-    // Try direct Spaces URL first (more reliable than CDN)
-    const getDirectUrl = (url: string) => {
-      if (url && url.includes('.cdn.')) {
-        return url.replace('.cdn.digitaloceanspaces.com', '.digitaloceanspaces.com');
-      }
-      return url;
-    };
-
     // Get the thumbnail URL with proper handling
     const getVideoThumbnail = () => {
       // First check if we have a generated thumbnail for this video
@@ -411,6 +468,7 @@ const PhotosVideos = () => {
         <TouchableOpacity 
           style={styles.videoContainer}
           activeOpacity={0.8}
+          onPress={() => openFullScreen(item, 'video')} // Single tap to open full screen
         >
           <Image
             source={thumbnailErrors[item.id] ? { uri: DEFAULT_VIDEO_THUMBNAIL } : { uri: videoThumbnailUrl }}
@@ -425,6 +483,14 @@ const PhotosVideos = () => {
             <MaterialCommunityIcons name="play" size={28} color={COLORS.white} />
           </View>
         </TouchableOpacity>
+        
+        {/* Thumbnail Generation Progress */}
+        {thumbnailGenerationProgress.total > 0 && !generatedThumbnails[item.id] && !thumbnailErrors[item.id] && (
+          <View style={styles.progressOverlay}>
+            <ActivityIndicator size="small" color={COLORS.white} />
+            <Text style={styles.progressText}>Generating...</Text>
+          </View>
+        )}
         
         {/* Delete Button */}
         <TouchableOpacity
@@ -461,6 +527,82 @@ const PhotosVideos = () => {
     </View>
   );
 
+  // Full Screen Modal Component
+  const renderFullScreenModal = () => {
+    if (!fullScreenItem) return null;
+
+    const mediaUrl = getDirectUrl(fullScreenItem.external_url);
+
+    return (
+      <Modal
+        visible={fullScreenVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={closeFullScreen}
+      >
+        <View style={styles.fullScreenContainer}>
+          {/* Header with close button */}
+          <View style={styles.fullScreenHeader}>
+            <TouchableOpacity onPress={closeFullScreen} style={styles.closeButton}>
+              <MaterialCommunityIcons name="close" size={30} color={COLORS.white} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Media Content */}
+          <View style={styles.fullScreenContent}>
+            {fullScreenType === 'photo' ? (
+              <Image
+                source={{ uri: mediaUrl }}
+                contentFit="contain"
+                style={styles.fullScreenImage}
+              />
+            ) : (
+              <View style={styles.fullScreenVideoContainer}>
+                {/* For now, show thumbnail with play button */}
+                {/* In a real implementation, you'd use a Video component */}
+                <Image
+                  source={{ uri: generatedThumbnails[fullScreenItem.id] || DEFAULT_VIDEO_THUMBNAIL }}
+                  contentFit="contain"
+                  style={styles.fullScreenVideo}
+                />
+                <View style={styles.fullScreenPlayButton}>
+                  <MaterialCommunityIcons name="play-circle" size={80} color={COLORS.white} />
+                </View>
+                <Text style={styles.videoPlayText}>Tap to play video</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Footer with actions */}
+          <View style={styles.fullScreenFooter}>
+            {fullScreenType === 'photo' && (
+              <TouchableOpacity 
+                style={styles.fullScreenAction}
+                onPress={() => {
+                  closeFullScreen();
+                  setAsAvatar(fullScreenItem.id);
+                }}
+              >
+                <MaterialCommunityIcons name="account" size={24} color={COLORS.white} />
+                <Text style={styles.fullScreenActionText}>Set as Avatar</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity 
+              style={styles.fullScreenAction}
+              onPress={() => {
+                closeFullScreen();
+                deleteMedia(fullScreenItem.id, fullScreenType);
+              }}
+            >
+              <MaterialCommunityIcons name="delete" size={24} color={COLORS.white} />
+              <Text style={styles.fullScreenActionText}>Delete</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
   return (
     <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
       <View style={[styles.container, { backgroundColor: COLORS.white }]}>
@@ -474,6 +616,23 @@ const PhotosVideos = () => {
           {renderTabButton('photos', 'Photos', icons.image)}
           {renderTabButton('videos', 'Videos', icons.videoCamera)}
         </View>
+
+        {/* Thumbnail Generation Progress Bar */}
+        {thumbnailGenerationProgress.total > 0 && (
+          <View style={styles.progressBarContainer}>
+            <Text style={styles.progressBarText}>
+              Generating video thumbnails... {thumbnailGenerationProgress.completed}/{thumbnailGenerationProgress.total}
+            </Text>
+            <View style={styles.progressBar}>
+              <View 
+                style={[
+                  styles.progressBarFill, 
+                  { width: `${(thumbnailGenerationProgress.completed / thumbnailGenerationProgress.total) * 100}%` }
+                ]} 
+              />
+            </View>
+          </View>
+        )}
 
         {/* Content */}
         {loading ? (
@@ -556,6 +715,9 @@ const PhotosVideos = () => {
           </ScrollView>
         )}
       </View>
+
+      {/* Full Screen Modal */}
+      {renderFullScreenModal()}
     </SafeAreaView>
   );
 };
@@ -605,6 +767,49 @@ const styles = StyleSheet.create({
   tabTextActive: {
     color: COLORS.white,
     fontFamily: 'semibold',
+  },
+  progressBarContainer: {
+    marginBottom: getResponsiveSpacing(16),
+    padding: getResponsiveSpacing(12),
+    backgroundColor: COLORS.grayscale100,
+    borderRadius: 8,
+  },
+  progressBarText: {
+    fontSize: getResponsiveFontSize(14),
+    fontFamily: 'medium',
+    color: COLORS.gray,
+    marginBottom: getResponsiveSpacing(8),
+  },
+  progressBar: {
+    height: 4,
+    backgroundColor: COLORS.grayscale200,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: COLORS.primary,
+    borderRadius: 2,
+  },
+  progressOverlay: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginTop: -30,
+    marginLeft: -40,
+    width: 80,
+    height: 60,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  progressText: {
+    fontSize: getResponsiveFontSize(10),
+    fontFamily: 'medium',
+    color: COLORS.white,
+    marginTop: 4,
   },
   contentContainer: {
     flex: 1,
@@ -668,7 +873,7 @@ const styles = StyleSheet.create({
   },
   videoItem: {
     width: '100%',
-    height: ((SIZES.width - 56) / 2) * 0.75, // 4:3 aspect ratio for videos
+    height: ((SIZES.width - 56) / 2) * 1.4, // Increased height for vertical videos (5:7 ratio)
     borderRadius: 12,
     backgroundColor: COLORS.grayscale200,
   },
@@ -795,6 +1000,71 @@ const styles = StyleSheet.create({
     fontFamily: 'medium',
     color: COLORS.gray,
     marginTop: getResponsiveSpacing(16),
+  },
+  // Full Screen Modal Styles
+  fullScreenContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+  },
+  fullScreenHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingTop: 50,
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+  },
+  closeButton: {
+    padding: 10,
+  },
+  fullScreenContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  fullScreenImage: {
+    width: screenWidth,
+    height: screenHeight * 0.7,
+  },
+  fullScreenVideoContainer: {
+    width: screenWidth,
+    height: screenHeight * 0.7,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullScreenVideo: {
+    width: '100%',
+    height: '100%',
+  },
+  fullScreenPlayButton: {
+    position: 'absolute',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  videoPlayText: {
+    position: 'absolute',
+    bottom: -40,
+    fontSize: getResponsiveFontSize(16),
+    color: COLORS.white,
+    fontFamily: 'medium',
+  },
+  fullScreenFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingVertical: 30,
+    paddingHorizontal: 20,
+  },
+  fullScreenAction: {
+    alignItems: 'center',
+    padding: 15,
+  },
+  fullScreenActionText: {
+    color: COLORS.white,
+    fontSize: getResponsiveFontSize(14),
+    fontFamily: 'medium',
+    marginTop: 5,
   },
 });
 
