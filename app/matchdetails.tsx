@@ -74,9 +74,10 @@ const MatchDetails = () => {
   const [error, setError] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   
-  // Fullscreen image viewer state
+  // Fullscreen media viewer state
   const [showFullscreenImage, setShowFullscreenImage] = useState(false);
   const [selectedImageUri, setSelectedImageUri] = useState<string>('');
+  const [selectedMediaType, setSelectedMediaType] = useState<'photo' | 'video'>('photo');
 
   // Load user data on component mount
   useEffect(() => {
@@ -193,14 +194,16 @@ const MatchDetails = () => {
     return age;
   };
 
-  const openFullscreenImage = (imageUri: string) => {
-    setSelectedImageUri(imageUri);
+  const openFullscreenImage = (mediaUri: string, mediaType: 'photo' | 'video' = 'photo') => {
+    setSelectedImageUri(mediaUri);
+    setSelectedMediaType(mediaType);
     setShowFullscreenImage(true);
   };
 
   const closeFullscreenImage = () => {
     setShowFullscreenImage(false);
     setSelectedImageUri('');
+    setSelectedMediaType('photo');
   };
 
   const getSliderImages = () => {
@@ -347,16 +350,16 @@ const MatchDetails = () => {
           </Text>
         )}
 
-                          {/* Photos Gallery Section (Photos only) */}
-         {userMedia && userMedia.filter(media => media.media_type === 'photo').length > 0 && (
+                          {/* Media Gallery Section (Photos and Videos) */}
+         {userMedia && userMedia.length > 0 && (
            <>
-             <Text style={[styles.subtitle, { color: COLORS.primary }]}>Photos</Text>
+             <Text style={[styles.subtitle, { color: COLORS.primary }]}>Photos & Videos</Text>
              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.mediaScroll}>
-               {userMedia.filter(media => media.media_type === 'photo').map((media, index) => (
+               {userMedia.map((media, index) => (
                             <TouchableOpacity
                    key={media.id} 
                    style={styles.mediaItem}
-                   onPress={() => openFullscreenImage(media.external_url)}
+                   onPress={() => openFullscreenImage(media.external_url, media.media_type)}
                  >
                    <Image
                      source={{ uri: media.thumbnail_url || media.external_url }}
@@ -365,6 +368,14 @@ const MatchDetails = () => {
                      cachePolicy="memory-disk"
                      transition={200}
                    />
+                   {/* Video indicator overlay */}
+                   {media.media_type === 'video' && (
+                     <View style={styles.videoIndicator}>
+                       <View style={styles.playIconContainer}>
+                         <Text style={styles.playIconText}>▶</Text>
+                       </View>
+                     </View>
+                   )}
                             </TouchableOpacity>
                         ))}
              </ScrollView>
@@ -533,7 +544,7 @@ const MatchDetails = () => {
         <View style={styles.bottomSpacing} />
       </ScrollView>
 
-      {/* Fullscreen Image Modal */}
+      {/* Fullscreen Media Modal */}
       <Modal
         visible={showFullscreenImage}
         transparent={true}
@@ -546,12 +557,35 @@ const MatchDetails = () => {
             onPress={closeFullscreenImage}
           >
             <View style={styles.fullscreenImageWrapper}>
-              <Image
-                source={{ uri: selectedImageUri }}
-                style={styles.fullscreenImage}
-                contentFit="contain"
-                cachePolicy="memory-disk"
-              />
+              {selectedMediaType === 'video' ? (
+                // Video player for web
+                <div style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  display: 'flex', 
+                  justifyContent: 'center', 
+                  alignItems: 'center' 
+                }}>
+                  <video
+                    src={selectedImageUri}
+                    controls
+                    autoPlay
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '100%',
+                      backgroundColor: 'black'
+                    }}
+                  />
+                </div>
+              ) : (
+                // Image display
+                <Image
+                  source={{ uri: selectedImageUri }}
+                  style={styles.fullscreenImage}
+                  contentFit="contain"
+                  cachePolicy="memory-disk"
+                />
+              )}
             </View>
             
             {/* Close button */}
@@ -750,6 +784,36 @@ const styles = StyleSheet.create({
         width: getResponsiveSpacing(100),
         height: getResponsiveSpacing(100),
         borderRadius: 12
+    },
+    videoIndicator: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        borderRadius: 12,
+    },
+    playIconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    playIconText: {
+        fontSize: getResponsiveFontSize(16),
+        color: COLORS.primary,
+        fontFamily: 'bold',
+        marginLeft: 2, // Slight offset to center the triangle visually
     },
 
     // AutoSlider styles
