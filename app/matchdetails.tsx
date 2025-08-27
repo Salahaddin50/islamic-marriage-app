@@ -73,6 +73,8 @@ const MatchDetails = () => {
   const [userMedia, setUserMedia] = useState<MediaReference[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [thumbnailErrors, setThumbnailErrors] = useState<{ [key: string]: boolean }>({});
+  const [thumbnailLoading, setThumbnailLoading] = useState<{ [key: string]: boolean }>({});
   
   // Fullscreen media viewer state
   const [showFullscreenImage, setShowFullscreenImage] = useState(false);
@@ -140,6 +142,20 @@ const MatchDetails = () => {
 
       const media = mediaData || [];
 
+      // Debug media data to identify thumbnail issues
+      console.log('🔍 Debug Media Data:', {
+        userId: targetUserId,
+        mediaCount: media.length,
+        mediaDetails: media.map(m => ({
+          id: m.id,
+          type: m.media_type,
+          external_url: m.external_url,
+          thumbnail_url: m.thumbnail_url,
+          hasThumbnail: !!m.thumbnail_url,
+          thumbnailLength: m.thumbnail_url?.length || 0
+        }))
+      });
+
       // Cache the data
       cachedMatchDetails[targetUserId] = profileData;
       cachedMatchMedia[targetUserId] = media;
@@ -204,6 +220,36 @@ const MatchDetails = () => {
     setShowFullscreenImage(false);
     setSelectedImageUri('');
     setSelectedMediaType('photo');
+  };
+
+  // Smart thumbnail URL resolver with fallbacks
+  const getThumbnailUrl = (media: MediaReference) => {
+    // Priority 1: Use thumbnail_url if it exists and is valid
+    if (media.thumbnail_url && media.thumbnail_url.trim() !== '') {
+      console.log('🎯 Using thumbnail_url:', media.thumbnail_url);
+      return media.thumbnail_url;
+    }
+    
+    // Priority 2: For videos, try to generate thumbnail from external_url
+    if (media.media_type === 'video' && media.external_url) {
+      // Try to create a thumbnail URL by adding parameters
+      const videoUrl = media.external_url;
+      if (videoUrl.includes('cloudinary')) {
+        // Cloudinary: add thumbnail transformation
+        const thumbnailUrl = videoUrl.replace('/video/upload/', '/video/upload/so_0,w_400,h_300,c_fill,q_auto/');
+        console.log('🎯 Generated Cloudinary thumbnail:', thumbnailUrl);
+        return thumbnailUrl;
+      } else if (videoUrl.includes('digitalocean') || videoUrl.includes('do-spaces')) {
+        // DigitalOcean: try to add thumbnail parameter
+        const thumbnailUrl = `${videoUrl}?thumbnail=true&w=400&h=300`;
+        console.log('🎯 Generated DigitalOcean thumbnail:', thumbnailUrl);
+        return thumbnailUrl;
+      }
+    }
+    
+    // Priority 3: Fallback to external_url (original media)
+    console.log('🎯 Using external_url as fallback:', media.external_url);
+    return media.external_url;
   };
 
   const getSliderImages = () => {
@@ -361,13 +407,55 @@ const MatchDetails = () => {
                    style={styles.mediaItem}
                    onPress={() => openFullscreenImage(media.external_url, media.media_type)}
                  >
+                   {thumbnailLoading[media.id] && (
+                     <View style={styles.thumbnailLoadingContainer}>
+                       <ActivityIndicator size="small" color={COLORS.primary} />
+                     </View>
+                   )}
+                   
                    <Image
-                     source={{ uri: media.thumbnail_url || media.external_url }}
-                     style={styles.mediaImage}
+                     source={{ uri: getThumbnailUrl(media) }}
+                     style={[
+                       styles.mediaImage,
+                       thumbnailErrors[media.id] && styles.mediaImageError
+                     ]}
                      contentFit="cover"
                      cachePolicy="memory-disk"
                      transition={200}
+                     onLoadStart={() => {
+                       setThumbnailLoading(prev => ({ ...prev, [media.id]: true }));
+                       setThumbnailErrors(prev => ({ ...prev, [media.id]: false }));
+                     }}
+                     onError={() => {
+                       console.log('❌ Thumbnail failed to load:', {
+                         mediaId: media.id,
+                         thumbnail_url: media.thumbnail_url,
+                         external_url: media.external_url,
+                         resolvedUrl: getThumbnailUrl(media)
+                       });
+                       setThumbnailErrors(prev => ({ ...prev, [media.id]: true }));
+                       setThumbnailLoading(prev => ({ ...prev, [media.id]: false }));
+                     }}
+                     onLoad={() => {
+                       console.log('✅ Thumbnail loaded successfully:', {
+                         mediaId: media.id,
+                         thumbnail_url: media.thumbnail_url,
+                         external_url: media.external_url,
+                         resolvedUrl: getThumbnailUrl(media)
+                       });
+                       setThumbnailLoading(prev => ({ ...prev, [media.id]: false }));
+                       setThumbnailErrors(prev => ({ ...prev, [media.id]: false }));
+                     }}
                    />
+                   
+                   {/* Error state - show placeholder */}
+                   {thumbnailErrors[media.id] && (
+                     <View style={styles.thumbnailErrorContainer}>
+                       <Text style={styles.thumbnailErrorText}>
+                         {media.media_type === 'video' ? '🎥' : '🖼️'}
+                       </Text>
+                     </View>
+                   )}
                    {/* Video indicator overlay */}
                    {media.media_type === 'video' && (
                      <View style={styles.videoIndicator}>
@@ -814,6 +902,38 @@ const styles = StyleSheet.create({
         color: COLORS.primary,
         fontFamily: 'bold',
         marginLeft: 2, // Slight offset to center the triangle visually
+    },
+    thumbnailLoadingContainer: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        borderRadius: 12,
+        zIndex: 1,
+    },
+    mediaImageError: {
+        opacity: 0.3,
+    },
+    thumbnailErrorContainer: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: COLORS.grayscale200,
+        borderRadius: 12,
+        zIndex: 2,
+    },
+    thumbnailErrorText: {
+        fontSize: getResponsiveFontSize(24),
+        color: COLORS.grayscale700,
+        fontFamily: 'bold',
     },
 
     // AutoSlider styles

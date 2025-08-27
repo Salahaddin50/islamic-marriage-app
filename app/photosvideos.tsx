@@ -13,7 +13,7 @@ import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '../uti
   import { PhotosVideosAPI } from '../src/api/photos-videos.api';
   import { PhotoVideoItem } from '../src/services/photos-videos.service';
   import { clearProfilePictureCache } from '../hooks/useProfilePicture';
-  
+  import { generateMultipleVideoThumbnails } from '../utils/videoThumbnailGenerator';
 
 // Cache for media items to prevent reloading
 let cachedMediaData: { photos: PhotoVideoItem[], videos: PhotoVideoItem[] } | null = null;
@@ -29,6 +29,8 @@ const PhotosVideos = () => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [thumbnailErrors, setThumbnailErrors] = useState<Record<string, boolean>>({});
+  const [generatedThumbnails, setGeneratedThumbnails] = useState<Record<string, string>>({});
+  const [thumbnailGenerationProgress, setThumbnailGenerationProgress] = useState<{completed: number, total: number}>({completed: 0, total: 0});
   
   // Full screen modal states
   const [fullScreenVisible, setFullScreenVisible] = useState(false);
@@ -79,7 +81,75 @@ const PhotosVideos = () => {
     }
   };
 
-  // Thumbnails are now generated server-side during upload - no client-side processing needed
+  // Generate thumbnails for videos when videos change - improved batch processing
+  useEffect(() => {
+    if (videos.length > 0) {
+      // Filter videos that need thumbnail generation
+      const videosNeedingThumbnails = videos.filter(video => 
+        video.external_url && 
+        !generatedThumbnails[video.id] && 
+        !thumbnailErrors[video.id]
+      );
+
+      if (videosNeedingThumbnails.length > 0) {
+        console.log(`Generating thumbnails for ${videosNeedingThumbnails.length} videos...`);
+        
+        // Set initial progress
+        setThumbnailGenerationProgress({completed: 0, total: videosNeedingThumbnails.length});
+
+        // Prepare video data for batch processing
+        const videoData = videosNeedingThumbnails.map(video => ({
+          id: video.id,
+          url: getDirectUrl(video.external_url)
+        }));
+
+        // Use batch thumbnail generation with progress callback
+        generateMultipleVideoThumbnails(
+          videoData,
+          DEFAULT_VIDEO_THUMBNAIL,
+          {
+            time: 3, // Use 3 seconds as requested
+            width: 400,
+            height: 600, // Increased height for better vertical video display
+            quality: 0.8,
+            retries: 2 // Reduce retries for faster processing
+          },
+          (completed, total, videoId, thumbnail) => {
+            // Progress callback - update state as each thumbnail is generated
+            setThumbnailGenerationProgress({completed, total});
+            
+            if (thumbnail !== DEFAULT_VIDEO_THUMBNAIL) {
+              setGeneratedThumbnails(prev => ({ ...prev, [videoId]: thumbnail }));
+            } else {
+              setThumbnailErrors(prev => ({ ...prev, [videoId]: true }));
+            }
+          }
+        ).then(results => {
+          console.log('Batch thumbnail generation completed:', Object.keys(results).length, 'thumbnails generated');
+          
+          // Update all results at once for any that weren't updated via progress callback
+          setGeneratedThumbnails(prev => ({ ...prev, ...results }));
+          
+          // Mark any failed ones as errors
+          Object.entries(results).forEach(([videoId, thumbnail]) => {
+            if (thumbnail === DEFAULT_VIDEO_THUMBNAIL) {
+              setThumbnailErrors(prev => ({ ...prev, [videoId]: true }));
+            }
+          });
+          
+          // Reset progress
+          setThumbnailGenerationProgress({completed: 0, total: 0});
+        }).catch(error => {
+          console.error('Batch thumbnail generation failed:', error);
+          // Mark all videos as errored if batch fails
+          videosNeedingThumbnails.forEach(video => {
+            setThumbnailErrors(prev => ({ ...prev, [video.id]: true }));
+          });
+          setThumbnailGenerationProgress({completed: 0, total: 0});
+        });
+      }
+    }
+  }, [videos, generatedThumbnails, thumbnailErrors]); // Added dependencies to prevent unnecessary re-runs
 
   // Load media items on component mount
   useEffect(() => {
@@ -400,9 +470,17 @@ const PhotosVideos = () => {
   const renderVideoItem = ({ item }: { item: PhotoVideoItem }) => {
     // Get the thumbnail URL with proper handling
     const getVideoThumbnail = () => {
-      // Use database thumbnail URL if available
+      // First check if we have a generated thumbnail for this video
+      if (generatedThumbnails[item.id]) {
+        return generatedThumbnails[item.id];
+      }
+      
+      // Check if we have a specific thumbnail URL
       if (item.thumbnail_url) {
-        return getDirectUrl(item.thumbnail_url);
+        // Add timestamp to prevent caching issues if not already present
+        const timestamp = Date.now();
+        const url = getDirectUrl(item.thumbnail_url);
+        return url.includes('?') ? `${url}&t=${timestamp}` : `${url}?t=${timestamp}`;
       }
       
       // Fallback to default thumbnail
@@ -532,7 +610,7 @@ const PhotosVideos = () => {
                     activeOpacity={0.8}
                   >
                     <Image
-                      source={{ uri: fullScreenItem.thumbnail_url || DEFAULT_VIDEO_THUMBNAIL }}
+                      source={{ uri: generatedThumbnails[fullScreenItem.id] || DEFAULT_VIDEO_THUMBNAIL }}
                       contentFit="contain"
                       style={styles.fullScreenVideo}
                     />
