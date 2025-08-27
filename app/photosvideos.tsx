@@ -13,17 +13,12 @@ import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '../uti
   import { PhotosVideosAPI } from '../src/api/photos-videos.api';
   import { PhotoVideoItem } from '../src/services/photos-videos.service';
   import { clearProfilePictureCache } from '../hooks/useProfilePicture';
-  import { generateMultipleVideoThumbnails } from '../utils/videoThumbnailGenerator';
+  import { ThumbnailAPI } from '../src/api/thumbnail.api';
 
 // Cache for media items to prevent reloading
 let cachedMediaData: { photos: PhotoVideoItem[], videos: PhotoVideoItem[] } | null = null;
 let mediaLoadTime = 0;
 const MEDIA_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-// Cache for generated thumbnails to prevent regeneration
-let cachedThumbnails: Record<string, string> = {};
-let thumbnailCacheTime = 0;
-const THUMBNAIL_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours - thumbnails don't change often
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -98,23 +93,15 @@ const PhotosVideos = () => {
 
 
 
-  // Generate thumbnails for videos when videos change - improved batch processing with caching
+  // Generate and store permanent thumbnails for videos
   useEffect(() => {
     if (videos.length > 0) {
-      // Check if we have cached thumbnails and they're still valid
-      const isThumbnailCacheValid = (Date.now() - thumbnailCacheTime) < THUMBNAIL_CACHE_TTL;
-      
-      if (isThumbnailCacheValid && Object.keys(cachedThumbnails).length > 0) {
-        // Use cached thumbnails
-        setGeneratedThumbnails(cachedThumbnails);
-        return;
-      }
-
-      // Filter videos that need thumbnail generation (always generate for videos since DB thumbnails are not images)
+      // Filter videos that need permanent thumbnails
       const videosNeedingThumbnails = videos.filter(video => 
         video.external_url && 
-        !cachedThumbnails[video.id] && 
-        !generatedThumbnails[video.id] && 
+        !video.thumbnail_url?.includes('.png') && // No permanent PNG thumbnail
+        !video.thumbnail_url?.includes('.jpg') && // No permanent JPG thumbnail
+        !video.thumbnail_url?.includes('.jpeg') && // No permanent JPEG thumbnail
         !thumbnailErrors[video.id]
       );
 
@@ -122,69 +109,48 @@ const PhotosVideos = () => {
         // Set initial progress
         setThumbnailGenerationProgress({completed: 0, total: videosNeedingThumbnails.length});
 
-        // Prepare video data for batch processing
-        const videoData = videosNeedingThumbnails.map(video => ({
-          id: video.id,
-          url: getDirectUrl(video.external_url)
-        }));
+        // Generate permanent thumbnails for each video
+        videosNeedingThumbnails.forEach(async (video, index) => {
+          try {
+            const result = await ThumbnailAPI.generateAndStoreThumbnail({
+              videoId: video.id,
+              videoUrl: getDirectUrl(video.external_url)
+            });
 
-        // Use batch thumbnail generation with progress callback
-        generateMultipleVideoThumbnails(
-          videoData,
-          DEFAULT_VIDEO_THUMBNAIL,
-          {
-            time: 3, // Use 3 seconds as requested
-            width: 400,
-            height: 600, // Increased height for better vertical video display
-            quality: 0.8,
-            retries: 2 // Reduce retries for faster processing
-          },
-          (completed, total, videoId, thumbnail) => {
-            // Progress callback - update state as each thumbnail is generated
-            setThumbnailGenerationProgress({completed, total});
-            
-            if (thumbnail !== DEFAULT_VIDEO_THUMBNAIL) {
-              const newThumbnails = { ...generatedThumbnails, [videoId]: thumbnail };
-              setGeneratedThumbnails(newThumbnails);
-              // Update cache
-              cachedThumbnails[videoId] = thumbnail;
+            if (result.success && result.data) {
+              // Update progress
+              setThumbnailGenerationProgress(prev => ({
+                completed: prev.completed + 1,
+                total: prev.total
+              }));
+
+              // Refresh media items to get updated thumbnail URLs
+              setTimeout(() => {
+                loadMediaItems(true);
+              }, 1000); // Small delay to ensure database update
             } else {
-              setThumbnailErrors(prev => ({ ...prev, [videoId]: true }));
+              // Mark as error
+              setThumbnailErrors(prev => ({ ...prev, [video.id]: true }));
+              setThumbnailGenerationProgress(prev => ({
+                completed: prev.completed + 1,
+                total: prev.total
+              }));
             }
-          }
-        ).then(results => {
-          // Update all results at once for any that weren't updated via progress callback
-          const allThumbnails = { ...generatedThumbnails, ...results };
-          setGeneratedThumbnails(allThumbnails);
-          
-          // Update cache with all successful thumbnails
-          Object.entries(results).forEach(([videoId, thumbnail]) => {
-            if (thumbnail !== DEFAULT_VIDEO_THUMBNAIL) {
-              cachedThumbnails[videoId] = thumbnail;
-            } else {
-              setThumbnailErrors(prev => ({ ...prev, [videoId]: true }));
-            }
-          });
-          
-          // Update cache timestamp
-          thumbnailCacheTime = Date.now();
-          
-          // Reset progress
-          setThumbnailGenerationProgress({completed: 0, total: 0});
-        }).catch(error => {
-          console.error('❌ Batch thumbnail generation failed:', error);
-          // Mark all videos as errored if batch fails
-          videosNeedingThumbnails.forEach(video => {
+          } catch (error) {
+            console.error('Thumbnail generation failed for video:', video.id, error);
             setThumbnailErrors(prev => ({ ...prev, [video.id]: true }));
-          });
-          setThumbnailGenerationProgress({completed: 0, total: 0});
+            setThumbnailGenerationProgress(prev => ({
+              completed: prev.completed + 1,
+              total: prev.total
+            }));
+          }
         });
-      } else if (Object.keys(cachedThumbnails).length > 0) {
-        // Use cached thumbnails if no new ones needed
-        setGeneratedThumbnails(cachedThumbnails);
+      } else {
+        // All videos have permanent thumbnails
+        setThumbnailGenerationProgress({completed: 0, total: 0});
       }
     }
-  }, [videos, generatedThumbnails, thumbnailErrors]); // Added dependencies to prevent unnecessary re-runs
+  }, [videos, thumbnailErrors]);
 
   // Load media items on component mount
   useEffect(() => {
@@ -195,10 +161,8 @@ const PhotosVideos = () => {
     try {
       setLoading(true);
       
-      // Clear thumbnail cache if force refresh
+      // Clear thumbnail errors if force refresh
       if (forceRefresh) {
-        cachedThumbnails = {};
-        thumbnailCacheTime = 0;
         setGeneratedThumbnails({});
         setThumbnailErrors({});
       }
@@ -533,27 +497,19 @@ const PhotosVideos = () => {
   };
 
   const renderVideoItem = ({ item }: { item: PhotoVideoItem }) => {
-    // Get the thumbnail URL with proper handling - PRIORITIZE DATABASE THUMBNAILS
+    // Get the thumbnail URL - now using permanent stored thumbnails
     const getVideoThumbnail = () => {
-      // Priority 1: Use locally generated thumbnail if available (most reliable)
-      if (generatedThumbnails[item.id]) {
-        return generatedThumbnails[item.id];
-      }
-      
-      // Priority 2: Check if database thumbnail is actually an image (not video with params)
+      // Priority 1: Use permanent stored thumbnail from database
       if (item.thumbnail_url && item.thumbnail_url.trim() !== '') {
         const thumbnailUrl = item.thumbnail_url;
-        // Check if it's a real thumbnail image or just a video with parameters
+        // Check if it's a real thumbnail image (PNG, JPG, etc.)
         if (thumbnailUrl.includes('.jpg') || thumbnailUrl.includes('.jpeg') || 
-            thumbnailUrl.includes('.png') || thumbnailUrl.includes('.webp') ||
-            (thumbnailUrl.includes('thumbnail') && !thumbnailUrl.includes('.mp4'))) {
-          const url = getDirectUrl(thumbnailUrl);
-          const timestamp = Date.now();
-          return url.includes('?') ? `${url}&t=${timestamp}` : `${url}?t=${timestamp}`;
+            thumbnailUrl.includes('.png') || thumbnailUrl.includes('.webp')) {
+          return getDirectUrl(thumbnailUrl);
         }
       }
       
-      // Priority 3: Fallback to default thumbnail
+      // Priority 2: Fallback to default thumbnail
       return DEFAULT_VIDEO_THUMBNAIL;
     };
 
