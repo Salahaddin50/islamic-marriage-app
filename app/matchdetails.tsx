@@ -252,7 +252,12 @@ const MatchDetails = () => {
     return media.external_url;
   };
 
-  const getSliderImages = () => {
+  // Define slider media types
+  type SliderMedia = 
+    | { uri: string; type: 'photo'; id: string; videoUrl?: never }
+    | { uri: string; type: 'video'; id: string; videoUrl: string };
+
+  const getSliderImages = (): SliderMedia[] => {
     // Include both photos and videos in the main slider
     const userPhotos = userMedia.filter(media => media.media_type === 'photo');
     const userVideos = userMedia.filter(media => media.media_type === 'video');
@@ -265,7 +270,7 @@ const MatchDetails = () => {
       userMediaLength: userMedia.length
     });
     
-    let sliderImages = [];
+    let sliderImages: SliderMedia[] = [];
     
     // Add photos first
     if (userPhotos.length > 0) {
@@ -317,6 +322,16 @@ const MatchDetails = () => {
   const renderAutoSlider = () => {
     const sliderImages = getSliderImages();
     
+    console.log('🎠 Debug AutoSlider:', {
+      totalImages: sliderImages.length,
+      images: sliderImages.map(img => ({
+        id: img.id,
+        type: img.type,
+        uri: img.uri?.substring(0, 50) + '...',
+        hasVideoUrl: !!img.videoUrl
+      }))
+    });
+    
     return (
       <View style={styles.autoSliderContainer}>
         <ScrollView 
@@ -324,11 +339,13 @@ const MatchDetails = () => {
           pagingEnabled 
           showsHorizontalScrollIndicator={false}
           style={styles.autoSliderScroll}
+          contentContainerStyle={styles.autoSliderContentContainer}
         >
           {sliderImages.map((media, index) => (
             <TouchableOpacity 
               key={media.id} 
               onPress={() => {
+                console.log('🎯 Slider item clicked:', { type: media.type, id: media.id });
                 if (media.type === 'video') {
                   // Open video in new page - use a valid route
                   router.push({
@@ -352,6 +369,9 @@ const MatchDetails = () => {
                 contentFit="cover"
                 cachePolicy="memory-disk"
                 transition={200}
+                onLoadStart={() => console.log('🖼️ Loading image:', media.uri?.substring(0, 50) + '...')}
+                onLoad={() => console.log('✅ Image loaded:', media.uri?.substring(0, 50) + '...')}
+                onError={(error) => console.log('❌ Image error:', error)}
               />
               
               {/* Video indicator overlay */}
@@ -996,13 +1016,19 @@ const styles = StyleSheet.create({
     autoSliderContainer: {
         width: SIZES.width,
         height: SIZES.height * 0.58,
+        position: 'relative',
     },
     autoSliderScroll: {
-        flex: 1
+        flex: 1,
+    },
+    autoSliderContentContainer: {
+        alignItems: 'center',
     },
     autoSliderImageContainer: {
         width: SIZES.width,
         height: SIZES.height * 0.58,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     autoSliderImage: {
         width: SIZES.width,
