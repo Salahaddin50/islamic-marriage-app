@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, FlatList, ActivityIndicator, Modal, Dimensions } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, SIZES, icons, images } from '../constants';
 import { DEFAULT_VIDEO_THUMBNAIL } from '../constants/defaultThumbnails';
@@ -36,6 +36,8 @@ const PhotosVideos = () => {
   const [fullScreenVisible, setFullScreenVisible] = useState(false);
   const [fullScreenItem, setFullScreenItem] = useState<PhotoVideoItem | null>(null);
   const [fullScreenType, setFullScreenType] = useState<'photo' | 'video'>('photo');
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   // Helper function to get direct URL
   const getDirectUrl = (url: string) => {
@@ -50,12 +52,33 @@ const PhotosVideos = () => {
     setFullScreenItem(item);
     setFullScreenType(type);
     setFullScreenVisible(true);
+    setIsVideoPlaying(false);
   };
 
   // Close full screen modal
   const closeFullScreen = () => {
     setFullScreenVisible(false);
     setFullScreenItem(null);
+    setIsVideoPlaying(false);
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+  };
+
+  // Play video
+  const playVideo = () => {
+    setIsVideoPlaying(true);
+    if (videoRef.current) {
+      videoRef.current.play();
+    }
+  };
+
+  // Pause video
+  const pauseVideo = () => {
+    setIsVideoPlaying(false);
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
   };
 
   // Generate thumbnails for videos when videos change - improved batch processing
@@ -539,12 +562,13 @@ const PhotosVideos = () => {
         transparent={true}
         animationType="fade"
         onRequestClose={closeFullScreen}
+        statusBarTranslucent
       >
         <View style={styles.fullScreenContainer}>
           {/* Header with close button */}
           <View style={styles.fullScreenHeader}>
             <TouchableOpacity onPress={closeFullScreen} style={styles.closeButton}>
-              <MaterialCommunityIcons name="close" size={30} color={COLORS.white} />
+              <MaterialCommunityIcons name="close" size={32} color={COLORS.white} />
             </TouchableOpacity>
           </View>
 
@@ -558,17 +582,44 @@ const PhotosVideos = () => {
               />
             ) : (
               <View style={styles.fullScreenVideoContainer}>
-                {/* For now, show thumbnail with play button */}
-                {/* In a real implementation, you'd use a Video component */}
-                <Image
-                  source={{ uri: generatedThumbnails[fullScreenItem.id] || DEFAULT_VIDEO_THUMBNAIL }}
-                  contentFit="contain"
-                  style={styles.fullScreenVideo}
-                />
-                <View style={styles.fullScreenPlayButton}>
-                  <MaterialCommunityIcons name="play-circle" size={80} color={COLORS.white} />
-                </View>
-                <Text style={styles.videoPlayText}>Tap to play video</Text>
+                {isVideoPlaying ? (
+                  // HTML5 Video Player for web
+                  <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                    <video
+                      ref={videoRef}
+                      src={mediaUrl}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'contain',
+                        backgroundColor: 'black'
+                      }}
+                      controls
+                      autoPlay
+                      onPause={pauseVideo}
+                      onEnded={() => setIsVideoPlaying(false)}
+                    />
+                  </div>
+                ) : (
+                  // Thumbnail with play button
+                  <TouchableOpacity 
+                    style={styles.videoThumbnailContainer}
+                    onPress={playVideo}
+                    activeOpacity={0.8}
+                  >
+                    <Image
+                      source={{ uri: generatedThumbnails[fullScreenItem.id] || DEFAULT_VIDEO_THUMBNAIL }}
+                      contentFit="contain"
+                      style={styles.fullScreenVideo}
+                    />
+                    <View style={styles.fullScreenPlayButton}>
+                      <View style={styles.playButtonBackground}>
+                        <MaterialCommunityIcons name="play" size={60} color={COLORS.white} />
+                      </View>
+                    </View>
+                    <Text style={styles.videoPlayText}>Tap to play video</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             )}
           </View>
@@ -583,7 +634,9 @@ const PhotosVideos = () => {
                   setAsAvatar(fullScreenItem.id);
                 }}
               >
-                <MaterialCommunityIcons name="account" size={24} color={COLORS.white} />
+                <View style={styles.actionButtonBackground}>
+                  <MaterialCommunityIcons name="account" size={28} color={COLORS.white} />
+                </View>
                 <Text style={styles.fullScreenActionText}>Set as Avatar</Text>
               </TouchableOpacity>
             )}
@@ -594,7 +647,9 @@ const PhotosVideos = () => {
                 deleteMedia(fullScreenItem.id, fullScreenType);
               }}
             >
-              <MaterialCommunityIcons name="delete" size={24} color={COLORS.white} />
+              <View style={styles.actionButtonBackground}>
+                <MaterialCommunityIcons name="delete" size={28} color={COLORS.white} />
+              </View>
               <Text style={styles.fullScreenActionText}>Delete</Text>
             </TouchableOpacity>
           </View>
@@ -1004,67 +1059,110 @@ const styles = StyleSheet.create({
   // Full Screen Modal Styles
   fullScreenContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    backgroundColor: 'rgba(0, 0, 0, 0.98)',
   },
   fullScreenHeader: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
-    paddingTop: 50,
+    paddingTop: 60,
     paddingHorizontal: 20,
-    paddingBottom: 10,
+    paddingBottom: 20,
+    zIndex: 1000,
   },
   closeButton: {
-    padding: 10,
+    padding: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 30,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   fullScreenContent: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
   },
   fullScreenImage: {
-    width: screenWidth,
+    width: screenWidth - 20,
     height: screenHeight * 0.7,
+    borderRadius: 8,
   },
   fullScreenVideoContainer: {
-    width: screenWidth,
+    width: screenWidth - 20,
     height: screenHeight * 0.7,
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  videoThumbnailContainer: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
   },
   fullScreenVideo: {
     width: '100%',
     height: '100%',
+    borderRadius: 8,
   },
   fullScreenPlayButton: {
     position: 'absolute',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  playButtonBackground: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: 'white',
+  },
   videoPlayText: {
     position: 'absolute',
-    bottom: -40,
-    fontSize: getResponsiveFontSize(16),
+    bottom: 30,
+    fontSize: getResponsiveFontSize(18),
     color: COLORS.white,
     fontFamily: 'medium',
+    textAlign: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
   },
   fullScreenFooter: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingVertical: 30,
-    paddingHorizontal: 20,
+    paddingVertical: 40,
+    paddingHorizontal: 40,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   fullScreenAction: {
     alignItems: 'center',
-    padding: 15,
+    padding: 10,
+  },
+  actionButtonBackground: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    marginBottom: 8,
   },
   fullScreenActionText: {
     color: COLORS.white,
     fontSize: getResponsiveFontSize(14),
     fontFamily: 'medium',
-    marginTop: 5,
+    textAlign: 'center',
   },
 });
 
