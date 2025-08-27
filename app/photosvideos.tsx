@@ -100,10 +100,9 @@ const PhotosVideos = () => {
   // Generate thumbnails for videos when videos change - improved batch processing
   useEffect(() => {
     if (videos.length > 0) {
-      // Filter videos that need thumbnail generation (only if no database thumbnail exists)
+      // Filter videos that need thumbnail generation (always generate for videos since DB thumbnails are not images)
       const videosNeedingThumbnails = videos.filter(video => 
         video.external_url && 
-        !video.thumbnail_url && // Only generate if no database thumbnail
         !generatedThumbnails[video.id] && 
         !thumbnailErrors[video.id]
       );
@@ -433,7 +432,23 @@ const PhotosVideos = () => {
   };
 
   const renderPhotoItem = ({ item }: { item: PhotoVideoItem }) => {
-    const imageUrl = getDirectUrl(item.external_url);
+    // For photos, use thumbnail_url if it's an actual image, otherwise use external_url
+    const getPhotoUrl = () => {
+      if (item.thumbnail_url && (
+        item.thumbnail_url.includes('.jpg') || 
+        item.thumbnail_url.includes('.jpeg') || 
+        item.thumbnail_url.includes('.png') || 
+        item.thumbnail_url.includes('.webp')
+      )) {
+        console.log('✅ Using photo thumbnail:', item.thumbnail_url);
+        return getDirectUrl(item.thumbnail_url);
+      } else {
+        console.log('✅ Using photo external URL:', item.external_url);
+        return getDirectUrl(item.external_url);
+      }
+    };
+
+    const imageUrl = getPhotoUrl();
 
     // Debug photo data
     console.log('🖼️ Rendering photo:', {
@@ -441,7 +456,8 @@ const PhotosVideos = () => {
       external_url: item.external_url,
       thumbnail_url: item.thumbnail_url,
       hasThumbnail: !!item.thumbnail_url,
-      imageUrl: imageUrl
+      imageUrl: imageUrl,
+      finalUrl: imageUrl
     });
 
     const handleImageError = (error: any) => {
@@ -555,23 +571,30 @@ const PhotosVideos = () => {
         generatedThumbnail: generatedThumbnails[item.id]
       });
 
-      // Priority 1: Use database thumbnail_url if it exists
-      if (item.thumbnail_url && item.thumbnail_url.trim() !== '') {
-        console.log('✅ Using database thumbnail:', item.thumbnail_url);
-        const url = getDirectUrl(item.thumbnail_url);
-        // Add timestamp to prevent caching issues if not already present
-        const timestamp = Date.now();
-        return url.includes('?') ? `${url}&t=${timestamp}` : `${url}?t=${timestamp}`;
-      }
-      
-      // Priority 2: Use locally generated thumbnail if available
+      // Priority 1: Use locally generated thumbnail if available (most reliable)
       if (generatedThumbnails[item.id]) {
         console.log('✅ Using generated thumbnail:', generatedThumbnails[item.id]);
         return generatedThumbnails[item.id];
       }
       
+      // Priority 2: Check if database thumbnail is actually an image (not video with params)
+      if (item.thumbnail_url && item.thumbnail_url.trim() !== '') {
+        const thumbnailUrl = item.thumbnail_url;
+        // Check if it's a real thumbnail image or just a video with parameters
+        if (thumbnailUrl.includes('.jpg') || thumbnailUrl.includes('.jpeg') || 
+            thumbnailUrl.includes('.png') || thumbnailUrl.includes('.webp') ||
+            (thumbnailUrl.includes('thumbnail') && !thumbnailUrl.includes('.mp4'))) {
+          console.log('✅ Using database thumbnail image:', thumbnailUrl);
+          const url = getDirectUrl(thumbnailUrl);
+          const timestamp = Date.now();
+          return url.includes('?') ? `${url}&t=${timestamp}` : `${url}?t=${timestamp}`;
+        } else {
+          console.log('⚠️ Database thumbnail is video URL, not image - will generate locally');
+        }
+      }
+      
       // Priority 3: Fallback to default thumbnail
-      console.log('⚠️ No thumbnail available, using default');
+      console.log('⚠️ No valid thumbnail available, using default');
       return DEFAULT_VIDEO_THUMBNAIL;
     };
 
@@ -589,6 +612,13 @@ const PhotosVideos = () => {
           activeOpacity={0.8}
           onPress={() => openFullScreen(item, 'video')} // Single tap to open full screen
         >
+          {/* Loading state for video thumbnails */}
+          {!generatedThumbnails[item.id] && !thumbnailErrors[item.id] && (
+            <View style={styles.videoLoadingContainer}>
+              <ActivityIndicator size="small" color={COLORS.primary} />
+              <Text style={styles.videoLoadingText}>Generating...</Text>
+            </View>
+          )}
           <Image
             source={thumbnailErrors[item.id] ? { uri: DEFAULT_VIDEO_THUMBNAIL } : { uri: videoThumbnailUrl }}
             contentFit="cover"
@@ -1297,6 +1327,24 @@ const styles = StyleSheet.create({
     fontFamily: 'medium',
     textAlign: 'center',
     marginVertical: 2,
+  },
+  videoLoadingContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 5,
+    borderRadius: 8,
+  },
+  videoLoadingText: {
+    fontSize: getResponsiveFontSize(12),
+    fontFamily: 'medium',
+    color: COLORS.primary,
+    marginTop: 8,
   }
 });
 
