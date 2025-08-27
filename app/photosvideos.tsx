@@ -225,6 +225,14 @@ const PhotosVideos = () => {
       if (result.success && result.data) {
         // Refresh the media list with force refresh
         await loadMediaItems(true);
+        
+        // For video uploads, force a page refresh for better user experience
+        if (type === 'video') {
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
+        }
+        
         Alert.alert('Success', `${type === 'photo' ? 'Photo' : 'Video'} uploaded successfully!`);
       } else {
         Alert.alert('Error', result.error || 'Upload failed');
@@ -507,13 +515,7 @@ const PhotosVideos = () => {
           </View>
         </TouchableOpacity>
         
-        {/* Thumbnail Generation Progress */}
-        {thumbnailGenerationProgress.total > 0 && !generatedThumbnails[item.id] && !thumbnailErrors[item.id] && (
-          <View style={styles.progressOverlay}>
-            <ActivityIndicator size="small" color={COLORS.white} />
-            <Text style={styles.progressText}>Generating...</Text>
-          </View>
-        )}
+        {/* Removed progress overlay - no longer needed */}
         
         {/* Delete Button */}
         <TouchableOpacity
@@ -568,7 +570,7 @@ const PhotosVideos = () => {
           {/* Header with close button */}
           <View style={styles.fullScreenHeader}>
             <TouchableOpacity onPress={closeFullScreen} style={styles.closeButton}>
-              <MaterialCommunityIcons name="close" size={32} color={COLORS.white} />
+              <MaterialCommunityIcons name="close" size={28} color={COLORS.white} />
             </TouchableOpacity>
           </View>
 
@@ -614,7 +616,7 @@ const PhotosVideos = () => {
                     />
                     <View style={styles.fullScreenPlayButton}>
                       <View style={styles.playButtonBackground}>
-                        <MaterialCommunityIcons name="play" size={60} color={COLORS.white} />
+                        <MaterialCommunityIcons name="play" size={80} color={COLORS.white} />
                       </View>
                     </View>
                     <Text style={styles.videoPlayText}>Tap to play video</Text>
@@ -672,22 +674,7 @@ const PhotosVideos = () => {
           {renderTabButton('videos', 'Videos', icons.videoCamera)}
         </View>
 
-        {/* Thumbnail Generation Progress Bar */}
-        {thumbnailGenerationProgress.total > 0 && (
-          <View style={styles.progressBarContainer}>
-            <Text style={styles.progressBarText}>
-              Generating video thumbnails... {thumbnailGenerationProgress.completed}/{thumbnailGenerationProgress.total}
-            </Text>
-            <View style={styles.progressBar}>
-              <View 
-                style={[
-                  styles.progressBarFill, 
-                  { width: `${(thumbnailGenerationProgress.completed / thumbnailGenerationProgress.total) * 100}%` }
-                ]} 
-              />
-            </View>
-          </View>
-        )}
+        {/* Removed progress bar - no longer needed */}
 
         {/* Content */}
         {loading ? (
@@ -1072,10 +1059,15 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     padding: 15,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     borderRadius: 30,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.8)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   fullScreenContent: {
     flex: 1,
@@ -1114,14 +1106,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   playButtonBackground: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 3,
+    borderWidth: 4,
     borderColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
   },
   videoPlayText: {
     position: 'absolute',
