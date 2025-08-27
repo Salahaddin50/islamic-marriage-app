@@ -123,7 +123,7 @@ const MatchDetails = () => {
         throw new Error('User profile not found or access denied');
       }
 
-      // Fetch user media (photos and videos)
+      // Fetch user media (photos and videos) - removed visibility filter to see all media
       const { data: mediaData, error: mediaError } = await supabase
         .from('media_references')
         .select(`
@@ -136,9 +136,25 @@ const MatchDetails = () => {
         `)
         .eq('user_id', targetUserId)
         .in('media_type', ['photo', 'video'])
-        .in('visibility_level', ['public', 'matched_only'])
         .order('is_profile_picture', { ascending: false })
         .order('media_order', { ascending: true });
+
+      if (mediaError) {
+        console.error('Media fetch error:', mediaError);
+      }
+
+      // Also try to fetch ALL media for this user to debug
+      const { data: allMediaData, error: allMediaError } = await supabase
+        .from('media_references')
+        .select('*')
+        .eq('user_id', targetUserId);
+
+      console.log('🔍 Debug ALL Media Data:', {
+        userId: targetUserId,
+        allMediaCount: allMediaData?.length || 0,
+        allMediaData: allMediaData,
+        allMediaError: allMediaError
+      });
 
       const media = mediaData || [];
 
@@ -146,6 +162,8 @@ const MatchDetails = () => {
       console.log('🔍 Debug Media Data:', {
         userId: targetUserId,
         mediaCount: media.length,
+        mediaData: mediaData,
+        mediaError: mediaError,
         mediaDetails: media.map(m => ({
           id: m.id,
           type: m.media_type,
