@@ -49,6 +49,11 @@ const PhotosVideos = () => {
 
   // Open full screen modal
   const openFullScreen = (item: PhotoVideoItem, type: 'photo' | 'video') => {
+    console.log('🖼️ Opening fullscreen:', type, 'Item:', item);
+    if (type === 'video') {
+      console.log('🎬 Video URL:', item.external_url);
+      console.log('🎬 Direct URL:', getDirectUrl(item.external_url));
+    }
     setFullScreenItem(item);
     setFullScreenType(type);
     setFullScreenVisible(true);
@@ -67,20 +72,25 @@ const PhotosVideos = () => {
 
   // Play video
   const playVideo = () => {
+    console.log('🎬 Play video called');
     setIsVideoPlaying(true);
-    if (videoRef.current) {
-      // Add a small delay to ensure video element is ready
-      setTimeout(() => {
-        if (videoRef.current) {
-          videoRef.current.play().catch(error => {
-            console.error('Video play failed:', error);
-            // Fallback to thumbnail if video can't play
-            setIsVideoPlaying(false);
-            Alert.alert('Video Error', 'Unable to play video. Please try again.');
-          });
-        }
-      }, 100);
-    }
+    
+    // Force video element to load and play
+    setTimeout(() => {
+      if (videoRef.current) {
+        console.log('🎬 Video element found, attempting to play');
+        videoRef.current.load(); // Force reload
+        videoRef.current.play().catch(error => {
+          console.error('❌ Video play failed:', error);
+          // Fallback to thumbnail if video can't play
+          setIsVideoPlaying(false);
+          Alert.alert('Video Error', 'Unable to play video. Please try again.');
+        });
+      } else {
+        console.error('❌ Video element not found');
+        setIsVideoPlaying(false);
+      }
+    }, 200); // Increased delay for better reliability
   };
 
   // Pause video
@@ -644,24 +654,32 @@ const PhotosVideos = () => {
                         onPause={pauseVideo}
                         onEnded={() => setIsVideoPlaying(false)}
                         onLoadStart={() => {
+                          console.log('🎬 Video load started, URL:', mediaUrl);
                           // Force video to load and display
                           if (videoRef.current) {
                             videoRef.current.load();
                           }
                         }}
                         onCanPlay={() => {
+                          console.log('🎬 Video can play, ready to play');
                           // Video is ready to play
                           if (videoRef.current) {
                             videoRef.current.style.backgroundColor = 'transparent';
                           }
                         }}
+                        onLoadedData={() => {
+                          console.log('🎬 Video data loaded successfully');
+                        }}
                         onError={(e) => {
-                          console.error('Video playback error:', e);
+                          console.error('❌ Video playback error:', e);
+                          console.error('❌ Video URL:', mediaUrl);
                           // Fallback to thumbnail if video fails
                           setIsVideoPlaying(false);
                         }}
                         crossOrigin="anonymous"
                         preload="metadata"
+                        muted={false}
+                        playsInline={false}
                       />
                     ) : (
                       <View style={styles.nativeVideoPlaceholder}>
