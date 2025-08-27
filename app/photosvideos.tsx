@@ -511,7 +511,7 @@ const PhotosVideos = () => {
             placeholder={{ uri: DEFAULT_VIDEO_THUMBNAIL }}
           />
           <View style={styles.playButton}>
-            <MaterialCommunityIcons name="play" size={28} color={COLORS.white} />
+            <Text style={styles.playButtonText}>Play</Text>
           </View>
         </TouchableOpacity>
         
@@ -570,7 +570,7 @@ const PhotosVideos = () => {
           {/* Header with close button */}
           <View style={styles.fullScreenHeader}>
             <TouchableOpacity onPress={closeFullScreen} style={styles.closeButton}>
-              <MaterialCommunityIcons name="close" size={28} color={COLORS.white} />
+              <Text style={styles.closeButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
 
@@ -616,7 +616,7 @@ const PhotosVideos = () => {
                     />
                     <View style={styles.fullScreenPlayButton}>
                       <View style={styles.playButtonBackground}>
-                        <MaterialCommunityIcons name="play" size={80} color={COLORS.white} />
+                        <Text style={styles.fullScreenPlayText}>Play</Text>
                       </View>
                     </View>
                     <Text style={styles.videoPlayText}>Tap to play video</Text>
@@ -979,9 +979,10 @@ const styles = StyleSheet.create({
     textShadowRadius: 1,
   },
   playButtonText: {
-    fontSize: getResponsiveFontSize(14),
+    fontSize: getResponsiveFontSize(12),
     fontFamily: 'semibold',
     color: COLORS.white,
+    textAlign: 'center',
   },
   profileBadge: {
     position: 'absolute',
@@ -1069,6 +1070,12 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
+  closeButtonText: {
+    fontSize: getResponsiveFontSize(16),
+    fontFamily: 'semibold',
+    color: COLORS.white,
+    textAlign: 'center',
+  },
   fullScreenContent: {
     flex: 1,
     justifyContent: 'center',
@@ -1119,6 +1126,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 8,
+  },
+  fullScreenPlayText: {
+    fontSize: getResponsiveFontSize(24),
+    fontFamily: 'bold',
+    color: COLORS.white,
+    textAlign: 'center',
   },
   videoPlayText: {
     position: 'absolute',

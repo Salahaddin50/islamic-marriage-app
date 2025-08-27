@@ -558,7 +558,7 @@ const MatchDetails = () => {
               style={styles.closeButton}
               onPress={closeFullscreenImage}
             >
-              <Text style={styles.closeButtonText}>✕</Text>
+              <Text style={styles.closeButtonText}>Close</Text>
             </TouchableOpacity>
           </TouchableOpacity>
         </View>
@@ -806,17 +806,20 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 50,
         right: 20,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        width: 40,
-        height: 40,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        paddingHorizontal: 15,
+        paddingVertical: 10,
         borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.3)',
     },
     closeButtonText: {
         color: COLORS.white,
-        fontSize: getResponsiveFontSize(20),
-        fontFamily: 'bold',
+        fontSize: getResponsiveFontSize(14),
+        fontFamily: 'semibold',
+        textAlign: 'center',
     }
 })
 
