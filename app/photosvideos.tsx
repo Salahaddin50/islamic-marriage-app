@@ -13,6 +13,7 @@ import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '../uti
   import { PhotosVideosAPI } from '../src/api/photos-videos.api';
   import { PhotoVideoItem } from '../src/services/photos-videos.service';
   import { clearProfilePictureCache } from '../hooks/useProfilePicture';
+  import { generateVideoThumbnailWithFallback } from '../utils/videoThumbnailGenerator';
 
 // Cache for media items to prevent reloading
 let cachedMediaData: { photos: PhotoVideoItem[], videos: PhotoVideoItem[] } | null = null;
@@ -26,6 +27,38 @@ const PhotosVideos = () => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [thumbnailErrors, setThumbnailErrors] = useState<Record<string, boolean>>({});
+  const [generatedThumbnails, setGeneratedThumbnails] = useState<Record<string, string>>({});
+
+  // Generate thumbnails for videos when videos change
+  useEffect(() => {
+    if (videos.length > 0) {
+      videos.forEach(video => {
+        if (video.external_url && !generatedThumbnails[video.id] && !thumbnailErrors[video.id]) {
+          const getDirectUrl = (url: string) => {
+            if (url && url.includes('.cdn.')) {
+              return url.replace('.cdn.digitaloceanspaces.com', '.digitaloceanspaces.com');
+            }
+            return url;
+          };
+
+          const videoUrl = getDirectUrl(video.external_url);
+          generateVideoThumbnailWithFallback(videoUrl, DEFAULT_VIDEO_THUMBNAIL, {
+            time: 1,
+            width: 400,
+            height: 300,
+            quality: 0.8
+          }).then(thumbnail => {
+            if (thumbnail !== DEFAULT_VIDEO_THUMBNAIL) {
+              setGeneratedThumbnails(prev => ({ ...prev, [video.id]: thumbnail }));
+            }
+          }).catch(error => {
+            console.warn('Failed to generate thumbnail for video:', video.id, error);
+            setThumbnailErrors(prev => ({ ...prev, [video.id]: true }));
+          });
+        }
+      });
+    }
+  }, [videos]);
 
   // Load media items on component mount
   useEffect(() => {
@@ -347,26 +380,49 @@ const PhotosVideos = () => {
       return url;
     };
 
-    const videoThumbnailUrl = getDirectUrl(item.thumbnail_url || item.external_url);
+    // Get the thumbnail URL with proper handling
+    const getVideoThumbnail = () => {
+      // First check if we have a generated thumbnail for this video
+      if (generatedThumbnails[item.id]) {
+        return generatedThumbnails[item.id];
+      }
+      
+      // Check if we have a specific thumbnail URL
+      if (item.thumbnail_url) {
+        // Add timestamp to prevent caching issues if not already present
+        const timestamp = Date.now();
+        const url = getDirectUrl(item.thumbnail_url);
+        return url.includes('?') ? `${url}&t=${timestamp}` : `${url}?t=${timestamp}`;
+      }
+      
+      // Fallback to default thumbnail
+      return DEFAULT_VIDEO_THUMBNAIL;
+    };
+
+    const videoThumbnailUrl = getVideoThumbnail();
 
     const handleVideoImageError = (error: any) => {
+      console.log('Video thumbnail error for ID:', item.id);
       setThumbnailErrors(prev => ({ ...prev, [item.id]: true }));
     };
 
     return (
       <View style={styles.mediaItem}>
-        <TouchableOpacity style={styles.videoContainer}>
+        <TouchableOpacity 
+          style={styles.videoContainer}
+          activeOpacity={0.8}
+        >
           <Image
             source={thumbnailErrors[item.id] ? { uri: DEFAULT_VIDEO_THUMBNAIL } : { uri: videoThumbnailUrl }}
             contentFit="cover"
             style={styles.videoItem}
-            cachePolicy="memory-disk"
+            cachePolicy="none" // Disable cache to ensure fresh thumbnails
             transition={200}
             onError={handleVideoImageError}
-            onLoad={() => {}}
+            placeholder={{ uri: DEFAULT_VIDEO_THUMBNAIL }}
           />
           <View style={styles.playButton}>
-            <Text style={[styles.playButtonText, { color: COLORS.white }]}>Play</Text>
+            <MaterialCommunityIcons name="play" size={28} color={COLORS.white} />
           </View>
         </TouchableOpacity>
         
@@ -620,14 +676,18 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: '50%',
     left: '50%',
-    marginTop: -20,
-    marginLeft: -20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    marginTop: -25,
+    marginLeft: -25,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(0,0,0,0.7)',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'white',
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.5)',
+    elevation: 5,
   },
   deleteButton: {
     position: 'absolute',
@@ -641,10 +701,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1, // Thinner border
     borderColor: COLORS.white,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
+    boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.3)',
     elevation: 3,
     zIndex: 999, // Ensure button is above all other elements
     pointerEvents: 'auto', // Ensure touch events are captured
@@ -661,10 +718,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1, // Thinner border
     borderColor: COLORS.white,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
+    boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.3)',
     elevation: 3,
     zIndex: 999, // Ensure button is above other elements
   },

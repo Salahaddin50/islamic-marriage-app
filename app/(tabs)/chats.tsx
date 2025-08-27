@@ -172,10 +172,7 @@ const styles = StyleSheet.create({
     bottom: 72,
     right: 16,
     zIndex: 999,
-    shadowRadius: 10,
-    shadowColor: COLORS.primary,
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 10 }
+    boxShadow: '0px 10px 10px rgba(85, 123, 255, 0.2)'
   }
 })
 

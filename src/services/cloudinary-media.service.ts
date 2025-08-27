@@ -40,9 +40,28 @@ export class CloudinaryMediaService {
 
       // Extract URLs
       const url = result.secure_url;
-      const thumbnailUrl = options.mediaType === 'video' 
-        ? result.secure_url.replace('/video/upload/', '/video/upload/so_0,w_300,h_200,c_fill/')
-        : url;
+      
+      // Generate proper video thumbnails
+      let thumbnailUrl;
+      if (options.mediaType === 'video') {
+        // Use Cloudinary's video thumbnail transformation
+        // This creates a thumbnail from the first frame of the video
+        // so_0 means frame at 0 seconds (first frame)
+        thumbnailUrl = result.secure_url.replace(
+          '/video/upload/', 
+          '/video/upload/so_0,w_400,h_300,c_fill,q_auto/'
+        );
+        
+        // If Cloudinary provides a thumbnail URL directly, use that instead
+        if (result.thumbnail_url) {
+          thumbnailUrl = result.thumbnail_url;
+        }
+        
+        // Add a timestamp to prevent caching issues
+        thumbnailUrl = `${thumbnailUrl}?t=${Date.now()}`;
+      } else {
+        thumbnailUrl = url;
+      }
 
       // Save reference to your database using existing service
       const mediaReference = await PhotosVideosService.createMediaReference({
