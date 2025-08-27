@@ -194,21 +194,22 @@ export class MediaIntegrationService {
 
       console.log('Found media record:', mediaRecord);
 
-      // 2. Delete from DigitalOcean Spaces (video + thumbnail)
+      // 2. Delete from storage (DigitalOcean or Cloudinary)
       if (mediaRecord.do_spaces_key) {
+        // DigitalOcean Spaces storage
         console.log('Deleting from DigitalOcean Spaces:', mediaRecord.do_spaces_key);
         
-        // Delete main video file
+        // Delete main media file (photo or video)
         const deleteResult = await DigitalOceanMediaService.deleteMedia(mediaRecord.do_spaces_key);
         if (!deleteResult.success) {
-          console.warn('Failed to delete video from DigitalOcean:', deleteResult.error);
-          // Continue with database deletion even if DigitalOcean deletion fails
+          console.warn(`Failed to delete ${mediaRecord.media_type} from DigitalOcean:`, deleteResult.error);
+          // Continue with database deletion even if storage deletion fails
         } else {
-          console.log('Successfully deleted video from DigitalOcean Spaces');
+          console.log(`Successfully deleted ${mediaRecord.media_type} from DigitalOcean Spaces`);
         }
 
-        // Delete associated thumbnail if it exists
-        if (mediaRecord.thumbnail_url && 
+        // Delete associated thumbnail if it exists (for videos)
+        if (mediaRecord.media_type === 'video' && mediaRecord.thumbnail_url && 
             (mediaRecord.thumbnail_url.includes('.png') || 
              mediaRecord.thumbnail_url.includes('.jpg') || 
              mediaRecord.thumbnail_url.includes('.jpeg'))) {
@@ -226,8 +227,31 @@ export class MediaIntegrationService {
             }
           }
         }
+      } else if (mediaRecord.external_url && mediaRecord.external_url.includes('cloudinary')) {
+        // Cloudinary storage
+        console.log('Deleting from Cloudinary:', mediaRecord.external_url);
+        
+        try {
+          // Extract public ID from Cloudinary URL
+          const publicId = this.extractCloudinaryPublicId(mediaRecord.external_url);
+          if (publicId) {
+            // Import Cloudinary service dynamically to avoid circular dependencies
+            const { CloudinaryMediaService } = await import('./cloudinary-media.service');
+            const cloudinaryDeleteResult = await CloudinaryMediaService.deleteMedia(publicId, mediaRecord.media_type);
+            
+            if (!cloudinaryDeleteResult.success) {
+              console.warn(`Failed to delete ${mediaRecord.media_type} from Cloudinary:`, cloudinaryDeleteResult.error);
+              // Continue with database deletion even if storage deletion fails
+            } else {
+              console.log(`Successfully deleted ${mediaRecord.media_type} from Cloudinary`);
+            }
+          }
+        } catch (error) {
+          console.warn('Failed to delete from Cloudinary:', error);
+          // Continue with database deletion even if Cloudinary deletion fails
+        }
       } else {
-        console.log('No DO Spaces key found, skipping storage deletion');
+        console.log('No storage key or Cloudinary URL found, skipping storage deletion');
       }
 
       // 3. Delete from database
@@ -535,6 +559,41 @@ export class MediaIntegrationService {
       return null;
     } catch (error) {
       console.error('Failed to extract thumbnail key from URL:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Extract Cloudinary public ID from URL
+   * Converts: https://res.cloudinary.com/cloud_name/image/upload/v1234567890/folder/image.jpg
+   * To: folder/image
+   */
+  private static extractCloudinaryPublicId(cloudinaryUrl: string): string | null {
+    try {
+      const url = new URL(cloudinaryUrl);
+      const pathParts = url.pathname.split('/');
+      
+      // Find the 'upload' index and get everything after it
+      const uploadIndex = pathParts.findIndex(part => part === 'upload');
+      if (uploadIndex !== -1 && uploadIndex + 1 < pathParts.length) {
+        // Skip 'upload' and version, get the rest
+        const publicIdParts = pathParts.slice(uploadIndex + 2);
+        
+        // Remove file extension from the last part
+        if (publicIdParts.length > 0) {
+          const lastPart = publicIdParts[publicIdParts.length - 1];
+          const dotIndex = lastPart.lastIndexOf('.');
+          if (dotIndex !== -1) {
+            publicIdParts[publicIdParts.length - 1] = lastPart.substring(0, dotIndex);
+          }
+        }
+        
+        return publicIdParts.join('/');
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Failed to extract Cloudinary public ID from URL:', error);
       return null;
     }
   }
