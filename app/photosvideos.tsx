@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, FlatList, ActivityIndicator, Modal, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, FlatList, ActivityIndicator, Modal, Dimensions, Platform } from 'react-native';
 import React, { useState, useEffect, useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, SIZES, icons, images } from '../constants';
@@ -81,21 +81,7 @@ const PhotosVideos = () => {
     }
   };
 
-  // Debug media data to identify thumbnail issues
-  useEffect(() => {
-    if (videos.length > 0) {
-      console.log('🔍 Debug Videos Data:', {
-        videoCount: videos.length,
-        videoDetails: videos.map(v => ({
-          id: v.id,
-          external_url: v.external_url,
-          thumbnail_url: v.thumbnail_url,
-          hasThumbnail: !!v.thumbnail_url,
-          thumbnailLength: v.thumbnail_url?.length || 0
-        }))
-      });
-    }
-  }, [videos]);
+
 
   // Generate thumbnails for videos when videos change - improved batch processing
   useEffect(() => {
@@ -108,8 +94,6 @@ const PhotosVideos = () => {
       );
 
       if (videosNeedingThumbnails.length > 0) {
-        console.log(`🔄 Generating thumbnails for ${videosNeedingThumbnails.length} videos (no database thumbnails)...`);
-        
         // Set initial progress
         setThumbnailGenerationProgress({completed: 0, total: videosNeedingThumbnails.length});
 
@@ -141,8 +125,6 @@ const PhotosVideos = () => {
             }
           }
         ).then(results => {
-          console.log('✅ Batch thumbnail generation completed:', Object.keys(results).length, 'thumbnails generated');
-          
           // Update all results at once for any that weren't updated via progress callback
           setGeneratedThumbnails(prev => ({ ...prev, ...results }));
           
@@ -163,66 +145,30 @@ const PhotosVideos = () => {
           });
           setThumbnailGenerationProgress({completed: 0, total: 0});
         });
-      } else {
-        console.log('✅ All videos have database thumbnails, no generation needed');
       }
     }
   }, [videos, generatedThumbnails, thumbnailErrors]); // Added dependencies to prevent unnecessary re-runs
 
   // Load media items on component mount
   useEffect(() => {
-    console.log('🚀 PhotosVideos component mounted, loading media...');
     loadMediaItems();
   }, []);
 
-  // Debug state changes
-  useEffect(() => {
-    console.log('📊 State updated:', {
-      photosCount: photos.length,
-      videosCount: videos.length,
-      loading,
-      thumbnailErrors: Object.keys(thumbnailErrors).length,
-      generatedThumbnails: Object.keys(generatedThumbnails).length
-    });
-  }, [photos, videos, loading, thumbnailErrors, generatedThumbnails]);
-
   const loadMediaItems = async (forceRefresh: boolean = false) => {
     try {
-      console.log('🔄 Loading media items...', { forceRefresh, hasCache: !!cachedMediaData });
       setLoading(true);
       
       // Check cache first unless force refresh
       if (!forceRefresh && cachedMediaData && (Date.now() - mediaLoadTime) < MEDIA_CACHE_TTL) {
-        console.log('✅ Using cached media data');
         setPhotos(cachedMediaData.photos);
         setVideos(cachedMediaData.videos);
         setLoading(false);
         return;
       }
       
-      console.log('📡 Calling PhotosVideosAPI.getMyMedia()...');
       const result = await PhotosVideosAPI.getMyMedia();
-      console.log('📡 API result:', result);
       
       if (result.success && result.data) {
-        // Debug the fetched data
-        console.log('🔍 Loaded media from database:', {
-          photosCount: result.data.photos.length,
-          videosCount: result.data.videos.length,
-          photos: result.data.photos.map(p => ({
-            id: p.id,
-            external_url: p.external_url,
-            thumbnail_url: p.thumbnail_url,
-            hasThumbnail: !!p.thumbnail_url
-          })),
-          videos: result.data.videos.map(v => ({
-            id: v.id,
-            external_url: v.external_url,
-            thumbnail_url: v.thumbnail_url,
-            hasThumbnail: !!v.thumbnail_url
-          }))
-        });
-        
         // Cache the data
         cachedMediaData = {
           photos: result.data.photos,
@@ -440,25 +386,15 @@ const PhotosVideos = () => {
         item.thumbnail_url.includes('.png') || 
         item.thumbnail_url.includes('.webp')
       )) {
-        console.log('✅ Using photo thumbnail:', item.thumbnail_url);
         return getDirectUrl(item.thumbnail_url);
       } else {
-        console.log('✅ Using photo external URL:', item.external_url);
         return getDirectUrl(item.external_url);
       }
     };
 
     const imageUrl = getPhotoUrl();
 
-    // Debug photo data
-    console.log('🖼️ Rendering photo:', {
-      id: item.id,
-      external_url: item.external_url,
-      thumbnail_url: item.thumbnail_url,
-      hasThumbnail: !!item.thumbnail_url,
-      imageUrl: imageUrl,
-      finalUrl: imageUrl
-    });
+
 
     const handleImageError = (error: any) => {
       console.log('❌ Photo load error:', {
@@ -483,19 +419,10 @@ const PhotosVideos = () => {
             cachePolicy="memory-disk"
             transition={200}
             onError={handleImageError}
-            onLoad={() => {
-              console.log('✅ Photo loaded successfully:', { id: item.id, url: imageUrl });
-            }}
-            onLoadStart={() => {
-              console.log('🔄 Photo loading started:', { id: item.id, url: imageUrl });
-            }}
+
           />
           
-          {/* Debug overlay - show URL info */}
-          <View style={styles.debugOverlay}>
-            <Text style={styles.debugText}>ID: {item.id}</Text>
-            <Text style={styles.debugText}>URL: {imageUrl.substring(0, 30)}...</Text>
-          </View>
+
         </TouchableOpacity>
       
       {/* Set as Main Button */}
@@ -563,17 +490,8 @@ const PhotosVideos = () => {
   const renderVideoItem = ({ item }: { item: PhotoVideoItem }) => {
     // Get the thumbnail URL with proper handling - PRIORITIZE DATABASE THUMBNAILS
     const getVideoThumbnail = () => {
-      console.log('🎯 Getting thumbnail for video:', {
-        id: item.id,
-        hasDatabaseThumbnail: !!item.thumbnail_url,
-        databaseThumbnail: item.thumbnail_url,
-        hasGeneratedThumbnail: !!generatedThumbnails[item.id],
-        generatedThumbnail: generatedThumbnails[item.id]
-      });
-
       // Priority 1: Use locally generated thumbnail if available (most reliable)
       if (generatedThumbnails[item.id]) {
-        console.log('✅ Using generated thumbnail:', generatedThumbnails[item.id]);
         return generatedThumbnails[item.id];
       }
       
@@ -584,17 +502,13 @@ const PhotosVideos = () => {
         if (thumbnailUrl.includes('.jpg') || thumbnailUrl.includes('.jpeg') || 
             thumbnailUrl.includes('.png') || thumbnailUrl.includes('.webp') ||
             (thumbnailUrl.includes('thumbnail') && !thumbnailUrl.includes('.mp4'))) {
-          console.log('✅ Using database thumbnail image:', thumbnailUrl);
           const url = getDirectUrl(thumbnailUrl);
           const timestamp = Date.now();
           return url.includes('?') ? `${url}&t=${timestamp}` : `${url}?t=${timestamp}`;
-        } else {
-          console.log('⚠️ Database thumbnail is video URL, not image - will generate locally');
         }
       }
       
       // Priority 3: Fallback to default thumbnail
-      console.log('⚠️ No valid thumbnail available, using default');
       return DEFAULT_VIDEO_THUMBNAIL;
     };
 
@@ -626,20 +540,7 @@ const PhotosVideos = () => {
             cachePolicy="none" // Disable cache to ensure fresh thumbnails
             transition={200}
             onError={handleVideoImageError}
-            onLoad={() => {
-              console.log('✅ Video thumbnail loaded successfully:', { 
-                id: item.id, 
-                url: videoThumbnailUrl,
-                source: thumbnailErrors[item.id] ? 'default' : 'actual'
-              });
-            }}
-            onLoadStart={() => {
-              console.log('🔄 Video thumbnail loading started:', { 
-                id: item.id, 
-                url: videoThumbnailUrl,
-                source: thumbnailErrors[item.id] ? 'default' : 'actual'
-              });
-            }}
+
             placeholder={{ uri: DEFAULT_VIDEO_THUMBNAIL }}
           />
           <View style={styles.playButton}>
@@ -717,23 +618,30 @@ const PhotosVideos = () => {
             ) : (
               <View style={styles.fullScreenVideoContainer}>
                 {isVideoPlaying ? (
-                  // HTML5 Video Player for web
-                  <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                    <video
-                      ref={videoRef}
-                      src={mediaUrl}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'contain',
-                        backgroundColor: 'black'
-                      }}
-                      controls
-                      autoPlay
-                      onPause={pauseVideo}
-                      onEnded={() => setIsVideoPlaying(false)}
-                    />
-                  </div>
+                  // Video Player - use proper React Native components
+                  <View style={styles.videoPlayerContainer}>
+                    {Platform.OS === 'web' ? (
+                      <video
+                        ref={videoRef}
+                        src={mediaUrl}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'contain',
+                          backgroundColor: 'transparent'
+                        }}
+                        controls
+                        autoPlay
+                        onPause={pauseVideo}
+                        onEnded={() => setIsVideoPlaying(false)}
+                      />
+                    ) : (
+                      <View style={styles.nativeVideoPlaceholder}>
+                        <Text style={styles.nativeVideoText}>Video Player</Text>
+                        <Text style={styles.nativeVideoSubtext}>Native video player not implemented</Text>
+                      </View>
+                    )}
+                  </View>
                 ) : (
                   // Thumbnail with play button
                   <TouchableOpacity 
@@ -1345,6 +1253,32 @@ const styles = StyleSheet.create({
     fontFamily: 'medium',
     color: COLORS.primary,
     marginTop: 8,
+  },
+  videoPlayerContainer: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  nativeVideoPlaceholder: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.grayscale200,
+    borderRadius: 8,
+  },
+  nativeVideoText: {
+    fontSize: getResponsiveFontSize(18),
+    fontFamily: 'bold',
+    color: COLORS.grayscale700,
+    marginBottom: 8,
+  },
+  nativeVideoSubtext: {
+    fontSize: getResponsiveFontSize(14),
+    fontFamily: 'medium',
+    color: COLORS.grayscale700,
   }
 });
 
