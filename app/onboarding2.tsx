@@ -52,12 +52,12 @@ const Onboarding2 = () => {
           />
           <View style={Onboarding1Styles.buttonContainer}>
             <View style={Onboarding1Styles.titleContainer}>
-              <Text style={Onboarding1Styles.title}>Discover Meaningful</Text>
-              <Text style={Onboarding1Styles.subTitle}>CONNECTIONS</Text>
+              <Text style={Onboarding1Styles.title}>Verified Polygamy</Text>
+              <Text style={Onboarding1Styles.subTitle}>PROFILES</Text>
             </View>
 
             <Text style={Onboarding1Styles.description}>
-              Join Datify today and explore a world of meaningful connections. Swipe, match, and meet like-minded people.
+              All female profiles are verified by our team and Walis are informed. Experience trust and transparency in your polygamous marriage journey.
             </Text>
 
             <View style={Onboarding1Styles.dotsContainer}>

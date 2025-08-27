@@ -54,12 +54,12 @@ const Onboarding3 = () => {
             backgroundColor: COLORS.white
           }]}>
             <View style={Onboarding1Styles.titleContainer}>
-              <Text style={Onboarding1Styles.title}>Be Yourself, Stand Out from </Text>
-              <Text style={Onboarding1Styles.subTitle}>THE CROWD</Text>
+              <Text style={Onboarding1Styles.title}>Polygamy with</Text>
+              <Text style={Onboarding1Styles.subTitle}>DIGNITY</Text>
             </View>
 
             <Text style={Onboarding1Styles.description}>
-              Tell your story. Share your interests, hobbies, and what you're looking for. Be authentic and make a lasting impression.
+              Share your journey and what you seek in polygamy. For brothers seeking additional wives and sisters open to being part of a polygamous marriage.
             </Text>
 
             <View style={Onboarding1Styles.dotsContainer}>

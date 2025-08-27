@@ -111,10 +111,10 @@ const Index = () => {
             {/* Content Section */}
             <View style={styles.bottomContainer}>
               <View style={styles.textContainer}>
-                <Text style={styles.title}>Welcome to</Text>
-                <Text style={styles.subtitle}>Hume Islamic Dating</Text>
+                <Text style={styles.title}>Assalamu Aleykoum</Text>
+                <Text style={styles.subtitle}>Welcome to Hume</Text>
                 <Text style={styles.description}>
-                  We're here to connect you with amazing people who share your Islamic values and relationship goals.
+                  For brothers seeking to follow the blessed Sunnah of polygamy and sisters accepting to be part of a polygamous marriage. All profiles are verified and Walis are informed.
                 </Text>
               </View>
 

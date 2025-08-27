@@ -71,9 +71,9 @@ const Welcome = () => {
                     </View>
 
                     {/* Title Section */}
-                    <Text style={styles.title}>Welcome to Hume</Text>
+                    <Text style={styles.title}>Assalamu Aleykoum</Text>
                     <Text style={styles.subtitle}>
-                        Connect with amazing people who share your Islamic values and relationship goals
+                        A dedicated platform for those seeking to live the blessed Sunnah of polygamy. All female profiles are verified and Walis are notified for complete transparency.
                     </Text>
 
                     {/* Social Buttons Section */}

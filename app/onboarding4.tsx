@@ -54,12 +54,12 @@ const Onboarding4 = () => {
             backgroundColor: COLORS.white
           }]}>
             <View style={Onboarding1Styles.titleContainer}>
-              <Text style={Onboarding1Styles.title}>Find Your Perfect Match</Text>
-              <Text style={Onboarding1Styles.subTitle}>TODAY</Text>
+              <Text style={Onboarding1Styles.title}>Follow the Sunnah</Text>
+              <Text style={Onboarding1Styles.subTitle}>OF POLYGAMY</Text>
             </View>
 
             <Text style={Onboarding1Styles.description}>
-              Discover real connections with Hume's intelligent matchmaking. Start swiping to find your perfect match today.
+              Embrace the blessed Sunnah of polygamy and find your next spouse through our Islamic matchmaking guided by Quranic principles.
             </Text>
 
             <View style={Onboarding1Styles.dotsContainer}>
