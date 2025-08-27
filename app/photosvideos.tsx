@@ -29,8 +29,6 @@ const PhotosVideos = () => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [thumbnailErrors, setThumbnailErrors] = useState<Record<string, boolean>>({});
-  const [generatedThumbnails, setGeneratedThumbnails] = useState<Record<string, string>>({});
-  const [thumbnailGenerationProgress, setThumbnailGenerationProgress] = useState<{completed: number, total: number}>({completed: 0, total: 0});
   
   // Full screen modal states
   const [fullScreenVisible, setFullScreenVisible] = useState(false);
@@ -470,17 +468,9 @@ const PhotosVideos = () => {
   const renderVideoItem = ({ item }: { item: PhotoVideoItem }) => {
     // Get the thumbnail URL with proper handling
     const getVideoThumbnail = () => {
-      // First check if we have a generated thumbnail for this video
-      if (generatedThumbnails[item.id]) {
-        return generatedThumbnails[item.id];
-      }
-      
-      // Check if we have a specific thumbnail URL
+      // Use database thumbnail URL if available
       if (item.thumbnail_url) {
-        // Add timestamp to prevent caching issues if not already present
-        const timestamp = Date.now();
-        const url = getDirectUrl(item.thumbnail_url);
-        return url.includes('?') ? `${url}&t=${timestamp}` : `${url}?t=${timestamp}`;
+        return getDirectUrl(item.thumbnail_url);
       }
       
       // Fallback to default thumbnail
@@ -610,7 +600,7 @@ const PhotosVideos = () => {
                     activeOpacity={0.8}
                   >
                     <Image
-                      source={{ uri: generatedThumbnails[fullScreenItem.id] || DEFAULT_VIDEO_THUMBNAIL }}
+                      source={{ uri: fullScreenItem.thumbnail_url || DEFAULT_VIDEO_THUMBNAIL }}
                       contentFit="contain"
                       style={styles.fullScreenVideo}
                     />

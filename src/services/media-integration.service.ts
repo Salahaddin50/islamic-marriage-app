@@ -1,6 +1,7 @@
 import { supabase } from '../config/supabase';
 import { DigitalOceanMediaService } from './digitalocean-media.service';
 import { PhotoVideoItem } from './photos-videos.service';
+import { ThumbnailService } from './thumbnail.service';
 
 export interface MediaUploadOptions {
   userId: string;
@@ -53,20 +54,65 @@ export class MediaIntegrationService {
         };
       }
 
-      // 4. Get next media order if not specified
+      // 4. Generate and upload proper thumbnail
+      let thumbnailUrl: string | undefined;
+      if (options.mediaType === 'video') {
+        console.log('Generating thumbnail for video...');
+        const thumbnailResult = await ThumbnailService.generateAndUploadThumbnail(
+          file,
+          'video',
+          options.userId,
+          uploadResult.data.key,
+          {
+            width: 400,
+            height: 300,
+            quality: 0.8,
+            timeframe: 1,
+            format: 'jpeg'
+          }
+        );
+        
+        if (thumbnailResult.success) {
+          thumbnailUrl = thumbnailResult.thumbnailUrl;
+          console.log('Video thumbnail generated successfully:', thumbnailUrl);
+        } else {
+          console.warn('Failed to generate video thumbnail:', thumbnailResult.error);
+          // Fallback to CDN URL with query parameter
+          thumbnailUrl = `${uploadResult.data.cdnUrl}?thumbnail=true`;
+        }
+      } else {
+        // For photos, generate an optimized thumbnail
+        console.log('Generating thumbnail for photo...');
+        const thumbnailResult = await ThumbnailService.generateAndUploadThumbnail(
+          file,
+          'photo',
+          options.userId,
+          uploadResult.data.key,
+          {
+            width: 400,
+            height: 400,
+            quality: 0.8,
+            format: 'jpeg'
+          }
+        );
+        
+        if (thumbnailResult.success) {
+          thumbnailUrl = thumbnailResult.thumbnailUrl;
+          console.log('Photo thumbnail generated successfully:', thumbnailUrl);
+        } else {
+          console.warn('Failed to generate photo thumbnail:', thumbnailResult.error);
+          // Fallback to original image URL
+          thumbnailUrl = uploadResult.data.cdnUrl;
+        }
+      }
+
+      // 5. Get next media order if not specified
       const mediaOrder = options.mediaOrder || await this.getNextMediaOrder(
         options.userId,
         options.mediaType
       );
 
-      // 5. Create database reference
-      // Ensure thumbnail_url isn't too long (max 500 chars for VARCHAR(500))
-      let thumbnailUrl = uploadResult.data.thumbnailUrl;
-      if (thumbnailUrl && thumbnailUrl.length > 480) {
-        console.log('Thumbnail URL too long, truncating or using fallback');
-        // Use a simple URL parameter instead of a data URI
-        thumbnailUrl = `${uploadResult.data.cdnUrl}?thumbnail=true`;
-      }
+      // 6. Create database reference with generated thumbnail
       
       const mediaReference = {
         user_id: options.userId,
