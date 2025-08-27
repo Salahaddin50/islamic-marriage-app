@@ -131,8 +131,8 @@ const PhotosVideos = () => {
           try {
             const thumbnailDataUrl = await generateVideoThumbnail(getDirectUrl(video.external_url), {
               time: 3,
-              width: 400,
-              height: 300,
+              width: 300,  // Reduced width for vertical format
+              height: 533,  // 9:16 ratio (300 * 16/9 = 533.33)
               quality: 0.8,
               retries: 2
             });
