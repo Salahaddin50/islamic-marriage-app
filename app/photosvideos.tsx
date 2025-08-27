@@ -172,22 +172,38 @@ const PhotosVideos = () => {
 
   // Load media items on component mount
   useEffect(() => {
+    console.log('🚀 PhotosVideos component mounted, loading media...');
     loadMediaItems();
   }, []);
 
+  // Debug state changes
+  useEffect(() => {
+    console.log('📊 State updated:', {
+      photosCount: photos.length,
+      videosCount: videos.length,
+      loading,
+      thumbnailErrors: Object.keys(thumbnailErrors).length,
+      generatedThumbnails: Object.keys(generatedThumbnails).length
+    });
+  }, [photos, videos, loading, thumbnailErrors, generatedThumbnails]);
+
   const loadMediaItems = async (forceRefresh: boolean = false) => {
     try {
+      console.log('🔄 Loading media items...', { forceRefresh, hasCache: !!cachedMediaData });
       setLoading(true);
       
       // Check cache first unless force refresh
       if (!forceRefresh && cachedMediaData && (Date.now() - mediaLoadTime) < MEDIA_CACHE_TTL) {
+        console.log('✅ Using cached media data');
         setPhotos(cachedMediaData.photos);
         setVideos(cachedMediaData.videos);
         setLoading(false);
         return;
       }
       
+      console.log('📡 Calling PhotosVideosAPI.getMyMedia()...');
       const result = await PhotosVideosAPI.getMyMedia();
+      console.log('📡 API result:', result);
       
       if (result.success && result.data) {
         // Debug the fetched data
@@ -451,8 +467,19 @@ const PhotosVideos = () => {
             cachePolicy="memory-disk"
             transition={200}
             onError={handleImageError}
-            onLoad={() => {}}
+            onLoad={() => {
+              console.log('✅ Photo loaded successfully:', { id: item.id, url: imageUrl });
+            }}
+            onLoadStart={() => {
+              console.log('🔄 Photo loading started:', { id: item.id, url: imageUrl });
+            }}
           />
+          
+          {/* Debug overlay - show URL info */}
+          <View style={styles.debugOverlay}>
+            <Text style={styles.debugText}>ID: {item.id}</Text>
+            <Text style={styles.debugText}>URL: {imageUrl.substring(0, 30)}...</Text>
+          </View>
         </TouchableOpacity>
       
       {/* Set as Main Button */}
@@ -569,6 +596,20 @@ const PhotosVideos = () => {
             cachePolicy="none" // Disable cache to ensure fresh thumbnails
             transition={200}
             onError={handleVideoImageError}
+            onLoad={() => {
+              console.log('✅ Video thumbnail loaded successfully:', { 
+                id: item.id, 
+                url: videoThumbnailUrl,
+                source: thumbnailErrors[item.id] ? 'default' : 'actual'
+              });
+            }}
+            onLoadStart={() => {
+              console.log('🔄 Video thumbnail loading started:', { 
+                id: item.id, 
+                url: videoThumbnailUrl,
+                source: thumbnailErrors[item.id] ? 'default' : 'actual'
+              });
+            }}
             placeholder={{ uri: DEFAULT_VIDEO_THUMBNAIL }}
           />
           <View style={styles.playButton}>
@@ -1239,6 +1280,24 @@ const styles = StyleSheet.create({
     fontFamily: 'semibold',
     textAlign: 'center',
   },
+  debugOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  debugText: {
+    color: COLORS.white,
+    fontSize: getResponsiveFontSize(10),
+    fontFamily: 'medium',
+    textAlign: 'center',
+    marginVertical: 2,
+  }
 });
 
 export default PhotosVideos;
