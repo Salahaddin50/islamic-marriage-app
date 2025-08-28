@@ -284,15 +284,33 @@ const MatchDetails = () => {
       userPhotosCount: userPhotos.length,
       userVideosCount: userVideos.length,
       hasProfilePicture: !!userProfile?.profile_picture_url,
+      profilePictureUrl: userProfile?.profile_picture_url,
       gender: userProfile?.gender,
       userMediaLength: userMedia.length
     });
     
     let sliderImages: SliderMedia[] = [];
     
-    // Add photos first
+    // Priority 1: Add profile picture first (if it exists and is not already in media)
+    if (userProfile?.profile_picture_url && userProfile.profile_picture_url.trim() !== '') {
+      const profilePicUrl = userProfile.profile_picture_url;
+      console.log('✅ Adding profile picture to slider:', profilePicUrl.substring(0, 50) + '...');
+      
+      // Check if profile picture URL is valid
+      if (profilePicUrl.startsWith('http') || profilePicUrl.startsWith('data:')) {
+        sliderImages.push({ 
+          uri: profilePicUrl, 
+          type: 'photo' as const,
+          id: 'profile_picture'
+        });
+      } else {
+        console.log('⚠️ Profile picture URL is not valid:', profilePicUrl);
+      }
+    }
+    
+    // Priority 2: Add photos from media_references
     if (userPhotos.length > 0) {
-      console.log('✅ Adding photos to slider');
+      console.log('✅ Adding photos from media_references to slider');
       sliderImages.push(...userPhotos.map(photo => ({ 
         uri: photo.external_url, 
         type: 'photo' as const,
@@ -300,7 +318,7 @@ const MatchDetails = () => {
       })));
     }
     
-    // Add videos with thumbnails
+    // Priority 3: Add videos with thumbnails from media_references
     if (userVideos.length > 0) {
       console.log('✅ Adding videos with thumbnails to slider');
       sliderImages.push(...userVideos.map(video => ({ 
@@ -311,17 +329,29 @@ const MatchDetails = () => {
       })));
     }
     
-    // If no media but user has profile picture, use that
-    if (sliderImages.length === 0 && userProfile?.profile_picture_url) {
-      console.log('✅ Using profile picture URL');
-      sliderImages.push({ 
-        uri: userProfile.profile_picture_url, 
-        type: 'photo' as const,
-        id: 'profile'
+    // Priority 4: Add some sample images for testing if no media exists
+    if (sliderImages.length <= 1) {
+      console.log('🧪 Adding sample images for testing');
+      
+      // Add sample photos (you can replace these with actual URLs)
+      const samplePhotos = [
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=600&fit=crop'
+      ];
+      
+      samplePhotos.forEach((photoUrl, index) => {
+        sliderImages.push({
+          uri: photoUrl,
+          type: 'photo' as const,
+          id: `sample_photo_${index}`
+        });
       });
+      
+      console.log('🧪 Added sample photos for testing');
     }
     
-    // Fallback to gender-specific silhouette if no real media exists
+    // Priority 5: Fallback to gender-specific silhouette if still no media exists
     if (sliderImages.length === 0) {
       const isFemale = userProfile?.gender?.toLowerCase() === 'female';
       const silhouetteImage = isFemale ? images.femaleSilhouette : images.maleSilhouette;
@@ -332,6 +362,15 @@ const MatchDetails = () => {
         id: 'silhouette'
       });
     }
+    
+    console.log('🎠 Final slider images:', {
+      totalImages: sliderImages.length,
+      images: sliderImages.map(img => ({
+        id: img.id,
+        type: img.type,
+        uri: img.uri?.substring(0, 50) + '...'
+      }))
+    });
     
     return sliderImages;
   };
