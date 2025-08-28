@@ -3,69 +3,35 @@ import { MediaIntegrationService } from '../services/media-integration.service';
 import { supabase } from '../config/supabase';
 
 /**
- * Helper function to get or create database user
+ * Helper function to get user_profiles.user_id for the authenticated user
+ * This ensures media uploads use the same user ID as the profiles
  */
-async function ensureDatabaseUser(authUserId: string): Promise<{ id: string } | null> {
-  console.log('Looking for user with auth_user_id:', authUserId);
+async function getUserProfileId(authUserId: string): Promise<{ id: string } | null> {
+  console.log('Looking for user_profile with auth user_id:', authUserId);
   
-  // First try to get existing user
-  const { data: existingUser, error: fetchError } = await supabase
-    .from('users')
-    .select('id')
-    .eq('auth_user_id', authUserId)
+  // Get user profile that matches this auth user
+  const { data: userProfile, error: fetchError } = await supabase
+    .from('user_profiles')
+    .select('user_id')
+    .eq('user_id', authUserId)  // user_profiles.user_id should match auth.uid()
     .maybeSingle();
 
   if (fetchError) {
-    console.error('Error fetching user:', fetchError);
-  }
-
-  if (existingUser) {
-    console.log('Found existing user:', existingUser.id);
-    return existingUser;
-  }
-
-  console.log('User not found, creating new user...');
-
-  // Get auth user details
-  const { data: { user: authUser } } = await supabase.auth.getUser();
-  if (!authUser) {
-    console.error('No auth user found');
+    console.error('Error fetching user profile:', fetchError);
     return null;
   }
 
-  if (!authUser.email) {
-    console.error('Auth user has no email');
-    return null;
+  if (userProfile) {
+    console.log('Found user profile with user_id:', userProfile.user_id);
+    return { id: userProfile.user_id };
   }
 
-  console.log('Creating user with email:', authUser.email);
-
-  // Create new user using secure database function
-  const { data: newUserId, error } = await supabase
-    .rpc('create_user_profile', {
-      p_auth_user_id: authUserId,
-      p_email: authUser.email,
-      p_phone: authUser.phone || null
-    });
-
-  if (error) {
-    console.error('Failed to create database user:', error);
-    console.error('Error details:', {
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-      code: error.code
-    });
-    return null;
-  }
-
-  if (!newUserId) {
-    console.error('No user ID returned from function');
-    return null;
-  }
-
-  console.log('Created new user:', newUserId);
-  return { id: newUserId };
+  console.log('⚠️ No user profile found for auth user:', authUserId);
+  console.log('💡 User needs to complete profile setup first');
+  
+  // Don't create profile here - that should be done during registration
+  // Just return null to indicate no profile exists
+  return null;
 }
 
 /**
@@ -88,12 +54,12 @@ export class PhotosVideosAPI {
         };
       }
 
-      // Get or create database user
-      const dbUser = await ensureDatabaseUser(authUser.id);
-      if (!dbUser) {
+      // Get user profile ID (must exist for media upload)
+      const userProfile = await getUserProfileId(authUser.id);
+      if (!userProfile) {
         return {
           success: false,
-          error: 'Failed to access user account'
+          error: 'Please complete your profile setup first'
         };
       }
 
@@ -141,18 +107,18 @@ export class PhotosVideosAPI {
         };
       }
 
-      // Get or create database user
-      const dbUser = await ensureDatabaseUser(authUser.id);
-      if (!dbUser) {
+      // Get user profile ID (must exist for media upload)
+      const userProfile = await getUserProfileId(authUser.id);
+      if (!userProfile) {
         return {
           success: false,
-          error: 'Failed to access user account'
+          error: 'Please complete your profile setup first'
         };
       }
 
       // Use DigitalOcean integration service
       const result = await MediaIntegrationService.uploadMedia(file, {
-        userId: dbUser.id,
+        userId: userProfile.id,
         mediaType: 'photo',
         isProfilePicture: options.isProfilePicture,
         visibility: options.visibility
@@ -199,12 +165,12 @@ export class PhotosVideosAPI {
         };
       }
 
-      // Get or create database user
-      const dbUser = await ensureDatabaseUser(authUser.id);
-      if (!dbUser) {
+      // Get user profile ID (must exist for media upload)
+      const userProfile = await getUserProfileId(authUser.id);
+      if (!userProfile) {
         return {
           success: false,
-          error: 'Failed to access user account'
+          error: 'Please complete your profile setup first'
         };
       }
 
@@ -213,7 +179,7 @@ export class PhotosVideosAPI {
       
       // Use DigitalOcean integration service
       const result = await MediaIntegrationService.uploadMedia(file, {
-        userId: dbUser.id,
+        userId: userProfile.id,
         mediaType: 'video',
         visibility: options.visibility
       });
@@ -263,8 +229,8 @@ export class PhotosVideosAPI {
 
       console.log('Auth user found:', authUser.id);
       
-      // Get or create database user
-      const dbUser = await ensureDatabaseUser(authUser.id);
+      // Get user profile ID (must exist for media upload)
+      const userProfile = await getUserProfileId(authUser.id);
       if (!dbUser) {
         console.error('Failed to get database user');
         return {
@@ -310,12 +276,12 @@ export class PhotosVideosAPI {
         };
       }
 
-      // Get or create database user
-      const dbUser = await ensureDatabaseUser(authUser.id);
-      if (!dbUser) {
+      // Get user profile ID (must exist for media upload)
+      const userProfile = await getUserProfileId(authUser.id);
+      if (!userProfile) {
         return {
           success: false,
-          error: 'Failed to access user account'
+          error: 'Please complete your profile setup first'
         };
       }
 
