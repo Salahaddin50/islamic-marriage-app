@@ -263,14 +263,10 @@ const MatchDetails = () => {
 
   // Smart thumbnail URL resolver with fallbacks
   const getThumbnailUrl = (media: MediaReference) => {
-    // Priority 1: Use thumbnail_url if present; ensure it's an image for DO URLs
+    // Priority 1: Use thumbnail_url if present - it's already properly formatted
     if (media.thumbnail_url && media.thumbnail_url.trim() !== '') {
-      let url = media.thumbnail_url.trim();
-      // If DO thumbnail points to mp4, hint image format
-      if ((url.includes('digitaloceanspaces.com') || url.includes('digitalocean')) && url.includes('.mp4')) {
-        url += url.includes('?') ? '&format=jpg' : '?format=jpg';
-      }
-      return url;
+      console.log('🎬 Using database thumbnail_url for video:', media.thumbnail_url);
+      return media.thumbnail_url.trim();
     }
 
     // Priority 2: For videos without thumbnail_url, attempt DO/Cloudinary transforms
@@ -308,27 +304,36 @@ const MatchDetails = () => {
       const photos = userMedia.filter(m => m.media_type === 'photo');
       const videos = userMedia.filter(m => m.media_type === 'video');
 
-      // Sort photos by media_order asc
-      const sortedPhotos = [...photos].sort((a, b) => (a.media_order || 0) - (b.media_order || 0));
+      // Sort photos by profile picture first, then by media_order
+      const sortedPhotos = [...photos].sort((a, b) => {
+        // Profile pictures first
+        if (a.is_profile_picture && !b.is_profile_picture) return -1;
+        if (!a.is_profile_picture && b.is_profile_picture) return 1;
+        // Then by media_order
+        return (a.media_order || 0) - (b.media_order || 0);
+      });
 
-      // Add profile picture from profile first if exists and not duplicated
-      if (userProfile?.profile_picture_url && userProfile.profile_picture_url.trim() !== '') {
-        const profilePicUrl = userProfile.profile_picture_url;
-        const alreadyInPhotos = sortedPhotos.some(p => p.external_url === profilePicUrl);
-        if (!alreadyInPhotos && (profilePicUrl.startsWith('http') || profilePicUrl.startsWith('data:'))) {
-          sliderImages.push({ uri: profilePicUrl, type: 'photo', id: 'profile_picture' });
-        }
-      }
-
-      // Add all photos
+      // Add all photos to slider
       sliderImages.push(
-        ...sortedPhotos.map(photo => ({ uri: photo.external_url, type: 'photo' as const, id: photo.id }))
+        ...sortedPhotos.map(photo => ({ 
+          uri: photo.external_url, 
+          type: 'photo' as const, 
+          id: photo.id 
+        }))
       );
 
-      // Add only ONE video at the end (first by media_order) with its thumbnail
+      // Add video thumbnail as LAST slide in carousel
       if (videos.length > 0) {
         const sortedVideos = [...videos].sort((a, b) => (a.media_order || 0) - (b.media_order || 0));
         const video = sortedVideos[0];
+        
+        console.log('🎥 Adding video to slider:', {
+          id: video.id,
+          originalThumbnailUrl: video.thumbnail_url,
+          resolvedThumbnail: getThumbnailUrl(video),
+          videoUrl: video.external_url
+        });
+        
         sliderImages.push({
           uri: getThumbnailUrl(video),
           type: 'video',
@@ -337,7 +342,11 @@ const MatchDetails = () => {
         });
       }
 
-      console.log('🖼️ Prepared slider images (photos first, video last if any):', sliderImages.length);
+      console.log('🖼️ Final slider composition:', {
+        totalSlides: sliderImages.length,
+        photos: photos.length,
+        videos: videos.length > 0 ? 1 : 0
+      });
     } else {
       console.log('❌ No userMedia available for slider');
     }
@@ -439,10 +448,19 @@ const MatchDetails = () => {
                 contentFit="cover"
                 cachePolicy="memory-disk"
                 transition={200}
-                onLoadStart={() => {/* Image loading started */}}
-                onLoad={() => {/* Image loaded successfully */}}
+                onLoadStart={() => {
+                  console.log('🔄 Loading slider image:', { type: media.type, id: media.id, uri: media.uri });
+                }}
+                onLoad={() => {
+                  console.log('✅ Slider image loaded successfully:', { type: media.type, id: media.id });
+                }}
                 onError={(error) => {
-                  console.log('❌ Image error:', error);
+                  console.log('❌ Slider image error:', { 
+                    type: media.type, 
+                    id: media.id, 
+                    uri: media.uri,
+                    error 
+                  });
                   // If this is a silhouette image that failed, try fallback
                   if (media.id === 'silhouette' && media.fallbackUri && !silhouetteFailedToLoad[media.id]) {
                     console.log('🔄 Silhouette image failed to load from DigitalOcean CDN, trying fallback');
