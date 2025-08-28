@@ -908,20 +908,19 @@ const HomeScreen = () => {
             onPress={() => setIsGalleryView(!isGalleryView)}
             style={styles.galleryButton}>
             {isGalleryView ? (
-              <View style={styles.gridIcon}>
-                <View style={styles.gridRow}>
-                  <View style={styles.gridSquare} />
-                  <View style={styles.gridSquare} />
-                </View>
-                <View style={styles.gridRow}>
-                  <View style={styles.gridSquare} />
-                  <View style={styles.gridSquare} />
-                </View>
+              <View style={styles.rectangleIcon}>
+                <View style={styles.blackRectangle} />
               </View>
             ) : (
-              <View style={styles.gridIconHorizontal}>
-                <View style={styles.gridColumn} />
-                <View style={styles.gridColumn} />
+              <View style={styles.gridIcon}>
+                <View style={styles.gridRow}>
+                  <View style={styles.roundButton} />
+                  <View style={styles.roundButton} />
+                </View>
+                <View style={styles.gridRow}>
+                  <View style={styles.roundButton} />
+                  <View style={styles.roundButton} />
+                </View>
               </View>
             )}
           </TouchableOpacity>
@@ -2121,7 +2120,28 @@ const styles = StyleSheet.create({
     borderRadius: 3.5,
     marginHorizontal: 1.5,
   },
-  // For grid view: two vertical rectangles
+  // For grid view: four round buttons
+  roundButton: {
+    width: 6,
+    height: 6,
+    backgroundColor: COLORS.greyscale900,
+    borderRadius: 3,
+    marginHorizontal: 1.5,
+  },
+  // For gallery view: single black rectangle
+  rectangleIcon: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 24,
+    height: 24,
+  },
+  blackRectangle: {
+    width: 16,
+    height: 10,
+    backgroundColor: COLORS.greyscale900,
+    borderRadius: 3,
+  },
+  // For grid view: two vertical rectangles (kept for legacy)
   gridColumn: {
     width: 7,
     height: 17,
