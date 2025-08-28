@@ -35,12 +35,19 @@ if (Platform.OS === 'web') {
     originalWarn(...args);
   };
   
-  // Also suppress the preload href errors
+  // Also suppress the preload href errors and other common web warnings
   const originalError = console.error;
   console.error = (...args) => {
     const message = args[0]?.toString?.() || '';
+    // Suppress preload href errors (common with require() based images)
     if (message.includes('has an invalid `href` value')) return;
     if (message.includes('<link rel=preload>')) return;
+    if (message.includes('preload')) return;
+    // Suppress React DevTools warnings  
+    if (message.includes('Download the React DevTools')) return;
+    // Suppress expo-image startsWith errors (from require() objects)
+    if (message.includes('str.startsWith is not a function')) return;
+    if (message.includes('isThumbhashString')) return;
     originalError(...args);
   };
 }

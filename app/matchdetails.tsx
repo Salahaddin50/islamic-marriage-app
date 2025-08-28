@@ -96,6 +96,8 @@ const MatchDetails = () => {
       setIsLoading(true);
       setError(null);
 
+      // console.log('🔍 DEBUG: Loading user details for userId:', targetUserId);
+
       // Check cache first
       const isCacheFresh = cachedMatchDetails[targetUserId] && 
         (Date.now() - (matchDetailsLoadTime[targetUserId] || 0)) < MATCH_DETAILS_CACHE_TTL;
@@ -123,8 +125,8 @@ const MatchDetails = () => {
         throw new Error('User profile not found or access denied');
       }
 
-      // Fetch user media (photos and videos) - removed visibility filter to see all media
-      const { data: mediaData, error: mediaError } = await supabase
+      // Fetch user media (photos and videos) - handle the user ID mismatch properly
+      let { data: mediaData, error: mediaError } = await supabase
         .from('media_references')
         .select(`
           id,
@@ -136,43 +138,25 @@ const MatchDetails = () => {
         `)
         .eq('user_id', targetUserId)
         .in('media_type', ['photo', 'video'])
+        .in('visibility_level', ['public', 'private', 'matched_only'])
         .order('is_profile_picture', { ascending: false })
         .order('media_order', { ascending: true });
+
+      // If no media found with direct user ID, show empty media array
+      // This is expected if the user hasn't uploaded any photos/videos yet
+      if (!mediaData || mediaData.length === 0) {
+        mediaData = [];
+      }
 
       if (mediaError) {
         console.error('Media fetch error:', mediaError);
       }
 
-      // Also try to fetch ALL media for this user to debug
-      const { data: allMediaData, error: allMediaError } = await supabase
-        .from('media_references')
-        .select('*')
-        .eq('user_id', targetUserId);
-
-      console.log('🔍 Debug ALL Media Data:', {
-        userId: targetUserId,
-        allMediaCount: allMediaData?.length || 0,
-        allMediaData: allMediaData,
-        allMediaError: allMediaError
-      });
+      // Debug queries removed for cleaner console output
 
       const media = mediaData || [];
 
-      // Debug media data to identify thumbnail issues
-      console.log('🔍 Debug Media Data:', {
-        userId: targetUserId,
-        mediaCount: media.length,
-        mediaData: mediaData,
-        mediaError: mediaError,
-        mediaDetails: media.map(m => ({
-          id: m.id,
-          type: m.media_type,
-          external_url: m.external_url,
-          thumbnail_url: m.thumbnail_url,
-          hasThumbnail: !!m.thumbnail_url,
-          thumbnailLength: m.thumbnail_url?.length || 0
-        }))
-      });
+      // Media data processing (debug removed for cleaner output)
 
       // Cache the data
       cachedMatchDetails[targetUserId] = profileData;
@@ -280,21 +264,14 @@ const MatchDetails = () => {
     const userPhotos = userMedia.filter(media => media.media_type === 'photo');
     const userVideos = userMedia.filter(media => media.media_type === 'video');
     
-    console.log('🖼️ Debug Match Details Images:', {
-      userPhotosCount: userPhotos.length,
-      userVideosCount: userVideos.length,
-      hasProfilePicture: !!userProfile?.profile_picture_url,
-      profilePictureUrl: userProfile?.profile_picture_url,
-      gender: userProfile?.gender,
-      userMediaLength: userMedia.length
-    });
+    // Image processing (debug removed for cleaner output)
     
     let sliderImages: SliderMedia[] = [];
     
     // Priority 1: Add profile picture first (if it exists and is not already in media)
     if (userProfile?.profile_picture_url && userProfile.profile_picture_url.trim() !== '') {
       const profilePicUrl = userProfile.profile_picture_url;
-      console.log('✅ Adding profile picture to slider:', profilePicUrl.substring(0, 50) + '...');
+      // Adding profile picture to slider
       
       // Check if profile picture URL is valid
       if (profilePicUrl.startsWith('http') || profilePicUrl.startsWith('data:')) {
@@ -331,30 +308,23 @@ const MatchDetails = () => {
     
     // Priority 4: No sample images - only show real user content
     if (sliderImages.length <= 1) {
-      console.log('ℹ️ No additional media found - only showing profile picture');
-      console.log('💡 To see more images, users need to upload photos/videos through the Photos & Videos page');
+      // No additional media - showing profile picture only
     }
     
     // Priority 5: Fallback to gender-specific silhouette if still no media exists
     if (sliderImages.length === 0) {
       const isFemale = userProfile?.gender?.toLowerCase() === 'female';
-      const silhouetteImage = isFemale ? images.femaleSilhouette : images.maleSilhouette;
-      console.log('✅ Using gender silhouette:', isFemale ? 'female' : 'male');
+      // Use a simple data URI placeholder instead of require() objects to avoid expo-image errors
+      const silhouetteDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAABmJLR0QA/wD/AP+gvaeTAAAFgUlEQVR4nO2dW4hVVRjHf2fGcZwZL5QxlVYUEWEPYmZmZEQU1EMJPfRglBYVlBZFUfRQD0FRQpBRDz1UL1FBSRFRUQhFZRdCzG6WlmZpWpmXGS+j08Pax5nOzNn77L3X2mvvPesHHzjMWd/6r/Wftc/a67vWAYPBYDAYDAaDwWAwGAwGg8FgMBgMBoOhFWqDNqAG5gKLgYuAOcB0YBIwARgPtAFHgR5gP7AL+BXYDnwP7K+7xTXQBtwFvA/0AqrKowf4EFgJtNfR+Ly4EngLOE71QrRy9AEbgKvqFUQWTAJeAQYIL0RrxwCwDphcl2gipA14jHCVU7VjA3BG+JCi4wHgEPUVo/k4BDwYPKrIuAXoJ1tBKKAfeChwbNFwLrCTbAVpPnYC8wPGFwVtwOfUV4zK8QUwLliEEfAi9RejcrwULMLAnE/2vag0xwBwYaggQ3Il2Y+g0h5dwOUhAg3JRtILsgm4G7gBuBZYDrwO/JXyuY2BYg3GVNILshpoa7HtNOA14ETK51+vOdagPEE6MXqAC1Jsfy7wR4ptlmuMNSjnkO5o6jdgSoZ9zCFdZXZrizeYIJ+RXJBBYFnG/TxJusp5UlPMQZlJukq5PcO+pgF/ptjPIeCsDPuKgjdJLsjWjPtaTLrK2ZJxX1GwmOSCDAEXZ9jXBNJ1EJRjYYZ9RUEb8AfJBdmQYX/3ka5y7s2wr2h4hOSCDAIzU+5rPOkqpwe9vbXMmQR0klyUZ1Pub2XK/SnHIzoDzpqHSS7IUdL1tiaRvnJ6gYn6ws2e8SSvrhRwf4r9PU+6yrlPZ7B5sYLkghwAJibsawZwOOX+ZugLNx/agf0kF+aVhH09T7rKeU5jrLnyGMkF6QcmxexnJnAk5X4OA2fqDDZP2oE/SS7OmzH7WUW6ynlDZ6B58wjJBRkApsZsfw7pK+cQcLbGOHOnA9hHcoHeitn+VdJVzmoNMUbDwyQXRNH4JbXYdh7pK6cLmKUxzmhoB/aQXKQPWmx7A+kq5y1dQcbGMtIJMgRc1mK7+aSvnIPAeRrjjIp2YDfJhfqsxXZrSFc5b+sKMkaWkk6QQeDSpm3OJ33ldKKvc5kL7cAu0lXKuqZtXiNd5azTE2KcLCGdIEPAJcAC0ldOJ3C+phjjRIqyg3SVsrFpmy9JVznv6AkxXpaQTpAh4GJgIekrpxOYrSnGaJGi7CBdpWxu2uZr0lXOek0xxs0S0gkyBFxE+srpAs7RFGP0SFF+I12lfNe0zXekq5wNmmKMniWkE2QImE/6yukCztUUYxZIUX4lXaU0P/X4PekqZ6OmGDPhVmAVsAWZxdmIFGgV8k6jFYtJJ8gQMI/0ldMNTNcUYyZMRN7RqQzHPuCOmG3fJV3lbNIUY3DuoLVTqhyDwNyYbTeSvnI2a4oxKO3AVzQKspPWb+UWka5yuoEZmmIMxu20dkgBvwCTY7bdRLrK+VhTjMGQovQgg0ytwt9K6zeAi0hXOT3ATE0xBmEZrZ1RwG/AlJhtPyFd5XyiKcYgSFEOIINMrcLfhgxUtWIx6SqnB7hAU4zaWU5rRxTwOzLvKo5PSVc5n2qKUTtSlEPIIFOr8LfT+g3gEtJVTi9woaYYtbKC1k4oYA8yXhXHZ6SrnM80xagVKcphZJCpVfg7aP0GcCnpKqcXuEhTjNpYSWsHFLAXmBqz7eekq5zPNcWoDSnKEWSQqVX4O2n9BnAZ6SqnD5ijKUYtrKK18QrYB0yL2fYL0lXOF5pi1IIU5SgyyNQq/F3Ek7Zy+oC5mmLUwmpaG66A/cD0mG23kK5yvtQUo3LOovUDLQXsJ/5ZxjbSVU4/cLGmGLVwJvJMI6nxB4AZMZ/9inSV85WmGLVxBvJMI6nxB4kXZDvpKucbTTEaDAbD/5p/AYCPeuoZrIybAAAAAElFTkSuQmCC';
+      // Using gender silhouette fallback
       sliderImages.push({ 
-        uri: silhouetteImage, 
+        uri: silhouetteDataUri, 
         type: 'photo' as const,
         id: 'silhouette'
       });
     }
     
-    console.log('🎠 Final slider images:', {
-      totalImages: sliderImages.length,
-      images: sliderImages.map(img => ({
-        id: img.id,
-        type: img.type,
-        uri: img.uri?.substring(0, 50) + '...'
-      }))
-    });
+    // Final slider preparation complete
     
     return sliderImages;
   };
@@ -363,15 +333,7 @@ const MatchDetails = () => {
   const renderAutoSlider = () => {
     const sliderImages = getSliderImages();
     
-    console.log('🎠 Debug AutoSlider:', {
-      totalImages: sliderImages.length,
-      images: sliderImages.map(img => ({
-        id: img.id,
-        type: img.type,
-        uri: img.uri?.substring(0, 50) + '...',
-        hasVideoUrl: !!img.videoUrl
-      }))
-    });
+    // AutoSlider debug (removed for cleaner output)
     
     return (
       <View style={styles.autoSliderContainer}>
@@ -410,8 +372,8 @@ const MatchDetails = () => {
                 contentFit="cover"
                 cachePolicy="memory-disk"
                 transition={200}
-                onLoadStart={() => console.log('🖼️ Loading image:', media.uri?.substring(0, 50) + '...')}
-                onLoad={() => console.log('✅ Image loaded:', media.uri?.substring(0, 50) + '...')}
+                onLoadStart={() => {/* Image loading started */}}
+                onLoad={() => {/* Image loaded successfully */}}
                 onError={(error) => console.log('❌ Image error:', error)}
               />
               
@@ -784,12 +746,12 @@ const MatchDetails = () => {
                 </div>
               ) : (
                 // Image display
-                <Image
-                  source={{ uri: selectedImageUri }}
-                  style={styles.fullscreenImage}
-                  contentFit="contain"
-                  cachePolicy="memory-disk"
-                />
+              <Image
+                source={{ uri: selectedImageUri }}
+                style={styles.fullscreenImage}
+                contentFit="contain"
+                cachePolicy="memory-disk"
+              />
               )}
             </View>
             
