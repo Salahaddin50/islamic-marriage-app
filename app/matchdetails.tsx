@@ -897,6 +897,38 @@ const MatchDetails = () => {
           </TouchableOpacity>
         </View>
       </Modal>
+      {/* Floating footer actions */}
+      <View style={styles.fabContainer}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => {
+            setIsFavorite(true);
+          }}
+        >
+          <Image source={icons.heart} contentFit="contain" style={styles.actionIcon} />
+          <Text style={styles.actionText}>Interest</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => {
+            Alert.alert('Video Meet', 'Starting video meet...');
+          }}
+        >
+          <Image source={icons.videoCamera2} contentFit="contain" style={styles.actionIcon} />
+          <Text style={styles.actionText}>Video meet</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => {
+            Alert.alert('Message', 'Opening chat...');
+          }}
+        >
+          <Image source={icons.chat} contentFit="contain" style={styles.actionIcon} />
+          <Text style={styles.actionText}>Message</Text>
+        </TouchableOpacity>
+      </View>
         </View>
   );
 };
@@ -933,7 +965,7 @@ const styles = StyleSheet.create({
     footerContainer: {
         flex: 1,
         paddingHorizontal: 16,
-        paddingBottom: 24,
+        paddingBottom: getResponsiveSpacing(120),
         backgroundColor: "white",
         borderTopRightRadius: 32,
         borderTopLeftRadius: 32,
@@ -1181,6 +1213,42 @@ const styles = StyleSheet.create({
         height: 8,
         borderRadius: 4,
         marginHorizontal: 5,
+    },
+    // Floating footer actions
+    fabContainer: {
+        position: 'absolute',
+        left: 16,
+        right: 16,
+        bottom: 24,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    actionButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: COLORS.primary,
+        paddingHorizontal: 12,
+        height: 42,
+        borderRadius: 10,
+        gap: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.18,
+        shadowRadius: 3,
+        elevation: 5,
+        flex: 1,
+    },
+    actionIcon: {
+        width: 18,
+        height: 18,
+        tintColor: COLORS.white,
+    },
+    actionText: {
+        color: COLORS.white,
+        fontFamily: 'semiBold',
+        fontSize: getResponsiveFontSize(14),
     },
     // Fullscreen modal styles
     fullscreenContainer: {
