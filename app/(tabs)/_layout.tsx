@@ -99,7 +99,7 @@ const TabLayout = () => {
                 minWidth: 60,
               }}>
                 <Image
-                  source={focused ? icons.explore : icons.exploreOutline}
+                  source={focused ? icons.heart2 : icons.heart2Outline}
                   contentFit="contain"
                   style={{
                     width: isMobileWeb() ? 20 : 24,
@@ -110,7 +110,7 @@ const TabLayout = () => {
                 <Text style={{
                   ...FONTS.body4,
                   color: focused ? COLORS.primary : COLORS.gray3,
-                }}>Maps</Text>
+                }}>Interest</Text>
               </View>
             )
           },
@@ -129,7 +129,7 @@ const TabLayout = () => {
                 minWidth: 60,
               }}>
                 <Image
-                  source={focused ? icons.heart2 : icons.heart2Outline}
+                  source={focused ? icons.videoCamera2 : icons.videoCameraOutline}
                   contentFit="contain"
                   style={{
                     width: isMobileWeb() ? 20 : 24,
@@ -140,7 +140,7 @@ const TabLayout = () => {
                 <Text style={{
                   ...FONTS.body4,
                   color: focused ? COLORS.primary : COLORS.gray3,
-                }}>Match</Text>
+                }}>Meet</Text>
               </View>
             )
           },
@@ -170,7 +170,7 @@ const TabLayout = () => {
                 <Text style={{
                   ...FONTS.body4,
                   color: focused ? COLORS.primary : COLORS.gray3,
-                }}>Chats</Text>
+                }}>Message</Text>
               </View>
             )
           },
