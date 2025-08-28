@@ -5,6 +5,10 @@
 ALTER TABLE media_references 
 DROP CONSTRAINT IF EXISTS media_references_user_id_fkey;
 
+-- Also try with the actual constraint name from the error message
+ALTER TABLE media_references 
+DROP CONSTRAINT IF EXISTS fk_media_user;
+
 -- Option 1: Simply remove the foreign key constraint entirely
 -- This will allow any value in user_id without validation
 -- Comment out if you prefer Option 2

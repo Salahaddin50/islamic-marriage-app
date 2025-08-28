@@ -5,6 +5,10 @@
 ALTER TABLE media_references 
 DROP CONSTRAINT IF EXISTS media_references_user_id_fkey;
 
+-- Also try with the actual constraint name from the error message
+ALTER TABLE media_references 
+DROP CONSTRAINT IF EXISTS fk_media_user;
+
 -- Add a unique constraint to user_profiles.user_id first (required for foreign key)
 ALTER TABLE user_profiles 
 ADD CONSTRAINT user_profiles_user_id_key UNIQUE (user_id);

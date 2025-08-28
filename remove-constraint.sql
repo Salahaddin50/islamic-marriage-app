@@ -6,6 +6,10 @@
 ALTER TABLE media_references 
 DROP CONSTRAINT IF EXISTS media_references_user_id_fkey;
 
+-- Also try with the actual constraint name from the error message
+ALTER TABLE media_references 
+DROP CONSTRAINT IF EXISTS fk_media_user;
+
 -- Confirm the constraint is removed
 SELECT
   conname AS constraint_name,

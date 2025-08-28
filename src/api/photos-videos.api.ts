@@ -57,14 +57,18 @@ export class PhotosVideosAPI {
       // Get user profile ID (must exist for media upload)
       const userProfile = await getUserProfileId(authUser.id);
       if (!userProfile) {
+        console.error('No user profile found for auth user:', authUser.id);
         return {
           success: false,
           error: 'Please complete your profile setup first'
         };
       }
 
+      console.log('Successfully found user profile:', userProfile.id);
+      
       // Use DigitalOcean integration service
       const result = await MediaIntegrationService.getUserMedia(userProfile.id);
+      console.log('MediaIntegrationService.getUserMedia result:', result);
       return {
         success: result.success,
         data: result.data,
@@ -231,7 +235,7 @@ export class PhotosVideosAPI {
       
       // Get user profile ID (must exist for media upload)
       const userProfile = await getUserProfileId(authUser.id);
-      if (!dbUser) {
+      if (!userProfile) {
         console.error('Failed to get database user');
         return {
           success: false,
@@ -239,10 +243,10 @@ export class PhotosVideosAPI {
         };
       }
 
-      console.log('Database user found:', dbUser.id);
-      console.log('Calling MediaIntegrationService.deleteMedia with:', mediaId, dbUser.id);
+      console.log('Database user found:', userProfile.id);
+      console.log('Calling MediaIntegrationService.deleteMedia with:', mediaId, userProfile.id);
       
-      const result = await MediaIntegrationService.deleteMedia(mediaId, dbUser.id);
+      const result = await MediaIntegrationService.deleteMedia(mediaId, userProfile.id);
       console.log('MediaIntegrationService.deleteMedia result:', result);
       
       return result;
@@ -285,7 +289,7 @@ export class PhotosVideosAPI {
         };
       }
 
-      return await MediaIntegrationService.setAsProfilePicture(photoId, dbUser.id);
+      return await MediaIntegrationService.setAsProfilePicture(photoId, userProfile.id);
     } catch (error) {
       console.error('API: Set profile picture error:', error);
       return {
