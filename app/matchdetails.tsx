@@ -471,6 +471,7 @@ const MatchDetails = () => {
                 }}
                 style={styles.autoSliderImage}
                 contentFit="cover"
+                contentPosition="top"
                 cachePolicy="memory-disk"
                 transition={200}
                 onLoadStart={() => {
@@ -1149,7 +1150,7 @@ const styles = StyleSheet.create({
     // AutoSlider styles
     autoSliderContainer: {
         width: SIZES.width,
-        height: SIZES.height * 0.58,
+        height: SIZES.height * 0.45,
         position: 'relative',
     },
     autoSliderScroll: {
@@ -1160,13 +1161,14 @@ const styles = StyleSheet.create({
     },
     autoSliderImageContainer: {
         width: SIZES.width,
-        height: SIZES.height * 0.58,
+        height: SIZES.height * 0.45,
         justifyContent: 'center',
         alignItems: 'center',
+        overflow: 'hidden',
     },
     autoSliderImage: {
         width: SIZES.width,
-        height: SIZES.height * 0.58,
+        height: SIZES.height * 0.45,
     },
     pagination: {
         flexDirection: 'row',

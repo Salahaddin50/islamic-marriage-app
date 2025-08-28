@@ -64,6 +64,8 @@ const Profile = () => {
       setRefreshTrigger(prev => prev + 1);
     };
 
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
     useEffect(() => {
       (async () => {
         setIsLoading(true);
@@ -74,6 +76,7 @@ const Profile = () => {
             return;
           }
           setEmail(user.email || '');
+          setCurrentUserId(user.id);
           
           // Try to get user profile data, handling the case where the table or column might not exist
           try {
@@ -118,6 +121,7 @@ const Profile = () => {
             size={isMobileWeb() ? 100 : 120}
             displayName={displayName}
             forceRefresh={refreshTrigger}
+            userId={currentUserId ?? undefined}
           />
         </TouchableOpacity>
         <Text style={[styles.title, { color: COLORS.greyscale900 }]}>{displayName || 'Profile'}</Text>

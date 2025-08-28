@@ -13,25 +13,30 @@ let globalCache: { [userId: string]: { url: string | null; timestamp: number } }
 let pendingFetches: { [userId: string]: Promise<string | null> } = {};
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-export function useProfilePictureSimple(forceRefresh?: number): ProfilePictureResult {
-  const [imageSource, setImageSource] = useState<any>(() => {
-    // Try to initialize with cached value immediately if available
-    return images.user1;
-  });
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+export function useProfilePictureSimple(forceRefresh?: number, userIdOverride?: string): ProfilePictureResult {
+  // Initialize from cache synchronously if userId is provided
+  const initialFromCache = userIdOverride ? getCachedProfilePicture(userIdOverride) : null;
+  const [imageSource, setImageSource] = useState<any>(initialFromCache ?? images.user1);
+  const [isLoading, setIsLoading] = useState<boolean>(!Boolean(initialFromCache));
   const [hasCustomImage, setHasCustomImage] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchProfilePicture = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
+        // Determine which userId to use
+        let effectiveUserId: string | null = userIdOverride || null;
+        if (!effectiveUserId) {
+          const { data: { user } } = await supabase.auth.getUser();
+          effectiveUserId = user?.id ?? null;
+        }
+
+        if (!effectiveUserId) {
           setIsLoading(false);
           return;
         }
 
         const now = Date.now();
-        const cached = globalCache[user.id];
+        const cached = globalCache[effectiveUserId];
         
         // Use cache if valid and not forcing refresh
         if (cached && !forceRefresh && (now - cached.timestamp) < CACHE_DURATION) {
@@ -47,10 +52,10 @@ export function useProfilePictureSimple(forceRefresh?: number): ProfilePictureRe
         }
 
         // Check if there's already a pending fetch for this user
-        if (pendingFetches[user.id] && !forceRefresh) {
-          const profilePictureUrl = await pendingFetches[user.id];
+        if (pendingFetches[effectiveUserId] && !forceRefresh) {
+          const profilePictureUrl = await pendingFetches[effectiveUserId];
           // Update cache from the pending fetch result
-          globalCache[user.id] = {
+          globalCache[effectiveUserId] = {
             url: profilePictureUrl,
             timestamp: now
           };
@@ -75,7 +80,7 @@ export function useProfilePictureSimple(forceRefresh?: number): ProfilePictureRe
           const { data: mediaRef } = await supabase
             .from('media_references')
             .select('do_spaces_cdn_url, do_spaces_url, external_url')
-            .eq('user_id', user.id)
+            .eq('user_id', effectiveUserId)
             .eq('media_type', 'photo')
             .eq('is_profile_picture', true)
             .order('created_at', { ascending: false })
@@ -91,7 +96,7 @@ export function useProfilePictureSimple(forceRefresh?: number): ProfilePictureRe
             const { data: profile } = await supabase
               .from('user_profiles')
               .select('profile_picture_url')
-              .eq('user_id', user.id)
+              .eq('user_id', effectiveUserId)
               .maybeSingle();
             
             profilePictureUrl = profile?.profile_picture_url || null;
@@ -101,15 +106,15 @@ export function useProfilePictureSimple(forceRefresh?: number): ProfilePictureRe
         })();
 
         // Store the pending fetch
-        pendingFetches[user.id] = fetchPromise;
+        pendingFetches[effectiveUserId] = fetchPromise;
 
         const profilePictureUrl = await fetchPromise;
 
         // Clean up the pending fetch
-        delete pendingFetches[user.id];
+        delete pendingFetches[effectiveUserId];
 
         // Update cache
-        globalCache[user.id] = {
+        globalCache[effectiveUserId] = {
           url: profilePictureUrl,
           timestamp: now
         };
@@ -130,8 +135,9 @@ export function useProfilePictureSimple(forceRefresh?: number): ProfilePictureRe
         
         // Clean up any pending fetch on error
         const { data: { user } } = await supabase.auth.getUser();
-        if (user && pendingFetches[user.id]) {
-          delete pendingFetches[user.id];
+        const effectiveUserId = userIdOverride || user?.id;
+        if (effectiveUserId && pendingFetches[effectiveUserId]) {
+          delete pendingFetches[effectiveUserId];
         }
       } finally {
         setIsLoading(false);
@@ -139,7 +145,7 @@ export function useProfilePictureSimple(forceRefresh?: number): ProfilePictureRe
     };
 
     fetchProfilePicture();
-  }, [forceRefresh]);
+  }, [forceRefresh, userIdOverride]);
 
   return {
     imageSource,

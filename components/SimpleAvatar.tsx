@@ -8,6 +8,7 @@ interface SimpleAvatarProps {
   size: number;
   displayName?: string;
   forceRefresh?: number;
+  userId?: string;
   onPress?: () => void;
 }
 
@@ -15,9 +16,10 @@ const SimpleAvatar: React.FC<SimpleAvatarProps> = ({
   size, 
   displayName = '', 
   forceRefresh,
+  userId,
   onPress 
 }) => {
-  const { imageSource, isLoading } = useProfilePictureSimple(forceRefresh);
+  const { imageSource, isLoading } = useProfilePictureSimple(forceRefresh, userId);
   
   const containerStyle = {
     width: size,
