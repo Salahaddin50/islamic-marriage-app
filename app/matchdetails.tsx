@@ -8,6 +8,7 @@ import { NavigationProp } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { supabase } from '@/src/config/supabase';
 import { getResponsiveFontSize, getResponsiveSpacing, safeGoBack } from '@/utils/responsive';
+import { DEFAULT_VIDEO_THUMBNAIL } from '@/constants/defaultThumbnails';
 
 // Types for user profile data (comprehensive - matches database)
 interface UserProfile {
@@ -261,27 +262,27 @@ const MatchDetails = () => {
     setSelectedMediaType('photo');
   };
 
-  // Smart thumbnail URL resolver with fallbacks
+  // Smart thumbnail URL resolver with fallbacks (matching photosvideos.tsx logic)
   const getThumbnailUrl = (media: MediaReference) => {
-    // Priority 1: Use thumbnail_url if present - it's already properly formatted
+    // Priority 1: Use permanent stored thumbnail from database (only if it's a real image)
     if (media.thumbnail_url && media.thumbnail_url.trim() !== '') {
-      console.log('🎬 Using database thumbnail_url for video:', media.thumbnail_url);
-      return media.thumbnail_url.trim();
+      const thumbnailUrl = media.thumbnail_url;
+      // Check if it's a real thumbnail image (PNG, JPG, etc.) like in photosvideos.tsx
+      if (thumbnailUrl.includes('.jpg') || thumbnailUrl.includes('.jpeg') || 
+          thumbnailUrl.includes('.png') || thumbnailUrl.includes('.webp')) {
+        console.log('🎬 Using valid image thumbnail_url:', thumbnailUrl);
+        return thumbnailUrl;
+      }
+      console.log('⚠️ thumbnail_url is not a valid image format:', thumbnailUrl);
     }
 
-    // Priority 2: For videos without thumbnail_url, attempt DO/Cloudinary transforms
-    if (media.media_type === 'video' && media.external_url) {
-      const videoUrl = media.external_url;
-      if (videoUrl.includes('cloudinary')) {
-        return videoUrl.replace('/video/upload/', '/video/upload/so_0,w_800,h_1200,c_fill,q_auto/');
-      }
-      if (videoUrl.includes('digitaloceanspaces.com') || videoUrl.includes('digitalocean')) {
-        const params = 'thumbnail=true&width=800&height=1200&format=jpg';
-        return `${videoUrl}${videoUrl.includes('?') ? '&' : '?'}${params}`;
-      }
+    // Priority 2: For videos without valid thumbnail, use default video thumbnail
+    if (media.media_type === 'video') {
+      console.log('📺 Using default video thumbnail (no valid image thumbnail available)');
+      return DEFAULT_VIDEO_THUMBNAIL;
     }
 
-    // Priority 3: Fallback to original
+    // Priority 4: Fallback to external_url for photos
     return media.external_url;
   };
 
@@ -586,7 +587,15 @@ const MatchDetails = () => {
            <>
              <Text style={[styles.subtitle, { color: COLORS.primary }]}>Photos & Videos</Text>
              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.mediaScroll}>
-               {userMedia.map((media, index) => (
+               {userMedia
+                 .sort((a, b) => {
+                   // Photos first, then videos
+                   if (a.media_type === 'photo' && b.media_type === 'video') return -1;
+                   if (a.media_type === 'video' && b.media_type === 'photo') return 1;
+                   // Within same type, sort by media_order
+                   return (a.media_order || 0) - (b.media_order || 0);
+                 })
+                 .map((media, index) => (
                             <TouchableOpacity
                    key={media.id} 
                    style={styles.mediaItem}
