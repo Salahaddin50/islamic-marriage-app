@@ -336,7 +336,7 @@ const MatchDetails = () => {
       // Add sample photos (you can replace these with actual URLs)
       const samplePhotos = [
         'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop',
-        'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=600&fit=crop',
         'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=600&fit=crop'
       ];
       
