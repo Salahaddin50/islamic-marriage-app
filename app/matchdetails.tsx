@@ -263,33 +263,29 @@ const MatchDetails = () => {
 
   // Smart thumbnail URL resolver with fallbacks
   const getThumbnailUrl = (media: MediaReference) => {
-    // Priority 1: Use thumbnail_url if it exists and is valid
+    // Priority 1: Use thumbnail_url if present; ensure it's an image for DO URLs
     if (media.thumbnail_url && media.thumbnail_url.trim() !== '') {
-      console.log('🎯 Using thumbnail_url:', media.thumbnail_url);
-      return media.thumbnail_url;
+      let url = media.thumbnail_url.trim();
+      // If DO thumbnail points to mp4, hint image format
+      if ((url.includes('digitaloceanspaces.com') || url.includes('digitalocean')) && url.includes('.mp4')) {
+        url += url.includes('?') ? '&format=jpg' : '?format=jpg';
+      }
+      return url;
     }
-    
-    // Priority 2: For videos, try to generate thumbnail from external_url
+
+    // Priority 2: For videos without thumbnail_url, attempt DO/Cloudinary transforms
     if (media.media_type === 'video' && media.external_url) {
-      // Try to create a thumbnail URL by adding parameters
       const videoUrl = media.external_url;
       if (videoUrl.includes('cloudinary')) {
-        // Cloudinary: add thumbnail transformation
-        const thumbnailUrl = videoUrl.replace('/video/upload/', '/video/upload/so_0,w_400,h_300,c_fill,q_auto/');
-        console.log('🎯 Generated Cloudinary thumbnail:', thumbnailUrl);
-        return thumbnailUrl;
-      } else if (videoUrl.includes('digitalocean') || videoUrl.includes('do-spaces')) {
-        // DigitalOcean: try to add thumbnail parameter
-        // PROPER SOLUTION: The server should generate and store thumbnails during upload
-        // rather than trying to generate them on the fly
-        const thumbnailUrl = `${videoUrl}?thumbnail=true&w=400&h=300`;
-        console.log('🎯 Generated DigitalOcean thumbnail:', thumbnailUrl);
-        return thumbnailUrl;
+        return videoUrl.replace('/video/upload/', '/video/upload/so_0,w_800,h_1200,c_fill,q_auto/');
+      }
+      if (videoUrl.includes('digitaloceanspaces.com') || videoUrl.includes('digitalocean')) {
+        const params = 'thumbnail=true&width=800&height=1200&format=jpg';
+        return `${videoUrl}${videoUrl.includes('?') ? '&' : '?'}${params}`;
       }
     }
-    
-    // Priority 3: Fallback to external_url (original media)
-    console.log('🎯 Using external_url as fallback:', media.external_url);
+
+    // Priority 3: Fallback to original
     return media.external_url;
   };
 
