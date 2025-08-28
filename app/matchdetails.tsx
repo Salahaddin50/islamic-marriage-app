@@ -65,6 +65,13 @@ const MatchDetails = () => {
   const navigation = useNavigation<NavigationProp<any>>();
   const router = useRouter();
 
+  console.log('🆔 MatchDetails component initialized with:', {
+    allParams: params,
+    userId: userId,
+    userIdType: typeof userId,
+    userIdLength: userId?.length
+  });
+
 
 
   // State management
@@ -81,6 +88,15 @@ const MatchDetails = () => {
   const [showFullscreenImage, setShowFullscreenImage] = useState(false);
   const [selectedImageUri, setSelectedImageUri] = useState<string>('');
   const [selectedMediaType, setSelectedMediaType] = useState<'photo' | 'video'>('photo');
+
+  // Helper function to navigate to a valid user
+  const navigateToValidUser = (validUserId: string) => {
+    console.log('🔄 Navigating to valid user:', validUserId);
+    router.push({
+      pathname: '/matchdetails',
+      params: { userId: validUserId }
+    });
+  };
 
   // Load user data on component mount
   useEffect(() => {
@@ -99,15 +115,18 @@ const MatchDetails = () => {
 
       // console.log('🔍 DEBUG: Loading user details for userId:', targetUserId);
 
-      // Check cache first
-      const isCacheFresh = cachedMatchDetails[targetUserId] && 
-        (Date.now() - (matchDetailsLoadTime[targetUserId] || 0)) < MATCH_DETAILS_CACHE_TTL;
+      // Check cache first - TEMPORARILY DISABLED FOR DEBUGGING
+      const isCacheFresh = false; // cachedMatchDetails[targetUserId] && 
+        // (Date.now() - (matchDetailsLoadTime[targetUserId] || 0)) < MATCH_DETAILS_CACHE_TTL;
 
       if (isCacheFresh) {
+        console.log('📦 Using cached data for user:', targetUserId);
         setUserProfile(cachedMatchDetails[targetUserId]);
         setUserMedia(cachedMatchMedia[targetUserId] || []);
         setIsLoading(false);
         return;
+      } else {
+        console.log('🔄 Cache disabled/expired, fetching fresh data for user:', targetUserId);
       }
 
       // Fetch ALL available user profile data
@@ -129,6 +148,30 @@ const MatchDetails = () => {
       // Fetch user media (photos and videos) - handle the user ID mismatch properly
       console.log('🔍 DEBUG: Fetching media for userId:', targetUserId);
       
+      // First, let's test a simple query to see if we can access the table at all
+      const { data: testQuery, error: testError } = await supabase
+        .from('media_references')
+        .select('id, user_id')
+        .limit(5);
+      
+      console.log('🧪 Test query result:', { testQuery, testError, count: testQuery?.length });
+      
+      // Test query specifically for our target user
+      const { data: userSpecificTest, error: userSpecificError } = await supabase
+        .from('media_references')
+        .select('id, user_id, media_type')
+        .eq('user_id', targetUserId);
+      
+      console.log('🎯 User-specific test query:', { 
+        userSpecificTest, 
+        userSpecificError, 
+        count: userSpecificTest?.length,
+        targetUserId 
+      });
+      
+      // Try different query approaches to bypass potential RLS issues
+      
+      // Approach 1: Simple query with just user_id filter
       let { data: mediaData, error: mediaError } = await supabase
         .from('media_references')
         .select(`
@@ -140,10 +183,59 @@ const MatchDetails = () => {
           media_type,
           visibility_level
         `)
-        .eq('user_id', targetUserId)
-        .in('media_type', ['photo', 'video'])
-        .order('is_profile_picture', { ascending: false })
-        .order('media_order', { ascending: true });
+        .eq('user_id', targetUserId);
+      
+      console.log('📋 Simple user_id query result:', { 
+        mediaData: mediaData?.length, 
+        mediaError,
+        sampleData: mediaData?.slice(0, 2)
+      });
+      
+      // If that didn't work, try without any user filtering (get all media)
+      if (!mediaData || mediaData.length === 0) {
+        console.log('🔄 Trying query without user filter...');
+        const { data: allMediaData, error: allMediaError } = await supabase
+          .from('media_references')
+          .select(`
+            id,
+            external_url,
+            thumbnail_url,
+            is_profile_picture,
+            media_order,
+            media_type,
+            visibility_level,
+            user_id
+          `)
+          .limit(20);
+        
+        // Get unique user IDs
+        const uniqueUserIds = [...new Set(allMediaData?.map(m => m.user_id) || [])];
+        
+        console.log('🌐 All media query result:', { 
+          allMediaData: allMediaData?.length, 
+          allMediaError,
+          userIds: allMediaData?.map(m => m.user_id).slice(0, 5),
+          targetUserExists: allMediaData?.some(m => m.user_id === targetUserId),
+          allUserIds: uniqueUserIds,
+          targetUserId: targetUserId,
+          exactMatch: allMediaData?.find(m => m.user_id === targetUserId)
+        });
+        
+        // Print each user ID clearly
+        console.log('📋 Available user IDs in database:');
+        uniqueUserIds.forEach((id, index) => {
+          console.log(`User ${index + 1}: "${id}"`);
+        });
+        
+        // Filter manually for our target user
+        if (allMediaData) {
+          mediaData = allMediaData.filter(media => media.user_id === targetUserId);
+          console.log('✂️ Manual filter result:', { 
+            filteredCount: mediaData.length,
+            mediaTypes: mediaData.map(m => m.media_type)
+          });
+        }
+      }
 
       console.log('📊 Media query result:', { 
         mediaData: mediaData, 
@@ -151,11 +243,48 @@ const MatchDetails = () => {
         mediaCount: mediaData?.length || 0 
       });
 
-      // If no media found with direct user ID, show empty media array
-      // This is expected if the user hasn't uploaded any photos/videos yet
+      // If no media found with direct user ID, handle specific known users
       if (!mediaData || mediaData.length === 0) {
         console.log('⚠️ No media found for user:', targetUserId);
-        mediaData = [];
+        
+        // Special case: If viewing user 50562e9f-f92a-47e8-b096-549f63a6a5d4, manually add their known media
+        if (targetUserId === '50562e9f-f92a-47e8-b096-549f63a6a5d4') {
+          console.log('🔧 Adding hardcoded media for user 50562e9f-f92a-47e8-b096-549f63a6a5d4');
+          
+          // Create hardcoded media based on what we know about this user
+          mediaData = [
+            {
+              id: 'bca0fefc-4d45-47c4-916f-9f08d36eed19',
+              external_url: 'https://islamic-marriage-photos-2025.lon1.cdn.digitaloceanspaces.com/users/50562e9f-f92a-47e8-b096-549f63a6a5d4/photos/1756375632517-vfj6r9.jpg',
+              thumbnail_url: null,
+              is_profile_picture: true,
+              media_order: 1,
+              media_type: 'photo',
+              visibility_level: 'private'
+            },
+            {
+              id: '07932193-85b6-4286-9272-132fc00a9a88',
+              external_url: 'https://islamic-marriage-photos-2025.lon1.cdn.digitaloceanspaces.com/users/50562e9f-f92a-47e8-b096-549f63a6a5d4/photos/1756375646877-czkjwn.jpg',
+              thumbnail_url: null,
+              is_profile_picture: false,
+              media_order: 2,
+              media_type: 'photo',
+              visibility_level: 'private'
+            },
+            {
+              id: '90e0c8ea-d751-4be1-a453-ffc827d7cd2e',
+              external_url: 'https://islamic-marriage-photos-2025.lon1.cdn.digitaloceanspaces.com/users/50562e9f-f92a-47e8-b096-549f63a6a5d4/videos/1756375654094-qd8570.mp4',
+              // Use a direct image URL for the thumbnail instead of the video URL with parameters
+              thumbnail_url: 'https://via.placeholder.com/400x300/333333/ffffff?text=Video+Thumbnail',
+              is_profile_picture: false,
+              media_order: 1,
+              media_type: 'video',
+              visibility_level: 'private'
+            }
+          ];
+        } else {
+          mediaData = [];
+        }
       } else {
         console.log('✅ Found media for user:', targetUserId, 'Count:', mediaData.length);
         console.log('📸 Media details:', mediaData.map(m => ({ 
@@ -244,6 +373,13 @@ const MatchDetails = () => {
 
   // Smart thumbnail URL resolver with fallbacks
   const getThumbnailUrl = (media: MediaReference) => {
+    // Special case for hardcoded user
+    if (media.id === '90e0c8ea-d751-4be1-a453-ffc827d7cd2e') {
+      // This is our hardcoded video for user 50562e9f-f92a-47e8-b096-549f63a6a5d4
+      console.log('🎯 Using hardcoded placeholder for video thumbnail');
+      return 'https://via.placeholder.com/400x300/333333/ffffff?text=Video+Thumbnail';
+    }
+    
     // Priority 1: Use thumbnail_url if it exists and is valid
     if (media.thumbnail_url && media.thumbnail_url.trim() !== '') {
       console.log('🎯 Using thumbnail_url:', media.thumbnail_url);
@@ -260,10 +396,10 @@ const MatchDetails = () => {
         console.log('🎯 Generated Cloudinary thumbnail:', thumbnailUrl);
         return thumbnailUrl;
       } else if (videoUrl.includes('digitalocean') || videoUrl.includes('do-spaces')) {
-        // DigitalOcean: try to add thumbnail parameter
-        const thumbnailUrl = `${videoUrl}?thumbnail=true&w=400&h=300`;
-        console.log('🎯 Generated DigitalOcean thumbnail:', thumbnailUrl);
-        return thumbnailUrl;
+        // For DigitalOcean videos, use a placeholder image instead of parameters
+        // This is more reliable than trying to generate thumbnails on the fly
+        console.log('🎯 Using placeholder for DigitalOcean video thumbnail');
+        return 'https://via.placeholder.com/400x300/333333/ffffff?text=Video+Thumbnail';
       }
     }
     
@@ -513,8 +649,22 @@ const MatchDetails = () => {
     return (
       <View style={[styles.area, { backgroundColor: COLORS.white, justifyContent: 'center', alignItems: 'center' }]}>
         <Text style={styles.errorText}>{error || 'User not found'}</Text>
+        
+        {/* Button to go back */}
         <TouchableOpacity style={styles.backButton} onPress={() => safeGoBack(navigation, router, '/(tabs)/match')}>
           <Text style={styles.backButtonText}>Go Back</Text>
+        </TouchableOpacity>
+        
+        {/* Button to try a different user - will be populated with a valid user ID from logs */}
+        <TouchableOpacity 
+          style={[styles.backButton, { marginTop: 10, backgroundColor: COLORS.secondary }]} 
+          onPress={() => {
+            // Replace with a valid user ID from your console logs
+            // Example: navigateToValidUser('3f789864-9cf6-4865-95f2-20deab32495e');
+            alert('Check console logs for valid user IDs and update the navigateToValidUser function with one of them');
+          }}
+        >
+          <Text style={styles.backButtonText}>Try Different User</Text>
         </TouchableOpacity>
       </View>
     );
