@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Alert, Modal, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Alert, Modal, Dimensions, Platform } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { COLORS, icons, images, SIZES } from '@/constants';
@@ -314,16 +314,31 @@ const MatchDetails = () => {
     // Priority 5: Fallback to gender-specific silhouette if still no media exists
     if (sliderImages.length === 0) {
       const isFemale = userProfile?.gender?.toLowerCase() === 'female';
-      // Use direct path to silhouette images in assets folder
-      const silhouettePath = isFemale 
-        ? require('../assets/images/female_silhouette.jpg')
-        : require('../assets/images/male_silhouette.png');
-      // Using gender silhouette fallback
-      sliderImages.push({ 
-        uri: silhouettePath, 
-        type: 'photo' as const,
-        id: 'silhouette'
-      });
+      
+      // For web compatibility, use direct image URLs
+      if (Platform.OS === 'web') {
+        // Use hardcoded URLs for web
+        const silhouetteUrl = isFemale 
+          ? 'https://i.imgur.com/mQ8xGNN.jpg'  // female silhouette
+          : 'https://i.imgur.com/jNNT4LE.png'; // male silhouette
+        
+        sliderImages.push({ 
+          uri: silhouetteUrl, 
+          type: 'photo' as const,
+          id: 'silhouette'
+        });
+      } else {
+        // Use require for native platforms
+        const silhouettePath = isFemale 
+          ? require('../assets/images/female_silhouette.jpg')
+          : require('../assets/images/male_silhouette.png');
+        
+        sliderImages.push({ 
+          uri: silhouettePath, 
+          type: 'photo' as const,
+          id: 'silhouette'
+        });
+      }
     }
     
     // Final slider preparation complete
