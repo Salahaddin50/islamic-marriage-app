@@ -329,26 +329,10 @@ const MatchDetails = () => {
       })));
     }
     
-    // Priority 4: Add some sample images for testing if no media exists
+    // Priority 4: No sample images - only show real user content
     if (sliderImages.length <= 1) {
-      console.log('🧪 Adding sample images for testing');
-      
-      // Add sample photos (you can replace these with actual URLs)
-      const samplePhotos = [
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop',
-        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=600&fit=crop',
-        'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=600&fit=crop'
-      ];
-      
-      samplePhotos.forEach((photoUrl, index) => {
-        sliderImages.push({
-          uri: photoUrl,
-          type: 'photo' as const,
-          id: `sample_photo_${index}`
-        });
-      });
-      
-      console.log('🧪 Added sample photos for testing');
+      console.log('ℹ️ No additional media found - only showing profile picture');
+      console.log('💡 To see more images, users need to upload photos/videos through the Photos & Videos page');
     }
     
     // Priority 5: Fallback to gender-specific silhouette if still no media exists
