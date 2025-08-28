@@ -856,10 +856,9 @@ const HomeScreen = () => {
         
         // Profile picture is handled by useProfilePicture hook
         
-        // Set display name
-        if (profile?.first_name || profile?.last_name) {
-          const name = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ');
-          setDisplayName(name);
+        // Set display name (first name only)
+        if (profile?.first_name) {
+          setDisplayName(profile.first_name);
         } else if (user.email) {
           setDisplayName(user.email.split('@')[0]);
         }
@@ -1942,8 +1941,8 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   bellIcon: {
-    height: 28,
-    width: 28,
+    height: 24,
+    width: 24,
     tintColor: COLORS.black,
     marginRight: 8
   },
@@ -2024,11 +2023,11 @@ const styles = StyleSheet.create({
   },
   filterButton: {
     position: 'relative',
-    padding: getResponsiveSpacing(8),
+    padding: getResponsiveSpacing(6),
   },
   galleryButton: {
-    padding: getResponsiveSpacing(8),
-    marginRight: getResponsiveSpacing(8),
+    padding: getResponsiveSpacing(6),
+    marginRight: getResponsiveSpacing(6),
   },
   filterBadge: {
     position: 'absolute',
@@ -2099,16 +2098,16 @@ const styles = StyleSheet.create({
   gridIcon: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 28,
-    height: 28,
+    width: 24,
+    height: 24,
   },
   // For grid view: horizontal layout of two vertical rectangles
   gridIconHorizontal: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    width: 28,
-    height: 28,
+    width: 24,
+    height: 24,
   },
   // For gallery view: 2x2 grid of rounded squares
   gridRow: {
@@ -2116,19 +2115,19 @@ const styles = StyleSheet.create({
     marginVertical: 1.5,
   },
   gridSquare: {
-    width: 8,
-    height: 8,
+    width: 7,
+    height: 7,
     backgroundColor: COLORS.greyscale900,
-    borderRadius: 4,
+    borderRadius: 3.5,
     marginHorizontal: 1.5,
   },
   // For grid view: two vertical rectangles
   gridColumn: {
-    width: 8,
-    height: 20,
+    width: 7,
+    height: 17,
     backgroundColor: COLORS.greyscale900,
     borderRadius: 2,
-    marginHorizontal: 2,
+    marginHorizontal: 1.5,
   },
   subtitle: {
     fontSize: 18,

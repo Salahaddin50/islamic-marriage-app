@@ -448,7 +448,7 @@ const Profile = () => {
               borderColor: COLORS.tansparentPrimary
             }}
             textColor={COLORS.primary}
-            onPress={() => refRBSheet.current.close()}
+            onPress={() => refRBSheet.current?.close()}
           />
           <Button
             title="Yes, Logout"
@@ -458,7 +458,7 @@ const Profile = () => {
               try {
                 await auth.signOut();
               } catch {}
-              refRBSheet.current.close();
+              refRBSheet.current?.close();
               router.replace('/');
               if (Platform.OS === 'web') {
                 try { (window as any).location.assign('/'); } catch {}

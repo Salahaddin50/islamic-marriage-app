@@ -176,9 +176,9 @@ const styles = StyleSheet.create({
     minHeight: isMobileWeb() ? 300 : 400,
   },
   illustration: {
-    height: isMobileWeb() ? getResponsiveWidth(80) : getResponsiveWidth(90),
+    height: isMobileWeb() ? getResponsiveWidth(72) : getResponsiveWidth(81), // Reduced by 10%
     width: isMobileWeb() ? getResponsiveWidth(80) : getResponsiveWidth(90),
-    maxHeight: 350,
+    maxHeight: 315, // Reduced by 10% from 350
     maxWidth: 350,
   },
   ornament: {
