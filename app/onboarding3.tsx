@@ -54,12 +54,12 @@ const Onboarding3 = () => {
             backgroundColor: COLORS.white
           }]}>
             <View style={Onboarding1Styles.titleContainer}>
-              <Text style={Onboarding1Styles.title}>Polygamy with</Text>
-              <Text style={Onboarding1Styles.subTitle}>DIGNITY</Text>
+              <Text style={Onboarding1Styles.title}>Verified</Text>
+              <Text style={Onboarding1Styles.subTitle}>PROFILES</Text>
             </View>
 
             <Text style={Onboarding1Styles.description}>
-              Share your journey and what you seek in polygamy. For brothers seeking additional wives and sisters open to being part of a polygamous marriage.
+              All female profiles are verified by our team and Walis are properly informed.
             </Text>
 
             <View style={Onboarding1Styles.dotsContainer}>

@@ -52,12 +52,12 @@ const Onboarding2 = () => {
           />
           <View style={Onboarding1Styles.buttonContainer}>
             <View style={Onboarding1Styles.titleContainer}>
-              <Text style={Onboarding1Styles.title}>Verified Polygamy</Text>
-              <Text style={Onboarding1Styles.subTitle}>PROFILES</Text>
+              <Text style={Onboarding1Styles.title}>Fully Shariah</Text>
+              <Text style={Onboarding1Styles.subTitle}>COMPLIANT</Text>
             </View>
 
             <Text style={Onboarding1Styles.description}>
-              All female profiles are verified by our team and Walis are informed. Experience trust and transparency in your polygamous marriage journey.
+              Every aspect of our platform strictly follows Shariah law and Islamic marriage principles.
             </Text>
 
             <View style={Onboarding1Styles.dotsContainer}>

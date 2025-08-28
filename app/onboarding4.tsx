@@ -54,12 +54,12 @@ const Onboarding4 = () => {
             backgroundColor: COLORS.white
           }]}>
             <View style={Onboarding1Styles.titleContainer}>
-              <Text style={Onboarding1Styles.title}>Follow the Sunnah</Text>
-              <Text style={Onboarding1Styles.subTitle}>OF POLYGAMY</Text>
+              <Text style={Onboarding1Styles.title}>Serious</Text>
+              <Text style={Onboarding1Styles.subTitle}>INTENTIONS</Text>
             </View>
 
             <Text style={Onboarding1Styles.description}>
-              Embrace the blessed Sunnah of polygamy and find your next spouse through our Islamic matchmaking guided by Quranic principles.
+              This platform is exclusively for serious individuals where every communication is intended for marriage.
             </Text>
 
             <View style={Onboarding1Styles.dotsContainer}>

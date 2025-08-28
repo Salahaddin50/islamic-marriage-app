@@ -114,7 +114,7 @@ const Index = () => {
                 <Text style={styles.title}>Assalamu Aleykoum</Text>
                 <Text style={styles.subtitle}>Welcome to Hume</Text>
                 <Text style={styles.description}>
-                  For brothers seeking to follow the blessed Sunnah of polygamy and sisters accepting to be part of a polygamous marriage. All profiles are verified and Walis are informed.
+                  The only Islamic platform dedicated exclusively for polygamous marriages following Quranic principles.
                 </Text>
               </View>
 
