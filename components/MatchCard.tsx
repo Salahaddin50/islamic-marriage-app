@@ -55,6 +55,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
       <Image
         source={image}
         contentFit="cover"
+        contentPosition="top"
         style={[styles.image, imageStyle]}
         cachePolicy="memory-disk"
         transition={200}

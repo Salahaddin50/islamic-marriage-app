@@ -292,11 +292,13 @@ const HomeScreen = () => {
   const [displayName, setDisplayName] = useState<string>('');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [oppositeGender, setOppositeGender] = useState<string | null>(null);
+  const [isGalleryView, setIsGalleryView] = useState(false);
   const { isLoading: profileLoading } = useProfilePicture(refreshTrigger);
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-  const baseWidth = ((windowWidth - 64) / 2) * 0.88; // baseline width (kept for height)
-  const baseHeight = baseWidth / (212 / 316); // keep this height
-  const cardWidth = baseWidth * 1.155 * 1.05; // increase width by 15.5% + 5% = 21.275%
+  const baseWidth = ((windowWidth - 64) / 2) * 0.88; // baseline width
+  // Make cards more vertical to match mobile phone aspect ratio (9:16 or similar)
+  const baseHeight = baseWidth * 1.6; // Much more vertical ratio for mobile photos
+  const cardWidth = isGalleryView ? windowWidth - 32 : baseWidth * 1.155 * 1.05; // gallery view: full width, grid view: increased width
 
   // Options arrays (matching database enums)
   const eyeColorOptions = ['Brown', 'Black', 'Hazel', 'Green', 'Blue', 'Gray', 'Amber'];
@@ -904,6 +906,27 @@ const HomeScreen = () => {
         </View>
         <View style={styles.viewRight}>
           <TouchableOpacity
+            onPress={() => setIsGalleryView(!isGalleryView)}
+            style={styles.galleryButton}>
+            {isGalleryView ? (
+              <View style={styles.gridIcon}>
+                <View style={styles.gridRow}>
+                  <View style={styles.gridSquare} />
+                  <View style={styles.gridSquare} />
+                </View>
+                <View style={styles.gridRow}>
+                  <View style={styles.gridSquare} />
+                  <View style={styles.gridSquare} />
+                </View>
+              </View>
+            ) : (
+              <View style={styles.gridIconHorizontal}>
+                <View style={styles.gridColumn} />
+                <View style={styles.gridColumn} />
+              </View>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
             onPress={() => !filterLoading && refRBSheet.current?.open()}
             disabled={filterLoading}
             style={[styles.filterButton, filterLoading && { opacity: 0.7 }]}>
@@ -938,6 +961,7 @@ const HomeScreen = () => {
 
 
   const renderItem = React.useCallback(({ item }: { item: UserProfileWithMedia }) => {
+    const cardHeight = isGalleryView ? baseHeight * 1.3 : baseHeight; // More vertical in gallery view
     return (
       <MatchCard
         name={item.name}
@@ -948,17 +972,20 @@ const HomeScreen = () => {
         country={item.country}
         city={item.city}
         onPress={() => navigation.navigate("matchdetails", { userId: item.user_id })}
-        containerStyle={[styles.cardContainer, { width: cardWidth, height: baseHeight }]}
+        containerStyle={[styles.cardContainer, { width: cardWidth, height: cardHeight }]}
+        imageStyle={{ resizeMode: 'cover', alignSelf: 'center' }} // Ensure full photo display, top-aligned
       />
     );
-  }, [navigation, cardWidth, baseHeight]);
+  }, [navigation, cardWidth, baseHeight, isGalleryView]);
 
   const getItemLayout = React.useCallback((_: any, index: number) => {
-    const rowIndex = Math.floor(index / 2);
-    const rowHeight = baseHeight + 24; // card height + marginBottom
+    const cardHeight = isGalleryView ? baseHeight * 1.3 : baseHeight;
+    const columnsPerRow = isGalleryView ? 1 : 2;
+    const rowIndex = Math.floor(index / columnsPerRow);
+    const rowHeight = cardHeight + 24; // card height + marginBottom
     const offset = 16 + rowIndex * rowHeight; // list paddingTop = 16
     return { length: rowHeight, offset, index };
-  }, [baseHeight]);
+  }, [baseHeight, isGalleryView]);
 
   if (loading) {
   return (
@@ -1416,19 +1443,20 @@ const HomeScreen = () => {
         {renderHeader()}
         <View style={{ flex: 1 }}>
         <FlatList
+          key={isGalleryView ? 'gallery' : 'grid'}
           data={users}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
-          numColumns={2}
-          columnWrapperStyle={styles.columnWrapper}
+          numColumns={isGalleryView ? 1 : 2}
+          columnWrapperStyle={isGalleryView ? undefined : styles.columnWrapper}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContainer}
             initialNumToRender={8}
             maxToRenderPerBatch={8}
             windowSize={7}
-            removeClippedSubviews
+            removeClippedSubviews={!isGalleryView}
             updateCellsBatchingPeriod={50}
-            getItemLayout={getItemLayout}
+            getItemLayout={!isGalleryView ? getItemLayout : undefined}
           />
           {filterLoading && (
             <View style={styles.filterLoadingOverlay}>
@@ -1998,6 +2026,10 @@ const styles = StyleSheet.create({
     position: 'relative',
     padding: getResponsiveSpacing(8),
   },
+  galleryButton: {
+    padding: getResponsiveSpacing(8),
+    marginRight: getResponsiveSpacing(8),
+  },
   filterBadge: {
     position: 'absolute',
     top: getResponsiveSpacing(2),
@@ -2014,6 +2046,89 @@ const styles = StyleSheet.create({
     fontSize: getResponsiveFontSize(12),
     fontFamily: 'bold',
     textAlign: 'center',
+  },
+  // Modern Material Design 3 inspired buttons
+  modernButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: COLORS.grayscale100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+    shadowColor: COLORS.black,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    position: 'relative',
+  },
+  modernButtonActive: {
+    backgroundColor: COLORS.primary,
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  modernButtonIcon: {
+    width: 20,
+    height: 20,
+  },
+  modernBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: COLORS.red,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: COLORS.white,
+  },
+  modernBadgeText: {
+    color: COLORS.white,
+    fontSize: 11,
+    fontFamily: 'bold',
+    textAlign: 'center',
+  },
+  // Custom icons for gallery toggle
+  gridIcon: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 28,
+    height: 28,
+  },
+  // For grid view: horizontal layout of two vertical rectangles
+  gridIconHorizontal: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 28,
+    height: 28,
+  },
+  // For gallery view: 2x2 grid of rounded squares
+  gridRow: {
+    flexDirection: 'row',
+    marginVertical: 1.5,
+  },
+  gridSquare: {
+    width: 8,
+    height: 8,
+    backgroundColor: COLORS.greyscale900,
+    borderRadius: 4,
+    marginHorizontal: 1.5,
+  },
+  // For grid view: two vertical rectangles
+  gridColumn: {
+    width: 8,
+    height: 20,
+    backgroundColor: COLORS.greyscale900,
+    borderRadius: 2,
+    marginHorizontal: 2,
   },
   subtitle: {
     fontSize: 18,
