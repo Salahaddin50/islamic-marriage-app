@@ -9,6 +9,7 @@ import { menbers } from '@/data';
 import { supabase } from '@/src/config/supabase';
 import { useProfilePicture } from '@/hooks/useProfilePicture';
 import MatchCard from '@/components/MatchCard';
+import HomeListSkeleton from '@/components/HomeListSkeleton';
 import { Database } from '@/src/types/database.types';
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
@@ -908,19 +909,20 @@ const HomeScreen = () => {
             onPress={() => setIsGalleryView(!isGalleryView)}
             style={styles.galleryButton}>
             {isGalleryView ? (
-              <View style={styles.rectangleIcon}>
-                <View style={styles.blackRectangle} />
-              </View>
-            ) : (
               <View style={styles.gridIcon}>
                 <View style={styles.gridRow}>
-                  <View style={styles.roundButton} />
-                  <View style={styles.roundButton} />
+                  <View style={styles.gridSquare} />
+                  <View style={styles.gridSquare} />
                 </View>
                 <View style={styles.gridRow}>
-                  <View style={styles.roundButton} />
-                  <View style={styles.roundButton} />
+                  <View style={styles.gridSquare} />
+                  <View style={styles.gridSquare} />
                 </View>
+              </View>
+            ) : (
+              <View style={styles.gridIconHorizontal}>
+                <View style={styles.gridColumn} />
+                <View style={styles.gridColumn} />
               </View>
             )}
           </TouchableOpacity>
@@ -986,14 +988,11 @@ const HomeScreen = () => {
   }, [baseHeight, isGalleryView]);
 
   if (loading) {
-  return (
-    <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
-      <View style={[styles.container, { backgroundColor: COLORS.white }]}>
-        {renderHeader()}
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={COLORS.primary} />
-            <Text style={styles.loadingText}>Finding matches for you...</Text>
-          </View>
+    return (
+      <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}> 
+        <View style={[styles.container, { backgroundColor: COLORS.white }]}> 
+          {renderHeader()} 
+          <HomeListSkeleton isGalleryView={isGalleryView} />
         </View>
       </SafeAreaView>
     );
@@ -2120,28 +2119,7 @@ const styles = StyleSheet.create({
     borderRadius: 3.5,
     marginHorizontal: 1.5,
   },
-  // For grid view: four round buttons
-  roundButton: {
-    width: 6,
-    height: 6,
-    backgroundColor: COLORS.greyscale900,
-    borderRadius: 3,
-    marginHorizontal: 1.5,
-  },
-  // For gallery view: single black rectangle
-  rectangleIcon: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 24,
-    height: 24,
-  },
-  blackRectangle: {
-    width: 16,
-    height: 10,
-    backgroundColor: COLORS.greyscale900,
-    borderRadius: 3,
-  },
-  // For grid view: two vertical rectangles (kept for legacy)
+  // For grid view: two vertical rectangles
   gridColumn: {
     width: 7,
     height: 17,

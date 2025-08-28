@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Alert, Modal, Dimensions, Platform } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { COLORS, icons, images, SIZES } from '@/constants';
 // import AutoSlider from '@/components/AutoSlider'; // Removed to ensure we only use custom implementation
@@ -9,6 +9,7 @@ import { Image } from 'expo-image';
 import { supabase } from '@/src/config/supabase';
 import { getResponsiveFontSize, getResponsiveSpacing, safeGoBack } from '@/utils/responsive';
 import { DEFAULT_VIDEO_THUMBNAIL } from '@/constants/defaultThumbnails';
+import MatchDetailsSkeleton from '@/components/MatchDetailsSkeleton';
 
 // Types for user profile data (comprehensive - matches database)
 interface UserProfile {
@@ -116,9 +117,9 @@ const MatchDetails = () => {
 
       // console.log('🔍 DEBUG: Loading user details for userId:', targetUserId);
 
-      // Check cache first - TEMPORARILY DISABLED FOR DEBUGGING
-      const isCacheFresh = false; // cachedMatchDetails[targetUserId] && 
-        // (Date.now() - (matchDetailsLoadTime[targetUserId] || 0)) < MATCH_DETAILS_CACHE_TTL;
+      // Check cache first
+      const isCacheFresh = cachedMatchDetails[targetUserId] && 
+        (Date.now() - (matchDetailsLoadTime[targetUserId] || 0)) < MATCH_DETAILS_CACHE_TTL;
 
       if (isCacheFresh) {
         console.log('📦 Using cached data for user:', targetUserId);
@@ -130,31 +131,35 @@ const MatchDetails = () => {
         console.log('🔄 Cache disabled/expired, fetching fresh data for user:', targetUserId);
       }
 
-      // Load profile (non-blocking if missing)
-      let profileData: UserProfile | null = null;
-      const { data: profileByUserId, error: profileErrorByUserId } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('user_id', targetUserId)
-        .maybeSingle();
-      if (!profileErrorByUserId && profileByUserId) profileData = profileByUserId as any;
+      // Load profile and media in parallel for better performance
+      const [profileResult, mediaResult] = await Promise.all([
+        supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('user_id', targetUserId)
+          .maybeSingle(),
+        supabase
+          .from('media_references')
+          .select(`
+            id,
+            external_url,
+            thumbnail_url,
+            is_profile_picture,
+            media_order,
+            media_type,
+            visibility_level
+          `)
+          .eq('user_id', targetUserId)
+          .in('media_type', ['photo', 'video'])
+          .order('is_profile_picture', { ascending: false })
+          .order('media_order', { ascending: true })
+      ]);
 
-      // Fetch user media (photos and videos) directly by match id (user_id)
-      let { data: mediaData, error: mediaError } = await supabase
-        .from('media_references')
-        .select(`
-          id,
-          external_url,
-          thumbnail_url,
-          is_profile_picture,
-          media_order,
-          media_type,
-          visibility_level
-        `)
-        .eq('user_id', targetUserId)
-        .in('media_type', ['photo', 'video'])
-        .order('is_profile_picture', { ascending: false })
-        .order('media_order', { ascending: true });
+      const { data: profileByUserId, error: profileErrorByUserId } = profileResult;
+      let { data: mediaData, error: mediaError } = mediaResult;
+      
+      let profileData: UserProfile | null = null;
+      if (!profileErrorByUserId && profileByUserId) profileData = profileByUserId as any;
 
       console.log('📊 Media query result:', { mediaError, mediaCount: mediaData?.length || 0 });
 
@@ -197,9 +202,11 @@ const MatchDetails = () => {
       // Media data processing (debug removed for cleaner output)
 
       // Cache the data
-      cachedMatchDetails[targetUserId] = profileData;
-      cachedMatchMedia[targetUserId] = media;
-      matchDetailsLoadTime[targetUserId] = Date.now();
+      if (profileData) {
+        cachedMatchDetails[targetUserId] = profileData;
+        cachedMatchMedia[targetUserId] = media;
+        matchDetailsLoadTime[targetUserId] = Date.now();
+      }
 
       setUserProfile(profileData);
       setUserMedia(media);
@@ -211,13 +218,13 @@ const MatchDetails = () => {
     }
   };
 
-  // Helper functions
-  const formatEnumValue = (value?: string) => {
+  // Memoized helper functions for better performance
+  const formatEnumValue = useCallback((value?: string) => {
     if (!value) return 'Not specified';
     return value.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-  };
+  }, []);
 
-  const parseIslamicQuestionnaire = (data?: any) => {
+  const parseIslamicQuestionnaire = useCallback((data?: any) => {
     if (!data) return null;
     
     // If it's already an object, return it directly
@@ -236,9 +243,9 @@ const MatchDetails = () => {
     }
     
     return null;
-  };
+  }, []);
 
-  const calculateAge = (dateOfBirth: string) => {
+  const calculateAge = useCallback((dateOfBirth: string) => {
     if (!dateOfBirth) return 'Unknown';
     const today = new Date();
     const birthDate = new Date(dateOfBirth);
@@ -248,7 +255,24 @@ const MatchDetails = () => {
       age--;
     }
     return age;
-  };
+  }, []);
+
+  // Memoized computed values to avoid recalculation on every render
+  const computedData = useMemo(() => {
+    if (!userProfile) return null;
+
+    const fullName = `${userProfile.first_name || ''} ${userProfile.last_name || ''}`.trim();
+    const age = calculateAge(userProfile.date_of_birth);
+    const location = [userProfile.country, userProfile.city].filter(Boolean).join(', ');
+    const islamicData = parseIslamicQuestionnaire(userProfile.islamic_questionnaire);
+
+    return {
+      fullName,
+      age,
+      location,
+      islamicData
+    };
+  }, [userProfile, calculateAge, parseIslamicQuestionnaire]);
 
   const openFullscreenImage = (mediaUri: string, mediaType: 'photo' | 'video' = 'photo') => {
     setSelectedImageUri(mediaUri);
@@ -522,14 +546,9 @@ const MatchDetails = () => {
     );
   };
 
-  // Show loading state
+  // Show skeleton loading state
   if (isLoading) {
-    return (
-      <View style={[styles.area, { backgroundColor: COLORS.white, justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Loading profile...</Text>
-      </View>
-    );
+    return <MatchDetailsSkeleton />;
   }
 
   // Show error state
@@ -558,10 +577,7 @@ const MatchDetails = () => {
     );
   }
 
-  const fullName = `${userProfile.first_name} ${userProfile.last_name}`.trim();
-  const age = userProfile.age || calculateAge(userProfile.date_of_birth);
-  const location = [userProfile.city, userProfile.country].filter(Boolean).join(', ');
-  const islamicData = parseIslamicQuestionnaire(userProfile.islamic_questionnaire);
+  const { fullName, age, location, islamicData } = computedData || {};
 
   return (
          <View style={[styles.area, { backgroundColor: COLORS.white }]}>

@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { COLORS, SIZES, FONTS, icons, images } from '../constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,148 +16,15 @@ import { useNavigation, router } from 'expo-router';
 import { NavigationProp } from '@react-navigation/native';
 import ProfileService, { UserProfile, UpdateProfileData } from '../src/services/profile.service';
 import { phoneCodesData } from '../data/phoneCodes';
-import { useProfilePicture } from '../hooks/useProfilePicture';
+import SimpleAvatar from '../components/SimpleAvatar';
 import { supabase } from '../src/config/supabase';
 import { getCountriesAsDropdownItems, getCitiesForCountry } from '../data/countries';
 import type { GenderType } from '../src/types/database.types';
-
-// Cache for edit profile page to prevent reloading
-let cachedEditProfileImageUrl: string | null = null;
-let editProfileImageLoadTime = 0;
-const EDIT_PROFILE_IMAGE_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
 // Cache for profile data
 let cachedUserProfile: UserProfile | null = null;
 let userProfileLoadTime = 0;
 const USER_PROFILE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-// Simple Edit Avatar Component with Profile Picture Support
-const SimpleEditAvatar = ({ size, displayName, isLoading }: { size: number, displayName?: string, isLoading: boolean }) => {
-  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(cachedEditProfileImageUrl);
-  const [imageLoadError, setImageLoadError] = useState(false);
-  
-  useEffect(() => {
-    const fetchProfileImage = async () => {
-      // Check if we have a fresh cached image
-      const isCacheFresh = cachedEditProfileImageUrl && (Date.now() - editProfileImageLoadTime) < EDIT_PROFILE_IMAGE_CACHE_TTL;
-      if (isCacheFresh) {
-        setProfileImageUrl(cachedEditProfileImageUrl);
-        return;
-      }
-      
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        // Check media_references first
-        const { data: mediaRef } = await supabase
-          .from('media_references')
-          .select('do_spaces_cdn_url, do_spaces_url, external_url')
-          .eq('user_id', user.id)
-          .eq('media_type', 'photo')
-          .eq('is_profile_picture', true)
-          .maybeSingle();
-
-        if (mediaRef) {
-          const imageUrl = mediaRef.do_spaces_cdn_url || mediaRef.do_spaces_url || mediaRef.external_url;
-          if (imageUrl) {
-            cachedEditProfileImageUrl = imageUrl;
-            editProfileImageLoadTime = Date.now();
-            setProfileImageUrl(imageUrl);
-            return;
-          }
-        }
-
-        // Check user_profiles as fallback
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('profile_picture_url')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (profile?.profile_picture_url) {
-          cachedEditProfileImageUrl = profile.profile_picture_url;
-          editProfileImageLoadTime = Date.now();
-          setProfileImageUrl(profile.profile_picture_url);
-        } else {
-          cachedEditProfileImageUrl = null;
-        }
-      } catch (error) {
-        // Error fetching edit profile image
-      }
-    };
-
-    fetchProfileImage();
-  }, []);
-
-  if (isLoading) {
-    return (
-      <View style={[{
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        backgroundColor: COLORS.grayscale200,
-        justifyContent: 'center',
-        alignItems: 'center'
-      }]}>
-        <ActivityIndicator size="small" color={COLORS.primary} />
-      </View>
-    );
-  }
-
-  const initial = displayName ? displayName.charAt(0).toUpperCase() : 'U';
-  
-  // Show profile picture if available and not errored
-  if (profileImageUrl && !imageLoadError) {
-    return (
-      <View style={[{
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        overflow: 'hidden',
-        backgroundColor: COLORS.grayscale200
-      }]}>
-        <Image
-          source={{ uri: profileImageUrl }}
-          style={{
-            width: size,
-            height: size,
-          }}
-          contentFit="cover"
-          cachePolicy="memory-disk"
-          transition={200}
-          onError={() => {
-            setImageLoadError(true);
-            cachedEditProfileImageUrl = null; // Clear cache on error
-          }}
-          onLoad={() => {}}
-        />
-      </View>
-    );
-  }
-  
-  // Fallback to initial
-  return (
-    <View style={[{
-      width: size,
-      height: size,
-      borderRadius: size / 2,
-      backgroundColor: COLORS.primary,
-      justifyContent: 'center',
-      alignItems: 'center',
-      overflow: 'hidden'
-    }]}>
-      <Text style={{
-        fontSize: size * 0.4,
-        fontWeight: 'bold',
-        color: COLORS.white,
-        textAlign: 'center'
-      }}>
-        {initial}
-      </Text>
-    </View>
-  );
-};
 
 // Edit Profile Screen
 const EditProfile = () => {
@@ -169,10 +36,8 @@ const EditProfile = () => {
   const [error, setError] = useState<string | null>(null);
   
   // Profile data
-  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileImage, setProfileImage] = useState<any>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const { profilePicture: fetchedProfilePicture, isLoading: profilePictureLoading, hasCustomImage } = useProfilePicture(refreshTrigger);
   
   // Form fields
   const [firstName, setFirstName] = useState('');
@@ -208,7 +73,6 @@ const EditProfile = () => {
       // Check cache first unless force refresh
       if (!forceRefresh && cachedUserProfile && (Date.now() - userProfileLoadTime) < USER_PROFILE_CACHE_TTL) {
         const userProfile = cachedUserProfile;
-        setProfile(userProfile);
         populateProfileFields(userProfile);
         setIsLoading(false);
         return;
@@ -221,7 +85,6 @@ const EditProfile = () => {
         cachedUserProfile = userProfile;
         userProfileLoadTime = Date.now();
         
-        setProfile(userProfile);
         populateProfileFields(userProfile);
       }
     } catch (error) {
@@ -331,8 +194,7 @@ const EditProfile = () => {
       if (profileImage?.uri) {
         try {
           await ProfileService.updateProfilePicture(profileImage.uri);
-          // Clear image cache when profile picture is updated
-          cachedEditProfileImageUrl = null;
+          // Trigger refresh for profile picture cache
         } catch (imageError) {
           // Don't fail the entire update for image upload
         }
@@ -390,10 +252,10 @@ const EditProfile = () => {
           {/* Profile Picture */}
           <View style={{ alignItems: "center", marginVertical: 12 }}>
             <View style={styles.avatarContainer}>
-              <SimpleEditAvatar 
+              <SimpleAvatar 
                 size={120}
                 displayName={firstName || 'User'}
-                isLoading={profilePictureLoading}
+                forceRefresh={refreshTrigger}
               />
             </View>
           </View>

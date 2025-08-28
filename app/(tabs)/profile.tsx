@@ -12,146 +12,13 @@ import { useNavigation, router } from 'expo-router';
 import SettingsItem from '@/components/SettingsItem';
 import { getResponsiveFontSize, getResponsiveSpacing, getResponsiveWidth, isMobileWeb } from '@/utils/responsive';
 import { supabase, auth } from '@/src/config/supabase';
-import { useProfilePicture } from '@/hooks/useProfilePicture';
+
 
 type Nav = {
   navigate: (value: string) => void
 }
 
-// Cached profile image for the profile page to prevent reloading
-let cachedProfilePageImageUrl: string | null = null;
-let profilePageImageLoadTime = 0;
-const PROFILE_PAGE_IMAGE_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
-
-// Simple Avatar Component with Profile Picture Support
-const SimpleAvatar = ({ size, displayName, isLoading }: { size: number, displayName?: string, isLoading: boolean }) => {
-  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(cachedProfilePageImageUrl);
-  const [imageLoadError, setImageLoadError] = useState(false);
-  
-  useEffect(() => {
-    const fetchProfileImage = async () => {
-      // Check if we have a fresh cached image
-      const isCacheFresh = cachedProfilePageImageUrl && (Date.now() - profilePageImageLoadTime) < PROFILE_PAGE_IMAGE_CACHE_TTL;
-      if (isCacheFresh) {
-        setProfileImageUrl(cachedProfilePageImageUrl);
-        return;
-      }
-      
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          return;
-        }
-
-        // Check media_references first
-        const { data: mediaRef, error: mediaError } = await supabase
-          .from('media_references')
-          .select('do_spaces_cdn_url, do_spaces_url, external_url, id, is_profile_picture')
-          .eq('user_id', user.id)
-          .eq('media_type', 'photo')
-          .eq('is_profile_picture', true)
-          .maybeSingle();
-
-        if (mediaRef) {
-          const imageUrl = mediaRef.do_spaces_cdn_url || mediaRef.do_spaces_url || mediaRef.external_url;
-          if (imageUrl) {
-            cachedProfilePageImageUrl = imageUrl;
-            profilePageImageLoadTime = Date.now();
-            setProfileImageUrl(imageUrl);
-            return;
-          }
-        }
-
-        // Check user_profiles as fallback
-        const { data: profile, error: profileError } = await supabase
-          .from('user_profiles')
-          .select('profile_picture_url')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (profile?.profile_picture_url) {
-          cachedProfilePageImageUrl = profile.profile_picture_url;
-          profilePageImageLoadTime = Date.now();
-          setProfileImageUrl(profile.profile_picture_url);
-        } else {
-          cachedProfilePageImageUrl = null;
-        }
-      } catch (error) {
-// Error fetching profile image
-      }
-    };
-
-    fetchProfileImage();
-  }, []);
-
-  if (isLoading) {
-    return (
-      <View style={[{
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        backgroundColor: COLORS.grayscale200,
-        justifyContent: 'center',
-        alignItems: 'center'
-      }]}>
-        <ActivityIndicator size="small" color={COLORS.primary} />
-      </View>
-    );
-  }
-
-  const initial = displayName ? displayName.charAt(0).toUpperCase() : 'U';
-  
-  // Show profile picture if available and not errored
-  if (profileImageUrl && !imageLoadError) {
-    return (
-      <View style={[{
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        overflow: 'hidden',
-        backgroundColor: COLORS.grayscale200
-      }]}>
-        <Image
-          source={{ uri: profileImageUrl }}
-          style={{
-            width: size,
-            height: size,
-          }}
-          contentFit="cover"
-          cachePolicy="memory-disk"
-          transition={200}
-          onError={() => {
-            setImageLoadError(true);
-            cachedProfilePageImageUrl = null; // Clear cache on error
-          }}
-          onLoad={() => {}}
-        />
-      </View>
-    );
-  }
-  
-  // Fallback to initial
-  return (
-    <View style={[{
-      width: size,
-      height: size,
-      borderRadius: size / 2,
-      backgroundColor: COLORS.primary,
-      justifyContent: 'center',
-      alignItems: 'center',
-      overflow: 'hidden'
-    }]}>
-      <Text style={{
-        fontSize: size * 0.4,
-        fontWeight: 'bold',
-        color: COLORS.white,
-        textAlign: 'center'
-      }}>
-        {initial}
-      </Text>
-    </View>
-  );
-};
+import SimpleAvatar from '@/components/SimpleAvatar';
 
 const Profile = () => {
   const refRBSheet = useRef<any>(null);
@@ -194,8 +61,6 @@ const Profile = () => {
 
     // Function to refresh profile data
     const refreshProfile = () => {
-      // Clear profile image cache when manually refreshing
-      cachedProfilePageImageUrl = null;
       setRefreshTrigger(prev => prev + 1);
     };
 
@@ -252,7 +117,7 @@ const Profile = () => {
           <SimpleAvatar 
             size={isMobileWeb() ? 100 : 120}
             displayName={displayName}
-            isLoading={isLoading}
+            forceRefresh={refreshTrigger}
           />
         </TouchableOpacity>
         <Text style={[styles.title, { color: COLORS.greyscale900 }]}>{displayName || 'Profile'}</Text>
