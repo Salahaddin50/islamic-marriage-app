@@ -64,7 +64,7 @@ export class PhotosVideosAPI {
       }
 
       // Use DigitalOcean integration service
-      const result = await MediaIntegrationService.getUserMedia(dbUser.id);
+      const result = await MediaIntegrationService.getUserMedia(userProfile.id);
       return {
         success: result.success,
         data: result.data,
