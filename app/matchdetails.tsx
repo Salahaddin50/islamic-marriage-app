@@ -127,6 +127,8 @@ const MatchDetails = () => {
       }
 
       // Fetch user media (photos and videos) - handle the user ID mismatch properly
+      console.log('🔍 DEBUG: Fetching media for userId:', targetUserId);
+      
       let { data: mediaData, error: mediaError } = await supabase
         .from('media_references')
         .select(`
@@ -135,22 +137,37 @@ const MatchDetails = () => {
           thumbnail_url,
           is_profile_picture,
           media_order,
-          media_type
+          media_type,
+          visibility_level
         `)
         .eq('user_id', targetUserId)
         .in('media_type', ['photo', 'video'])
-        .in('visibility_level', ['public', 'private', 'matched_only'])
         .order('is_profile_picture', { ascending: false })
         .order('media_order', { ascending: true });
+
+      console.log('📊 Media query result:', { 
+        mediaData: mediaData, 
+        mediaError: mediaError, 
+        mediaCount: mediaData?.length || 0 
+      });
 
       // If no media found with direct user ID, show empty media array
       // This is expected if the user hasn't uploaded any photos/videos yet
       if (!mediaData || mediaData.length === 0) {
+        console.log('⚠️ No media found for user:', targetUserId);
         mediaData = [];
+      } else {
+        console.log('✅ Found media for user:', targetUserId, 'Count:', mediaData.length);
+        console.log('📸 Media details:', mediaData.map(m => ({ 
+          id: m.id, 
+          type: m.media_type, 
+          order: m.media_order, 
+          isProfile: m.is_profile_picture 
+        })));
       }
 
       if (mediaError) {
-        console.error('Media fetch error:', mediaError);
+        console.error('❌ Media fetch error:', mediaError);
       }
 
       // Debug queries removed for cleaner console output
@@ -261,6 +278,12 @@ const MatchDetails = () => {
     | { uri: string; type: 'video'; id: string; videoUrl: string; fallbackUri?: string };
 
   const getSliderImages = (): SliderMedia[] => {
+    console.log('🎯 getSliderImages called with userMedia:', {
+      userMediaExists: !!userMedia,
+      userMediaLength: userMedia?.length || 0,
+      userMediaSample: userMedia?.slice(0, 2).map(m => ({ id: m.id, type: m.media_type, url: m.external_url }))
+    });
+    
     let sliderImages: SliderMedia[] = [];
     
     // Priority 1: Add ALL photos and videos from media_references first
@@ -276,6 +299,13 @@ const MatchDetails = () => {
         // Then by media_order
         return (a.media_order || 0) - (b.media_order || 0);
       });
+      
+      console.log('📋 Sorted media order:', sortedMedia.map(m => ({ 
+        id: m.id, 
+        type: m.media_type, 
+        order: m.media_order, 
+        isProfile: m.is_profile_picture 
+      })));
       
       // Add all media to slider
       sliderImages.push(...sortedMedia.map(media => {
@@ -294,6 +324,10 @@ const MatchDetails = () => {
           };
         }
       }));
+      
+      console.log('🖼️ Added media to slider:', sliderImages.length);
+    } else {
+      console.log('❌ No userMedia available for slider');
     }
     
     // Priority 2: Add profile picture from user_profiles if not already included in media
