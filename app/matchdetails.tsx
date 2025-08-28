@@ -75,6 +75,7 @@ const MatchDetails = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [thumbnailErrors, setThumbnailErrors] = useState<{ [key: string]: boolean }>({});
   const [thumbnailLoading, setThumbnailLoading] = useState<{ [key: string]: boolean }>({});
+  const [silhouetteFailedToLoad, setSilhouetteFailedToLoad] = useState<{ [key: string]: boolean }>({});
   
   // Fullscreen media viewer state
   const [showFullscreenImage, setShowFullscreenImage] = useState(false);
@@ -256,8 +257,8 @@ const MatchDetails = () => {
 
   // Define slider media types
   type SliderMedia = 
-    | { uri: string; type: 'photo'; id: string; videoUrl?: never }
-    | { uri: string; type: 'video'; id: string; videoUrl: string };
+    | { uri: string; type: 'photo'; id: string; videoUrl?: never; fallbackUri?: string }
+    | { uri: string; type: 'video'; id: string; videoUrl: string; fallbackUri?: string };
 
   const getSliderImages = (): SliderMedia[] => {
     // Include both photos and videos in the main slider
@@ -311,21 +312,27 @@ const MatchDetails = () => {
       // No additional media - showing profile picture only
     }
     
-    // Priority 5: Fallback to gender-specific silhouette if still no media exists
+        // Priority 5: Fallback to gender-specific silhouette if still no media exists
     if (sliderImages.length === 0) {
-      const isFemale = userProfile?.gender?.toLowerCase() === 'female';
+    const isFemale = userProfile?.gender?.toLowerCase() === 'female';
       
-      // For web compatibility, use direct image URLs
+      // For web compatibility, use direct image URLs with fallback
       if (Platform.OS === 'web') {
-        // Use hardcoded URLs for web
+        // Try DigitalOcean CDN URLs first, with placeholder fallback
         const silhouetteUrl = isFemale 
-          ? 'https://i.imgur.com/mQ8xGNN.jpg'  // female silhouette
-          : 'https://i.imgur.com/jNNT4LE.png'; // male silhouette
+          ? 'https://islamic-marriage-photos-2025.lon1.cdn.digitaloceanspaces.com/silhouette/female_silhouette.jpg'  // female silhouette
+          : 'https://islamic-marriage-photos-2025.lon1.cdn.digitaloceanspaces.com/silhouette/male_silhouette.png'; // male silhouette
+        
+        // Add fallback placeholder in case DigitalOcean images don't exist
+        const fallbackUrl = isFemale
+          ? 'https://via.placeholder.com/400x600/e8e8e8/666666?text=👤+Female+Profile'
+          : 'https://via.placeholder.com/400x600/e8e8e8/666666?text=👤+Male+Profile';
         
         sliderImages.push({ 
           uri: silhouetteUrl, 
           type: 'photo' as const,
-          id: 'silhouette'
+          id: 'silhouette',
+          fallbackUri: fallbackUrl
         });
       } else {
         // Use require for native platforms
@@ -384,14 +391,25 @@ const MatchDetails = () => {
               style={styles.autoSliderImageContainer}
             >
               <Image
-                source={{ uri: media.uri }}
+                source={{ 
+                  uri: silhouetteFailedToLoad[media.id] && media.fallbackUri 
+                    ? media.fallbackUri 
+                    : media.uri 
+                }}
                 style={styles.autoSliderImage}
                 contentFit="cover"
                 cachePolicy="memory-disk"
                 transition={200}
                 onLoadStart={() => {/* Image loading started */}}
                 onLoad={() => {/* Image loaded successfully */}}
-                onError={(error) => console.log('❌ Image error:', error)}
+                onError={(error) => {
+                  console.log('❌ Image error:', error);
+                  // If this is a silhouette image that failed, try fallback
+                  if (media.id === 'silhouette' && media.fallbackUri && !silhouetteFailedToLoad[media.id]) {
+                    console.log('🔄 Silhouette image failed to load from DigitalOcean CDN, trying fallback');
+                    setSilhouetteFailedToLoad(prev => ({ ...prev, [media.id]: true }));
+                  }
+                }}
               />
               
               {/* Video indicator overlay */}
