@@ -9,7 +9,6 @@ import { menbers } from '@/data';
 import { supabase } from '@/src/config/supabase';
 import { useProfilePicture } from '@/hooks/useProfilePicture';
 import MatchCard from '@/components/MatchCard';
-import HomeListSkeleton from '@/components/HomeListSkeleton';
 import { Database } from '@/src/types/database.types';
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
@@ -901,10 +900,20 @@ const HomeScreen = () => {
             <Text style={styles.greeeting}>Salam Aleykoum 👋</Text>
             <Text style={[styles.title, {
               color: COLORS.greyscale900
-            }]}>{displayName || 'Welcome'}</Text>
+            }]}>{(displayName || 'Welcome').slice(0, 15)}{(displayName && displayName.length > 15) ? '…' : ''}</Text>
           </View>
         </View>
         <View style={styles.viewRight}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('settingsnotifications')}
+            style={styles.notifButton}
+          >
+            <Image
+              source={icons.notificationBell}
+              resizeMode='contain'
+              style={[styles.bellIcon, { tintColor: COLORS.greyscale900 }]}
+            />
+          </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setIsGalleryView(!isGalleryView)}
             style={styles.galleryButton}>
@@ -988,11 +997,14 @@ const HomeScreen = () => {
   }, [baseHeight, isGalleryView]);
 
   if (loading) {
-    return (
-      <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}> 
-        <View style={[styles.container, { backgroundColor: COLORS.white }]}> 
-          {renderHeader()} 
-          <HomeListSkeleton isGalleryView={isGalleryView} />
+  return (
+    <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
+      <View style={[styles.container, { backgroundColor: COLORS.white }]}>
+        {renderHeader()}
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={COLORS.primary} />
+            <Text style={styles.loadingText}>Finding matches for you...</Text>
+          </View>
         </View>
       </SafeAreaView>
     );
@@ -1920,13 +1932,13 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   greeeting: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: "regular",
     color: "gray",
     marginBottom: 4
   },
   title: {
-    fontSize: 20,
+    fontSize: 14.5,
     fontFamily: "bold",
     color: COLORS.greyscale900
   },
@@ -1938,11 +1950,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center"
   },
+  notifButton: {
+    padding: 4,
+    marginRight: 4,
+  },
   bellIcon: {
     height: 24,
     width: 24,
     tintColor: COLORS.black,
-    marginRight: 8
+    marginRight: 4
   },
   bookmarkIcon: {
     height: 24,
@@ -2021,11 +2037,11 @@ const styles = StyleSheet.create({
   },
   filterButton: {
     position: 'relative',
-    padding: getResponsiveSpacing(6),
+    padding: getResponsiveSpacing(4),
   },
   galleryButton: {
-    padding: getResponsiveSpacing(6),
-    marginRight: getResponsiveSpacing(6),
+    padding: getResponsiveSpacing(4),
+    marginRight: getResponsiveSpacing(4),
   },
   filterBadge: {
     position: 'absolute',

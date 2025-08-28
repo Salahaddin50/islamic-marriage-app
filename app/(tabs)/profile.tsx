@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Switch, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Switch, Platform, ActivityIndicator, Share } from 'react-native';
 import React, { useState, useRef, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView } from 'react-native-virtualized-view';
@@ -162,20 +162,16 @@ const Profile = () => {
           onPress={() => navigate("editprofile")}
         />
         <SettingsItem
-          icon={icons.bell2}
-          name="Notification"
-          onPress={() => navigate("settingsnotifications")}
+          icon={icons.settings}
+          name="Settings"
+          onPress={() => navigate("settingshelpcenter")}
         />
         <SettingsItem
           icon={icons.wallet2Outline}
           name="Payment"
           onPress={() => navigate("settingspayment")}
         />
-        <SettingsItem
-          icon={icons.fund}
-          name="Topup"
-          onPress={() => navigate("topupamount")}
-        />
+        {/* Topup removed per request */}
         <SettingsItem
           icon={icons.shieldOutline}
           name="Security"
@@ -194,7 +190,7 @@ const Profile = () => {
             />
             <Text style={[styles.settingsName, {
               color: COLORS.greyscale900
-            }]}>Language & Region</Text>
+            }]}>Language</Text>
           </View>
           <View style={styles.rightContainer}>
             <Text style={[styles.rightLanguage, {
@@ -209,31 +205,7 @@ const Profile = () => {
             />
           </View>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.settingsItemContainer}>
-          <View style={styles.leftContainer}>
-            <Image
-              source={icons.show}
-              contentFit='contain'
-              style={[styles.settingsIcon, {
-                tintColor: COLORS.greyscale900
-              }]}
-            />
-            <Text style={[styles.settingsName, {
-              color: COLORS.greyscale900
-            }]}>Dark Mode</Text>
-          </View>
-          <View style={styles.rightContainer}>
-            <Switch
-              value={isDarkMode}
-              onValueChange={toggleDarkMode}
-              thumbColor={isDarkMode ? '#fff' : COLORS.white}
-              trackColor={{ false: '#EEEEEE', true: COLORS.primary }}
-              ios_backgroundColor={COLORS.white}
-              style={styles.switch}
-            />
-          </View>
-        </TouchableOpacity>
+        {/* Dark Mode hidden per request */}
         <SettingsItem
           icon={icons.lockedComputerOutline}
           name="Privacy Policy"
@@ -247,7 +219,20 @@ const Profile = () => {
         <SettingsItem
           icon={icons.people4}
           name="Invite Friends"
-          onPress={() => navigate("settingsinvitefriends")}
+          onPress={async () => {
+            try {
+              const appUrl = Platform.OS === 'web' ? (typeof window !== 'undefined' ? (window.location.origin || '/') : '/') : 'https://hume.app';
+              const shareText = `Join me on Hume: ${appUrl}`;
+              // Web Share API if available
+              // @ts-ignore
+              if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.share) {
+                // @ts-ignore
+                await navigator.share({ title: 'Hume', text: shareText, url: appUrl });
+              } else {
+                await Share.share({ message: shareText, url: appUrl });
+              }
+            } catch (e) {}
+          }}
         />
         <TouchableOpacity
           onPress={() => refRBSheet.current.open()}
