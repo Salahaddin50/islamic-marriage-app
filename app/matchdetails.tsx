@@ -1003,10 +1003,11 @@ const MatchDetails = () => {
           style={[
             styles.actionButton,
             (meetStatus === 'accepted') && { backgroundColor: COLORS.success },
-            ((meetStatus === 'pending' && isMeetSender) || (meetStatus === 'accepted')) && styles.actionButtonDisabled,
+            ((interestStatus !== 'accepted') || (meetStatus === 'pending' && isMeetSender) || (meetStatus === 'accepted')) && styles.actionButtonDisabled,
           ]}
-          disabled={(meetStatus === 'pending' && isMeetSender) || (meetStatus === 'accepted')}
+          disabled={(interestStatus !== 'accepted') || (meetStatus === 'pending' && isMeetSender) || (meetStatus === 'accepted')}
           onPress={async () => {
+            if (interestStatus !== 'accepted') return;
             if (meetStatus === 'accepted' && meetLink) {
               try { await Linking.openURL(meetLink); } catch { Alert.alert('Error', 'Unable to open meeting link'); }
               return;
@@ -1020,7 +1021,7 @@ const MatchDetails = () => {
           }}
         >
           <Image source={icons.videoCamera2} contentFit="contain" style={styles.actionIcon} />
-          <Text style={[styles.actionText, ((meetStatus === 'pending' && isMeetSender) || (meetStatus === 'accepted')) && styles.actionTextDisabled]}>
+          <Text style={[styles.actionText, ((interestStatus !== 'accepted') || (meetStatus === 'pending' && isMeetSender) || (meetStatus === 'accepted')) && styles.actionTextDisabled]}>
             {(meetStatus === 'accepted') ? 'Approved' : ((meetStatus === 'pending' && isMeetSender) ? 'Requested' : 'Video meet')}
           </Text>
         </TouchableOpacity>

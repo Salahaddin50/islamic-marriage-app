@@ -34,7 +34,7 @@ const MeetRequestsScreen = () => {
       .in('user_id', uniqueIds);
     const map: Record<string, { name: string; avatar?: any }> = {};
     (data || []).forEach((row: any) => {
-      const name = [row.first_name, row.last_name].filter(Boolean).join(' ').trim() || 'Member';
+      const name = (row.first_name || 'Member').toString();
       map[row.user_id] = {
         name,
         avatar: row.profile_picture_url

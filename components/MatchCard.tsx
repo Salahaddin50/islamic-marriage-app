@@ -74,7 +74,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
         style={[styles.background, backgroundStyle]}
       >
         <View style={[styles.viewContainer, viewContainerStyle]}>
-          <Text style={[styles.name, nameStyle]}>{name}, {age}</Text>
+          <Text style={[styles.name, nameStyle]}>{name.length > 20 ? name.slice(0, 20) + '…' : name}, {age}</Text>
           {(height || weight) ? (
             <Text style={[styles.position, positionStyle]}>{[height, weight].filter(Boolean).join(', ')}</Text>
           ) : null}

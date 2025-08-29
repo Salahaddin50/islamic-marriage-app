@@ -47,7 +47,7 @@ const InterestsScreen = () => {
       .in('user_id', uniqueIds);
     const map: Record<string, { name: string; age?: number; avatar?: any }> = {};
     (data || []).forEach((row: any) => {
-      const name = [row.first_name, row.last_name].filter(Boolean).join(' ').trim() || 'Member';
+      const name = (row.first_name || 'Member').toString();
       map[row.user_id] = {
         name,
         age: calculateAge(row.date_of_birth),
@@ -230,7 +230,7 @@ const InterestsScreen = () => {
                         </TouchableOpacity>
                       </View>
                     </View>
-                    <View style={{ position: 'absolute', right: 4, alignItems: 'center' }}>
+                    <View style={{ position: 'absolute', right: 4, alignItems: 'flex-end', width: SIZES.width - 16 }}>
                       <Text style={styles.lastMessageTime}>{formatChatTime(row.created_at)}</Text>
                     </View>
                   </View>
@@ -273,7 +273,7 @@ const InterestsScreen = () => {
                         </TouchableOpacity>
                       </View>
                     </View>
-                    <View style={{ position: 'absolute', right: 4, alignItems: 'center' }}>
+                    <View style={{ position: 'absolute', right: 4, alignItems: 'flex-end', width: SIZES.width - 16 }}>
                       <Text style={styles.lastMessageTime}>{formatChatTime(row.created_at)}</Text>
                     </View>
                   </View>
@@ -316,7 +316,7 @@ const InterestsScreen = () => {
                         </TouchableOpacity>
                       </View>
                     </View>
-                    <View style={{ position: 'absolute', right: 4, alignItems: 'center' }}>
+                    <View style={{ position: 'absolute', right: 4, alignItems: 'flex-end', width: SIZES.width - 16 }}>
                       <Text style={styles.lastMessageTime}>{formatChatTime(row.updated_at)}</Text>
                     </View>
                   </View>
