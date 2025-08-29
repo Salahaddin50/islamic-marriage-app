@@ -1,134 +1,112 @@
-import { View, Text, StyleSheet, Modal, TouchableWithoutFeedback, Image, TouchableOpacity } from 'react-native';
-import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, icons, illustrations, SIZES } from '@/constants';
 import { NavigationProp } from '@react-navigation/native';
 import { useNavigation } from 'expo-router';
-import WebMapFallback from '@/components/WebMapFallback';
+import { InterestsService, InterestRecord } from '@/src/services/interests';
+import { supabase } from '@/src/config/supabase';
 import Button from '@/components/Button';
 
-// Web-compatible Maps Screen
+// Interests list page with three tabs
 const Maps = () => {
   const navigation = useNavigation<NavigationProp<any>>();
-  const [modalVisible, setModalVisible] = useState(true);
-  const [directionModalVisible, setDirectionModalVisible] = useState(false);
+  const [incoming, setIncoming] = useState<InterestRecord[]>([]);
+  const [outgoing, setOutgoing] = useState<InterestRecord[]>([]);
+  const [approved, setApproved] = useState<InterestRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'received' | 'sent' | 'approved'>('received');
 
-  const renderDirectionModal = () => {
-    return (
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={directionModalVisible}>
-        <TouchableWithoutFeedback
-          onPress={() => setDirectionModalVisible(false)}>
-          <View style={styles.modalContainer}>
-            <View style={[styles.modalSubContainer,
-            {
-              height: 420,
-              width: SIZES.width * 0.8,
-              backgroundColor: COLORS.white,
-            }]}>
-              <View style={styles.backgroundIllustration}>
-                <Image
-                  source={illustrations.background}
-                  resizeMode='contain'
-                  style={styles.modalIllustration}
-                />
-                <Image
-                  source={icons.location2}
-                  resizeMode='contain'
-                  style={styles.editPencilIcon}
-                />
-              </View>
-              <Text style={styles.modalTitle}>You Have Arrived!</Text>
-              <Text style={[styles.modalSubtitle, {
-                color: COLORS.black,
-              }]}>
-                We have arrived at your match location.
-              </Text>
-              <Button
-                title="Okay"
-                filled
-                onPress={() => {
-                  setDirectionModalVisible(false)
-                }}
-                style={styles.successBtn}
-              />
-            </View>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
-    )
-  }
+  const loadAll = async () => {
+    try {
+      setLoading(true);
+      const [inc, out, appr] = await Promise.all([
+        InterestsService.listIncoming(),
+        InterestsService.listOutgoing(),
+        InterestsService.listApproved(),
+      ]);
+      setIncoming(inc);
+      setOutgoing(out);
+      setApproved(appr);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const renderModal = () => {
-    return (
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}>
-        <TouchableWithoutFeedback
-          onPress={() => setModalVisible(false)}>
-          <View style={styles.modalContainer}>
-            <View style={[styles.modalSubContainer, {
-              backgroundColor: COLORS.white,
-            }]}>
-              <View style={styles.backgroundIllustration}>
-                <Image
-                  source={illustrations.background}
-                  resizeMode='contain'
-                  style={styles.modalIllustration}
-                />
-                <Image
-                  source={icons.location2}
-                  resizeMode='contain'
-                  style={styles.editPencilIcon}
-                />
-              </View>
-              <Text style={styles.modalTitle}>Enable Location</Text>
-              <Text style={[styles.modalSubtitle, {
-                color: COLORS.black,
-              }]}>
-                We need location access to find the nearest members around you.
-              </Text>
-              <Button
-                title="Enable location"
-                filled
-                onPress={() => {
-                  setModalVisible(false)
-                }}
-                style={styles.successBtn}
-              />
-              <Button
-                title="Cancel"
-                onPress={() => {
-                  setModalVisible(false)
-                }}
-                textColor={COLORS.primary}
-                style={{
-                  width: "100%",
-                  marginTop: 12,
-                  borderRadius: 32,
-                  backgroundColor: COLORS.tansparentPrimary,
-                  borderColor: COLORS.tansparentPrimary
-                }}
-              />
-            </View>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
-    )
-  }
+  const accept = async (id: string) => {
+    await InterestsService.accept(id);
+    await loadAll();
+  };
+
+  const reject = async (id: string) => {
+    await InterestsService.reject(id);
+    await loadAll();
+  };
+
+  useEffect(() => {
+    loadAll();
+  }, []);
 
   return (
     <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
       <View style={[styles.container, { backgroundColor: COLORS.white }]}>
-        <WebMapFallback
-          onSearch={() => navigation.navigate('search' as never)}
-          onDirectionPress={() => setDirectionModalVisible(true)}
-        />
-        {renderModal()}
-        {renderDirectionModal()}
+        <Text style={styles.modalTitle}>Interests</Text>
+        <View style={styles.tabsRow}>
+          <TouchableOpacity onPress={() => setActiveTab('received')} style={[styles.tabChip, activeTab==='received' && styles.tabChipActive]}>
+            <Text style={[styles.tabText, activeTab==='received' && styles.tabTextActive]}>Received</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setActiveTab('sent')} style={[styles.tabChip, activeTab==='sent' && styles.tabChipActive]}>
+            <Text style={[styles.tabText, activeTab==='sent' && styles.tabTextActive]}>Sent</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setActiveTab('approved')} style={[styles.tabChip, activeTab==='approved' && styles.tabChipActive]}>
+            <Text style={[styles.tabText, activeTab==='approved' && styles.tabTextActive]}>Approved</Text>
+          </TouchableOpacity>
+        </View>
+        <ScrollView style={{ flex: 1, width: '100%' }}>
+          {loading ? (
+            <Text style={styles.modalSubtitle}>Loading…</Text>
+          ) : (
+            <>
+              {activeTab === 'received' && (
+                incoming.length === 0 ? (
+                  <Text style={styles.modalSubtitle}>No received interests</Text>
+                ) : (
+                  incoming.map((row) => (
+                    <View key={row.id} style={styles.rowItem}>
+                      <Text style={styles.rowTitle}>From: {row.sender_id}</Text>
+                      <View style={styles.rowActions}>
+                        <Button title="Accept" filled onPress={() => accept(row.id)} style={styles.actionBtn} />
+                        <Button title="Reject" onPress={() => reject(row.id)} textColor={COLORS.primary} style={[styles.actionBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.tansparentPrimary }]} />
+                      </View>
+                    </View>
+                  ))
+                )
+              )}
+              {activeTab === 'sent' && (
+                outgoing.length === 0 ? (
+                  <Text style={styles.modalSubtitle}>No sent interests</Text>
+                ) : (
+                  outgoing.map((row) => (
+                    <View key={row.id} style={styles.rowItem}>
+                      <Text style={styles.rowTitle}>To: {row.receiver_id} • {row.status}</Text>
+                    </View>
+                  ))
+                )
+              )}
+              {activeTab === 'approved' && (
+                approved.length === 0 ? (
+                  <Text style={styles.modalSubtitle}>No approved interests</Text>
+                ) : (
+                  approved.map((row) => (
+                    <View key={row.id} style={styles.rowItem}>
+                      <Text style={styles.rowTitle}>With: {row.sender_id} ↔ {row.receiver_id}</Text>
+                    </View>
+                  ))
+                )
+              )}
+            </>
+          )}
+        </ScrollView>
       </View>
     </SafeAreaView>
   );

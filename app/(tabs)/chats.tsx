@@ -71,26 +71,7 @@ const Inbox = () => {
             color: COLORS.greyscale900
           }]}>Inbox</Text>
         </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity>
-            <Image
-              source={icons.search}
-              contentFit='contain'
-              style={[styles.searchIcon, {
-                tintColor: COLORS.greyscale900
-              }]}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <Image
-              source={icons.moreCircle}
-              contentFit='contain'
-              style={[styles.moreCircleIcon, {
-                tintColor: COLORS.greyscale900
-              }]}
-            />
-          </TouchableOpacity>
-        </View>
+        <View style={styles.headerRight} />
       </View>
     )
   }

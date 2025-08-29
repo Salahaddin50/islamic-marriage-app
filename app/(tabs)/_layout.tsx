@@ -87,7 +87,7 @@ const TabLayout = () => {
         }}
       />
       <Tabs.Screen
-        name="maps"
+        name="interests"
         options={{
           title: "",
           tabBarIcon: ({ focused }: { focused: boolean }) => {
@@ -110,7 +110,7 @@ const TabLayout = () => {
                 <Text style={{
                   ...FONTS.body4,
                   color: focused ? COLORS.primary : COLORS.gray3,
-                }}>Interest</Text>
+                }}>Requests</Text>
               </View>
             )
           },
@@ -207,6 +207,13 @@ const TabLayout = () => {
               </View>
             )
           },
+        }}
+      />
+      {/* Hide legacy maps tab without deleting files */}
+      <Tabs.Screen
+        name="maps"
+        options={{
+          href: null,
         }}
       />
     </Tabs>

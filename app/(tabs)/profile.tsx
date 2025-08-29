@@ -37,15 +37,7 @@ const Profile = () => {
             color: COLORS.greyscale900
           }]}>Profile</Text>
         </View>
-        <TouchableOpacity>
-          <Image
-            source={icons.moreCircle}
-            contentFit='contain'
-            style={[styles.headerIcon, {
-              tintColor: COLORS.greyscale900
-            }]}
-          />
-        </TouchableOpacity>
+        <View />
       </TouchableOpacity>
     )
   }

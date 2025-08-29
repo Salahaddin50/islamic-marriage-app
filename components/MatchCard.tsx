@@ -22,6 +22,7 @@ interface MatchCardProps {
   nameStyle?: StyleProp<TextStyle>;
   positionStyle?: StyleProp<TextStyle>;
   viewContainerStyle?: StyleProp<ViewStyle>;
+  locked?: boolean;
 }
 
 const MatchCard: React.FC<MatchCardProps> = ({
@@ -41,6 +42,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
   nameStyle,
   positionStyle,
   viewContainerStyle,
+  locked = false,
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -57,6 +59,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
         contentFit="cover"
         contentPosition="top"
         style={[styles.image, imageStyle]}
+        blurRadius={locked ? 15 : 0}
         cachePolicy="memory-disk"
         transition={200}
         onLoadStart={() => setIsLoading(true)}

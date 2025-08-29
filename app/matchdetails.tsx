@@ -10,6 +10,7 @@ import { supabase } from '@/src/config/supabase';
 import { getResponsiveFontSize, getResponsiveSpacing, safeGoBack } from '@/utils/responsive';
 import { DEFAULT_VIDEO_THUMBNAIL } from '@/constants/defaultThumbnails';
 import MatchDetailsSkeleton from '@/components/MatchDetailsSkeleton';
+import { InterestsService, InterestStatus } from '@/src/services/interests';
 
 // Types for user profile data (comprehensive - matches database)
 interface UserProfile {
@@ -82,6 +83,9 @@ const MatchDetails = () => {
   const [userMedia, setUserMedia] = useState<MediaReference[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [interestStatus, setInterestStatus] = useState<InterestStatus>('none');
+  const [isInterestSender, setIsInterestSender] = useState(false);
+  const [interestRecordId, setInterestRecordId] = useState<string | null>(null);
   const [thumbnailErrors, setThumbnailErrors] = useState<{ [key: string]: boolean }>({});
   const [thumbnailLoading, setThumbnailLoading] = useState<{ [key: string]: boolean }>({});
   const [silhouetteFailedToLoad, setSilhouetteFailedToLoad] = useState<{ [key: string]: boolean }>({});
@@ -108,6 +112,19 @@ const MatchDetails = () => {
       setError('No valid user ID provided. Please go back and try again.');
       setIsLoading(false);
     }
+  }, [userId]);
+
+  // Load interest status for this profile
+  useEffect(() => {
+    (async () => {
+      if (!userId) return;
+      try {
+        const res = await InterestsService.getStatusForTarget(userId);
+        setInterestStatus(res.status);
+        setIsInterestSender(res.isSender);
+        setInterestRecordId(res.record?.id || null);
+      } catch {}
+    })();
   }, [userId]);
 
   const loadUserDetails = async (targetUserId: string) => {
@@ -452,12 +469,11 @@ const MatchDetails = () => {
             <TouchableOpacity 
               key={media.id} 
               onPress={() => {
-                console.log('🎯 Slider item clicked:', { type: media.type, id: media.id });
+                const unlocked = interestStatus === 'accepted';
+                if (!unlocked) return;
                 if (media.type === 'video') {
-                  // Open video in fullscreen modal
                   openFullscreenImage(media.videoUrl, 'video');
                 } else {
-                  // Open photo in fullscreen modal
                   openFullscreenImage(media.uri);
                 }
               }}
@@ -470,6 +486,7 @@ const MatchDetails = () => {
                     : media.uri 
                 }}
                 style={styles.autoSliderImage}
+                blurRadius={interestStatus !== 'accepted' && media.type === 'photo' && media.id !== 'silhouette' ? 15 : 0}
                 contentFit="cover"
                 contentPosition="top"
                 cachePolicy="memory-disk"
@@ -494,6 +511,7 @@ const MatchDetails = () => {
                   }
                 }}
               />
+              {/* No text overlay; blur already applied above. Silhouette never blurred. */}
               
               {/* Video indicator overlay */}
               {media.type === 'video' && (
@@ -534,15 +552,7 @@ const MatchDetails = () => {
                     />
                 </TouchableOpacity>
 
-                <View style={styles.iconContainer}>
-          <TouchableOpacity onPress={() => setIsFavorite(!isFavorite)}>
-                        <Image
-                            source={isFavorite ? icons.heart2 : icons.heart2Outline}
-              contentFit="contain" 
-                            style={styles.bookmarkIcon}
-                        />
-                    </TouchableOpacity>
-                </View>
+                {/* Removed favorite button per request */}
             </View>
     );
   };
@@ -616,7 +626,10 @@ const MatchDetails = () => {
                             <TouchableOpacity
                    key={media.id} 
                    style={styles.mediaItem}
-                   onPress={() => openFullscreenImage(media.external_url, media.media_type)}
+                   onPress={() => {
+                     if (interestStatus !== 'accepted') return;
+                     openFullscreenImage(media.external_url, media.media_type)
+                   }}
                  >
                    {thumbnailLoading[media.id] && (
                      <View style={styles.thumbnailLoadingContainer}>
@@ -630,6 +643,7 @@ const MatchDetails = () => {
                        styles.mediaImage,
                        thumbnailErrors[media.id] && styles.mediaImageError
                      ]}
+                     blurRadius={interestStatus !== 'accepted' && media.media_type === 'photo' ? 15 : 0}
                      contentFit="cover"
                      cachePolicy="memory-disk"
                      transition={200}
@@ -900,17 +914,46 @@ const MatchDetails = () => {
       {/* Floating footer actions */}
       <View style={styles.fabContainer}>
         <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => {
-            setIsFavorite(true);
+          style={[
+            styles.actionButton,
+            (interestStatus === 'pending' && isInterestSender) && { opacity: 0.6 },
+            (interestStatus === 'accepted') && { backgroundColor: COLORS.success, opacity: 0.9 }
+          ]}
+          disabled={(interestStatus === 'pending' && isInterestSender) || (interestStatus === 'accepted')}
+          onPress={async () => {
+            try {
+              const current = await InterestsService.getStatusForTarget(userId);
+              if (current.status === 'pending') {
+                setInterestStatus('pending');
+                setIsInterestSender(current.isSender);
+                setInterestRecordId(current.record?.id || null);
+                return;
+              }
+              if (current.status === 'accepted') {
+                setInterestStatus('accepted');
+                setIsInterestSender(current.isSender);
+                setInterestRecordId(current.record?.id || null);
+                return;
+              }
+
+              const res = await InterestsService.sendInterest(userId);
+              setInterestStatus('pending');
+              setIsInterestSender(true);
+              setInterestRecordId(res?.id || null);
+            } catch (e) {
+              Alert.alert('Error', 'Unable to send interest');
+            }
           }}
         >
           <Image source={icons.heart} contentFit="contain" style={styles.actionIcon} />
-          <Text style={styles.actionText}>Interest</Text>
+          <Text style={styles.actionText}>
+            {(interestStatus === 'accepted') ? 'Approved' : ((interestStatus === 'pending' && isInterestSender) ? 'Submitted' : 'Ask Photo')}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.actionButton}
+          style={[styles.actionButton, !(interestStatus === 'accepted') && { opacity: 0.6 }]}
+          disabled={!(interestStatus === 'accepted')}
           onPress={() => {
             Alert.alert('Video Meet', 'Starting video meet...');
           }}
@@ -920,7 +963,8 @@ const MatchDetails = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.actionButton}
+          style={[styles.actionButton, !(interestStatus === 'accepted') && { opacity: 0.6 }]}
+          disabled={!(interestStatus === 'accepted')}
           onPress={() => {
             Alert.alert('Message', 'Opening chat...');
           }}
@@ -1201,6 +1245,25 @@ const styles = StyleSheet.create({
     autoSliderImage: {
         width: SIZES.width,
         height: SIZES.height * 0.45,
+    },
+    lockOverlayDetails: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.35)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    lockOverlayText: {
+        color: COLORS.white,
+        fontFamily: 'bold',
+        fontSize: getResponsiveFontSize(14),
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 16,
     },
     pagination: {
         flexDirection: 'row',

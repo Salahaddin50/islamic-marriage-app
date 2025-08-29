@@ -14,6 +14,7 @@ import { Database } from '@/src/types/database.types';
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { useMatchStore } from '@/src/store';
+import { InterestsService, InterestStatus } from '@/src/services/interests';
 
 // Cached profile image to prevent reloading
 let cachedProfileImageUrl: string | null = null;
@@ -201,6 +202,7 @@ type UserProfileWithMedia = {
   country?: string;
   city?: string;
   image: any;
+  unlocked?: boolean; // computed: whether media should be visible
 };
 
 type DatabaseProfile = {
@@ -755,6 +757,21 @@ const HomeScreen = () => {
       }
 
       if (profilesData && profilesData.length > 0) {
+        // Preload current user's outgoing and incoming interests to compute unlocks
+        let outgoing: Record<string, InterestStatus> = {};
+        let incomingAcceptedFrom: Set<string> = new Set();
+        try {
+          const { data: { user: me } } = await supabase.auth.getUser();
+          if (me) {
+            const [outgoingList, incomingList] = await Promise.all([
+              InterestsService.listOutgoing(),
+              InterestsService.listIncoming(),
+            ]);
+            outgoingList.forEach(r => { outgoing[r.receiver_id] = r.status as InterestStatus; });
+            incomingList.filter(r => r.status === 'accepted').forEach(r => incomingAcceptedFrom.add(r.sender_id));
+          }
+        } catch {}
+
         const usersWithMedia = profilesData.map((profile) => {
           // Calculate age from date_of_birth
           const birthDate = new Date(profile.date_of_birth);
@@ -782,7 +799,8 @@ const HomeScreen = () => {
             weight: profile.weight_kg ? `${profile.weight_kg}kg` : undefined,
             country: profile.country || undefined,
             city: profile.city || undefined,
-            image: imageUrl ? { uri: imageUrl } : (isFemale ? images.femaleSilhouette : images.maleSilhouette)
+            image: imageUrl ? { uri: imageUrl } : (isFemale ? images.femaleSilhouette : images.maleSilhouette),
+            unlocked: (outgoing[(profile as any).user_id] === 'accepted') || incomingAcceptedFrom.has((profile as any).user_id)
           };
 
           return processedProfile;
@@ -973,6 +991,7 @@ const HomeScreen = () => {
 
   const renderItem = React.useCallback(({ item }: { item: UserProfileWithMedia }) => {
     const cardHeight = isGalleryView ? baseHeight * 1.3 : baseHeight; // More vertical in gallery view
+    const isSilhouette = !item.image?.uri || item.image === images.femaleSilhouette || item.image === images.maleSilhouette;
     return (
       <MatchCard
         name={item.name}
@@ -985,6 +1004,7 @@ const HomeScreen = () => {
         onPress={() => navigation.navigate("matchdetails", { userId: item.user_id })}
         containerStyle={[styles.cardContainer, { width: cardWidth, height: cardHeight }]}
         imageStyle={{ resizeMode: 'cover', alignSelf: 'center' }} // Ensure full photo display, top-aligned
+        locked={!item.unlocked && !isSilhouette}
       />
     );
   }, [navigation, cardWidth, baseHeight, isGalleryView]);
