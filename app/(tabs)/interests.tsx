@@ -18,10 +18,10 @@ const InterestsScreen = () => {
   const [loading, setLoading] = useState(true);
   const layout = useWindowDimensions();
   const [index, setIndex] = useState(0);
-  const [routes] = useState([
-    { key: 'received', title: 'Received' },
-    { key: 'sent', title: 'Sent' },
-    { key: 'approved', title: 'Approved' },
+  const [routes, setRoutes] = useState([
+    { key: 'received', title: 'Received (0)' },
+    { key: 'sent', title: 'Sent (0)' },
+    { key: 'approved', title: 'Approved (0)' },
   ]);
 
   const [profilesById, setProfilesById] = useState<Record<string, { name: string; age?: number; avatar?: any }>>({});
@@ -131,6 +131,42 @@ const InterestsScreen = () => {
     loadAll();
   }, []);
 
+  useEffect(() => {
+    let channel: any = null;
+    let isMounted = true;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      const myId = user?.id;
+      if (!myId) return;
+      channel = supabase
+        .channel('interests-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'interests' }, (payload: any) => {
+          const row = (payload.new || payload.old) as InterestRecord | undefined;
+          if (!row) return;
+          if (row.sender_id === myId || row.receiver_id === myId) {
+            // Relevant change for me → refresh lists
+            loadAll();
+          }
+        })
+        .subscribe();
+    })();
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+      isMounted = false;
+    };
+  }, []);
+
+  // Keep tab titles in sync with counts so Web/native always display counts
+  useEffect(() => {
+    setRoutes([
+      { key: 'received', title: `Received (${incoming.length})` },
+      { key: 'sent', title: `Sent (${outgoing.length})` },
+      { key: 'approved', title: `Approved (${approved.length})` },
+    ]);
+  }, [incoming.length, outgoing.length, approved.length]);
+
   const renderTabBar = (props: any) => (
     <TabBar
       {...props}
@@ -138,9 +174,16 @@ const InterestsScreen = () => {
       style={{ backgroundColor: COLORS.white }}
       activeColor={COLORS.primary}
       inactiveColor={COLORS.greyscale900}
-      renderLabel={({ route, focused }: any) => (
-        <Text style={{ color: focused ? COLORS.primary : 'gray', fontSize: 16, fontFamily: 'bold' }}>{route.title}</Text>
-      )}
+      renderLabel={({ route, focused }: any) => {
+        let count = 0;
+        if (route.key === 'received') count = incoming.length;
+        else if (route.key === 'sent') count = outgoing.length;
+        else if (route.key === 'approved') count = approved.length;
+        const label = `${route.title} (${count})`;
+        return (
+          <Text style={{ color: focused ? COLORS.primary : 'gray', fontSize: 16, fontFamily: 'bold' }}>{label}</Text>
+        );
+      }}
     />
   );
 

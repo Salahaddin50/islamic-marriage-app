@@ -757,18 +757,24 @@ const HomeScreen = () => {
       }
 
       if (profilesData && profilesData.length > 0) {
-        // Preload current user's outgoing and incoming interests to compute unlocks
-        let outgoing: Record<string, InterestStatus> = {};
-        let incomingAcceptedFrom: Set<string> = new Set();
+        // Preload interests to compute media visibility
+        let pendingIncomingFrom: Set<string> = new Set();
+        let approvedWith: Set<string> = new Set();
         try {
           const { data: { user: me } } = await supabase.auth.getUser();
           if (me) {
-            const [outgoingList, incomingList] = await Promise.all([
+            const [outgoingPending, incomingPending, approvedList] = await Promise.all([
               InterestsService.listOutgoing(),
               InterestsService.listIncoming(),
+              InterestsService.listApproved(),
             ]);
-            outgoingList.forEach(r => { outgoing[r.receiver_id] = r.status as InterestStatus; });
-            incomingList.filter(r => r.status === 'accepted').forEach(r => incomingAcceptedFrom.add(r.sender_id));
+            // Incoming pending interests = other users who sent to me → their photos should be open
+            incomingPending.forEach(r => pendingIncomingFrom.add(r.sender_id));
+            // Approved interests → photos open both ways
+            approvedList.forEach(r => {
+              if (r.sender_id === me.id) approvedWith.add(r.receiver_id);
+              else if (r.receiver_id === me.id) approvedWith.add(r.sender_id);
+            });
           }
         } catch {}
 
@@ -800,7 +806,7 @@ const HomeScreen = () => {
             country: profile.country || undefined,
             city: profile.city || undefined,
             image: imageUrl ? { uri: imageUrl } : (isFemale ? images.femaleSilhouette : images.maleSilhouette),
-            unlocked: (outgoing[(profile as any).user_id] === 'accepted') || incomingAcceptedFrom.has((profile as any).user_id)
+            unlocked: approvedWith.has((profile as any).user_id) || pendingIncomingFrom.has((profile as any).user_id)
           };
 
           return processedProfile;
