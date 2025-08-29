@@ -453,6 +453,7 @@ const MatchDetails = () => {
   // Custom AutoSlider component with tap functionality
   const renderAutoSlider = () => {
     const sliderImages = getSliderImages();
+    const canViewPhotos = interestStatus === 'accepted' || (interestStatus === 'pending' && !isInterestSender);
     
     // AutoSlider debug (removed for cleaner output)
     
@@ -469,11 +470,11 @@ const MatchDetails = () => {
             <TouchableOpacity 
               key={media.id} 
               onPress={() => {
-                const unlocked = interestStatus === 'accepted';
-                if (!unlocked) return;
                 if (media.type === 'video') {
+                  if (interestStatus !== 'accepted') return;
                   openFullscreenImage(media.videoUrl, 'video');
                 } else {
+                  if (!canViewPhotos) return;
                   openFullscreenImage(media.uri);
                 }
               }}
@@ -486,7 +487,7 @@ const MatchDetails = () => {
                     : media.uri 
                 }}
                 style={styles.autoSliderImage}
-                blurRadius={interestStatus !== 'accepted' && media.type === 'photo' && media.id !== 'silhouette' ? 15 : 0}
+                blurRadius={!canViewPhotos && media.type === 'photo' && media.id !== 'silhouette' ? 15 : 0}
                 contentFit="cover"
                 contentPosition="top"
                 cachePolicy="memory-disk"
@@ -627,7 +628,9 @@ const MatchDetails = () => {
                    key={media.id} 
                    style={styles.mediaItem}
                    onPress={() => {
-                     if (interestStatus !== 'accepted') return;
+                     const canViewPhotos = interestStatus === 'accepted' || (interestStatus === 'pending' && !isInterestSender);
+                     if (media.media_type === 'video' && interestStatus !== 'accepted') return;
+                     if (media.media_type === 'photo' && !canViewPhotos) return;
                      openFullscreenImage(media.external_url, media.media_type)
                    }}
                  >
@@ -643,7 +646,7 @@ const MatchDetails = () => {
                        styles.mediaImage,
                        thumbnailErrors[media.id] && styles.mediaImageError
                      ]}
-                     blurRadius={interestStatus !== 'accepted' && media.media_type === 'photo' ? 15 : 0}
+                     blurRadius={(interestStatus !== 'accepted' && media.media_type === 'video') ? 0 : ((interestStatus === 'accepted' || (interestStatus === 'pending' && !isInterestSender)) ? 0 : (media.media_type === 'photo' ? 15 : 0))}
                      contentFit="cover"
                      cachePolicy="memory-disk"
                      transition={200}
@@ -911,13 +914,15 @@ const MatchDetails = () => {
           </TouchableOpacity>
         </View>
       </Modal>
+      {/* White backdrop strip to hide underlying content while scrolling */}
+      <View style={styles.fabBackdrop} />
       {/* Floating footer actions */}
       <View style={styles.fabContainer}>
         <TouchableOpacity
           style={[
             styles.actionButton,
-            (interestStatus === 'pending' && isInterestSender) && { opacity: 0.6 },
-            (interestStatus === 'accepted') && { backgroundColor: COLORS.success, opacity: 0.9 }
+            (interestStatus === 'accepted') && { backgroundColor: COLORS.success },
+            ((interestStatus === 'pending' && isInterestSender) || (interestStatus === 'accepted')) && styles.actionButtonDisabled,
           ]}
           disabled={(interestStatus === 'pending' && isInterestSender) || (interestStatus === 'accepted')}
           onPress={async () => {
@@ -946,31 +951,31 @@ const MatchDetails = () => {
           }}
         >
           <Image source={icons.heart} contentFit="contain" style={styles.actionIcon} />
-          <Text style={styles.actionText}>
-            {(interestStatus === 'accepted') ? 'Approved' : ((interestStatus === 'pending' && isInterestSender) ? 'Submitted' : 'Ask Photo')}
+          <Text style={[styles.actionText, ((interestStatus === 'pending' && isInterestSender) || (interestStatus === 'accepted')) && styles.actionTextDisabled]}>
+            {(interestStatus === 'accepted') ? 'Approved' : ((interestStatus === 'pending' && isInterestSender) ? 'Requested' : 'Ask Photo')}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.actionButton, !(interestStatus === 'accepted') && { opacity: 0.6 }]}
+          style={[styles.actionButton, !(interestStatus === 'accepted') && styles.actionButtonDisabled]}
           disabled={!(interestStatus === 'accepted')}
           onPress={() => {
             Alert.alert('Video Meet', 'Starting video meet...');
           }}
         >
           <Image source={icons.videoCamera2} contentFit="contain" style={styles.actionIcon} />
-          <Text style={styles.actionText}>Video meet</Text>
+          <Text style={[styles.actionText, !(interestStatus === 'accepted') && styles.actionTextDisabled]}>Video meet</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.actionButton, !(interestStatus === 'accepted') && { opacity: 0.6 }]}
+          style={[styles.actionButton, !(interestStatus === 'accepted') && styles.actionButtonDisabled]}
           disabled={!(interestStatus === 'accepted')}
           onPress={() => {
             Alert.alert('Message', 'Opening chat...');
           }}
         >
           <Image source={icons.chat} contentFit="contain" style={styles.actionIcon} />
-          <Text style={styles.actionText}>Message</Text>
+          <Text style={[styles.actionText, !(interestStatus === 'accepted') && styles.actionTextDisabled]}>Message</Text>
         </TouchableOpacity>
       </View>
         </View>
@@ -1029,7 +1034,7 @@ const styles = StyleSheet.create({
         marginBottom: getResponsiveSpacing(20)
     },
     positionText: {
-        fontSize: getResponsiveFontSize(16),
+        fontSize: getResponsiveFontSize(18),
         fontFamily: "medium",
         color: COLORS.grayscale700,
         marginRight: 16
@@ -1041,7 +1046,7 @@ const styles = StyleSheet.create({
         borderRadius: 12
     },
     viewText: {
-        fontSize: getResponsiveFontSize(14),
+        fontSize: getResponsiveFontSize(16),
         fontFamily: "medium",
         color: COLORS.primary
     },
@@ -1051,14 +1056,14 @@ const styles = StyleSheet.create({
         marginBottom: getResponsiveSpacing(16)
     },
     subtitle: {
-        fontSize: getResponsiveFontSize(18),
+        fontSize: getResponsiveFontSize(20),
         fontFamily: "bold",
         color: COLORS.greyscale900,
         marginTop: getResponsiveSpacing(20),
         marginBottom: getResponsiveSpacing(12)
     },
     description: {
-        fontSize: getResponsiveFontSize(15),
+        fontSize: getResponsiveFontSize(17),
         fontFamily: "regular",
         color: COLORS.grayscale700,
         lineHeight: 22,
@@ -1079,7 +1084,7 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     buttonText: {
-        fontSize: getResponsiveFontSize(12),
+        fontSize: getResponsiveFontSize(14),
         color: COLORS.white,
         fontFamily: 'medium',
     },
@@ -1096,13 +1101,13 @@ const styles = StyleSheet.create({
         borderBottomColor: COLORS.grayscale400
     },
     detailLabel: {
-        fontSize: getResponsiveFontSize(14),
+        fontSize: getResponsiveFontSize(16),
         fontFamily: 'medium',
         color: COLORS.grayscale700,
         flex: 1
     },
     detailValue: {
-        fontSize: getResponsiveFontSize(14),
+        fontSize: getResponsiveFontSize(16),
         fontFamily: 'regular',
         color: COLORS.black,
         flex: 1,
@@ -1110,12 +1115,12 @@ const styles = StyleSheet.create({
     },
     loadingText: {
         marginTop: 12,
-        fontSize: getResponsiveFontSize(16),
+        fontSize: getResponsiveFontSize(18),
         fontFamily: 'regular',
         color: COLORS.gray,
     },
     errorText: {
-        fontSize: getResponsiveFontSize(16),
+        fontSize: getResponsiveFontSize(18),
         fontFamily: 'regular',
         color: COLORS.red,
         textAlign: 'center',
@@ -1128,7 +1133,7 @@ const styles = StyleSheet.create({
         borderRadius: 25
     },
     backButtonText: {
-        fontSize: getResponsiveFontSize(16),
+        fontSize: getResponsiveFontSize(18),
         fontFamily: 'medium',
         color: COLORS.white
     },
@@ -1136,14 +1141,14 @@ const styles = StyleSheet.create({
         height: getResponsiveSpacing(50)
     },
     cleanDetailText: {
-        fontSize: getResponsiveFontSize(15),
+        fontSize: getResponsiveFontSize(17),
         fontFamily: "medium", // Make the entire text (including data) bold
         color: COLORS.grayscale700,
         marginBottom: getResponsiveSpacing(8),
         lineHeight: 22
     },
     cleanDetailLabel: {
-        fontSize: getResponsiveFontSize(15),
+        fontSize: getResponsiveFontSize(17),
         fontFamily: "medium",
         color: COLORS.black
     },
@@ -1185,7 +1190,7 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     playIconText: {
-        fontSize: getResponsiveFontSize(16),
+        fontSize: getResponsiveFontSize(18),
         color: COLORS.primary,
         fontFamily: 'bold',
         marginLeft: 2, // Slight offset to center the triangle visually
@@ -1218,7 +1223,7 @@ const styles = StyleSheet.create({
         zIndex: 2,
     },
     thumbnailErrorText: {
-        fontSize: getResponsiveFontSize(24),
+        fontSize: getResponsiveFontSize(26),
         color: COLORS.grayscale700,
         fontFamily: 'bold',
     },
@@ -1259,7 +1264,7 @@ const styles = StyleSheet.create({
     lockOverlayText: {
         color: COLORS.white,
         fontFamily: 'bold',
-        fontSize: getResponsiveFontSize(14),
+        fontSize: getResponsiveFontSize(16),
         backgroundColor: 'rgba(0,0,0,0.5)',
         paddingHorizontal: 10,
         paddingVertical: 6,
@@ -1278,6 +1283,14 @@ const styles = StyleSheet.create({
         marginHorizontal: 5,
     },
     // Floating footer actions
+    fabBackdrop: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 24,
+        height: 42, // exactly equal to button height
+        backgroundColor: COLORS.white,
+    },
     fabContainer: {
         position: 'absolute',
         left: 16,
@@ -1311,7 +1324,13 @@ const styles = StyleSheet.create({
     actionText: {
         color: COLORS.white,
         fontFamily: 'semiBold',
-        fontSize: getResponsiveFontSize(14),
+        fontSize: getResponsiveFontSize(16),
+    },
+    actionButtonDisabled: {
+        backgroundColor: 'rgba(150, 16, 255, 0.35)',
+    },
+    actionTextDisabled: {
+        color: 'rgba(255,255,255,0.85)'
     },
     // Fullscreen modal styles
     fullscreenContainer: {
@@ -1351,7 +1370,7 @@ const styles = StyleSheet.create({
     },
     closeButtonText: {
         color: COLORS.white,
-        fontSize: getResponsiveFontSize(14),
+        fontSize: getResponsiveFontSize(16),
         fontFamily: 'semibold',
         textAlign: 'center',
     },
@@ -1381,7 +1400,7 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     autoSliderPlayIconText: {
-        fontSize: getResponsiveFontSize(20),
+        fontSize: getResponsiveFontSize(22),
         color: COLORS.primary,
         fontFamily: 'bold',
         marginLeft: 2, // Slight offset to center the triangle visually

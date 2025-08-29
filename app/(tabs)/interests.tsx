@@ -6,6 +6,7 @@ import { Image } from 'expo-image';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import Button from '@/components/Button';
 import { InterestsService, InterestRecord } from '@/src/services/interests';
+import { supabase } from '@/src/config/supabase';
 
 const InterestsScreen = () => {
   const [incoming, setIncoming] = useState<InterestRecord[]>([]);
@@ -20,6 +21,62 @@ const InterestsScreen = () => {
     { key: 'approved', title: 'Approved' },
   ]);
 
+  const [profilesById, setProfilesById] = useState<Record<string, { name: string; age?: number; avatar?: string }>>({});
+
+  const calculateAge = (dateOfBirth?: string | null): number | undefined => {
+    if (!dateOfBirth) return undefined;
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const loadProfiles = async (userIds: string[]) => {
+    const uniqueIds = Array.from(new Set(userIds.filter(Boolean)));
+    if (uniqueIds.length === 0) return;
+    const { data } = await supabase
+      .from('user_profiles')
+      .select('user_id, first_name, last_name, date_of_birth, profile_picture_url')
+      .in('user_id', uniqueIds);
+    const map: Record<string, { name: string; age?: number; avatar?: string }> = {};
+    (data || []).forEach((row: any) => {
+      const name = [row.first_name, row.last_name].filter(Boolean).join(' ').trim() || 'Member';
+      map[row.user_id] = {
+        name,
+        age: calculateAge(row.date_of_birth),
+        avatar: row.profile_picture_url || undefined,
+      };
+    });
+    setProfilesById(prev => ({ ...prev, ...map }));
+  };
+
+  const formatChatTime = (iso?: string) => {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso);
+      const now = new Date();
+      const diffMs = now.getTime() - d.getTime();
+      const oneDayMs = 24 * 60 * 60 * 1000;
+      if (diffMs < oneDayMs) {
+        // HH:mm in 24-hour format
+        const hh = String(d.getHours()).padStart(2, '0');
+        const mm = String(d.getMinutes()).padStart(2, '0');
+        return `${hh}:${mm}`;
+      }
+      // e.g., 3 Aug 25
+      const day = d.getDate();
+      const month = d.toLocaleString(undefined, { month: 'short' });
+      const year = String(d.getFullYear()).slice(-2);
+      return `${day} ${month} ${year}`;
+    } catch {
+      return iso;
+    }
+  };
+
   const loadAll = async () => {
     try {
       setLoading(true);
@@ -31,6 +88,12 @@ const InterestsScreen = () => {
       setIncoming(inc);
       setOutgoing(out);
       setApproved(appr);
+      // Load user profiles to enrich rows
+      const ids: string[] = [];
+      inc.forEach(r => ids.push(r.sender_id));
+      out.forEach(r => ids.push(r.receiver_id));
+      appr.forEach(r => { ids.push(r.sender_id, r.receiver_id); });
+      await loadProfiles(ids);
     } finally {
       setLoading(false);
     }
@@ -82,15 +145,34 @@ const InterestsScreen = () => {
           {incoming.length === 0 ? (
             <Text style={styles.subtitle}>No received interests</Text>
           ) : (
-            incoming.map((row) => (
-              <View key={row.id} style={styles.rowItem}>
-                <Text style={styles.rowTitle}>From: {row.sender_id}</Text>
-                <View style={styles.rowActions}>
-                  <Button title="Accept" filled onPress={() => accept(row.id)} style={styles.actionBtn} />
-                  <Button title="Reject" onPress={() => reject(row.id)} textColor={COLORS.primary} style={[styles.actionBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.tansparentPrimary }]} />
+            incoming.map((row, idx) => {
+              const other = profilesById[row.sender_id];
+              return (
+                <View key={row.id} style={[styles.userContainer, idx % 2 !== 0 ? styles.oddBackground : null]}>
+                  <View style={styles.userImageContainer}>
+                    <Image source={other?.avatar ? { uri: other.avatar } : images.user} contentFit='cover' style={styles.userImage} />
+                  </View>
+                  <View style={{ flexDirection: 'row', width: SIZES.width - 104 }}>
+                    <View style={styles.userInfoContainer}>
+                      <Text style={[styles.userName, { color: COLORS.greyscale900 }]}>
+                        {other?.name || row.sender_id}{other?.age ? `, ${other.age}` : ''}
+                      </Text>
+                      <View style={styles.rowActions}>
+                        <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.primary }]} onPress={() => accept(row.id)}>
+                          <Text style={styles.tinyBtnText}>Accept</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={() => reject(row.id)}>
+                          <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>Reject</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                    <View style={{ position: 'absolute', right: 4, alignItems: 'center' }}>
+                      <Text style={styles.lastMessageTime}>{formatChatTime(row.created_at)}</Text>
+                    </View>
+                  </View>
                 </View>
-              </View>
-            ))
+              );
+            })
           )}
         </>
       )}
@@ -106,14 +188,31 @@ const InterestsScreen = () => {
           {outgoing.length === 0 ? (
             <Text style={styles.subtitle}>No sent interests</Text>
           ) : (
-            outgoing.map((row) => (
-              <View key={row.id} style={styles.rowItem}>
-                <Text style={styles.rowTitle}>To: {row.receiver_id} • {row.status}</Text>
-                <View style={styles.rowActions}>
-                  <Button title="Withdraw" onPress={() => reject(row.id)} textColor={COLORS.primary} style={[styles.actionBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.tansparentPrimary }]} />
+            outgoing.map((row, idx) => {
+              const other = profilesById[row.receiver_id];
+              return (
+                <View key={row.id} style={[styles.userContainer, idx % 2 !== 0 ? styles.oddBackground : null]}>
+                  <View style={styles.userImageContainer}>
+                    <Image source={other?.avatar ? { uri: other.avatar } : images.user} contentFit='cover' style={styles.userImage} />
+                  </View>
+                  <View style={{ flexDirection: 'row', width: SIZES.width - 104 }}>
+                    <View style={styles.userInfoContainer}>
+                      <Text style={[styles.userName, { color: COLORS.greyscale900 }]}>
+                        {other?.name || row.receiver_id}{other?.age ? `, ${other.age}` : ''}
+                      </Text>
+                      <View style={styles.rowActions}>
+                        <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={() => reject(row.id)}>
+                          <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>Withdraw</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                    <View style={{ position: 'absolute', right: 4, alignItems: 'center' }}>
+                      <Text style={styles.lastMessageTime}>{formatChatTime(row.created_at)}</Text>
+                    </View>
+                  </View>
                 </View>
-              </View>
-            ))
+              );
+            })
           )}
         </>
       )}
@@ -129,14 +228,32 @@ const InterestsScreen = () => {
           {approved.length === 0 ? (
             <Text style={styles.subtitle}>No approved interests</Text>
           ) : (
-            approved.map((row) => (
-              <View key={row.id} style={styles.rowItem}>
-                <Text style={styles.rowTitle}>With: {row.sender_id} ↔ {row.receiver_id}</Text>
-                <View style={styles.rowActions}>
-                  <Button title="Cancel" onPress={() => reject(row.id)} textColor={COLORS.primary} style={[styles.actionBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.tansparentPrimary }]} />
+            approved.map((row, idx) => {
+              const otherId = row.sender_id; // Simplified: show sender profile
+              const other = profilesById[otherId];
+              return (
+                <View key={row.id} style={[styles.userContainer, idx % 2 !== 0 ? styles.oddBackground : null]}>
+                  <View style={styles.userImageContainer}>
+                    <Image source={other?.avatar ? { uri: other.avatar } : images.user} contentFit='cover' style={styles.userImage} />
+                  </View>
+                  <View style={{ flexDirection: 'row', width: SIZES.width - 104 }}>
+                    <View style={styles.userInfoContainer}>
+                      <Text style={[styles.userName, { color: COLORS.greyscale900 }]}>
+                        {other?.name || otherId}{other?.age ? `, ${other.age}` : ''}
+                      </Text>
+                      <View style={styles.rowActions}>
+                        <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={() => reject(row.id)}>
+                          <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>Cancel</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                    <View style={{ position: 'absolute', right: 4, alignItems: 'center' }}>
+                      <Text style={styles.lastMessageTime}>{formatChatTime(row.updated_at)}</Text>
+                    </View>
+                  </View>
                 </View>
-              </View>
-            ))
+              );
+            })
           )}
         </>
       )}
@@ -259,6 +376,36 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,0,0,0.05)'
   },
+  userContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomColor: COLORS.secondaryWhite,
+    borderBottomWidth: 1,
+  },
+  userImageContainer: {
+    paddingVertical: 15,
+    marginRight: 22,
+  },
+  userImage: {
+    height: 50,
+    width: 50,
+    borderRadius: 25,
+  },
+  oddBackground: {
+    backgroundColor: COLORS.tertiaryWhite,
+  },
+  userName: {
+    fontSize: 14,
+    color: COLORS.black,
+    fontFamily: 'bold',
+    marginBottom: 8,
+  },
+  lastMessageTime: {
+    fontSize: 12,
+    fontFamily: 'regular',
+    color: COLORS.black,
+  },
   rowTitle: {
     fontSize: 15,
     fontFamily: 'medium',
@@ -268,11 +415,21 @@ const styles = StyleSheet.create({
   rowActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
   },
   actionBtn: {
     width: '48%',
     borderRadius: 32,
+  },
+  tinyBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+  },
+  tinyBtnText: {
+    fontSize: 12,
+    color: COLORS.white,
+    fontFamily: 'semiBold',
   }
 });
 
