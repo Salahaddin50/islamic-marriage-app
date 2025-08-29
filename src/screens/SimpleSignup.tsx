@@ -490,6 +490,7 @@ const styles = StyleSheet.create({
   },
   socialContainer: {
     marginBottom: getResponsiveSpacing(12),
+    marginTop: getResponsiveSpacing(-10), // Lift Google button 10mm up
   },
   googleButton: {
     flexDirection: 'row',
@@ -497,11 +498,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: COLORS.white,
     borderWidth: 1,
-    borderColor: COLORS.gray,
-    borderRadius: 12,
-    paddingVertical: getResponsiveSpacing(16),
+    borderColor: COLORS.gray6,
+    borderRadius: 30,
+    paddingVertical: getResponsiveSpacing(12),
     paddingHorizontal: getResponsiveSpacing(20),
-    marginTop: getResponsiveSpacing(4),
+    marginTop: getResponsiveSpacing(2),
+    height: isMobileWeb() ? 48 : 52, // Match exact height from login page
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
   googleIcon: {
     width: getResponsiveSpacing(20),
