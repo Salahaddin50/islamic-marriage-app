@@ -29,10 +29,13 @@ export const MeetService = {
   },
 
   async accept(meetId: string): Promise<void> {
-    // Set accepted and store a generic Google Meet creation link (user will create/join)
+    // Generate a Jitsi room link instantly (no external API)
+    const randomPart = `${Math.random().toString(36).slice(2, 10)}-${Date.now().toString(36)}`;
+    const generatedLink = `https://meet.jit.si/hume-${randomPart}`;
+
     const { error } = await supabase
       .from('meet_requests')
-      .update({ status: 'accepted', meet_link: 'https://meet.google.com/new' })
+      .update({ status: 'accepted', meet_link: generatedLink })
       .eq('id', meetId);
     if (error) throw error;
   },

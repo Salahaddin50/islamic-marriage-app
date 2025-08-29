@@ -138,7 +138,7 @@ const MeetRequestsScreen = () => {
             </TouchableOpacity>
             <View style={styles.rowActions}>{actions}</View>
           </View>
-          <View style={{ position: 'absolute', right: 4, alignItems: 'flex-end' }}>
+          <View style={{ position: 'absolute', right: 4, alignItems: 'flex-end', width: SIZES.width - 16 }}>
             {!!rightText && (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Image source={icons.videoCamera2} contentFit='contain' style={{ width: 14, height: 14, tintColor: COLORS.primary }} />
