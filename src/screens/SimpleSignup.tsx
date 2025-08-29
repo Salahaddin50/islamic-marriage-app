@@ -382,16 +382,18 @@ const SimpleSignup: React.FC<Props> = ({ onGoogleSignup, onSignupSuccess }) => {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.loginLink}>
-              <Text style={styles.loginLinkText}>
-                Already have an account?{' '}
-              </Text>
-              <TouchableOpacity onPress={() => navigation.navigate('login')}>
-                <Text style={styles.loginLinkButton}>Sign In</Text>
-              </TouchableOpacity>
-            </View>
+            {/* Removed inline login link; using fixed bottom container instead */}
           </View>
         </ScrollView>
+      {/* Bottom fixed Sign In link (matching Login screen) */}
+      <View style={styles.bottomContainer}>
+        <Text style={styles.bottomText}>
+          Already have an account?{' '}
+          <TouchableOpacity onPress={() => navigation.navigate('login')}>
+            <Text style={styles.signInText}>Sign In</Text>
+          </TouchableOpacity>
+        </Text>
+      </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -411,7 +413,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: getResponsiveSpacing(32),
+    paddingBottom: getResponsiveSpacing(60),
   },
   logoContainer: {
     alignItems: 'center',
@@ -487,7 +489,7 @@ const styles = StyleSheet.create({
     marginBottom: getResponsiveSpacing(12),
   },
   socialContainer: {
-    marginBottom: getResponsiveSpacing(24),
+    marginBottom: getResponsiveSpacing(12),
   },
   googleButton: {
     flexDirection: 'row',
@@ -499,7 +501,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: getResponsiveSpacing(16),
     paddingHorizontal: getResponsiveSpacing(20),
-    marginTop: getResponsiveSpacing(8),
+    marginTop: getResponsiveSpacing(4),
   },
   googleIcon: {
     width: getResponsiveSpacing(20),
@@ -511,11 +513,24 @@ const styles = StyleSheet.create({
     fontFamily: 'medium',
     color: COLORS.black,
   },
-  loginLink: {
-    flexDirection: 'row',
+  bottomContainer: {
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: getResponsiveSpacing(16),
+    paddingVertical: getResponsiveSpacing(20),
+    paddingHorizontal: getResponsiveSpacing(20),
+    borderTopWidth: 1,
+    borderTopColor: COLORS.gray7,
+    backgroundColor: COLORS.white,
+  },
+  bottomText: {
+    fontSize: getResponsiveFontSize(14),
+    fontFamily: 'regular',
+    color: COLORS.black,
+    textAlign: 'center',
+  },
+  signInText: {
+    fontSize: getResponsiveFontSize(14),
+    fontFamily: 'semiBold',
+    color: COLORS.primary,
   },
   loginLinkText: {
     fontSize: getResponsiveFontSize(14),

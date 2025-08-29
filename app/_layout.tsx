@@ -69,6 +69,9 @@ export default function RootLayout() {
       try {
         await Promise.all([
           Asset.fromModule(illustrations.onboarding6).downloadAsync(),
+          Asset.fromModule(illustrations.onboarding2).downloadAsync(),
+          Asset.fromModule(illustrations.onboarding3).downloadAsync(),
+          Asset.fromModule(illustrations.onboarding4).downloadAsync(),
           Asset.fromModule(images.ornament).downloadAsync(),
           Asset.fromModule(images.logo).downloadAsync(),
         ]);
