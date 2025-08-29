@@ -53,26 +53,20 @@ export const InterestsService = {
     return { status: rec.status as InterestStatus, record: rec, isSender: rec.sender_id === user.id };
   },
 
-  async accept(interestId: string): Promise<InterestRecord> {
-    const { data, error } = await supabase
+  async accept(interestId: string): Promise<void> {
+    const { error } = await supabase
       .from('interests')
       .update({ status: 'accepted' })
-      .eq('id', interestId)
-      .select('*')
-      .single();
+      .eq('id', interestId);
     if (error) throw error;
-    return data as unknown as InterestRecord;
   },
 
-  async reject(interestId: string): Promise<InterestRecord> {
-    const { data, error } = await supabase
+  async reject(interestId: string): Promise<void> {
+    const { error } = await supabase
       .from('interests')
       .update({ status: 'rejected' })
-      .eq('id', interestId)
-      .select('*')
-      .single();
+      .eq('id', interestId);
     if (error) throw error;
-    return data as unknown as InterestRecord;
   },
 
   async listIncoming(): Promise<InterestRecord[]> {
@@ -82,6 +76,7 @@ export const InterestsService = {
       .from('interests')
       .select('*')
       .eq('receiver_id', user.id)
+      .eq('status', 'pending')
       .order('created_at', { ascending: false });
     return (data as unknown as InterestRecord[]) || [];
   },
@@ -93,6 +88,7 @@ export const InterestsService = {
       .from('interests')
       .select('*')
       .eq('sender_id', user.id)
+      .eq('status', 'pending')
       .order('created_at', { ascending: false });
     return (data as unknown as InterestRecord[]) || [];
   },
@@ -107,6 +103,23 @@ export const InterestsService = {
       .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
       .order('updated_at', { ascending: false });
     return (data as unknown as InterestRecord[]) || [];
+  },
+
+  async withdraw(interestId: string): Promise<void> {
+    const { error } = await supabase
+      .from('interests')
+      .delete()
+      .eq('id', interestId);
+    if (error) throw error;
+  },
+
+  async cancel(interestId: string): Promise<void> {
+    // For approved interests, cancel by deleting the record
+    const { error } = await supabase
+      .from('interests')
+      .delete()
+      .eq('id', interestId);
+    if (error) throw error;
   }
 };
 

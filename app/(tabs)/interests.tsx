@@ -7,8 +7,11 @@ import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import Button from '@/components/Button';
 import { InterestsService, InterestRecord } from '@/src/services/interests';
 import { supabase } from '@/src/config/supabase';
+import { useNavigation } from 'expo-router';
+import { NavigationProp } from '@react-navigation/native';
 
 const InterestsScreen = () => {
+  const navigation = useNavigation<NavigationProp<any>>();
   const [incoming, setIncoming] = useState<InterestRecord[]>([]);
   const [outgoing, setOutgoing] = useState<InterestRecord[]>([]);
   const [approved, setApproved] = useState<InterestRecord[]>([]);
@@ -21,7 +24,7 @@ const InterestsScreen = () => {
     { key: 'approved', title: 'Approved' },
   ]);
 
-  const [profilesById, setProfilesById] = useState<Record<string, { name: string; age?: number; avatar?: string }>>({});
+  const [profilesById, setProfilesById] = useState<Record<string, { name: string; age?: number; avatar?: any }>>({});
 
   const calculateAge = (dateOfBirth?: string | null): number | undefined => {
     if (!dateOfBirth) return undefined;
@@ -40,15 +43,19 @@ const InterestsScreen = () => {
     if (uniqueIds.length === 0) return;
     const { data } = await supabase
       .from('user_profiles')
-      .select('user_id, first_name, last_name, date_of_birth, profile_picture_url')
+      .select('user_id, first_name, last_name, date_of_birth, profile_picture_url, gender')
       .in('user_id', uniqueIds);
-    const map: Record<string, { name: string; age?: number; avatar?: string }> = {};
+    const map: Record<string, { name: string; age?: number; avatar?: any }> = {};
     (data || []).forEach((row: any) => {
       const name = [row.first_name, row.last_name].filter(Boolean).join(' ').trim() || 'Member';
       map[row.user_id] = {
         name,
         age: calculateAge(row.date_of_birth),
-        avatar: row.profile_picture_url || undefined,
+        avatar: row.profile_picture_url
+          ? row.profile_picture_url
+          : (row.gender && typeof row.gender === 'string' && row.gender.toLowerCase() === 'female'
+              ? images.femaleSilhouette
+              : images.maleSilhouette),
       };
     });
     setProfilesById(prev => ({ ...prev, ...map }));
@@ -102,10 +109,21 @@ const InterestsScreen = () => {
   const accept = async (id: string) => {
     await InterestsService.accept(id);
     await loadAll();
+    setIndex(2); // Switch to Approved tab
   };
 
   const reject = async (id: string) => {
     await InterestsService.reject(id);
+    await loadAll(); // Will disappear from pending lists automatically
+  };
+
+  const withdraw = async (id: string) => {
+    await InterestsService.withdraw(id);
+    await loadAll();
+  };
+
+  const cancelApproved = async (id: string) => {
+    await InterestsService.cancel(id);
     await loadAll();
   };
 
@@ -146,17 +164,20 @@ const InterestsScreen = () => {
             <Text style={styles.subtitle}>No received interests</Text>
           ) : (
             incoming.map((row, idx) => {
-              const other = profilesById[row.sender_id];
+              const otherUserId = row.sender_id;
+              const other = profilesById[otherUserId];
               return (
                 <View key={row.id} style={[styles.userContainer, idx % 2 !== 0 ? styles.oddBackground : null]}>
-                  <View style={styles.userImageContainer}>
-                    <Image source={other?.avatar ? { uri: other.avatar } : images.user} contentFit='cover' style={styles.userImage} />
-                  </View>
+                  <TouchableOpacity style={styles.userImageContainer} onPress={() => navigation.navigate('matchdetails' as never, { userId: otherUserId } as never)}>
+                    <Image source={other?.avatar ? (typeof other.avatar === 'string' ? { uri: other.avatar } : other.avatar) : images.user} contentFit='cover' style={styles.userImage} />
+                  </TouchableOpacity>
                   <View style={{ flexDirection: 'row', width: SIZES.width - 104 }}>
                     <View style={styles.userInfoContainer}>
-                      <Text style={[styles.userName, { color: COLORS.greyscale900 }]}>
-                        {other?.name || row.sender_id}{other?.age ? `, ${other.age}` : ''}
-                      </Text>
+                      <TouchableOpacity onPress={() => navigation.navigate('matchdetails' as never, { userId: otherUserId } as never)}>
+                        <Text style={[styles.userName, { color: COLORS.greyscale900 }]}>
+                          {other?.name || otherUserId}{other?.age ? `, ${other.age}` : ''}
+                        </Text>
+                      </TouchableOpacity>
                       <View style={styles.rowActions}>
                         <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.primary }]} onPress={() => accept(row.id)}>
                           <Text style={styles.tinyBtnText}>Accept</Text>
@@ -189,19 +210,22 @@ const InterestsScreen = () => {
             <Text style={styles.subtitle}>No sent interests</Text>
           ) : (
             outgoing.map((row, idx) => {
-              const other = profilesById[row.receiver_id];
+              const otherUserId = row.receiver_id;
+              const other = profilesById[otherUserId];
               return (
                 <View key={row.id} style={[styles.userContainer, idx % 2 !== 0 ? styles.oddBackground : null]}>
-                  <View style={styles.userImageContainer}>
-                    <Image source={other?.avatar ? { uri: other.avatar } : images.user} contentFit='cover' style={styles.userImage} />
-                  </View>
+                  <TouchableOpacity style={styles.userImageContainer} onPress={() => navigation.navigate('matchdetails' as never, { userId: otherUserId } as never)}>
+                    <Image source={other?.avatar ? (typeof other.avatar === 'string' ? { uri: other.avatar } : other.avatar) : images.user} contentFit='cover' style={styles.userImage} />
+                  </TouchableOpacity>
                   <View style={{ flexDirection: 'row', width: SIZES.width - 104 }}>
                     <View style={styles.userInfoContainer}>
-                      <Text style={[styles.userName, { color: COLORS.greyscale900 }]}>
-                        {other?.name || row.receiver_id}{other?.age ? `, ${other.age}` : ''}
-                      </Text>
+                      <TouchableOpacity onPress={() => navigation.navigate('matchdetails' as never, { userId: otherUserId } as never)}>
+                        <Text style={[styles.userName, { color: COLORS.greyscale900 }]}>
+                          {other?.name || otherUserId}{other?.age ? `, ${other.age}` : ''}
+                        </Text>
+                      </TouchableOpacity>
                       <View style={styles.rowActions}>
-                        <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={() => reject(row.id)}>
+                        <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={() => withdraw(row.id)}>
                           <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>Withdraw</Text>
                         </TouchableOpacity>
                       </View>
@@ -229,20 +253,22 @@ const InterestsScreen = () => {
             <Text style={styles.subtitle}>No approved interests</Text>
           ) : (
             approved.map((row, idx) => {
-              const otherId = row.sender_id; // Simplified: show sender profile
-              const other = profilesById[otherId];
+              const otherUserId = row.sender_id; // Simplified
+              const other = profilesById[otherUserId];
               return (
                 <View key={row.id} style={[styles.userContainer, idx % 2 !== 0 ? styles.oddBackground : null]}>
-                  <View style={styles.userImageContainer}>
-                    <Image source={other?.avatar ? { uri: other.avatar } : images.user} contentFit='cover' style={styles.userImage} />
-                  </View>
+                  <TouchableOpacity style={styles.userImageContainer} onPress={() => navigation.navigate('matchdetails' as never, { userId: otherUserId } as never)}>
+                    <Image source={other?.avatar ? (typeof other.avatar === 'string' ? { uri: other.avatar } : other.avatar) : images.user} contentFit='cover' style={styles.userImage} />
+                  </TouchableOpacity>
                   <View style={{ flexDirection: 'row', width: SIZES.width - 104 }}>
                     <View style={styles.userInfoContainer}>
-                      <Text style={[styles.userName, { color: COLORS.greyscale900 }]}>
-                        {other?.name || otherId}{other?.age ? `, ${other.age}` : ''}
-                      </Text>
+                      <TouchableOpacity onPress={() => navigation.navigate('matchdetails' as never, { userId: otherUserId } as never)}>
+                        <Text style={[styles.userName, { color: COLORS.greyscale900 }]}>
+                          {other?.name || otherUserId}{other?.age ? `, ${other.age}` : ''}
+                        </Text>
+                      </TouchableOpacity>
                       <View style={styles.rowActions}>
-                        <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={() => reject(row.id)}>
+                        <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={() => cancelApproved(row.id)}>
                           <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>Cancel</Text>
                         </TouchableOpacity>
                       </View>
