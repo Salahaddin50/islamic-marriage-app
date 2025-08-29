@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Alert, Modal, Dimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Alert, Modal, Dimensions, Platform, Linking, TextInput } from 'react-native';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { COLORS, icons, images, SIZES } from '@/constants';
@@ -11,6 +11,7 @@ import { getResponsiveFontSize, getResponsiveSpacing, safeGoBack } from '@/utils
 import { DEFAULT_VIDEO_THUMBNAIL } from '@/constants/defaultThumbnails';
 import MatchDetailsSkeleton from '@/components/MatchDetailsSkeleton';
 import { InterestsService, InterestStatus } from '@/src/services/interests';
+import { MeetService, MeetOverallStatus } from '@/src/services/meet';
 
 // Types for user profile data (comprehensive - matches database)
 interface UserProfile {
@@ -89,6 +90,17 @@ const MatchDetails = () => {
   const [thumbnailErrors, setThumbnailErrors] = useState<{ [key: string]: boolean }>({});
   const [thumbnailLoading, setThumbnailLoading] = useState<{ [key: string]: boolean }>({});
   const [silhouetteFailedToLoad, setSilhouetteFailedToLoad] = useState<{ [key: string]: boolean }>({});
+  // Meet request state
+  const [meetStatus, setMeetStatus] = useState<MeetOverallStatus>('none');
+  const [isMeetSender, setIsMeetSender] = useState(false);
+  const [meetRecordId, setMeetRecordId] = useState<string | null>(null);
+  const [meetLink, setMeetLink] = useState<string | null | undefined>(null);
+  const [showMeetModal, setShowMeetModal] = useState(false);
+  const [scheduledAt, setScheduledAt] = useState<string>('');
+  const [meetDate, setMeetDate] = useState<string>(''); // web-only date
+  const [meetTime, setMeetTime] = useState<string>(''); // web-only time
+  const [meetScheduledAt, setMeetScheduledAt] = useState<string | null>(null);
+  const [nowTick, setNowTick] = useState<number>(Date.now());
   
   // Fullscreen media viewer state
   const [showFullscreenImage, setShowFullscreenImage] = useState(false);
@@ -113,6 +125,37 @@ const MatchDetails = () => {
       setIsLoading(false);
     }
   }, [userId]);
+
+  // Load meet status for this profile
+  useEffect(() => {
+    (async () => {
+      if (!userId) return;
+      try {
+        const res = await MeetService.getStatusForTarget(userId);
+        setMeetStatus(res.status);
+        setIsMeetSender(res.isSender);
+        setMeetRecordId(res.record?.id || null);
+        setMeetLink(res.meetLink);
+        setMeetScheduledAt(res.record?.scheduled_at || null);
+      } catch {}
+    })();
+  }, [userId]);
+
+  // Refresh ticker every minute so time-based gating updates
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 60000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Can message only after 1 hour from approved meet time
+  const canMessage = useMemo(() => {
+    if (interestStatus !== 'accepted') return false;
+    if (meetStatus !== 'accepted') return false;
+    if (!meetScheduledAt) return false;
+    const ts = new Date(meetScheduledAt).getTime();
+    if (Number.isNaN(ts)) return false;
+    return Date.now() >= (ts + 60 * 60 * 1000);
+  }, [interestStatus, meetStatus, meetScheduledAt, nowTick]);
 
   // Load interest status for this profile
   useEffect(() => {
@@ -957,27 +1000,116 @@ const MatchDetails = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.actionButton, !(interestStatus === 'accepted') && styles.actionButtonDisabled]}
-          disabled={!(interestStatus === 'accepted')}
-          onPress={() => {
-            Alert.alert('Video Meet', 'Starting video meet...');
+          style={[
+            styles.actionButton,
+            (meetStatus === 'accepted') && { backgroundColor: COLORS.success },
+            ((meetStatus === 'pending' && isMeetSender) || (meetStatus === 'accepted')) && styles.actionButtonDisabled,
+          ]}
+          disabled={(meetStatus === 'pending' && isMeetSender) || (meetStatus === 'accepted')}
+          onPress={async () => {
+            if (meetStatus === 'accepted' && meetLink) {
+              try { await Linking.openURL(meetLink); } catch { Alert.alert('Error', 'Unable to open meeting link'); }
+              return;
+            }
+            if (meetStatus === 'pending') {
+              Alert.alert('Video Meet', isMeetSender ? 'Request submitted. Waiting for approval.' : 'You have a pending meet request. Please approve in Meet tab.');
+              return;
+            }
+            // No meet request yet → open scheduler
+            setShowMeetModal(true);
           }}
         >
           <Image source={icons.videoCamera2} contentFit="contain" style={styles.actionIcon} />
-          <Text style={[styles.actionText, !(interestStatus === 'accepted') && styles.actionTextDisabled]}>Video meet</Text>
+          <Text style={[styles.actionText, ((meetStatus === 'pending' && isMeetSender) || (meetStatus === 'accepted')) && styles.actionTextDisabled]}>
+            {(meetStatus === 'accepted') ? 'Approved' : ((meetStatus === 'pending' && isMeetSender) ? 'Requested' : 'Video meet')}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.actionButton, !(interestStatus === 'accepted') && styles.actionButtonDisabled]}
-          disabled={!(interestStatus === 'accepted')}
+          style={[styles.actionButton, !canMessage && styles.actionButtonDisabled]}
+          disabled={!canMessage}
           onPress={() => {
             Alert.alert('Message', 'Opening chat...');
           }}
         >
           <Image source={icons.chat} contentFit="contain" style={styles.actionIcon} />
-          <Text style={[styles.actionText, !(interestStatus === 'accepted') && styles.actionTextDisabled]}>Message</Text>
+          <Text style={[styles.actionText, !canMessage && styles.actionTextDisabled]}>Message</Text>
         </TouchableOpacity>
       </View>
+      {/* Meet scheduling modal */}
+      <Modal
+        visible={showMeetModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowMeetModal(false)}
+      >
+        <View style={styles.fullscreenContainer}>
+          <View style={styles.modalCard}>
+            <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 8 }]}>Schedule Video Meet</Text>
+            {Platform.OS === 'web' ? (
+              // Two-step picker on web: date then time
+              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ width: '100%', marginBottom: 12 }}>
+                  <input
+                    type="date"
+                    value={meetDate}
+                    onChange={(e: any) => { setMeetDate(e.target.value); }}
+                    style={{ width: '85%', padding: 12, fontSize: 16, borderRadius: 10, border: '1px solid #e9e9ef', display: 'block', margin: '0 auto' }}
+                  />
+                </div>
+                {meetDate && (
+                  <div style={{ width: '100%', marginBottom: 12 }}>
+                    <input
+                      type="time"
+                      step={900}
+                      value={meetTime}
+                      onChange={(e: any) => { setMeetTime(e.target.value); }}
+                      style={{ width: '85%', padding: 12, fontSize: 16, borderRadius: 10, border: '1px solid #e9e9ef', display: 'block', margin: '0 auto' }}
+                    />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <TextInput
+                placeholder="YYYY-MM-DD HH:mm"
+                value={scheduledAt}
+                onChangeText={setScheduledAt}
+                style={{ borderWidth: 1, borderColor: '#e9e9ef', borderRadius: 12, padding: 12, marginBottom: 12 }}
+              />
+            )}
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}>
+              <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={() => { setShowMeetModal(false); setScheduledAt(''); setMeetDate(''); setMeetTime(''); }}>
+                <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.primary }]} onPress={async () => {
+                try {
+                  let iso = '';
+                  if (Platform.OS === 'web') {
+                    if (!meetDate || !meetTime) { Alert.alert('Select time', 'Please select date and time'); return; }
+                    iso = new Date(`${meetDate}T${meetTime}`).toISOString();
+                  } else {
+                    iso = scheduledAt ? new Date(scheduledAt.replace(' ', 'T')).toISOString() : '';
+                    if (!iso) { Alert.alert('Select time', 'Please enter date and time'); return; }
+                  }
+                  await MeetService.sendRequest(userId, iso);
+                  setMeetStatus('pending');
+                  setIsMeetSender(true);
+                  setMeetScheduledAt(iso);
+                  setShowMeetModal(false);
+                  setScheduledAt('');
+                  setMeetDate('');
+                  setMeetTime('');
+                  Alert.alert('Video Meet', 'Request submitted and awaiting approval.');
+                } catch {
+                  Alert.alert('Error', 'Unable to send meet request');
+                }
+              }}>
+                <Text style={styles.tinyBtnText}>Send</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
         </View>
   );
 };
@@ -1332,12 +1464,34 @@ const styles = StyleSheet.create({
     actionTextDisabled: {
         color: 'rgba(255,255,255,0.85)'
     },
+    tinyBtn: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 14,
+    },
+    tinyBtnText: {
+        fontSize: getResponsiveFontSize(12),
+        color: COLORS.white,
+        fontFamily: 'semiBold',
+    },
     // Fullscreen modal styles
     fullscreenContainer: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.9)',
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    modalCard: {
+        backgroundColor: COLORS.white,
+        padding: 16,
+        borderRadius: 16,
+        width: Math.min(420, SIZES.width - 24),
+        marginHorizontal: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 6,
     },
     fullscreenBackground: {
         flex: 1,

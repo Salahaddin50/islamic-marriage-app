@@ -117,7 +117,7 @@ const TabLayout = () => {
         }}
       />
       <Tabs.Screen
-        name="match"
+        name="meet-requests"
         options={{
           title: "",
           tabBarIcon: ({ focused }: { focused: boolean }) => {
@@ -207,6 +207,13 @@ const TabLayout = () => {
               </View>
             )
           },
+        }}
+      />
+      {/* Hide legacy match tab without deleting files */}
+      <Tabs.Screen
+        name="match"
+        options={{
+          href: null,
         }}
       />
       {/* Hide legacy maps tab without deleting files */}
