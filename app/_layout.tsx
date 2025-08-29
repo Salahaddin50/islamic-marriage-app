@@ -2,13 +2,15 @@ import '../global'; // Import global polyfills first
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import { FONTS } from '@/constants/fonts';
 import { LogBox, Platform } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Ionicons } from '@expo/vector-icons';
 import { FontAwesome } from '@expo/vector-icons';
+import { illustrations, images } from '@/constants';
+import { Asset } from 'expo-asset';
 
 // Import CSS for web builds
 if (Platform.OS === 'web') {
@@ -60,12 +62,27 @@ export default function RootLayout() {
     ...Ionicons.font,
     ...FontAwesome.font
   });
+  const [assetsReady, setAssetsReady] = useState(false);
 
   useEffect(() => {
-    if (loaded) {
+    const preloadAssets = async () => {
+      try {
+        await Promise.all([
+          Asset.fromModule(illustrations.onboarding6).downloadAsync(),
+          Asset.fromModule(images.ornament).downloadAsync(),
+          Asset.fromModule(images.logo).downloadAsync(),
+        ]);
+      } catch {}
+      setAssetsReady(true);
+    };
+    preloadAssets();
+  }, []);
+
+  useEffect(() => {
+    if (loaded && assetsReady) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [loaded, assetsReady]);
 
   // Add responsive CSS for web
   useEffect(() => {
@@ -148,7 +165,7 @@ export default function RootLayout() {
     }
   }, []);
 
-  if (!loaded) {
+  if (!loaded || !assetsReady) {
     return null;
   }
 
