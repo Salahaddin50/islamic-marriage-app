@@ -436,7 +436,7 @@ const styles = StyleSheet.create({
     fontFamily: 'regular',
     color: COLORS.gray,
     textAlign: 'center',
-    marginBottom: getResponsiveSpacing(16),
+    marginBottom: getResponsiveSpacing(8),
     paddingHorizontal: getResponsiveSpacing(32),
     lineHeight: getResponsiveFontSize(22),
   },
@@ -444,11 +444,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: getResponsiveSpacing(24),
   },
   checkboxContainer: {
-    marginBottom: getResponsiveSpacing(12),
+    marginBottom: getResponsiveSpacing(6),
   },
   checkboxRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center', // Changed from 'flex-start' to 'center' for vertical alignment
     marginBottom: getResponsiveSpacing(4),
   },
   checkbox: {
@@ -460,7 +460,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: getResponsiveSpacing(12),
-    marginTop: getResponsiveSpacing(2),
+    // Removed marginTop to allow perfect center alignment
   },
   checkboxChecked: {
     backgroundColor: COLORS.primary,
@@ -476,7 +476,8 @@ const styles = StyleSheet.create({
     fontSize: getResponsiveFontSize(14),
     fontFamily: 'regular',
     color: COLORS.black,
-    lineHeight: getResponsiveFontSize(20),
+    lineHeight: getResponsiveFontSize(18), // Reduced lineHeight for better center alignment
+    textAlignVertical: 'center', // Ensure text is vertically centered
   },
   errorText: {
     fontSize: getResponsiveFontSize(12),
@@ -486,11 +487,11 @@ const styles = StyleSheet.create({
     marginLeft: getResponsiveSpacing(32),
   },
   signupButton: {
-    marginBottom: getResponsiveSpacing(12),
+    marginBottom: getResponsiveSpacing(6),
   },
   socialContainer: {
     marginBottom: getResponsiveSpacing(12),
-    marginTop: getResponsiveSpacing(-10), // Lift Google button 10mm up
+    marginTop: getResponsiveSpacing(-16), // Further compact space above Google button
   },
   googleButton: {
     flexDirection: 'row',
