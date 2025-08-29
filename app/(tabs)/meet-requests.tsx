@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, useWindowDimensions, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, useWindowDimensions, Linking, Alert } from 'react-native';
 import { COLORS, SIZES, images, icons } from '@/constants';
 import { Image } from 'expo-image';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
@@ -24,6 +24,28 @@ const MeetRequestsScreen = () => {
   ]);
 
   const [profilesById, setProfilesById] = useState<Record<string, { name: string; avatar?: any }>>({});
+  const [nowTick, setNowTick] = useState<number>(Date.now());
+
+  const formatRequestTime = (iso?: string) => {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso);
+      const now = new Date();
+      const diffMs = now.getTime() - d.getTime();
+      const oneDayMs = 24 * 60 * 60 * 1000;
+      if (diffMs < oneDayMs) {
+        const hh = String(d.getHours()).padStart(2, '0');
+        const mm = String(d.getMinutes()).padStart(2, '0');
+        return `${hh}:${mm}`;
+      }
+      const day = d.getDate();
+      const month = d.toLocaleString(undefined, { month: 'short' });
+      const year = String(d.getFullYear()).slice(-2);
+      return `${day} ${month} ${year}`;
+    } catch {
+      return iso;
+    }
+  };
 
   const loadProfiles = async (userIds: string[]) => {
     const uniqueIds = Array.from(new Set(userIds.filter(Boolean)));
@@ -86,6 +108,12 @@ const MeetRequestsScreen = () => {
 
   useEffect(() => { loadAll(); }, []);
 
+  // Tick every minute for enabling join 10 minutes before
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 60000);
+    return () => clearInterval(id);
+  }, []);
+
   useEffect(() => {
     const ch = supabase
       .channel('meet-requests-realtime')
@@ -122,12 +150,14 @@ const MeetRequestsScreen = () => {
     </View>
   );
 
-  const Row = ({ row, idx, otherUserId, rightText, actions }: { row: MeetRecord; idx: number; otherUserId: string; rightText?: string; actions: React.ReactNode }) => {
+  const Row = ({ row, idx, otherUserId, scheduledText, scheduledAtISO, requestText, actions, hideInlineJoin }: { row: MeetRecord; idx: number; otherUserId: string; scheduledText?: string; scheduledAtISO?: string | null; requestText?: string; actions: React.ReactNode; hideInlineJoin?: boolean }) => {
     const other = profilesById[otherUserId];
+    const scheduledMs = scheduledAtISO ? new Date(scheduledAtISO).getTime() : NaN;
+    const canJoin = !!row.meet_link && !Number.isNaN(scheduledMs) && (nowTick >= (scheduledMs - 10 * 60 * 1000));
     return (
       <View key={row.id} style={[styles.userContainer, idx % 2 !== 0 ? styles.oddBackground : null]}>
         <TouchableOpacity style={styles.userImageContainer} onPress={() => navigation.navigate('matchdetails' as never, { userId: otherUserId } as never)}>
-          <Image source={other?.avatar ? (typeof other.avatar === 'string' ? { uri: other.avatar } : other.avatar) : images.user} contentFit='cover' style={styles.userImage} />
+          <Image source={other?.avatar ? (typeof other.avatar === 'string' ? { uri: other.avatar } : other.avatar) : images.maleSilhouette} contentFit='cover' style={styles.userImage} />
         </TouchableOpacity>
         <View style={{ flexDirection: 'row', width: SIZES.width - 104 }}>
           <View style={styles.userInfoContainer}>
@@ -136,20 +166,31 @@ const MeetRequestsScreen = () => {
                 {other?.name || otherUserId}
               </Text>
             </TouchableOpacity>
-            <View style={styles.rowActions}>{actions}</View>
+            <View style={styles.rowActions}>
+              {actions}
+              {!!scheduledText && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Image source={icons.videoCamera2} contentFit='contain' style={{ width: 14, height: 14, tintColor: COLORS.primary }} />
+                  <Text style={styles.lastMessageTime}>{scheduledText}</Text>
+                  {!hideInlineJoin && row.meet_link && (
+                    <TouchableOpacity
+                      onPress={() => {
+                        if (canJoin) { Linking.openURL(row.meet_link as string); }
+                        else { Alert.alert('Meeting not active yet', 'Join link will be active 10 minutes before the scheduled time.'); }
+                      }}
+                    >
+                      <Text style={[styles.joinLink, !canJoin && { color: 'gray', opacity: 0.7 }]}>Join</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )}
+            </View>
           </View>
           <View style={{ position: 'absolute', right: 4, alignItems: 'flex-end', width: SIZES.width - 16 }}>
-            {!!rightText && (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Image source={icons.videoCamera2} contentFit='contain' style={{ width: 14, height: 14, tintColor: COLORS.primary }} />
-                <Text style={styles.lastMessageTime}>{rightText}</Text>
-              </View>
+            {!!requestText && (
+              <Text style={styles.lastMessageTime}>{requestText}</Text>
             )}
-            {row.meet_link && (
-              <TouchableOpacity onPress={() => Linking.openURL(row.meet_link as string)}>
-                <Text style={[styles.lastMessageTime, { color: COLORS.primary }]}>Join</Text>
-              </TouchableOpacity>
-            )}
+            {/* Join link moved next to scheduled time */}
           </View>
         </View>
       </View>
@@ -169,7 +210,9 @@ const MeetRequestsScreen = () => {
             row={row}
             idx={idx}
             otherUserId={row.sender_id}
-            rightText={row.scheduled_at ? new Date(row.scheduled_at).toLocaleString() : ''}
+            scheduledText={row.scheduled_at ? new Date(row.scheduled_at).toLocaleString() : ''}
+            scheduledAtISO={row.scheduled_at || undefined}
+            requestText={formatRequestTime(row.created_at)}
             actions={
               <>
                 <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.primary }]} onPress={() => accept(row.id)}>
@@ -199,7 +242,9 @@ const MeetRequestsScreen = () => {
             row={row}
             idx={idx}
             otherUserId={row.receiver_id}
-            rightText={row.scheduled_at ? new Date(row.scheduled_at).toLocaleString() : ''}
+            scheduledText={row.scheduled_at ? new Date(row.scheduled_at).toLocaleString() : ''}
+            scheduledAtISO={row.scheduled_at || undefined}
+            requestText={formatRequestTime(row.created_at)}
             actions={
               <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={() => withdraw(row.id)}>
                 <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>Withdraw</Text>
@@ -218,20 +263,39 @@ const MeetRequestsScreen = () => {
       ) : approved.length === 0 ? (
         <Text style={styles.subtitle}>No approved meet requests</Text>
       ) : (
-        approved.map((row, idx) => (
-          <Row
-            key={row.id}
-            row={row}
-            idx={idx}
-            otherUserId={row.sender_id}
-            rightText={row.scheduled_at ? new Date(row.scheduled_at).toLocaleString() : ''}
-            actions={
-              <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={() => withdraw(row.id)}>
-                <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>Cancel</Text>
-              </TouchableOpacity>
-            }
-          />
-        ))
+        approved.map((row, idx) => {
+          const scheduledMs = row.scheduled_at ? new Date(row.scheduled_at).getTime() : NaN;
+          const canJoin = !!row.meet_link && !Number.isNaN(scheduledMs) && (nowTick >= (scheduledMs - 10 * 60 * 1000));
+          return (
+            <Row
+              key={row.id}
+              row={row}
+              idx={idx}
+              otherUserId={row.sender_id}
+              scheduledText={row.scheduled_at ? new Date(row.scheduled_at).toLocaleString() : ''}
+              scheduledAtISO={row.scheduled_at || undefined}
+              requestText={formatRequestTime(row.updated_at)}
+              hideInlineJoin
+              actions={
+                <>
+                  <TouchableOpacity
+                    style={[styles.tinyBtn, { backgroundColor: COLORS.primary }]}
+                    onPress={() => {
+                      if (canJoin && row.meet_link) { Linking.openURL(row.meet_link as string); }
+                      else { Alert.alert('Meeting not active yet', 'Join link will be active 10 minutes before the scheduled time.'); }
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.tinyBtnText}>Join</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={() => withdraw(row.id)}>
+                    <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>Cancel</Text>
+                  </TouchableOpacity>
+                </>
+              }
+            />
+          );
+        })
       )}
     </ScrollView>
   );
@@ -267,8 +331,10 @@ const styles = StyleSheet.create({
   userImageContainer: { paddingVertical: 15, marginRight: 22 },
   userImage: { height: 50, width: 50, borderRadius: 25 },
   oddBackground: { backgroundColor: COLORS.tertiaryWhite },
+  userInfoContainer: { flex: 1 },
   userName: { fontSize: 14, color: COLORS.black, fontFamily: 'bold', marginBottom: 8 },
   lastMessageTime: { fontSize: 12, fontFamily: 'regular', color: COLORS.black },
+  joinLink: { fontSize: 16, fontFamily: 'bold', color: COLORS.primary, marginTop: 0 },
   rowActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   tinyBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14 },
   tinyBtnText: { fontSize: 12, color: COLORS.white, fontFamily: 'semiBold' },
