@@ -126,6 +126,14 @@ const ProfileSetup: React.FC = () => {
   const [photos, setPhotos] = useState<PhotoVideoItem[]>([]);
   const [videos, setVideos] = useState<PhotoVideoItem[]>([]);
 
+  // Helper: convert CDN to direct URL to avoid CORS issues on web
+  const getDirectUrl = (url: string) => {
+    if (url && url.includes('.cdn.')) {
+      return url.replace('.cdn.digitaloceanspaces.com', '.digitaloceanspaces.com');
+    }
+    return url;
+  };
+
   // Form states for each step
   const [physicalDetails, setPhysicalDetails] = useState<Partial<PhysicalDetails>>({});
   const [lifestyleDetails, setLifestyleDetails] = useState<Partial<LifestyleDetails>>({});
@@ -376,9 +384,9 @@ const ProfileSetup: React.FC = () => {
         item.thumbnail_url.includes('.png') ||
         item.thumbnail_url.includes('.webp')
       )) {
-        return item.thumbnail_url;
+        return getDirectUrl(item.thumbnail_url);
       } else {
-        return item.external_url;
+        return getDirectUrl(item.external_url);
       }
     };
 
@@ -423,7 +431,8 @@ const ProfileSetup: React.FC = () => {
   };
 
   const renderVideoItem = ({ item }: { item: PhotoVideoItem }) => {
-    const thumb = item.thumbnail_url || DEFAULT_VIDEO_THUMBNAIL;
+    const thumbRaw = item.thumbnail_url || DEFAULT_VIDEO_THUMBNAIL;
+    const thumb = thumbRaw.startsWith('http') ? getDirectUrl(thumbRaw) : thumbRaw;
     return (
       <View style={styles.mediaItem}>
         <TouchableOpacity style={styles.videoContainer} activeOpacity={0.8}>
@@ -1160,7 +1169,12 @@ const ProfileSetup: React.FC = () => {
 
         {/* Step 5: Photos & Videos (3 photos required) */}
         {currentStep === 5 && (
-          <ScrollView style={styles.stepContainer} showsVerticalScrollIndicator={false}>
+          <ScrollView 
+            style={styles.stepContainer} 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.mediaScrollContent}
+            keyboardShouldPersistTaps="handled"
+          >
             <Text style={styles.stepTitle}>Photos & Videos</Text>
             <Text style={styles.stepSubtitle}>Add at least 3 photos. Videos are optional.</Text>
 
@@ -1776,6 +1790,9 @@ const styles = StyleSheet.create({
   },
   calendarEmoji: {
     fontSize: getResponsiveFontSize(20),
+  },
+  mediaScrollContent: {
+    paddingBottom: getResponsiveSpacing(120),
   },
 
 });
