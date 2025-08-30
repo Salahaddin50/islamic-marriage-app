@@ -3,10 +3,12 @@ import { View, Text, Platform } from "react-native";
 import { Image } from "expo-image";
 import { COLORS, icons, FONTS, SIZES } from "../../constants";
 import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from "../../utils/responsive";
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { supabase } from "../../src/config/supabase";
 
 const TabLayout = () => {
+  const [approvedInterestNewCount, setApprovedInterestNewCount] = useState<number>(0);
+  const [approvedMeetNewCount, setApprovedMeetNewCount] = useState<number>(0);
   useEffect(() => {
     let isMounted = true;
     const checkAuth = async () => {
@@ -26,6 +28,50 @@ const TabLayout = () => {
     return () => {
       isMounted = false;
       subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    let channel: any;
+    let intervalId: any;
+
+    const loadCounts = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { setApprovedInterestNewCount(0); setApprovedMeetNewCount(0); return; }
+
+        const [interestsCountRes, meetsCountRes] = await Promise.all([
+          supabase
+            .from('interests')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'accepted')
+            .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`),
+          supabase
+            .from('meet_requests')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'accepted')
+            .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`),
+        ]);
+
+        setApprovedInterestNewCount(interestsCountRes.count || 0);
+        setApprovedMeetNewCount(meetsCountRes.count || 0);
+      } catch {}
+    };
+
+    loadCounts();
+
+    channel = supabase
+      .channel('footer-badges')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'interests' }, loadCounts)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'meet_requests' }, loadCounts)
+      .subscribe();
+
+    // Poll as a fallback to ensure counts reflect local deletes/updates quickly
+    intervalId = setInterval(loadCounts, 1000);
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+      if (intervalId) clearInterval(intervalId);
     };
   }, []);
 
@@ -98,15 +144,22 @@ const TabLayout = () => {
                 width: isMobileWeb() ? '20%' : SIZES.width / 5,
                 minWidth: 60,
               }}>
-                <Image
-                  source={focused ? icons.heart2 : icons.heart2Outline}
-                  contentFit="contain"
-                  style={{
-                    width: isMobileWeb() ? 20 : 24,
-                    height: isMobileWeb() ? 20 : 24,
-                    tintColor: focused ? COLORS.primary : COLORS.gray3,
-                  }}
-                />
+                <View style={{ width: isMobileWeb() ? 28 : 32, height: isMobileWeb() ? 20 : 24, alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                  <Image
+                    source={focused ? icons.heart2 : icons.heart2Outline}
+                    contentFit="contain"
+                    style={{
+                      width: isMobileWeb() ? 20 : 24,
+                      height: isMobileWeb() ? 20 : 24,
+                      tintColor: focused ? COLORS.primary : COLORS.gray3,
+                    }}
+                  />
+                  {approvedInterestNewCount > 0 && (
+                    <View style={{ position: 'absolute', top: isMobileWeb() ? 1 : 3, left: isMobileWeb() ? 26 : 30, backgroundColor: COLORS.primary, minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}>
+                      <Text style={{ color: COLORS.white, fontSize: 10, fontFamily: 'bold' }}>{approvedInterestNewCount > 99 ? '99+' : approvedInterestNewCount}</Text>
+                    </View>
+                  )}
+                </View>
                 <Text style={{
                   ...FONTS.body4,
                   color: focused ? COLORS.primary : COLORS.gray3,
@@ -128,15 +181,22 @@ const TabLayout = () => {
                 width: isMobileWeb() ? '20%' : SIZES.width / 5,
                 minWidth: 60,
               }}>
-                <Image
-                  source={focused ? icons.videoCamera2 : icons.videoCameraOutline}
-                  contentFit="contain"
-                  style={{
-                    width: isMobileWeb() ? 20 : 24,
-                    height: isMobileWeb() ? 20 : 24,
-                    tintColor: focused ? COLORS.primary : COLORS.gray3,
-                  }}
-                />
+                <View style={{ width: isMobileWeb() ? 28 : 32, height: isMobileWeb() ? 20 : 24, alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                  <Image
+                    source={focused ? icons.videoCamera2 : icons.videoCameraOutline}
+                    contentFit="contain"
+                    style={{
+                      width: isMobileWeb() ? 20 : 24,
+                      height: isMobileWeb() ? 20 : 24,
+                      tintColor: focused ? COLORS.primary : COLORS.gray3,
+                    }}
+                  />
+                  {approvedMeetNewCount > 0 && (
+                    <View style={{ position: 'absolute', top: isMobileWeb() ? 1 : 3, left: isMobileWeb() ? 26 : 30, backgroundColor: COLORS.primary, minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}>
+                      <Text style={{ color: COLORS.white, fontSize: 10, fontFamily: 'bold' }}>{approvedMeetNewCount > 99 ? '99+' : approvedMeetNewCount}</Text>
+                    </View>
+                  )}
+                </View>
                 <Text style={{
                   ...FONTS.body4,
                   color: focused ? COLORS.primary : COLORS.gray3,

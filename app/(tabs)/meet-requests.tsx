@@ -8,6 +8,7 @@ import { MeetService, MeetRecord } from '@/src/services/meet';
 import { supabase } from '@/src/config/supabase';
 import { useNavigation } from 'expo-router';
 import { NavigationProp } from '@react-navigation/native';
+import * as SecureStore from 'expo-secure-store';
 
 const MeetRequestsScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
@@ -121,6 +122,13 @@ const MeetRequestsScreen = () => {
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
+
+  // Mark approved meets as seen whenever the Approved tab becomes active
+  useEffect(() => {
+    if (index === 2) {
+      SecureStore.setItemAsync('LAST_SEEN_APPROVED_MEETS', new Date().toISOString()).catch(() => {});
+    }
+  }, [index]);
 
   useEffect(() => {
     setRoutes([

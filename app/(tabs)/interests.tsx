@@ -9,6 +9,7 @@ import { InterestsService, InterestRecord } from '@/src/services/interests';
 import { supabase } from '@/src/config/supabase';
 import { useNavigation } from 'expo-router';
 import { NavigationProp } from '@react-navigation/native';
+import * as SecureStore from 'expo-secure-store';
 
 const InterestsScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
@@ -131,6 +132,13 @@ const InterestsScreen = () => {
     loadAll();
   }, []);
 
+  // Mark approved interests as seen whenever the Approved tab becomes active
+  useEffect(() => {
+    if (index === 2) {
+      SecureStore.setItemAsync('LAST_SEEN_APPROVED_INTERESTS', new Date().toISOString()).catch(() => {});
+    }
+  }, [index]);
+
   useEffect(() => {
     let channel: any = null;
     let isMounted = true;
@@ -191,7 +199,7 @@ const InterestsScreen = () => {
     <View style={styles.headerContainer}>
       <View style={styles.headerLeft}>
         <Image source={images.logo} contentFit='contain' style={styles.headerLogo} />
-        <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>Interests</Text>
+        <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>Photo Requests</Text>
       </View>
       <View style={styles.headerRight} />
     </View>
