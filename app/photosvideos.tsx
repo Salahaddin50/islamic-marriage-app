@@ -230,6 +230,19 @@ const PhotosVideos = () => {
       // Convert URI to File/Blob for upload
       const response = await fetch(mediaResult.uri);
       let blob = await response.blob();
+      // Size validation
+      const MAX_PHOTO_SIZE = 10 * 1024 * 1024; // 10MB
+      const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
+      if (type === 'photo' && blob.size > MAX_PHOTO_SIZE) {
+        Alert.alert('File too large', 'Photo size must be less than 10MB.');
+        setUploading(false);
+        return;
+      }
+      if (type === 'video' && blob.size > MAX_VIDEO_SIZE) {
+        Alert.alert('File too large', 'Video size must be less than 100MB.');
+        setUploading(false);
+        return;
+      }
       
       // Create blob with correct MIME type
       if (mediaResult.mimeType) {

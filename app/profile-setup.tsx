@@ -4,8 +4,8 @@
 // Multi-step profile completion after initial signup
 // ============================================================================
 
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, KeyboardAvoidingView, Platform, TouchableOpacity, ScrollView, TextInput, FlatList } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { View, Text, StyleSheet, Alert, KeyboardAvoidingView, Platform, TouchableOpacity, ScrollView, TextInput, FlatList, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from 'expo-router';
 import { router } from 'expo-router';
@@ -125,6 +125,11 @@ const ProfileSetup: React.FC = () => {
   const [mediaUploading, setMediaUploading] = useState(false);
   const [photos, setPhotos] = useState<PhotoVideoItem[]>([]);
   const [videos, setVideos] = useState<PhotoVideoItem[]>([]);
+  const [fullScreenVisible, setFullScreenVisible] = useState(false);
+  const [fullScreenItem, setFullScreenItem] = useState<PhotoVideoItem | null>(null);
+  const [fullScreenType, setFullScreenType] = useState<'photo' | 'video'>('video');
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   // Helper: convert CDN to direct URL to avoid CORS issues on web
   const getDirectUrl = (url: string) => {
@@ -317,6 +322,17 @@ const ProfileSetup: React.FC = () => {
       if (media.mimeType) {
         blob = new Blob([blob], { type: media.mimeType });
       }
+      // Validate size before upload
+      const MAX_PHOTO_SIZE = 10 * 1024 * 1024; // 10MB
+      const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
+      if (type === 'photo' && blob.size > MAX_PHOTO_SIZE) {
+        Alert.alert('File too large', 'Photo size must be less than 10MB.');
+        return;
+      }
+      if (type === 'video' && blob.size > MAX_VIDEO_SIZE) {
+        Alert.alert('File too large', 'Video size must be less than 100MB.');
+        return;
+      }
       const result = type === 'photo'
         ? await PhotosVideosAPI.uploadPhoto(blob, { visibility: 'private' })
         : await PhotosVideosAPI.uploadVideo(blob, { visibility: 'private' });
@@ -435,7 +451,11 @@ const ProfileSetup: React.FC = () => {
     const thumb = thumbRaw.startsWith('http') ? getDirectUrl(thumbRaw) : thumbRaw;
     return (
       <View style={styles.mediaItem}>
-        <TouchableOpacity style={styles.videoContainer} activeOpacity={0.8}>
+        <TouchableOpacity 
+          style={styles.videoContainer} 
+          activeOpacity={0.8}
+          onPress={() => openFullScreen(item, 'video')}
+        >
           <Image
             source={{ uri: thumb }}
             contentFit="contain"
@@ -455,6 +475,68 @@ const ProfileSetup: React.FC = () => {
           <Text style={styles.buttonText}>Delete</Text>
         </TouchableOpacity>
       </View>
+    );
+  };
+
+  // Full screen handling (reusing light version)
+  const openFullScreen = (item: PhotoVideoItem, type: 'photo' | 'video') => {
+    setFullScreenItem(item);
+    setFullScreenType(type);
+    setFullScreenVisible(true);
+    setIsVideoPlaying(type === 'video');
+  };
+
+  const closeFullScreen = () => {
+    setFullScreenVisible(false);
+    setFullScreenItem(null);
+    setIsVideoPlaying(false);
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+  };
+
+  const renderFullScreenModal = () => {
+    if (!fullScreenItem) return null;
+    const mediaUrl = getDirectUrl(fullScreenItem.external_url);
+    return (
+      <Modal
+        visible={fullScreenVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={closeFullScreen}
+      >
+        <View style={styles.fullScreenContainer}>
+          <View style={styles.fullScreenHeader}>
+            <TouchableOpacity onPress={closeFullScreen} style={styles.closeButton}>
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.fullScreenContent}>
+            {fullScreenType === 'photo' ? (
+              <Image source={{ uri: mediaUrl }} contentFit="contain" style={styles.fullScreenImage} />
+            ) : (
+              <View style={styles.fullScreenVideoContainer}>
+                {Platform.OS === 'web' ? (
+                  <video
+                    ref={videoRef}
+                    src={mediaUrl}
+                    style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: 'transparent' }}
+                    controls
+                    autoPlay
+                    playsInline
+                  />
+                ) : (
+                  <View style={styles.nativeVideoPlaceholder}>
+                    <Text style={styles.nativeVideoText}>Video Player</Text>
+                    <Text style={styles.nativeVideoSubtext}>Native video player not implemented</nText>
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
     );
   };
 
@@ -1358,6 +1440,9 @@ const ProfileSetup: React.FC = () => {
             </View>
           </ScrollView>
         )}
+
+        {/* Full Screen Media Modal */}
+        {renderFullScreenModal()}
 
         {/* Date Picker Modal */}
         <DatePickerModal
