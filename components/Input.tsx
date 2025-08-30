@@ -92,10 +92,14 @@ const styles = StyleSheet.create({
     input: {
         color: COLORS.black,
         flex: 1,
+        flexShrink: 1,
+        minWidth: 0,
+        maxWidth: '100%',
         fontFamily: 'regular',
         fontSize: getResponsiveFontSize(16),
         paddingTop: 0,
         paddingLeft: getResponsiveSpacing(4), // Add left padding to prevent text from sticking to border
+        paddingRight: getResponsiveSpacing(4),
     },
     errorContainer: {
         marginVertical: 4,

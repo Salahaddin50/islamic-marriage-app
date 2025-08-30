@@ -43,11 +43,15 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
   const [searchText, setSearchText] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   
-  // Filter data based on search text
-  const filteredData = data.filter(item =>
-    item.label.toLowerCase().includes(searchText.toLowerCase()) ||
-    item.value.toLowerCase().includes(searchText.toLowerCase())
-  );
+  // Filter data based on search text (match label, value, or optional country field)
+  const text = searchText.trim().toLowerCase();
+  const filteredData = data.filter((item: any) => {
+    if (!text) return true;
+    const label = (item.label || '').toLowerCase();
+    const value = (item.value || '').toLowerCase();
+    const country = (item.country || '').toLowerCase();
+    return label.includes(text) || value.includes(text) || country.includes(text);
+  });
 
   // Find selected item for display
   const selectedItem = data.find(item => item.value === selectedValue);
@@ -190,7 +194,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
             <FlatList
               data={filteredData}
               renderItem={renderItem}
-              keyExtractor={(item) => item.value}
+              keyExtractor={(item) => `${item.value}-${item.label}`}
               style={styles.flatList}
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={

@@ -24,6 +24,12 @@ import { phoneCodesData } from '../data/phoneCodes';
 import { getCountriesAsDropdownItems, getCitiesForCountry } from '../data/countries';
 import RegistrationService, { RegistrationData } from '../src/services/registration.service';
 import type { GenderType } from '../src/types/database.types';
+import { PhotosVideosAPI } from '../src/api/photos-videos.api';
+import { launchMediaPicker } from '../utils/ImagePickerHelper';
+import { supabase } from '../src/config/supabase';
+import { Image } from 'expo-image';
+import { DEFAULT_VIDEO_THUMBNAIL } from '../constants/defaultThumbnails';
+import type { PhotoVideoItem } from '../src/services/photos-videos.service';
 
 // ================================
 // VALIDATION SCHEMAS
@@ -113,6 +119,12 @@ const ProfileSetup: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedCountry, setSelectedCountry] = useState<string>('');
   const [availableCities, setAvailableCities] = useState<string[]>([]);
+  const [mediaLoading, setMediaLoading] = useState(false);
+  const [photosCount, setPhotosCount] = useState(0);
+  const [videosCount, setVideosCount] = useState(0);
+  const [mediaUploading, setMediaUploading] = useState(false);
+  const [photos, setPhotos] = useState<PhotoVideoItem[]>([]);
+  const [videos, setVideos] = useState<PhotoVideoItem[]>([]);
 
   // Form states for each step
   const [physicalDetails, setPhysicalDetails] = useState<Partial<PhysicalDetails>>({});
@@ -222,6 +234,219 @@ const ProfileSetup: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Ensure minimal profile for media uploads
+  const ensureMinimalProfileForMedia = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+      const { data: existing } = await supabase
+        .from('user_profiles')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (existing) return true;
+
+      const basic = watchedValues;
+      if (!basic.firstName || !basic.gender || !basic.dateOfBirth || !basic.country || !basic.city) {
+        return false;
+      }
+      const { error } = await supabase
+        .from('user_profiles')
+        .insert({
+          user_id: user.id,
+          first_name: basic.firstName,
+          last_name: basic.lastName || '',
+          gender: basic.gender,
+          date_of_birth: new Date(basic.dateOfBirth).toISOString().split('T')[0],
+          country: basic.country,
+          city: basic.city,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+      return !error;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const loadMyMedia = async () => {
+    try {
+      setMediaLoading(true);
+      const ensured = await ensureMinimalProfileForMedia();
+      if (!ensured) {
+        setPhotosCount(0);
+        setVideosCount(0);
+        setPhotos([]);
+        setVideos([]);
+        return;
+      }
+      const result = await PhotosVideosAPI.getMyMedia();
+      if (result.success && result.data) {
+        setPhotos(result.data.photos);
+        setVideos(result.data.videos);
+        setPhotosCount(result.data.photos.length);
+        setVideosCount(result.data.videos.length);
+      } else {
+        setPhotosCount(0);
+        setVideosCount(0);
+        setPhotos([]);
+        setVideos([]);
+      }
+    } finally {
+      setMediaLoading(false);
+    }
+  };
+
+  const pickAndUploadMedia = async (type: 'photo' | 'video') => {
+    try {
+      setMediaUploading(true);
+      const media = await launchMediaPicker(type);
+      if (!media) return;
+      const response = await fetch(media.uri);
+      let blob = await response.blob();
+      if (media.mimeType) {
+        blob = new Blob([blob], { type: media.mimeType });
+      }
+      const result = type === 'photo'
+        ? await PhotosVideosAPI.uploadPhoto(blob, { visibility: 'private' })
+        : await PhotosVideosAPI.uploadVideo(blob, { visibility: 'private' });
+      if (result.success) {
+        await loadMyMedia();
+        Alert.alert('Success', type === 'photo' ? 'Photo uploaded successfully' : 'Video uploaded successfully');
+      } else {
+        Alert.alert('Error', result.error || 'Upload failed');
+      }
+    } catch (e) {
+      Alert.alert('Error', 'Failed to upload media');
+    } finally {
+      setMediaUploading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    if (currentStep === 5) {
+      loadMyMedia();
+    }
+  }, [currentStep]);
+
+  const handleMediaNext = () => {
+    if (photos.length < 3) {
+      Alert.alert('Add Photos', 'Please upload at least 3 photos to continue.');
+      return;
+    }
+    setCurrentStep(6);
+  };
+
+  const setAsAvatar = async (id: string) => {
+    try {
+      setMediaLoading(true);
+      const result = await PhotosVideosAPI.setProfilePicture(id);
+      if (result.success) {
+        await loadMyMedia();
+        Alert.alert('Success', 'Photo set as profile avatar!');
+      } else {
+        Alert.alert('Error', result.error || 'Failed to set avatar');
+      }
+    } finally {
+      setMediaLoading(false);
+    }
+  };
+
+  const handleDeleteMedia = async (id: string, type: 'photo' | 'video') => {
+    try {
+      setMediaLoading(true);
+      const result = await PhotosVideosAPI.deleteMedia(id);
+      if (result.success) {
+        await loadMyMedia();
+      } else {
+        Alert.alert('Error', result.error || 'Delete failed');
+      }
+    } finally {
+      setMediaLoading(false);
+    }
+  };
+
+  const renderPhotoItem = ({ item }: { item: PhotoVideoItem }) => {
+    const getPhotoUrl = () => {
+      if (item.thumbnail_url && (
+        item.thumbnail_url.includes('.jpg') ||
+        item.thumbnail_url.includes('.jpeg') ||
+        item.thumbnail_url.includes('.png') ||
+        item.thumbnail_url.includes('.webp')
+      )) {
+        return item.thumbnail_url;
+      } else {
+        return item.external_url;
+      }
+    };
+
+    return (
+      <View style={styles.mediaItem}>
+        <TouchableOpacity 
+          style={styles.imageContainer}
+          activeOpacity={0.8}
+        >
+          <Image
+            source={{ uri: getPhotoUrl() }}
+            contentFit="cover"
+            style={styles.photoItem}
+            cachePolicy="memory-disk"
+            transition={200}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.avatarButton}
+          onPress={() => setAsAvatar(item.id)}
+          activeOpacity={0.5}
+        >
+          <Text style={styles.buttonText}>Main</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.deleteButton, { zIndex: 99 }]}
+          onPress={() => handleDeleteMedia(item.id, 'photo')}
+          activeOpacity={0.5}
+        >
+          <Text style={styles.buttonText}>Delete</Text>
+        </TouchableOpacity>
+
+        {item.is_profile_picture && (
+          <View style={styles.profileBadge}>
+            <Text style={styles.profileBadgeText}>Current Avatar</Text>
+          </View>
+        )}
+      </View>
+    );
+  };
+
+  const renderVideoItem = ({ item }: { item: PhotoVideoItem }) => {
+    const thumb = item.thumbnail_url || DEFAULT_VIDEO_THUMBNAIL;
+    return (
+      <View style={styles.mediaItem}>
+        <TouchableOpacity style={styles.videoContainer} activeOpacity={0.8}>
+          <Image
+            source={{ uri: thumb }}
+            contentFit="contain"
+            style={[styles.videoItem, { objectFit: 'contain' }]}
+            cachePolicy="none"
+            transition={200}
+          />
+          <View style={styles.playButton}>
+            <Text style={styles.playButtonText}>Play</Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.deleteButton, { zIndex: 99 }]}
+          onPress={() => handleDeleteMedia(item.id, 'video')}
+          activeOpacity={0.5}
+        >
+          <Text style={styles.buttonText}>Delete</Text>
+        </TouchableOpacity>
+      </View>
+    );
   };
 
   const handleBack = () => {
@@ -448,9 +673,9 @@ const ProfileSetup: React.FC = () => {
         {/* Step Progress */}
         <View style={styles.progressContainer}>
           <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${(currentStep / 5) * 100}%` }]} />
+            <View style={[styles.progressFill, { width: `${(currentStep / 6) * 100}%` }]} />
           </View>
-          <Text style={styles.progressText}>Step {currentStep} of 5</Text>
+          <Text style={styles.progressText}>Step {currentStep} of 6</Text>
         </View>
 
         {/* Step 1: Basic Information */}
@@ -933,8 +1158,79 @@ const ProfileSetup: React.FC = () => {
           </ScrollView>
         )}
 
-        {/* Step 5: Marriage Intentions */}
+        {/* Step 5: Photos & Videos (3 photos required) */}
         {currentStep === 5 && (
+          <ScrollView style={styles.stepContainer} showsVerticalScrollIndicator={false}>
+            <Text style={styles.stepTitle}>Photos & Videos</Text>
+            <Text style={styles.stepSubtitle}>Add at least 3 photos. Videos are optional.</Text>
+
+            <View style={styles.formContainer}>
+              {/* Photos Section */}
+              <View style={styles.sectionHeaderInline}>
+                <Text style={styles.sectionTitleInline}>My Photos ({photos.length})</Text>
+                <TouchableOpacity 
+                  style={[styles.addButtonInline, mediaUploading && styles.addButtonDisabledInline]}
+                  onPress={() => !mediaUploading && pickAndUploadMedia('photo')}
+                  disabled={mediaUploading}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.addButtonTextInline}>{mediaUploading ? 'Uploading...' : 'Add Photo'}</Text>
+                </TouchableOpacity>
+              </View>
+
+              {photos.length > 0 ? (
+                <FlatList
+                  data={photos}
+                  renderItem={renderPhotoItem}
+                  keyExtractor={(item) => item.id}
+                  numColumns={2}
+                  columnWrapperStyle={styles.gridRow}
+                  scrollEnabled={false}
+                  contentContainerStyle={styles.gridContainer}
+                  ItemSeparatorComponent={() => <View style={styles.gridSeparator} />}
+                />
+              ) : (
+                <Text style={styles.mediaInfoText}>Add at least 3 photos to continue.</Text>
+              )}
+
+              {/* Videos Section */}
+              <View style={[styles.sectionHeaderInline, { marginTop: getResponsiveSpacing(16) }]}>
+                <Text style={styles.sectionTitleInline}>My Videos ({videos.length})</Text>
+                <TouchableOpacity 
+                  style={[styles.addButtonInline, mediaUploading && styles.addButtonDisabledInline]}
+                  onPress={() => !mediaUploading && pickAndUploadMedia('video')}
+                  disabled={mediaUploading}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.addButtonTextInline}>{mediaUploading ? 'Uploading...' : 'Add Video'}</Text>
+                </TouchableOpacity>
+              </View>
+
+              {videos.length > 0 ? (
+                <FlatList
+                  data={videos}
+                  renderItem={renderVideoItem}
+                  keyExtractor={(item) => item.id}
+                  numColumns={2}
+                  columnWrapperStyle={styles.gridRow}
+                  scrollEnabled={false}
+                  contentContainerStyle={styles.gridContainer}
+                  ItemSeparatorComponent={() => <View style={styles.gridSeparator} />}
+                />
+              ) : null}
+
+              <Button
+                title="Continue"
+                onPress={handleMediaNext}
+                style={styles.continueButton}
+                disabled={mediaLoading || mediaUploading || photos.length < 3}
+              />
+            </View>
+          </ScrollView>
+        )}
+
+        {/* Step 6: Marriage Intentions */}
+        {currentStep === 6 && (
           <ScrollView style={styles.stepContainer} showsVerticalScrollIndicator={false}>
             <Text style={styles.stepTitle}>Marriage Intentions</Text>
             <Text style={styles.stepSubtitle}>
@@ -1206,12 +1502,42 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: getResponsiveSpacing(12),
+    flexWrap: 'wrap',
   },
   halfWidth: {
-    flex: 1,
+    width: '48%',
   },
   selectorContainer: {
     marginBottom: getResponsiveSpacing(24),
+  },
+  sectionHeaderInline: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: getResponsiveSpacing(16),
+  },
+  sectionTitleInline: {
+    fontSize: getResponsiveFontSize(18),
+    fontFamily: 'bold',
+    color: COLORS.black,
+  },
+  addButtonInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: getResponsiveSpacing(12),
+    paddingVertical: getResponsiveSpacing(8),
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+  addButtonDisabledInline: {
+    opacity: 0.6,
+  },
+  addButtonTextInline: {
+    fontSize: getResponsiveFontSize(14),
+    fontFamily: 'medium',
+    color: COLORS.primary,
+    marginLeft: getResponsiveSpacing(4),
   },
   selectorTitle: {
     fontSize: getResponsiveFontSize(16),
@@ -1242,6 +1568,13 @@ const styles = StyleSheet.create({
   },
   optionChipTextSelected: {
     color: COLORS.white,
+  },
+  mediaInfoText: {
+    fontSize: getResponsiveFontSize(14),
+    fontFamily: 'regular',
+    color: COLORS.gray,
+    marginBottom: getResponsiveSpacing(12),
+    textAlign: 'center',
   },
   multiSelectContainer: {
     flexDirection: 'row',
@@ -1315,6 +1648,104 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     backgroundColor: COLORS.primary,
+  },
+  gridContainer: {
+    paddingBottom: getResponsiveSpacing(20),
+  },
+  gridRow: {
+    justifyContent: 'space-between',
+    paddingHorizontal: getResponsiveSpacing(4),
+  },
+  gridSeparator: {
+    height: getResponsiveSpacing(12),
+  },
+  mediaItem: {
+    position: 'relative',
+    width: (SIZES.width - 56) / 2,
+    marginHorizontal: getResponsiveSpacing(4),
+  },
+  imageContainer: {
+    width: '100%',
+    height: '100%',
+  },
+  photoItem: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 12,
+    backgroundColor: COLORS.grayscale200,
+  },
+  videoContainer: {
+    position: 'relative',
+  },
+  videoItem: {
+    width: '100%',
+    aspectRatio: 0.5625,
+    borderRadius: 12,
+    backgroundColor: COLORS.grayscale200,
+  },
+  playButton: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginTop: -25,
+    marginLeft: -25,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  deleteButton: {
+    position: 'absolute',
+    top: getResponsiveSpacing(4),
+    right: getResponsiveSpacing(4),
+    paddingHorizontal: getResponsiveSpacing(8),
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#ff3b30',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.white,
+  },
+  avatarButton: {
+    position: 'absolute',
+    top: getResponsiveSpacing(4),
+    left: getResponsiveSpacing(4),
+    paddingHorizontal: getResponsiveSpacing(8),
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#34c759',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.white,
+  },
+  buttonText: {
+    fontSize: getResponsiveFontSize(10),
+    fontFamily: 'semiBold',
+    color: COLORS.white,
+    textAlign: 'center',
+  },
+  profileBadge: {
+    position: 'absolute',
+    bottom: getResponsiveSpacing(8),
+    left: getResponsiveSpacing(8),
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: getResponsiveSpacing(8),
+    paddingVertical: getResponsiveSpacing(4),
+    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  profileBadgeText: {
+    fontSize: getResponsiveFontSize(10),
+    fontFamily: 'bold',
+    color: COLORS.white,
+    marginLeft: getResponsiveSpacing(4),
   },
   datePickerInput: {
     marginVertical: getResponsiveSpacing(12),
