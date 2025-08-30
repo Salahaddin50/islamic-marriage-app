@@ -261,6 +261,18 @@ const PhotosVideos = () => {
       }
 
       if (result.success && result.data) {
+        // If first photo and no avatar yet, set uploaded photo as avatar
+        if (type === 'photo') {
+          try {
+            const mediaAfter = await PhotosVideosAPI.getMyMedia();
+            const photosList = mediaAfter.success ? (mediaAfter.data?.photos || []) : [];
+            const hasAvatar = photosList.some((p) => p.is_profile_picture);
+            if (!hasAvatar && result.data?.id) {
+              await PhotosVideosAPI.setProfilePicture(result.data.id);
+              clearProfilePictureCache();
+            }
+          } catch {}
+        }
         // Refresh the media list with force refresh
         await loadMediaItems(true);
         
@@ -292,6 +304,16 @@ const PhotosVideos = () => {
       const result = await PhotosVideosAPI.deleteMedia(id);
       
       if (result.success) {
+        // If avatar got deleted, auto-set next available photo as avatar
+        try {
+          const mediaAfter = await PhotosVideosAPI.getMyMedia();
+          const photosList = mediaAfter.success ? (mediaAfter.data?.photos || []) : [];
+          const hasAvatar = photosList.some((p) => p.is_profile_picture);
+          if (!hasAvatar && photosList.length > 0) {
+            await PhotosVideosAPI.setProfilePicture(photosList[0].id);
+            clearProfilePictureCache();
+          }
+        } catch {}
         // Refresh the list to show updated data with force refresh
         await loadMediaItems(true);
         Alert.alert('Success', `${type === 'photo' ? 'Photo' : 'Video'} deleted successfully!`);

@@ -43,3 +43,8 @@ end; $$ language plpgsql;
 drop trigger if exists message_requests_updated_at on public.message_requests;
 create trigger message_requests_updated_at before update on public.message_requests
 for each row execute function public.set_message_updated_at();
+
+-- Performance indexes
+create index if not exists idx_msg_receiver_status_created on public.message_requests(receiver_id, status, created_at desc);
+create index if not exists idx_msg_sender_status_created on public.message_requests(sender_id, status, created_at desc);
+create index if not exists idx_msg_status_updated on public.message_requests(status, updated_at desc);

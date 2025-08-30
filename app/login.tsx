@@ -163,7 +163,7 @@ const Login = () => {
                 style={styles.container}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             >
-                <Header title="" />
+                <Header title="" showBackButton={false} />
                 <ScrollView 
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={styles.scrollContent}

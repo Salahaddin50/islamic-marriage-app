@@ -46,4 +46,7 @@ drop trigger if exists meet_requests_updated_at on public.meet_requests;
 create trigger meet_requests_updated_at before update on public.meet_requests
 for each row execute function public.set_meet_updated_at();
 
+-- Performance indexes
+create index if not exists idx_meet_receiver_status_updated on public.meet_requests(receiver_id, status, updated_at desc);
+create index if not exists idx_meet_sender_status_updated on public.meet_requests(sender_id, status, updated_at desc);
 

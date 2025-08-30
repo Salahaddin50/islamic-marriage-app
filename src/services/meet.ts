@@ -56,39 +56,42 @@ export const MeetService = {
     if (error) throw error;
   },
 
-  async listIncoming(): Promise<MeetRecord[]> {
+  async listIncoming({ limit = 20, offset = 0 }: { limit?: number; offset?: number } = {}): Promise<MeetRecord[]> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
     const { data } = await supabase
       .from('meet_requests')
-      .select('*')
+      .select('id,sender_id,receiver_id,status,scheduled_at,meet_link,created_at,updated_at')
       .eq('receiver_id', user.id)
       .eq('status', 'pending')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
     return (data as unknown as MeetRecord[]) || [];
   },
 
-  async listOutgoing(): Promise<MeetRecord[]> {
+  async listOutgoing({ limit = 20, offset = 0 }: { limit?: number; offset?: number } = {}): Promise<MeetRecord[]> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
     const { data } = await supabase
       .from('meet_requests')
-      .select('*')
+      .select('id,sender_id,receiver_id,status,scheduled_at,meet_link,created_at,updated_at')
       .eq('sender_id', user.id)
       .eq('status', 'pending')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
     return (data as unknown as MeetRecord[]) || [];
   },
 
-  async listApproved(): Promise<MeetRecord[]> {
+  async listApproved({ limit = 20, offset = 0 }: { limit?: number; offset?: number } = {}): Promise<MeetRecord[]> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
     const { data } = await supabase
       .from('meet_requests')
-      .select('*')
+      .select('id,sender_id,receiver_id,status,scheduled_at,meet_link,created_at,updated_at')
       .eq('status', 'accepted')
       .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
-      .order('updated_at', { ascending: false });
+      .order('updated_at', { ascending: false })
+      .range(offset, offset + limit - 1);
     return (data as unknown as MeetRecord[]) || [];
   },
 

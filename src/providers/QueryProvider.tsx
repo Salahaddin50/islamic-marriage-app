@@ -6,7 +6,7 @@
 // ============================================================================
 
 import React from 'react';
-import { QueryClient, QueryClientProvider, focusManager } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, focusManager, keepPreviousData } from '@tanstack/react-query';
 import { AppState, Platform } from 'react-native';
 import { CONFIG } from '../config';
 
@@ -18,8 +18,8 @@ function createQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        // Stale time - how long data stays fresh
-        staleTime: 5 * 60 * 1000, // 5 minutes
+        // Stale time - keep data fresh longer to avoid refetch flicker
+        staleTime: 10 * 60 * 1000, // 10 minutes
         
         // Cache time - how long data stays in cache after unused
         gcTime: 30 * 60 * 1000, // 30 minutes (previously cacheTime)
@@ -42,9 +42,9 @@ function createQueryClient() {
         networkMode: 'online',
         
         // Refetch configuration
-        refetchOnWindowFocus: true,
+        refetchOnWindowFocus: false,
         refetchOnReconnect: true,
-        refetchOnMount: true,
+        refetchOnMount: false,
         
         // Background updates
         refetchInterval: false, // Disable automatic polling
@@ -57,7 +57,8 @@ function createQueryClient() {
         select: undefined, // Allow components to define their own selectors
         
         // Placeholders
-        placeholderData: undefined,
+        // Keep previous data while fetching to avoid "Loading..." flicker
+        placeholderData: keepPreviousData,
         
         // Structural sharing for better performance
         structuralSharing: true,

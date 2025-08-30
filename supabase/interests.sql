@@ -73,4 +73,9 @@ create trigger set_interests_updated_at
 before update on public.interests
 for each row execute function public.set_updated_at();
 
+-- Performance indexes
+create index if not exists idx_interests_receiver_status_created on public.interests(receiver_id, status, created_at desc);
+create index if not exists idx_interests_sender_status_created on public.interests(sender_id, status, created_at desc);
+create index if not exists idx_interests_status_updated on public.interests(status, updated_at desc);
+
 

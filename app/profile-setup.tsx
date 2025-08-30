@@ -30,6 +30,7 @@ import { supabase } from '../src/config/supabase';
 import { Image } from 'expo-image';
 import { DEFAULT_VIDEO_THUMBNAIL } from '../constants/defaultThumbnails';
 import type { PhotoVideoItem } from '../src/services/photos-videos.service';
+import { generateVideoThumbnail } from '../utils/videoThumbnailGenerator';
 
 // ================================
 // VALIDATION SCHEMAS
@@ -125,6 +126,8 @@ const ProfileSetup: React.FC = () => {
   const [mediaUploading, setMediaUploading] = useState(false);
   const [photos, setPhotos] = useState<PhotoVideoItem[]>([]);
   const [videos, setVideos] = useState<PhotoVideoItem[]>([]);
+  const [videoThumbs, setVideoThumbs] = useState<Record<string, string>>({});
+  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
   const [fullScreenVisible, setFullScreenVisible] = useState(false);
   const [fullScreenItem, setFullScreenItem] = useState<PhotoVideoItem | null>(null);
   const [fullScreenType, setFullScreenType] = useState<'photo' | 'video'>('video');
@@ -301,6 +304,22 @@ const ProfileSetup: React.FC = () => {
         setVideos(result.data.videos);
         setPhotosCount(result.data.photos.length);
         setVideosCount(result.data.videos.length);
+        // Generate thumbnails client-side for videos missing one
+        try {
+          const toProcess = (result.data.videos || []).filter(v => !v.thumbnail_url || !(v.thumbnail_url.includes('.png') || v.thumbnail_url.includes('.jpg') || v.thumbnail_url.includes('.jpeg') || v.thumbnail_url.includes('.webp')));
+          for (const v of toProcess) {
+            try {
+              const res = await fetch(getDirectUrl(v.external_url));
+              const blob = await res.blob();
+              const thumb = await generateVideoThumbnail(blob, { width: 400, height: 300, quality: 0.8 });
+              if (thumb && thumb.length > 1000) {
+                setVideoThumbs(prev => ({ ...prev, [v.id]: thumb }));
+              }
+            } catch (err) {
+              // ignore per-item errors
+            }
+          }
+        } catch {}
       } else {
         setPhotosCount(0);
         setVideosCount(0);
@@ -337,6 +356,16 @@ const ProfileSetup: React.FC = () => {
         ? await PhotosVideosAPI.uploadPhoto(blob, { visibility: 'private' })
         : await PhotosVideosAPI.uploadVideo(blob, { visibility: 'private' });
       if (result.success) {
+        // If this is the first photo (no avatar yet), set uploaded photo as avatar
+        if (type === 'photo') {
+          try {
+            const mediaAfter = await PhotosVideosAPI.getMyMedia();
+            const hasAvatar = mediaAfter.success && mediaAfter.data?.photos?.some((p) => p.is_profile_picture);
+            if (!hasAvatar && result.data?.id) {
+              await PhotosVideosAPI.setProfilePicture(result.data.id);
+            }
+          } catch {}
+        }
         await loadMyMedia();
         Alert.alert('Success', type === 'photo' ? 'Photo uploaded successfully' : 'Video uploaded successfully');
       } else {
@@ -383,6 +412,15 @@ const ProfileSetup: React.FC = () => {
       setMediaLoading(true);
       const result = await PhotosVideosAPI.deleteMedia(id);
       if (result.success) {
+        // If avatar was deleted and there are remaining photos without avatar, set first as avatar
+        try {
+          const mediaAfter = await PhotosVideosAPI.getMyMedia();
+          const photosList = mediaAfter.success ? (mediaAfter.data?.photos || []) : [];
+          const hasAvatar = photosList.some((p) => p.is_profile_picture);
+          if (!hasAvatar && photosList.length > 0) {
+            await PhotosVideosAPI.setProfilePicture(photosList[0].id);
+          }
+        } catch {}
         await loadMyMedia();
       } else {
         Alert.alert('Error', result.error || 'Delete failed');
@@ -447,25 +485,44 @@ const ProfileSetup: React.FC = () => {
   };
 
   const renderVideoItem = ({ item }: { item: PhotoVideoItem }) => {
-    const thumbRaw = item.thumbnail_url || DEFAULT_VIDEO_THUMBNAIL;
+    const localThumb = videoThumbs[item.id];
+    const thumbRaw = localThumb || item.thumbnail_url || DEFAULT_VIDEO_THUMBNAIL;
     const thumb = thumbRaw.startsWith('http') ? getDirectUrl(thumbRaw) : thumbRaw;
+    const isPlayingInline = playingVideoId === item.id;
+    const mediaUrl = getDirectUrl(item.external_url);
     return (
       <View style={styles.mediaItem}>
         <TouchableOpacity 
           style={styles.videoContainer} 
           activeOpacity={0.8}
-          onPress={() => openFullScreen(item, 'video')}
+          onPress={() => {
+            if (Platform.OS === 'web') {
+              setPlayingVideoId(prev => prev === item.id ? null : item.id);
+            }
+          }}
         >
-          <Image
-            source={{ uri: thumb }}
-            contentFit="contain"
-            style={[styles.videoItem, { objectFit: 'contain' }]}
-            cachePolicy="none"
-            transition={200}
-          />
-          <View style={styles.playButton}>
-            <Text style={styles.playButtonText}>Play</Text>
-          </View>
+          {isPlayingInline && Platform.OS === 'web' ? (
+            <video
+              src={mediaUrl}
+              style={{ width: '100%', aspectRatio: '16/9', borderRadius: 12, backgroundColor: 'transparent' }}
+              controls
+              playsInline
+              autoPlay
+            />
+          ) : (
+            <>
+              <Image
+                source={{ uri: thumb }}
+                contentFit="contain"
+                style={[styles.videoItem, { objectFit: 'contain' }]}
+                cachePolicy="none"
+                transition={200}
+              />
+              <View style={styles.playButton}>
+                <Text style={styles.playButtonText}>Play</Text>
+              </View>
+            </>
+          )}
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.deleteButton, { zIndex: 99 }]}
