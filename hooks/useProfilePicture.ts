@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/src/config/supabase';
 import { images } from '@/constants';
+import { fixWebImageSource } from '@/constants/webImageFix';
 import { Platform } from 'react-native';
 // Simple storage implementation using localStorage for web
 const storage = {
@@ -57,15 +58,10 @@ export function useProfilePicture(forceRefresh?: number) {
     
     // Fix for web platform to ensure default image is properly loaded
     if (Platform.OS === 'web') {
-      // For web, we need to ensure the image path is properly resolved
-      import('@/constants/webImageFix').then(module => {
-        // Use the fixWebImageSource function to handle the default image
-        const fixedImageSource = module.fixWebImageSource(images.user1);
-        console.log('Web fixed image source:', fixedImageSource);
-        setProfilePicture(fixedImageSource);
-      }).catch(err => {
-        console.log('Failed to load web image fix:', err);
-      });
+      // For web, ensure the image path is properly resolved
+      const fixedImageSource = fixWebImageSource(images.user1);
+      console.log('Web fixed image source:', fixedImageSource);
+      setProfilePicture(fixedImageSource);
     }
   }, []);
 
@@ -127,7 +123,7 @@ export function useProfilePicture(forceRefresh?: number) {
             console.log('Checking user_profiles for profile picture...');
             const { data: profile, error: profileError } = await supabase
               .from('user_profiles')
-              .select('profile_picture_url')
+              .select('profile_picture_url, gender')
               .eq('user_id', user.id)
               .maybeSingle();
 
@@ -136,6 +132,14 @@ export function useProfilePicture(forceRefresh?: number) {
             } else if (profile?.profile_picture_url) {
               console.log('Found profile picture in user_profiles:', profile.profile_picture_url);
               profilePictureUrl = profile.profile_picture_url;
+            } else if (!profile?.profile_picture_url) {
+              // Fallback to gender silhouettes from CDN for web
+              const isFemale = (profile?.gender || '').toLowerCase() === 'female';
+              profilePictureUrl = Platform.OS === 'web'
+                ? (isFemale
+                    ? 'https://islamic-marriage-photos-2025.lon1.cdn.digitaloceanspaces.com/silhouette/female_silhouette.jpg'
+                    : 'https://islamic-marriage-photos-2025.lon1.cdn.digitaloceanspaces.com/silhouette/male_silhouette.png')
+                : null;
             }
           } catch (profileError) {
             console.log('Exception checking user_profiles:', profileError);
@@ -157,24 +161,13 @@ export function useProfilePicture(forceRefresh?: number) {
               // Set the profile picture with the properly formatted URL
               if (Platform.OS === 'web') {
                 // For web, use the fixWebImageSource helper
-                import('@/constants/webImageFix').then(module => {
-                  const fixedImageSource = module.fixWebImageSource({ uri: formattedUrl });
-                  console.log('Web fixed profile image source:', fixedImageSource);
-                  setProfilePicture(fixedImageSource);
-                  setHasCustomImage(true);
-                  // Cache the profile picture
-                  storage.setItem(PROFILE_PICTURE_CACHE_KEY, JSON.stringify(fixedImageSource));
-                  storage.setItem(PROFILE_PICTURE_TIMESTAMP_KEY, Date.now().toString());
-                }).catch(err => {
-                  console.log('Failed to load web image fix for profile:', err);
-                  // Fallback to direct URI
-                  const directUri = { uri: formattedUrl };
-                  setProfilePicture(directUri);
-                  setHasCustomImage(true);
-                  // Cache the profile picture
-                  storage.setItem(PROFILE_PICTURE_CACHE_KEY, JSON.stringify(directUri));
-                  storage.setItem(PROFILE_PICTURE_TIMESTAMP_KEY, Date.now().toString());
-                });
+                const fixedImageSource = fixWebImageSource({ uri: formattedUrl });
+                console.log('Web fixed profile image source:', fixedImageSource);
+                setProfilePicture(fixedImageSource);
+                setHasCustomImage(true);
+                // Cache the profile picture
+                storage.setItem(PROFILE_PICTURE_CACHE_KEY, JSON.stringify(fixedImageSource));
+                storage.setItem(PROFILE_PICTURE_TIMESTAMP_KEY, Date.now().toString());
               } else {
                 // For native platforms, use the URI directly
                 const nativeUri = { uri: formattedUrl };

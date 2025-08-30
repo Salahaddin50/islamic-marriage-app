@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/src/config/supabase';
 import { images } from '@/constants';
+import { Platform } from 'react-native';
 
 interface ProfilePictureResult {
   imageSource: any;
@@ -95,11 +96,25 @@ export function useProfilePictureSimple(forceRefresh?: number, userIdOverride?: 
           if (!profilePictureUrl) {
             const { data: profile } = await supabase
               .from('user_profiles')
-              .select('profile_picture_url')
+              .select('profile_picture_url, gender')
               .eq('user_id', effectiveUserId)
               .maybeSingle();
             
             profilePictureUrl = profile?.profile_picture_url || null;
+
+            // If still none, choose gender-based silhouette
+            if (!profilePictureUrl) {
+              const isFemale = (profile?.gender || '').toLowerCase() === 'female';
+              if (Platform.OS === 'web') {
+                profilePictureUrl = isFemale
+                  ? 'https://islamic-marriage-photos-2025.lon1.cdn.digitaloceanspaces.com/silhouette/female_silhouette.jpg'
+                  : 'https://islamic-marriage-photos-2025.lon1.cdn.digitaloceanspaces.com/silhouette/male_silhouette.png';
+              } else {
+                // For native, keep using local bundled assets via images
+                // We'll return null to signal using images fallback in caller below
+                profilePictureUrl = null;
+              }
+            }
           }
 
           return profilePictureUrl;
@@ -124,6 +139,7 @@ export function useProfilePictureSimple(forceRefresh?: number, userIdOverride?: 
           setImageSource({ uri: profilePictureUrl });
           setHasCustomImage(true);
         } else {
+          // Use local gender-neutral default if no URL (native platforms)
           setImageSource(images.user1);
           setHasCustomImage(false);
         }

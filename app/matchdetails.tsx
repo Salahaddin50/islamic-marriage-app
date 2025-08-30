@@ -633,7 +633,7 @@ const MatchDetails = () => {
     const renderHeader = () => {
         return (
             <View style={styles.headerContainer}>
-        <TouchableOpacity onPress={() => safeGoBack(navigation, router, '/(tabs)/match')}>
+        <TouchableOpacity onPress={() => safeGoBack(navigation, router, '/(tabs)/home')}>
                     <Image
                         source={icons.back}
             contentFit="contain"
@@ -658,7 +658,7 @@ const MatchDetails = () => {
         <Text style={styles.errorText}>{error || 'User not found'}</Text>
         
         {/* Button to go back */}
-        <TouchableOpacity style={styles.backButton} onPress={() => safeGoBack(navigation, router, '/(tabs)/match')}>
+        <TouchableOpacity style={styles.backButton} onPress={() => safeGoBack(navigation, router, '/(tabs)/home')}>
           <Text style={styles.backButtonText}>Go Back</Text>
         </TouchableOpacity>
         

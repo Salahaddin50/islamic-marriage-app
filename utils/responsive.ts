@@ -131,7 +131,7 @@ export const RESPONSIVE_SIZES = {
 };
 
 // Safe navigation utility for handling back navigation when history is lost
-export const safeGoBack = (navigation: any, router: any, fallbackRoute: string = '/(tabs)') => {
+export const safeGoBack = (navigation: any, router: any, fallbackRoute: string = '/(tabs)/home') => {
   try {
     // First try the standard navigation back
     if (navigation?.canGoBack && navigation.canGoBack()) {
