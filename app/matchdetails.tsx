@@ -99,6 +99,7 @@ const MatchDetails = () => {
   const [showMeetModal, setShowMeetModal] = useState(false);
   const [showPhotoRequestInfoModal, setShowPhotoRequestInfoModal] = useState(false);
   const [showVideoMeetInfoModal, setShowVideoMeetInfoModal] = useState(false);
+  const [showVideoPreconditionModal, setShowVideoPreconditionModal] = useState(false);
   const [showChatInfoModal, setShowChatInfoModal] = useState(false);
   const [chatOathConfirmed, setChatOathConfirmed] = useState(false);
   const [scheduledAt, setScheduledAt] = useState<string>('');
@@ -1053,11 +1054,11 @@ const MatchDetails = () => {
           style={[
             styles.actionButton,
             (meetStatus === 'accepted') && { backgroundColor: COLORS.success },
-            ((interestStatus !== 'accepted') || (meetStatus === 'pending' && isMeetSender)) && styles.actionButtonDisabled,
+            // Keep button active; no disabled style for preconditions
           ]}
-          disabled={(interestStatus !== 'accepted') || (meetStatus === 'pending' && isMeetSender) || (meetStatus === 'accepted')}
+          disabled={false}
           onPress={async () => {
-            if (interestStatus !== 'accepted') return;
+            if (interestStatus !== 'accepted') { setShowVideoPreconditionModal(true); return; }
             if (meetStatus === 'accepted' && meetLink) {
               try { await Linking.openURL(meetLink); } catch { Alert.alert('Error', 'Unable to open meeting link'); }
               return;
@@ -1071,7 +1072,7 @@ const MatchDetails = () => {
           }}
         >
           <Image source={icons.videoCamera2} contentFit="contain" style={styles.actionIcon} />
-          <Text style={[styles.actionText, ((interestStatus !== 'accepted') || (meetStatus === 'pending' && isMeetSender)) && styles.actionTextDisabled]}>
+          <Text style={[styles.actionText]}>
             {(meetStatus === 'accepted') ? 'Approved' : ((meetStatus === 'pending' && isMeetSender) ? 'Requested' : 'Video meet')}
           </Text>
         </TouchableOpacity>
@@ -1166,6 +1167,47 @@ const MatchDetails = () => {
               >
                 <Image source={icons.heart2} contentFit="contain" style={{ width: 18, height: 18, tintColor: COLORS.white, marginRight: 8 }} />
                 <Text style={styles.infoButtonText}>Send</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Video Meet Precondition Modal */}
+      <Modal
+        visible={showVideoPreconditionModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowVideoPreconditionModal(false)}
+      >
+        <View style={styles.fullscreenContainer}>
+          <View style={[styles.modalCard, { maxWidth: 360 }]}> 
+            <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 12, textAlign: 'center', color: COLORS.primary }]}>Video Meet Info</Text>
+            <View style={styles.infoStepContainer}>
+              <View style={styles.infoStepNumberContainer}>
+                <Text style={styles.infoStepNumber}>1</Text>
+              </View>
+              <Text style={styles.infoStepText}>First click Ask Photo to request pictures of the user.</Text>
+            </View>
+            <View style={styles.infoStepContainer}>
+              <View style={styles.infoStepNumberContainer}>
+                <Text style={styles.infoStepNumber}>2</Text>
+              </View>
+              <Text style={styles.infoStepText}>Once she accepts your photo request (likes your profile), Video Meet will be active.</Text>
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+              <TouchableOpacity 
+                style={[styles.infoButton, styles.cancelButton]} 
+                onPress={() => setShowVideoPreconditionModal(false)}
+              >
+                <Text style={[styles.infoButtonText, { color: COLORS.primary }]}>OK</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.infoButton, styles.confirmButton]} 
+                onPress={() => { setShowVideoPreconditionModal(false); setShowPhotoRequestInfoModal(true); }}
+              >
+                <Image source={icons.heart2} contentFit="contain" style={{ width: 18, height: 18, tintColor: COLORS.white, marginRight: 8 }} />
+                <Text style={styles.infoButtonText}>Ask Photo</Text>
               </TouchableOpacity>
             </View>
           </View>

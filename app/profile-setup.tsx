@@ -529,7 +529,7 @@ const ProfileSetup: React.FC = () => {
                 ) : (
                   <View style={styles.nativeVideoPlaceholder}>
                     <Text style={styles.nativeVideoText}>Video Player</Text>
-                    <Text style={styles.nativeVideoSubtext}>Native video player not implemented</nText>
+                    <Text style={styles.nativeVideoSubtext}>Native video player not implemented</Text>
                   </View>
                 )}
               </View>
