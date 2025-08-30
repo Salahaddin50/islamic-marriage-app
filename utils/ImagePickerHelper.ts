@@ -29,7 +29,9 @@ export const launchMediaPicker = async (mediaType: 'photo' | 'video' = 'photo'):
         mediaTypes: mediaType === 'video' ? ["videos"] : ["images"],
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 1,
+        // Compress images on-device; for videos request medium quality when supported
+        quality: mediaType === 'photo' ? 0.75 : 1,
+        videoQuality: mediaType === 'video' ? 'medium' as any : undefined,
     });
 
     if (!result.canceled) {
