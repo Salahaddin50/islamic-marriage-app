@@ -8,11 +8,12 @@ import Button from '@/components/Button';
 import { InterestsService, InterestRecord } from '@/src/services/interests';
 import { supabase } from '@/src/config/supabase';
 import { useNavigation } from 'expo-router';
-import { NavigationProp } from '@react-navigation/native';
+import { NavigationProp, useIsFocused } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
 
 const InterestsScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
+  const isFocused = useIsFocused();
   const [incoming, setIncoming] = useState<InterestRecord[]>([]);
   const [outgoing, setOutgoing] = useState<InterestRecord[]>([]);
   const [approved, setApproved] = useState<InterestRecord[]>([]);
@@ -131,6 +132,13 @@ const InterestsScreen = () => {
   useEffect(() => {
     loadAll();
   }, []);
+
+  // Refresh when tab/screen gains focus
+  useEffect(() => {
+    if (isFocused) {
+      loadAll();
+    }
+  }, [isFocused]);
 
   // Mark approved interests as seen whenever the Approved tab becomes active
   useEffect(() => {

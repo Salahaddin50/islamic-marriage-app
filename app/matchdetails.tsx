@@ -12,6 +12,7 @@ import { DEFAULT_VIDEO_THUMBNAIL } from '@/constants/defaultThumbnails';
 import MatchDetailsSkeleton from '@/components/MatchDetailsSkeleton';
 import { InterestsService, InterestStatus } from '@/src/services/interests';
 import { MeetService, MeetOverallStatus } from '@/src/services/meet';
+import { MessageRequestsService } from '@/src/services/message-requests.service';
 
 // Types for user profile data (comprehensive - matches database)
 interface UserProfile {
@@ -98,11 +99,19 @@ const MatchDetails = () => {
   const [showMeetModal, setShowMeetModal] = useState(false);
   const [showPhotoRequestInfoModal, setShowPhotoRequestInfoModal] = useState(false);
   const [showVideoMeetInfoModal, setShowVideoMeetInfoModal] = useState(false);
+  const [showChatInfoModal, setShowChatInfoModal] = useState(false);
   const [scheduledAt, setScheduledAt] = useState<string>('');
   const [meetDate, setMeetDate] = useState<string>(''); // web-only date
   const [meetTime, setMeetTime] = useState<string>(''); // web-only time
   const [meetScheduledAt, setMeetScheduledAt] = useState<string | null>(null);
   const [nowTick, setNowTick] = useState<number>(Date.now());
+  const todayDateStr = useMemo(() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`; // Local YYYY-MM-DD
+  }, []);
   
   // Fullscreen media viewer state
   const [showFullscreenImage, setShowFullscreenImage] = useState(false);
@@ -158,6 +167,21 @@ const MatchDetails = () => {
     if (Number.isNaN(ts)) return false;
     return Date.now() >= (ts + 60 * 60 * 1000);
   }, [interestStatus, meetStatus, meetScheduledAt, nowTick]);
+
+  const formatMeetingDateShort = (iso?: string | null): string => {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso);
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = d.toLocaleString(undefined, { month: 'short' });
+      const year = String(d.getFullYear()).slice(-2);
+      const hours = String(d.getHours()).padStart(2, '0');
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      return `${day} ${month} ${year} at ${hours}:${minutes}`;
+    } catch {
+      return '';
+    }
+  };
 
   // Load interest status for this profile
   useEffect(() => {
@@ -1035,14 +1059,13 @@ const MatchDetails = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.actionButton, !canMessage && styles.actionButtonDisabled]}
-          disabled={!canMessage}
+          style={[styles.actionButton]}
           onPress={() => {
-            Alert.alert('Message', 'Opening chat...');
+            setShowChatInfoModal(true);
           }}
         >
           <Image source={icons.chat} contentFit="contain" style={styles.actionIcon} />
-          <Text style={[styles.actionText, !canMessage && styles.actionTextDisabled]}>Message</Text>
+          <Text style={[styles.actionText]}>Message</Text>
         </TouchableOpacity>
       </View>
       {/* Photo Request Info Modal */}
@@ -1206,6 +1229,7 @@ const MatchDetails = () => {
                     type="date"
                     value={meetDate}
                     onChange={(e: any) => { setMeetDate(e.target.value); }}
+                    min={todayDateStr}
                     style={{ width: '85%', padding: 12, fontSize: 16, borderRadius: 10, border: '1px solid #e9e9ef', display: 'block', margin: '0 auto' }}
                   />
                 </div>
@@ -1238,10 +1262,15 @@ const MatchDetails = () => {
                   let iso = '';
                   if (Platform.OS === 'web') {
                     if (!meetDate || !meetTime) { Alert.alert('Select time', 'Please select date and time'); return; }
+                    // Block past dates (yesterday and earlier)
+                    if (meetDate < todayDateStr) { Alert.alert('Invalid date', 'Please select today or a future date.'); return; }
                     iso = new Date(`${meetDate}T${meetTime}`).toISOString();
                   } else {
                     iso = scheduledAt ? new Date(scheduledAt.replace(' ', 'T')).toISOString() : '';
                     if (!iso) { Alert.alert('Select time', 'Please enter date and time'); return; }
+                    // Validate entered date is today or future
+                    const datePart = scheduledAt.split(' ')[0];
+                    if (datePart && datePart < todayDateStr) { Alert.alert('Invalid date', 'Please select today or a future date.'); return; }
                   }
                   await MeetService.sendRequest(userId, iso);
                   setMeetStatus('pending');
@@ -1257,6 +1286,81 @@ const MatchDetails = () => {
                 }
               }}>
                 <Text style={styles.tinyBtnText}>Send</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Chat Info Modal */}
+      <Modal
+        visible={showChatInfoModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowChatInfoModal(false)}
+      >
+        <View style={styles.fullscreenContainer}>
+          <View style={[styles.modalCard, { maxWidth: 360 }]}> 
+            <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 12, textAlign: 'center', color: COLORS.primary }]}>Chat Request Process</Text>
+
+            <View style={styles.infoStepContainer}>
+              <View style={styles.infoStepNumberContainer}>
+                <Text style={styles.infoStepNumber}>1</Text>
+              </View>
+              <Text style={styles.infoStepText}>
+                {meetStatus === 'none'
+                  ? 'You need first to arrange a meeting by clicking Video Meet and waiting for approval.'
+                  : 'Chat will be active one hour after the video meeting.'}
+              </Text>
+            </View>
+
+            {!!meetScheduledAt && (
+              <Text style={[styles.infoStepText, { textAlign: 'center', marginBottom: 12 }]}>Meeting time: {formatMeetingDateShort(meetScheduledAt)}</Text>
+            )}
+
+            {meetStatus !== 'none' && (
+              <>
+                <View style={styles.infoStepContainer}>
+                  <View style={styles.infoStepNumberContainer}>
+                    <Text style={styles.infoStepNumber}>2</Text>
+                  </View>
+                  <Text style={styles.infoStepText}>You swear to Allah that you had a meeting and want to proceed for nikah by requesting chat.</Text>
+                </View>
+
+                <View style={styles.infoStepContainer}>
+                  <View style={styles.infoStepNumberContainer}>
+                    <Text style={styles.infoStepNumber}>3</Text>
+                  </View>
+                  <Text style={styles.infoStepText}>If the user accepts your request, you will see her WhatsApp number in the Messages page.</Text>
+                </View>
+              </>
+            )}
+
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
+              <TouchableOpacity 
+                style={[styles.infoButton, styles.cancelButton]} 
+                onPress={() => setShowChatInfoModal(false)}
+              >
+                <Text style={[styles.infoButtonText, { color: COLORS.primary }]}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.infoButton, styles.confirmButton, !canMessage && { opacity: 0.6 }]} 
+                onPress={() => {
+                  if (!canMessage) return; // gate request until eligible time
+                  setShowChatInfoModal(false);
+                  (async () => {
+                    try {
+                      await MessageRequestsService.send(userId);
+                      Alert.alert('Chat Request', 'Your request has been sent. Check Messages to view updates.');
+                      router.push('/(tabs)/chats');
+                    } catch (e) {
+                      Alert.alert('Error', 'Unable to send chat request');
+                    }
+                  })();
+                }}
+              >
+                <Image source={icons.chat} contentFit="contain" style={{ width: 18, height: 18, tintColor: COLORS.white, marginRight: 8 }} />
+                <Text style={styles.infoButtonText}>Request</Text>
               </TouchableOpacity>
             </View>
           </View>

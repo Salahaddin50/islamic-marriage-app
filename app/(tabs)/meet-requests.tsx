@@ -7,11 +7,12 @@ import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import { MeetService, MeetRecord } from '@/src/services/meet';
 import { supabase } from '@/src/config/supabase';
 import { useNavigation } from 'expo-router';
-import { NavigationProp } from '@react-navigation/native';
+import { NavigationProp, useIsFocused } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
 
 const MeetRequestsScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
+  const isFocused = useIsFocused();
   const [incoming, setIncoming] = useState<MeetRecord[]>([]);
   const [outgoing, setOutgoing] = useState<MeetRecord[]>([]);
   const [approved, setApproved] = useState<MeetRecord[]>([]);
@@ -110,6 +111,13 @@ const MeetRequestsScreen = () => {
   };
 
   useEffect(() => { loadAll(); }, []);
+
+  // Refresh when tab/screen gains focus
+  useEffect(() => {
+    if (isFocused) {
+      loadAll();
+    }
+  }, [isFocused]);
 
   // Tick every minute for enabling join 10 minutes before
   useEffect(() => {
