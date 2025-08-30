@@ -965,7 +965,7 @@ const MatchDetails = () => {
           style={[
             styles.actionButton,
             (interestStatus === 'accepted') && { backgroundColor: COLORS.success },
-            ((interestStatus === 'pending' && isInterestSender) || (interestStatus === 'accepted')) && styles.actionButtonDisabled,
+            ((interestStatus === 'pending' && isInterestSender)) && styles.actionButtonDisabled,
           ]}
           disabled={(interestStatus === 'pending' && isInterestSender) || (interestStatus === 'accepted')}
           onPress={async () => {
@@ -994,7 +994,7 @@ const MatchDetails = () => {
           }}
         >
           <Image source={icons.heart} contentFit="contain" style={styles.actionIcon} />
-          <Text style={[styles.actionText, ((interestStatus === 'pending' && isInterestSender) || (interestStatus === 'accepted')) && styles.actionTextDisabled]}>
+          <Text style={[styles.actionText, ((interestStatus === 'pending' && isInterestSender)) && styles.actionTextDisabled]}>
             {(interestStatus === 'accepted') ? 'Approved' : ((interestStatus === 'pending' && isInterestSender) ? 'Requested' : 'Ask Photo')}
           </Text>
         </TouchableOpacity>
@@ -1003,7 +1003,7 @@ const MatchDetails = () => {
           style={[
             styles.actionButton,
             (meetStatus === 'accepted') && { backgroundColor: COLORS.success },
-            ((interestStatus !== 'accepted') || (meetStatus === 'pending' && isMeetSender) || (meetStatus === 'accepted')) && styles.actionButtonDisabled,
+            ((interestStatus !== 'accepted') || (meetStatus === 'pending' && isMeetSender)) && styles.actionButtonDisabled,
           ]}
           disabled={(interestStatus !== 'accepted') || (meetStatus === 'pending' && isMeetSender) || (meetStatus === 'accepted')}
           onPress={async () => {
@@ -1021,7 +1021,7 @@ const MatchDetails = () => {
           }}
         >
           <Image source={icons.videoCamera2} contentFit="contain" style={styles.actionIcon} />
-          <Text style={[styles.actionText, ((interestStatus !== 'accepted') || (meetStatus === 'pending' && isMeetSender) || (meetStatus === 'accepted')) && styles.actionTextDisabled]}>
+          <Text style={[styles.actionText, ((interestStatus !== 'accepted') || (meetStatus === 'pending' && isMeetSender)) && styles.actionTextDisabled]}>
             {(meetStatus === 'accepted') ? 'Approved' : ((meetStatus === 'pending' && isMeetSender) ? 'Requested' : 'Video meet')}
           </Text>
         </TouchableOpacity>

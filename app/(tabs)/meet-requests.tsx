@@ -178,6 +178,7 @@ const MeetRequestsScreen = () => {
                         if (canJoin) { Linking.openURL(row.meet_link as string); }
                         else { Alert.alert('Meeting not active yet', 'Join link will be active 10 minutes before the scheduled time.'); }
                       }}
+                      disabled={!canJoin}
                     >
                       <Text style={[styles.joinLink, !canJoin && { color: 'gray', opacity: 0.7 }]}>Join</Text>
                     </TouchableOpacity>
@@ -284,7 +285,6 @@ const MeetRequestsScreen = () => {
                       if (canJoin && row.meet_link) { Linking.openURL(row.meet_link as string); }
                       else { Alert.alert('Meeting not active yet', 'Join link will be active 10 minutes before the scheduled time.'); }
                     }}
-                    activeOpacity={0.8}
                   >
                     <Text style={styles.tinyBtnText}>Join</Text>
                   </TouchableOpacity>
