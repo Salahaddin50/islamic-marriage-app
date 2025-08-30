@@ -5,7 +5,8 @@
 // ============================================================================
 
 import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 import { useNavigation } from 'expo-router';
 import { supabase } from '../../src/config/supabase';
 import { COLORS } from '../../constants';
@@ -44,6 +45,13 @@ const AuthCallback: React.FC = () => {
 
       if (existingProfile) {
         // Existing user with a profile - redirect to main app IMMEDIATELY
+        try {
+          if (Platform.OS === 'web') {
+            localStorage.setItem('hume_reset_filters_on_login', '1');
+          } else {
+            await SecureStore.setItemAsync('hume_reset_filters_on_login', '1');
+          }
+        } catch {}
         navigation.navigate('(tabs)' as never);
       } else {
         // New user (no profile) - redirect to profile setup IMMEDIATELY  

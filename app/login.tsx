@@ -19,6 +19,7 @@ import SocialButton from '../components/SocialButton';
 import OrSeparator from '../components/OrSeparator';
 import { useNavigation, useRouter, router } from 'expo-router';
 import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '../utils/responsive';
+import * as SecureStore from 'expo-secure-store';
 
 const isTestMode = true;
 
@@ -42,7 +43,7 @@ type Nav = {
 const Login = () => {
     const { navigate } = useNavigation<Nav>();
     const [formState, dispatchFormState] = useReducer(reducer, initialState);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState<string | null>(null);
     const [isChecked, setChecked] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -141,6 +142,14 @@ const Login = () => {
                 // Redirect based on profile existence
                 if (profile) {
                     // Has profile - go to main app
+                    // Mark filters to reset on next home load
+                    try {
+                        if (Platform.OS === 'web') {
+                            localStorage.setItem('hume_reset_filters_on_login', '1');
+                        } else {
+                            await SecureStore.setItemAsync('hume_reset_filters_on_login', '1');
+                        }
+                    } catch {}
                     router.replace('/(tabs)/home');
                 } else {
                     // No profile - go to profile setup
@@ -373,7 +382,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         backgroundColor: COLORS.white,
         borderWidth: 1,
-        borderColor: COLORS.gray6,
+        borderColor: COLORS.greyscale300,
         borderRadius: 30,
         paddingVertical: getResponsiveSpacing(12),
         paddingHorizontal: getResponsiveSpacing(20),
@@ -403,7 +412,7 @@ const styles = StyleSheet.create({
         paddingVertical: getResponsiveSpacing(20),
         paddingHorizontal: getResponsiveSpacing(20),
         borderTopWidth: 1,
-        borderTopColor: COLORS.gray7,
+        borderTopColor: COLORS.greyscale300,
         backgroundColor: COLORS.white,
     },
     bottomText: {

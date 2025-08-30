@@ -223,10 +223,12 @@ type DatabaseProfile = {
 let cachedUsers: UserProfileWithMedia[] | null = null;
 let cachedAt = 0;
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const HOME_CACHE_KEY = 'hume_home_profiles_cache_v1';
 
 // Cache for filter states to survive page refresh and auth redirects
 let cachedFilters: any = null;
 const FILTERS_CACHE_KEY = 'hume_filters_cache';
+const RESET_FLAG_KEY = 'hume_reset_filters_on_login';
 
 // Cross-platform storage utility
 const Storage = {
@@ -259,6 +261,10 @@ const HomeScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
   const [users, setUsers] = useState<UserProfileWithMedia[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 24;
   const [filterLoading, setFilterLoading] = useState(false);
   const refRBSheet = useRef<any>(null);
 
@@ -531,9 +537,11 @@ const HomeScreen = () => {
 
 
   // Fetch user profiles from database
-  const fetchUserProfiles = async (ignoreFilters: boolean = false, isFilter: boolean = false) => {
+  const fetchUserProfiles = async (ignoreFilters: boolean = false, isFilter: boolean = false, isLoadMore: boolean = false) => {
     try {
-      if (isFilter) {
+      if (isLoadMore) {
+        setIsFetchingMore(true);
+      } else if (isFilter) {
         setFilterLoading(true);
       } else {
       setLoading(true);
@@ -559,6 +567,9 @@ const HomeScreen = () => {
         currentUserGender = currentUserProfile?.gender;
       }
 
+      const start = isLoadMore ? (page + 1) * PAGE_SIZE : 0;
+      const end = start + PAGE_SIZE - 1;
+
       let query = supabase
         .from('user_profiles')
         .select(`
@@ -575,7 +586,8 @@ const HomeScreen = () => {
           profile_picture_url,
           islamic_questionnaire
         `)
-        .limit(50);
+        .order('created_at', { ascending: false })
+        .range(start, end);
 
       // Exclude current user if exists
       if (currentUser?.id) {
@@ -812,23 +824,55 @@ const HomeScreen = () => {
           return processedProfile;
         }).filter(profile => profile !== null) as UserProfileWithMedia[]; // Remove null entries
 
-        setUsers(usersWithMedia);
+        // Append or replace depending on load mode
+        if (isLoadMore) {
+          setUsers(prev => [...prev, ...usersWithMedia]);
+          setPage(prev => prev + 1);
+        } else {
+          setUsers(usersWithMedia);
+          setPage(0);
+          setHasMore(true);
+        }
         // cache results for instant navigation back
-        cachedUsers = usersWithMedia;
+        cachedUsers = isLoadMore && Array.isArray(cachedUsers)
+          ? [...cachedUsers, ...usersWithMedia]
+          : usersWithMedia;
         cachedAt = Date.now();
+        // persist to storage for cold starts
+        try {
+          const toStore = isLoadMore && Array.isArray(cachedUsers)
+            ? [...(cachedUsers as UserProfileWithMedia[])]
+            : usersWithMedia;
+          await Storage.setItem(HOME_CACHE_KEY, JSON.stringify({ users: toStore, cachedAt }));
+        } catch {}
+
+        // Determine if there are more pages
+        if (profilesData.length < PAGE_SIZE) {
+          setHasMore(false);
+        }
       } else {
         // No profiles found
+        if (!isLoadMore) {
+          setUsers([]);
+          cachedUsers = [];
+          cachedAt = Date.now();
+        }
+        try {
+          await Storage.setItem(HOME_CACHE_KEY, JSON.stringify({ users: [], cachedAt }));
+        } catch {}
+        setHasMore(false);
+      }
+    } catch (error) {
+      // Show no results on exception
+      if (!isLoadMore) {
         setUsers([]);
         cachedUsers = [];
         cachedAt = Date.now();
       }
-    } catch (error) {
-      // Show no results on exception
-      setUsers([]);
-      cachedUsers = [];
-      cachedAt = Date.now();
     } finally {
-      if (isFilter) {
+      if (isLoadMore) {
+        setIsFetchingMore(false);
+      } else if (isFilter) {
         setFilterLoading(false);
       } else {
       setLoading(false);
@@ -840,7 +884,30 @@ const HomeScreen = () => {
   useFocusEffect(
     React.useCallback(() => {
       const initializeScreen = async () => {
-        // Restore filters first
+        // Render from persistent cache immediately if present
+        try {
+          const stored = await Storage.getItem(HOME_CACHE_KEY);
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (parsed?.users?.length) {
+              setUsers(parsed.users as UserProfileWithMedia[]);
+              setLoading(false);
+            }
+          }
+        } catch {}
+
+        // If coming from a fresh login, reset filters once
+        try {
+          const resetFlag = await Storage.getItem(RESET_FLAG_KEY);
+          if (resetFlag) {
+            await resetAllFilters();
+            await Storage.removeItem(RESET_FLAG_KEY);
+            await fetchUserProfiles(true);
+            return;
+          }
+        } catch {}
+
+        // Otherwise, restore previous filters
         await restoreFiltersFromCache();
         
         const isFresh = cachedUsers && (Date.now() - cachedAt) < CACHE_TTL_MS;
@@ -858,7 +925,10 @@ const HomeScreen = () => {
 
   // Add a manual refresh function for testing
   const handleRefresh = () => {
-    fetchUserProfiles();
+    // Reset and refetch from page 0
+    setPage(0);
+    setHasMore(true);
+    fetchUserProfiles(false, false, false);
   };
 
   // Load current user's display name from Supabase profile
@@ -1491,6 +1561,17 @@ const HomeScreen = () => {
             removeClippedSubviews={!isGalleryView}
             updateCellsBatchingPeriod={50}
             getItemLayout={!isGalleryView ? getItemLayout : undefined}
+            onEndReachedThreshold={0.5}
+            onEndReached={() => {
+              if (!isFetchingMore && hasMore) {
+                fetchUserProfiles(false, false, true);
+              }
+            }}
+            ListFooterComponent={isFetchingMore ? (
+              <View style={{ paddingVertical: 16 }}>
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              </View>
+            ) : null}
           />
           {filterLoading && (
             <View style={styles.filterLoadingOverlay}>
