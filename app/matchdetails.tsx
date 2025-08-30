@@ -96,6 +96,8 @@ const MatchDetails = () => {
   const [meetRecordId, setMeetRecordId] = useState<string | null>(null);
   const [meetLink, setMeetLink] = useState<string | null | undefined>(null);
   const [showMeetModal, setShowMeetModal] = useState(false);
+  const [showPhotoRequestInfoModal, setShowPhotoRequestInfoModal] = useState(false);
+  const [showVideoMeetInfoModal, setShowVideoMeetInfoModal] = useState(false);
   const [scheduledAt, setScheduledAt] = useState<string>('');
   const [meetDate, setMeetDate] = useState<string>(''); // web-only date
   const [meetTime, setMeetTime] = useState<string>(''); // web-only time
@@ -969,6 +971,12 @@ const MatchDetails = () => {
           ]}
           disabled={(interestStatus === 'pending' && isInterestSender) || (interestStatus === 'accepted')}
           onPress={async () => {
+            // First, show the photo request info modal
+            if (interestStatus === 'none') {
+              setShowPhotoRequestInfoModal(true);
+              return;
+            }
+            
             try {
               const current = await InterestsService.getStatusForTarget(userId);
               if (current.status === 'pending') {
@@ -1016,8 +1024,8 @@ const MatchDetails = () => {
               Alert.alert('Video Meet', isMeetSender ? 'Request submitted. Waiting for approval.' : 'You have a pending meet request. Please approve in Meet tab.');
               return;
             }
-            // No meet request yet → open scheduler
-            setShowMeetModal(true);
+            // No meet request yet → show info modal first
+            setShowVideoMeetInfoModal(true);
           }}
         >
           <Image source={icons.videoCamera2} contentFit="contain" style={styles.actionIcon} />
@@ -1037,6 +1045,149 @@ const MatchDetails = () => {
           <Text style={[styles.actionText, !canMessage && styles.actionTextDisabled]}>Message</Text>
         </TouchableOpacity>
       </View>
+      {/* Photo Request Info Modal */}
+      <Modal
+        visible={showPhotoRequestInfoModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowPhotoRequestInfoModal(false)}
+      >
+        <View style={styles.fullscreenContainer}>
+          <View style={[styles.modalCard, { maxWidth: 340 }]}>
+            <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 12, textAlign: 'center', color: COLORS.primary }]}>Photo Request Process</Text>
+            
+            <View style={styles.infoStepContainer}>
+              <View style={styles.infoStepNumberContainer}>
+                <Text style={styles.infoStepNumber}>1</Text>
+              </View>
+              <Text style={styles.infoStepText}>You send a photo request to this person</Text>
+            </View>
+            
+            <View style={styles.infoStepContainer}>
+              <View style={styles.infoStepNumberContainer}>
+                <Text style={styles.infoStepNumber}>2</Text>
+              </View>
+              <Text style={styles.infoStepText}>They receive a notification in their "Requests" page</Text>
+            </View>
+            
+            <View style={styles.infoStepContainer}>
+              <View style={styles.infoStepNumberContainer}>
+                <Text style={styles.infoStepNumber}>3</Text>
+              </View>
+              <Text style={styles.infoStepText}>If they approve your request, you'll see their photos unblurred</Text>
+            </View>
+            
+            <View style={styles.infoStepContainer}>
+              <View style={styles.infoStepNumberContainer}>
+                <Text style={styles.infoStepNumber}>4</Text>
+              </View>
+              <Text style={styles.infoStepText}>Check the "Requests" page to see the approved requests</Text>
+            </View>
+            
+            <View style={styles.infoStepContainer}>
+              <View style={styles.infoStepNumberContainer}>
+                <Text style={styles.infoStepNumber}>5</Text>
+              </View>
+              <Text style={styles.infoStepText}>Once approved, you can request video meetings</Text>
+            </View>
+            
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
+              <TouchableOpacity 
+                style={[styles.infoButton, styles.cancelButton]} 
+                onPress={() => setShowPhotoRequestInfoModal(false)}
+              >
+                <Text style={[styles.infoButtonText, { color: COLORS.primary }]}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.infoButton, styles.confirmButton]} 
+                onPress={async () => {
+                  setShowPhotoRequestInfoModal(false);
+                  try {
+                    const res = await InterestsService.sendInterest(userId);
+                    setInterestStatus('pending');
+                    setIsInterestSender(true);
+                    setInterestRecordId(res?.id || null);
+                  } catch (e) {
+                    Alert.alert('Error', 'Unable to send photo request');
+                  }
+                }}
+              >
+                <Image source={icons.heart2} contentFit="contain" style={{ width: 18, height: 18, tintColor: COLORS.white, marginRight: 8 }} />
+                <Text style={styles.infoButtonText}>Send</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Video Meet Info Modal */}
+      <Modal
+        visible={showVideoMeetInfoModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowVideoMeetInfoModal(false)}
+      >
+        <View style={styles.fullscreenContainer}>
+          <View style={[styles.modalCard, { maxWidth: 340 }]}>
+            <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 12, textAlign: 'center', color: COLORS.primary }]}>Video Meet Process</Text>
+            
+            <View style={styles.infoStepContainer}>
+              <View style={styles.infoStepNumberContainer}>
+                <Text style={styles.infoStepNumber}>1</Text>
+              </View>
+              <Text style={styles.infoStepText}>You schedule a video meeting with this person</Text>
+            </View>
+            
+            <View style={styles.infoStepContainer}>
+              <View style={styles.infoStepNumberContainer}>
+                <Text style={styles.infoStepNumber}>2</Text>
+              </View>
+              <Text style={styles.infoStepText}>They receive a notification in their "Meet" page</Text>
+            </View>
+            
+            <View style={styles.infoStepContainer}>
+              <View style={styles.infoStepNumberContainer}>
+                <Text style={styles.infoStepNumber}>3</Text>
+              </View>
+              <Text style={styles.infoStepText}>If they approve, a secure video meeting link is created</Text>
+            </View>
+            
+            <View style={styles.infoStepContainer}>
+              <View style={styles.infoStepNumberContainer}>
+                <Text style={styles.infoStepNumber}>4</Text>
+              </View>
+              <Text style={styles.infoStepText}>Check the "Meet" page to see your approved meetings</Text>
+            </View>
+            
+            <View style={styles.infoStepContainer}>
+              <View style={styles.infoStepNumberContainer}>
+                <Text style={styles.infoStepNumber}>5</Text>
+              </View>
+              <Text style={styles.infoStepText}>Join the meeting at the scheduled time (available 10 minutes before)</Text>
+            </View>
+            
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
+              <TouchableOpacity 
+                style={[styles.infoButton, styles.cancelButton]} 
+                onPress={() => setShowVideoMeetInfoModal(false)}
+              >
+                <Text style={[styles.infoButtonText, { color: COLORS.primary }]}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.infoButton, styles.confirmButton]} 
+                onPress={() => {
+                  setShowVideoMeetInfoModal(false);
+                  setShowMeetModal(true);
+                }}
+              >
+                <Image source={icons.videoCamera2} contentFit="contain" style={{ width: 18, height: 18, tintColor: COLORS.white, marginRight: 8 }} />
+                <Text style={styles.infoButtonText}>Schedule</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      
       {/* Meet scheduling modal */}
       <Modal
         visible={showMeetModal}
@@ -1119,6 +1270,60 @@ const styles = StyleSheet.create({
     area: {
         flex: 1,
         backgroundColor: COLORS.white
+    },
+    infoStepContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    infoStepNumberContainer: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: COLORS.primary,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+    infoStepNumber: {
+        color: COLORS.white,
+        fontSize: 16,
+        fontFamily: 'bold',
+    },
+    infoStepText: {
+        fontSize: 16,
+        fontFamily: 'medium',
+        color: COLORS.greyscale900,
+        flex: 1,
+    },
+    infoButton: {
+        height: 48,
+        borderRadius: 24,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        flexDirection: 'row',
+        flex: 1,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+    },
+    cancelButton: {
+        backgroundColor: COLORS.tansparentPrimary,
+        borderColor: COLORS.primary,
+        borderWidth: 1,
+        marginRight: 10,
+    },
+    confirmButton: {
+        backgroundColor: COLORS.primary,
+        marginLeft: 10,
+    },
+    infoButtonText: {
+        fontSize: 16,
+        fontFamily: 'bold',
+        color: COLORS.white,
     },
     headerContainer: {
         width: SIZES.width - 32,

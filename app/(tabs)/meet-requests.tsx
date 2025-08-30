@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, useWindowDimensions, Linking, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, useWindowDimensions, Linking, Alert, Modal } from 'react-native';
 import { COLORS, SIZES, images, icons } from '@/constants';
 import { Image } from 'expo-image';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
@@ -26,6 +26,8 @@ const MeetRequestsScreen = () => {
 
   const [profilesById, setProfilesById] = useState<Record<string, { name: string; avatar?: any }>>({});
   const [nowTick, setNowTick] = useState<number>(Date.now());
+  const [showJoinInfoModal, setShowJoinInfoModal] = useState(false);
+  const [selectedMeetRow, setSelectedMeetRow] = useState<MeetRecord | null>(null);
 
   const formatRequestTime = (iso?: string) => {
     if (!iso) return '';
@@ -39,7 +41,7 @@ const MeetRequestsScreen = () => {
         const mm = String(d.getMinutes()).padStart(2, '0');
         return `${hh}:${mm}`;
       }
-      const day = d.getDate();
+      const day = String(d.getDate()).padStart(2, '0');
       const month = d.toLocaleString(undefined, { month: 'short' });
       const year = String(d.getFullYear()).slice(-2);
       return `${day} ${month} ${year}`;
@@ -114,6 +116,33 @@ const MeetRequestsScreen = () => {
     const id = setInterval(() => setNowTick(Date.now()), 60000);
     return () => clearInterval(id);
   }, []);
+  
+  // Format meeting date in the required format: "14 Sep 25"
+  const formatMeetingDate = (iso?: string | null): string => {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso);
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = d.toLocaleString(undefined, { month: 'short' });
+      const year = String(d.getFullYear()).slice(-2);
+      const hours = String(d.getHours()).padStart(2, '0');
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      return `${day} ${month} ${year} at ${hours}:${minutes}`;
+    } catch {
+      return '';
+    }
+  };
+  
+  // Helper function to check if it's time to join a meeting
+  const isTimeToJoin = (scheduledAt: string | null): boolean => {
+    if (!scheduledAt) return false;
+    try {
+      const scheduledMs = new Date(scheduledAt).getTime();
+      return !Number.isNaN(scheduledMs) && (nowTick >= (scheduledMs - 10 * 60 * 1000));
+    } catch {
+      return false;
+    }
+  };
 
   useEffect(() => {
     const ch = supabase
@@ -219,7 +248,7 @@ const MeetRequestsScreen = () => {
             row={row}
             idx={idx}
             otherUserId={row.sender_id}
-            scheduledText={row.scheduled_at ? new Date(row.scheduled_at).toLocaleString() : ''}
+            scheduledText={row.scheduled_at ? formatMeetingDate(row.scheduled_at) : ''}
             scheduledAtISO={row.scheduled_at || undefined}
             requestText={formatRequestTime(row.created_at)}
             actions={
@@ -251,7 +280,7 @@ const MeetRequestsScreen = () => {
             row={row}
             idx={idx}
             otherUserId={row.receiver_id}
-            scheduledText={row.scheduled_at ? new Date(row.scheduled_at).toLocaleString() : ''}
+            scheduledText={row.scheduled_at ? formatMeetingDate(row.scheduled_at) : ''}
             scheduledAtISO={row.scheduled_at || undefined}
             requestText={formatRequestTime(row.created_at)}
             actions={
@@ -281,7 +310,7 @@ const MeetRequestsScreen = () => {
               row={row}
               idx={idx}
               otherUserId={row.sender_id}
-              scheduledText={row.scheduled_at ? new Date(row.scheduled_at).toLocaleString() : ''}
+              scheduledText={row.scheduled_at ? formatMeetingDate(row.scheduled_at) : ''}
               scheduledAtISO={row.scheduled_at || undefined}
               requestText={formatRequestTime(row.updated_at)}
               hideInlineJoin
@@ -290,8 +319,8 @@ const MeetRequestsScreen = () => {
                   <TouchableOpacity
                     style={[styles.tinyBtn, { backgroundColor: COLORS.primary }]}
                     onPress={() => {
-                      if (canJoin && row.meet_link) { Linking.openURL(row.meet_link as string); }
-                      else { Alert.alert('Meeting not active yet', 'Join link will be active 10 minutes before the scheduled time.'); }
+                      setSelectedMeetRow(row);
+                      setShowJoinInfoModal(true);
                     }}
                   >
                     <Text style={styles.tinyBtnText}>Join</Text>
@@ -310,18 +339,90 @@ const MeetRequestsScreen = () => {
 
   const renderScene = SceneMap({ received: ReceivedRoute, sent: SentRoute, approved: ApprovedRoute });
 
-  return (
-    <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}> 
-      <View style={[styles.container, { backgroundColor: COLORS.white }]}> 
-        {renderHeader()} 
-        <TabView 
-          navigationState={{ index, routes }} 
-          renderScene={renderScene} 
-          onIndexChange={setIndex} 
-          initialLayout={{ width: layout.width }} 
-          renderTabBar={renderTabBar} 
-        /> 
-      </View> 
+    return (
+    <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
+      <View style={[styles.container, { backgroundColor: COLORS.white }]}>
+        {renderHeader()}
+        <TabView
+          navigationState={{ index, routes }}
+          renderScene={renderScene}
+          onIndexChange={setIndex}
+          initialLayout={{ width: layout.width }}
+          renderTabBar={renderTabBar}
+        />
+        
+        {/* Join Meeting Info Modal */}
+        <Modal
+          visible={showJoinInfoModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowJoinInfoModal(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Video Meeting Access</Text>
+              
+              <View style={styles.meetingInfoContainer}>
+                {selectedMeetRow?.scheduled_at && (
+                  <Text style={styles.scheduledTimeText}>
+                    Scheduled for: {formatMeetingDate(selectedMeetRow.scheduled_at)}
+                  </Text>
+                )}
+                
+                <View style={styles.infoRow}>
+                  <Image 
+                    source={icons.videoCamera2} 
+                    contentFit="contain" 
+                    style={{ width: 24, height: 24, tintColor: COLORS.primary, marginRight: 12 }} 
+                  />
+                  <Text style={styles.infoText}>
+                    Meeting access is available 10 minutes before the scheduled time
+                  </Text>
+                </View>
+                
+                <View style={styles.infoRow}>
+                  <Image 
+                    source={icons.clock} 
+                    contentFit="contain" 
+                    style={{ width: 24, height: 24, tintColor: COLORS.primary, marginRight: 12 }} 
+                  />
+                  <Text style={styles.infoText}>
+                    {selectedMeetRow && selectedMeetRow.scheduled_at ? 
+                      isTimeToJoin(selectedMeetRow.scheduled_at) ? 
+                        "You can join the meeting now" : 
+                        "Meeting is not yet available to join" 
+                      : ""}
+                  </Text>
+                </View>
+              </View>
+              
+              <View style={styles.modalButtonsContainer}>
+                <TouchableOpacity 
+                  style={[styles.modalButton, styles.cancelButton]} 
+                  onPress={() => setShowJoinInfoModal(false)}
+                >
+                  <Text style={[styles.modalButtonText, { color: COLORS.primary }]}>Close</Text>
+                </TouchableOpacity>
+                
+                {selectedMeetRow && selectedMeetRow.meet_link && isTimeToJoin(selectedMeetRow.scheduled_at) && (
+                  <TouchableOpacity 
+                    style={[styles.modalButton, styles.joinButton]} 
+                    onPress={() => {
+                      setShowJoinInfoModal(false);
+                      if (selectedMeetRow?.meet_link) {
+                        Linking.openURL(selectedMeetRow.meet_link);
+                      }
+                    }}
+                  >
+                    <Image source={icons.videoCamera2} contentFit="contain" style={{ width: 18, height: 18, tintColor: COLORS.white, marginRight: 8 }} />
+                    <Text style={styles.modalButtonText}>Join Now</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          </View>
+        </Modal>
+      </View>
     </SafeAreaView>
   );
 };
@@ -330,6 +431,87 @@ const styles = StyleSheet.create({
   area: { flex: 1, backgroundColor: COLORS.white },
   container: { flex: 1, backgroundColor: COLORS.white, padding: 16 },
   headerContainer: { flexDirection: 'row', alignItems: 'center', width: SIZES.width - 32, justifyContent: 'space-between' },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 20,
+    width: '100%',
+    maxWidth: 340,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontFamily: 'bold',
+    color: COLORS.primary,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  meetingInfoContainer: {
+    marginVertical: 16,
+  },
+  scheduledTimeText: {
+    fontSize: 16,
+    fontFamily: 'medium',
+    color: COLORS.greyscale900,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  infoText: {
+    fontSize: 16,
+    fontFamily: 'medium',
+    color: COLORS.greyscale900,
+    flex: 1,
+  },
+  modalButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  modalButton: {
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    flex: 1,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  cancelButton: {
+    backgroundColor: COLORS.tansparentPrimary,
+    borderColor: COLORS.primary,
+    borderWidth: 1,
+    marginRight: 10,
+  },
+  joinButton: {
+    backgroundColor: COLORS.primary,
+    marginLeft: 10,
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontFamily: 'bold',
+    color: COLORS.white,
+  },
   headerLeft: { flexDirection: 'row', alignItems: 'center' },
   headerLogo: { height: 36, width: 36, tintColor: COLORS.primary },
   headerTitle: { fontSize: 20, fontFamily: 'bold', color: COLORS.black, marginLeft: 12 },
