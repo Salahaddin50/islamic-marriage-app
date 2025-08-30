@@ -63,13 +63,13 @@ const Inbox = () => {
       <View style={styles.headerContainer}>
         <View style={styles.headerLeft}>
           <Image
-            source={images.logo}
+            source={icons.chat}
             contentFit='contain'
-            style={styles.headerLogo}
+            style={[styles.headerLogo, {tintColor: COLORS.primary}]}
           />
           <Text style={[styles.headerTitle, {
             color: COLORS.greyscale900
-          }]}>Inbox</Text>
+          }]}>Messages</Text>
         </View>
         <View style={styles.headerRight} />
       </View>

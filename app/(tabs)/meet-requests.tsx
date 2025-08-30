@@ -151,7 +151,7 @@ const MeetRequestsScreen = () => {
   const renderHeader = () => (
     <View style={styles.headerContainer}>
       <View style={styles.headerLeft}>
-        <Image source={images.logo} contentFit='contain' style={styles.headerLogo} />
+        <Image source={icons.videoCamera2} contentFit='contain' style={[styles.headerLogo, {tintColor: COLORS.primary}]} />
         <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>Meet Requests</Text>
       </View>
       <View style={styles.headerRight} />
