@@ -638,6 +638,8 @@ export class RegistrationService {
         date_of_birth: new Date(basicInfo.dateOfBirth).toISOString().split('T')[0], // Convert to YYYY-MM-DD format
         country: basicInfo.country,
         city: basicInfo.city,
+        phone_code: basicInfo.phoneCode || null,
+        mobile_number: basicInfo.mobileNumber || null,
         // Physical details
         height_cm: physicalDetails.height,
         weight_kg: physicalDetails.weight,
@@ -731,6 +733,8 @@ export class RegistrationService {
         country: profileData.country,
         city: profileData.city,
         bio: profileData.aboutMe || '',
+        phone_code: (profileData as any).phoneCode || null,
+        mobile_number: (profileData as any).mobileNumber || null,
         updated_at: new Date().toISOString(),
       };
 
