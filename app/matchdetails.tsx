@@ -100,11 +100,16 @@ const MatchDetails = () => {
   const [showPhotoRequestInfoModal, setShowPhotoRequestInfoModal] = useState(false);
   const [showVideoMeetInfoModal, setShowVideoMeetInfoModal] = useState(false);
   const [showChatInfoModal, setShowChatInfoModal] = useState(false);
+  const [chatOathConfirmed, setChatOathConfirmed] = useState(false);
   const [scheduledAt, setScheduledAt] = useState<string>('');
   const [meetDate, setMeetDate] = useState<string>(''); // web-only date
   const [meetTime, setMeetTime] = useState<string>(''); // web-only time
   const [meetScheduledAt, setMeetScheduledAt] = useState<string | null>(null);
   const [nowTick, setNowTick] = useState<number>(Date.now());
+  // Message request state
+  const [messageStatus, setMessageStatus] = useState<'none' | 'pending' | 'accepted' | 'rejected'>('none');
+  const [isMessageSender, setIsMessageSender] = useState(false);
+  const [messageRecordId, setMessageRecordId] = useState<string | null>(null);
   const todayDateStr = useMemo(() => {
     const d = new Date();
     const y = d.getFullYear();
@@ -151,6 +156,19 @@ const MatchDetails = () => {
       } catch {}
     })();
   }, [userId]);
+
+  // Load messaging status for this profile
+  useEffect(() => {
+    (async () => {
+      if (!userId) return;
+      try {
+        const res = await MessageRequestsService.getStatusForTarget(userId);
+        setMessageStatus((res.status as any) || 'none');
+        setIsMessageSender(res.isSender);
+        setMessageRecordId(res.record?.id || null);
+      } catch {}
+    })();
+  }, [userId, nowTick]);
 
   // Refresh ticker every minute so time-based gating updates
   useEffect(() => {
@@ -1059,13 +1077,24 @@ const MatchDetails = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.actionButton]}
+          style={[
+            styles.actionButton,
+            (messageStatus === 'accepted') && { backgroundColor: COLORS.success },
+            (messageStatus === 'pending' && isMessageSender) && styles.actionButtonDisabled,
+          ]}
+          disabled={(messageStatus === 'pending' && isMessageSender) || (messageStatus === 'accepted')}
           onPress={() => {
+            setChatOathConfirmed(false);
             setShowChatInfoModal(true);
           }}
         >
           <Image source={icons.chat} contentFit="contain" style={styles.actionIcon} />
-          <Text style={[styles.actionText]}>Message</Text>
+          <Text style={[
+            styles.actionText,
+            (messageStatus === 'pending' && isMessageSender) && styles.actionTextDisabled
+          ]}>
+            {messageStatus === 'accepted' ? 'Approved' : (messageStatus === 'pending' && isMessageSender) ? 'Requested' : 'Message'}
+          </Text>
         </TouchableOpacity>
       </View>
       {/* Photo Request Info Modal */}
@@ -1310,7 +1339,9 @@ const MatchDetails = () => {
               <Text style={styles.infoStepText}>
                 {meetStatus === 'none'
                   ? 'You need first to arrange a meeting by clicking Video Meet and waiting for approval.'
-                  : 'Chat will be active one hour after the video meeting.'}
+                  : (canMessage
+                      ? 'You swear by Allah that you have already video meeting with the person and you intend marriage by requesting messaging with her.'
+                      : 'Chat will be active one hour after the video meeting.')}
               </Text>
             </View>
 
@@ -1318,22 +1349,55 @@ const MatchDetails = () => {
               <Text style={[styles.infoStepText, { textAlign: 'center', marginBottom: 12 }]}>Meeting time: {formatMeetingDateShort(meetScheduledAt)}</Text>
             )}
 
-            {meetStatus !== 'none' && (
+            {meetStatus !== 'none' && !canMessage && (
               <>
                 <View style={styles.infoStepContainer}>
                   <View style={styles.infoStepNumberContainer}>
                     <Text style={styles.infoStepNumber}>2</Text>
                   </View>
-                  <Text style={styles.infoStepText}>You swear to Allah that you had a meeting and want to proceed for nikah by requesting chat.</Text>
+                  <Text style={styles.infoStepText}>You swear to Allah that you had a video meeting with the person and want to proceed for nikah by requesting chat.</Text>
                 </View>
 
                 <View style={styles.infoStepContainer}>
                   <View style={styles.infoStepNumberContainer}>
                     <Text style={styles.infoStepNumber}>3</Text>
                   </View>
-                  <Text style={styles.infoStepText}>If the user accepts your request, you will see her WhatsApp number in the Messages page.</Text>
+                  <Text style={styles.infoStepText}>If the user accepts your request, you will see user's WhatsApp number in the Messages page.</Text>
                 </View>
               </>
+            )}
+
+            {canMessage && (
+              <View style={styles.infoStepContainer}>
+                <View style={styles.infoStepNumberContainer}>
+                  <Text style={styles.infoStepNumber}>2</Text>
+                </View>
+                <Text style={styles.infoStepText}>If the user accepts you will see user's WhatsApp number in the Messages page.</Text>
+              </View>
+            )}
+
+            {canMessage && (
+              <TouchableOpacity
+                onPress={() => setChatOathConfirmed(prev => !prev)}
+                style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}
+              >
+                <View style={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: 4,
+                  borderWidth: 1,
+                  borderColor: COLORS.primary,
+                  backgroundColor: chatOathConfirmed ? COLORS.primary : 'transparent',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 10,
+                }}>
+                  {chatOathConfirmed && (
+                    <Text style={{ color: COLORS.white, fontFamily: 'bold', fontSize: 14 }}>✓</Text>
+                  )}
+                </View>
+                <Text style={[styles.infoStepText, { flex: 1 }]}>Yes, I swear</Text>
+              </TouchableOpacity>
             )}
 
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
@@ -1344,9 +1408,14 @@ const MatchDetails = () => {
                 <Text style={[styles.infoButtonText, { color: COLORS.primary }]}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={[styles.infoButton, styles.confirmButton, !canMessage && { opacity: 0.6 }]} 
+                style={[
+                  styles.infoButton,
+                  styles.confirmButton,
+                  (!canMessage || (canMessage && !chatOathConfirmed)) && { opacity: 0.6 }
+                ]} 
                 onPress={() => {
-                  if (!canMessage) return; // gate request until eligible time
+                  const disabled = (!canMessage) || (canMessage && !chatOathConfirmed);
+                  if (disabled) return; // gate request until eligible time and oath confirmed
                   setShowChatInfoModal(false);
                   (async () => {
                     try {

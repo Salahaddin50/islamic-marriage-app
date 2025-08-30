@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, useWindowDimensions, ScrollView, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, useWindowDimensions, ScrollView, Linking, Modal } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
@@ -37,6 +37,12 @@ const Messages = () => {
   const [approved, setApproved] = useState<MessageRequestRecord[]>([]);
   const [profilesById, setProfilesById] = useState<Record<string, { name: string; avatar?: any; phone?: string }>>({});
   const [loading, setLoading] = useState(true);
+  const [myUserId, setMyUserId] = useState<string | null>(null);
+
+  // Accept-oath modal state
+  const [showAcceptInfoModal, setShowAcceptInfoModal] = useState(false);
+  const [acceptOathConfirmed, setAcceptOathConfirmed] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<MessageRequestRecord | null>(null);
 
   const sanitizePhone = (phoneCode?: string | null, mobile?: string | null): string | undefined => {
     if (!mobile) return undefined;
@@ -71,6 +77,8 @@ const Messages = () => {
   const loadAll = async () => {
     try {
       setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      setMyUserId(user?.id || null);
       const [inc, out, appr] = await Promise.all([
         MessageRequestsService.listIncoming(),
         MessageRequestsService.listOutgoing(),
@@ -147,7 +155,14 @@ const Messages = () => {
             otherUserId={row.sender_id}
             rightContent={
               <>
-                <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.primary }]} onPress={async () => { await MessageRequestsService.accept(row.id); await loadAll(); }}>
+                <TouchableOpacity
+                  style={[styles.tinyBtn, { backgroundColor: COLORS.primary }]}
+                  onPress={() => {
+                    setSelectedRequest(row);
+                    setAcceptOathConfirmed(false);
+                    setShowAcceptInfoModal(true);
+                  }}
+                >
                   <Text style={styles.tinyBtnText}>Accept</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={async () => { await MessageRequestsService.reject(row.id); await loadAll(); }}>
@@ -193,7 +208,7 @@ const Messages = () => {
         <Text style={styles.subtitle}>No approved chat requests</Text>
       ) : (
         approved.map((row, idx) => {
-          const otherUserId = row.sender_id;
+          const otherUserId = myUserId && row.sender_id === myUserId ? row.receiver_id : row.sender_id;
           const other = profilesById[otherUserId];
           const phoneDigits = other?.phone;
           return (
@@ -265,6 +280,75 @@ const Messages = () => {
           initialLayout={{ width: layout.width }}
           renderTabBar={renderTabBar}
         />
+
+        {/* Accept Oath Modal */}
+        <Modal
+          visible={showAcceptInfoModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowAcceptInfoModal(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Accept Chat Request</Text>
+
+              <View style={styles.infoStepContainer}> 
+                <View style={styles.infoStepNumberContainer}>
+                  <Text style={styles.infoStepNumber}>1</Text>
+                </View>
+                <Text style={styles.infoStepText}>
+                  By accepting you swear to Allah that you had a video meeting with the person and you intend to discuss the marriage further.
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                onPress={() => setAcceptOathConfirmed(prev => !prev)}
+                style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}
+              >
+                <View style={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: 4,
+                  borderWidth: 1,
+                  borderColor: COLORS.primary,
+                  backgroundColor: acceptOathConfirmed ? COLORS.primary : 'transparent',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 10,
+                }}>
+                  {acceptOathConfirmed && (
+                    <Text style={{ color: COLORS.white, fontFamily: 'bold', fontSize: 14 }}>✓</Text>
+                  )}
+                </View>
+                <Text style={[styles.infoStepText, { flex: 1 }]}>Yes, I swear</Text>
+              </TouchableOpacity>
+
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
+                <TouchableOpacity
+                  style={[styles.infoButton, styles.cancelButton]}
+                  onPress={() => setShowAcceptInfoModal(false)}
+                >
+                  <Text style={[styles.infoButtonText, { color: COLORS.primary }]}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.infoButton, styles.confirmButton, !acceptOathConfirmed && { opacity: 0.6 }]}
+                  onPress={async () => {
+                    if (!acceptOathConfirmed || !selectedRequest) return;
+                    try {
+                      await MessageRequestsService.accept(selectedRequest.id);
+                      setShowAcceptInfoModal(false);
+                      setAcceptOathConfirmed(false);
+                      setSelectedRequest(null);
+                      await loadAll();
+                    } catch {}
+                  }}
+                >
+                  <Text style={styles.infoButtonText}>Accept</Text>
+        </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </View>
     </SafeAreaView>
   )
@@ -355,6 +439,86 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'regular',
     color: COLORS.grayscale700,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 20,
+    width: '100%',
+    maxWidth: 360,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontFamily: 'bold',
+    color: COLORS.primary,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  infoStepContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  infoStepNumberContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  infoStepNumber: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontFamily: 'bold',
+  },
+  infoStepText: {
+    fontSize: 16,
+    fontFamily: 'medium',
+    color: COLORS.greyscale900,
+    flex: 1,
+  },
+  infoButton: {
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    flex: 1,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  cancelButton: {
+    backgroundColor: COLORS.tansparentPrimary,
+    borderColor: COLORS.primary,
+    borderWidth: 1,
+    marginRight: 10,
+  },
+  confirmButton: {
+    backgroundColor: COLORS.primary,
+    marginLeft: 10,
+  },
+  infoButtonText: {
+    fontSize: 16,
+    fontFamily: 'bold',
+    color: COLORS.white,
   },
 })
 

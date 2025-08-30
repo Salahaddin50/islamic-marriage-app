@@ -84,4 +84,25 @@ export const MessageRequestsService = {
       .order('updated_at', { ascending: false });
     return (data as unknown as MessageRequestRecord[]) || [];
   },
+
+  async getLatestBetween(userA: string, userB: string): Promise<MessageRequestRecord | null> {
+    const { data, error } = await supabase
+      .from('message_requests')
+      .select('*')
+      .or(`and(sender_id.eq.${userA},receiver_id.eq.${userB}),and(sender_id.eq.${userB},receiver_id.eq.${userA})`)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) return null;
+    return (data as unknown as MessageRequestRecord) || null;
+  },
+
+  async getStatusForTarget(targetUserId: string): Promise<{ status: MessageRequestStatus | 'none'; record: MessageRequestRecord | null; isSender: boolean }>
+  {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { status: 'none', record: null, isSender: false };
+    const rec = await this.getLatestBetween(user.id, targetUserId);
+    if (!rec) return { status: 'none', record: null, isSender: false };
+    return { status: rec.status as MessageRequestStatus, record: rec, isSender: rec.sender_id === user.id };
+  },
 };

@@ -9,6 +9,7 @@ import { supabase } from "../../src/config/supabase";
 const TabLayout = () => {
   const [approvedInterestNewCount, setApprovedInterestNewCount] = useState<number>(0);
   const [approvedMeetNewCount, setApprovedMeetNewCount] = useState<number>(0);
+  const [approvedMessageNewCount, setApprovedMessageNewCount] = useState<number>(0);
   useEffect(() => {
     let isMounted = true;
     const checkAuth = async () => {
@@ -38,9 +39,9 @@ const TabLayout = () => {
     const loadCounts = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { setApprovedInterestNewCount(0); setApprovedMeetNewCount(0); return; }
+        if (!user) { setApprovedInterestNewCount(0); setApprovedMeetNewCount(0); setApprovedMessageNewCount(0); return; }
 
-        const [interestsCountRes, meetsCountRes] = await Promise.all([
+        const [interestsCountRes, meetsCountRes, messagesCountRes] = await Promise.all([
           supabase
             .from('interests')
             .select('*', { count: 'exact', head: true })
@@ -51,10 +52,16 @@ const TabLayout = () => {
             .select('*', { count: 'exact', head: true })
             .eq('status', 'accepted')
             .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`),
+          supabase
+            .from('message_requests')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'accepted')
+            .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`),
         ]);
 
         setApprovedInterestNewCount(interestsCountRes.count || 0);
         setApprovedMeetNewCount(meetsCountRes.count || 0);
+        setApprovedMessageNewCount(messagesCountRes.count || 0);
       } catch {}
     };
 
@@ -64,6 +71,7 @@ const TabLayout = () => {
       .channel('footer-badges')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'interests' }, loadCounts)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'meet_requests' }, loadCounts)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'message_requests' }, loadCounts)
       .subscribe();
 
     // Poll as a fallback to ensure counts reflect local deletes/updates quickly
@@ -218,15 +226,22 @@ const TabLayout = () => {
                 width: isMobileWeb() ? '20%' : SIZES.width / 5,
                 minWidth: 60,
               }}>
-                <Image
-                  source={focused ? icons.chat : icons.chatBubble2Outline}
-                  contentFit="contain"
-                  style={{
-                    width: isMobileWeb() ? 20 : 24,
-                    height: isMobileWeb() ? 20 : 24,
-                    tintColor: focused ? COLORS.primary : COLORS.gray3,
-                  }}
-                />
+                <View style={{ width: isMobileWeb() ? 28 : 32, height: isMobileWeb() ? 20 : 24, alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                  <Image
+                    source={focused ? icons.chat : icons.chatBubble2Outline}
+                    contentFit="contain"
+                    style={{
+                      width: isMobileWeb() ? 20 : 24,
+                      height: isMobileWeb() ? 20 : 24,
+                      tintColor: focused ? COLORS.primary : COLORS.gray3,
+                    }}
+                  />
+                  {approvedMessageNewCount > 0 && (
+                    <View style={{ position: 'absolute', top: isMobileWeb() ? 1 : 3, left: isMobileWeb() ? 26 : 30, backgroundColor: COLORS.primary, minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}>
+                      <Text style={{ color: COLORS.white, fontSize: 10, fontFamily: 'bold' }}>{approvedMessageNewCount > 99 ? '99+' : approvedMessageNewCount}</Text>
+                    </View>
+                  )}
+                </View>
                 <Text style={{
                   ...FONTS.body4,
                   color: focused ? COLORS.primary : COLORS.gray3,
