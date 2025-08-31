@@ -6,7 +6,7 @@ import Header from '../components/Header';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { useNavigation } from 'expo-router';
-import { NavigationProp } from '@react-navigation/native';
+import { NavigationProp, useFocusEffect } from '@react-navigation/native';
 import PersonalDetailsService, { PersonalDetails, UpdatePersonalDetailsData } from '../src/services/personalDetails.service';
 import { getResponsiveFontSize, getResponsiveSpacing } from '../utils/responsive';
 
@@ -62,9 +62,12 @@ const PersonalDetailsScreen = () => {
 
   // Options arrays (matching profile setup)
   const eyeColorOptions = ['Brown', 'Black', 'Blue', 'Green', 'Hazel', 'Gray', 'Other'];
-  const hairColorOptions = ['Black', 'Brown', 'Blonde', 'Red', 'Gray', 'White', 'Other'];
+  const hairColorOptions = ['Black', 'Dark Brown', 'Brown', 'Light Brown', 'Blonde', 'Red', 'Gray', 'White', 'Other'];
   const skinToneOptions = ['Very Fair', 'Fair', 'Medium', 'Olive', 'Brown', 'Dark'];
-  const bodyTypeOptions = ['Slim', 'Athletic', 'Average', 'Curvy', 'Plus Size', 'Muscular'];
+  const bodyTypeOptionsAll = {
+    male: ['Slim', 'Average', 'Athletic', 'Heavy Set', 'Muscular'],
+    female: ['Slim', 'Average', 'Athletic', 'Curvy', 'Plus Size']
+  } as const;
   
   const educationOptions = ['High School', 'Some College', 'Associate Degree', 'Bachelor\'s Degree', 'Master\'s Degree', 'Doctorate', 'Trade School', 'Other'];
   const languageOptions = [
@@ -109,13 +112,20 @@ const PersonalDetailsScreen = () => {
   ];
   
   const religiousLevelOptions = ['Very Religious', 'Religious', 'Moderately Religious', 'Somewhat Religious', 'Not Very Religious'];
-  const prayerFrequencyOptions = ['5 Times Daily', 'Regularly', 'Sometimes', 'Rarely', 'Never'];
+  const prayerFrequencyOptions = ['All 5 Daily Prayers', '5 Times Daily', 'Regularly', 'Sometimes', 'Rarely', 'Never'];
   const quranReadingOptions = ['Memorized Significant Portions', 'Read Fluently', 'Read with Help', 'Learning to Read', 'Cannot Read Arabic'];
 
   // Load personal details on component mount
   useEffect(() => {
     loadPersonalDetails();
   }, []);
+
+  // Ensure latest values if gender or profile changed elsewhere (e.g., Edit Profile)
+  useFocusEffect(
+    React.useCallback(() => {
+      loadPersonalDetails(true);
+    }, [])
+  );
 
   const loadPersonalDetails = async (forceRefresh: boolean = false) => {
     try {
@@ -271,19 +281,23 @@ const PersonalDetailsScreen = () => {
           const isObject = typeof option === 'object';
           const optionValue = isObject ? option.value : option;
           const optionLabel = isObject ? option.label : option;
-          
+          const normSel = (selectedValue || '').toString().trim().toLowerCase();
+          const isSelected = normSel.length > 0 && (
+            normSel === optionValue.toString().trim().toLowerCase() ||
+            normSel === optionLabel.toString().trim().toLowerCase()
+          );
           return (
             <TouchableOpacity
               key={optionValue}
               style={[
                 styles.optionChip,
-                selectedValue === optionValue && styles.optionChipSelected
+                isSelected && styles.optionChipSelected
               ]}
               onPress={() => onSelect(optionValue)}
             >
               <Text style={[
                 styles.optionChipText,
-                selectedValue === optionValue && styles.optionChipTextSelected
+                isSelected && styles.optionChipTextSelected
               ]}>
                 {optionLabel}
               </Text>
@@ -434,7 +448,13 @@ const PersonalDetailsScreen = () => {
             {renderDropdownSelector('Eye Color', eyeColorOptions, eyeColor, setEyeColor)}
             {renderDropdownSelector('Hair Color', hairColorOptions, hairColor, setHairColor)}
             {renderDropdownSelector('Skin Tone', skinToneOptions, skinTone, setSkinTone)}
-            {renderDropdownSelector('Body Type', bodyTypeOptions, bodyType, setBodyType, true)}
+            {renderDropdownSelector(
+              'Body Type',
+              (personalDetails?.gender === 'female' ? bodyTypeOptionsAll.female : bodyTypeOptionsAll.male),
+              bodyType,
+              setBodyType,
+              true
+            )}
           </View>
 
           {/* Lifestyle & Work Section */}

@@ -1019,15 +1019,15 @@ const styles = StyleSheet.create({
   },
   gridRow: {
     justifyContent: 'space-between',
-    paddingHorizontal: getResponsiveSpacing(4),
+    paddingHorizontal: getResponsiveSpacing(8),
   },
   gridSeparator: {
     height: getResponsiveSpacing(12),
   },
   mediaItem: {
     position: 'relative',
-    width: (SIZES.width - 56) / 2, // Adjusted for better spacing
-    marginHorizontal: getResponsiveSpacing(4),
+    width: '48%', // Responsive: always two columns with equal gaps
+    marginHorizontal: 0,
   },
   imageContainer: {
     width: '100%',

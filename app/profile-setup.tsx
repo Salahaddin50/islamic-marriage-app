@@ -908,9 +908,11 @@ const ProfileSetup: React.FC = () => {
     'Very Fair', 'Fair', 'Medium', 'Olive', 'Brown', 'Dark Brown', 'Very Dark'
   ];
 
-  const bodyTypeOptions = [
-    'Slim', 'Average', 'Athletic', 'Curvy', 'Heavy Set', 'Plus Size'
-  ];
+  // Body type options filtered by gender to avoid mismatched suggestions
+  const bodyTypeOptionsAll = {
+    male: ['Slim', 'Average', 'Athletic', 'Heavy Set'],
+    female: ['Slim', 'Average', 'Athletic', 'Curvy', 'Plus Size']
+  } as const;
 
   const educationOptions = [
     'High School', 'Some College', 'Bachelor\'s Degree', 'Master\'s Degree', 
@@ -1416,9 +1418,11 @@ const ProfileSetup: React.FC = () => {
               <Controller
                 control={physicalForm.control}
                 name="bodyType"
-                render={({ field: { onChange, value } }) => 
-                  renderDropdownSelector('Body Type', bodyTypeOptions, value, onChange, true)
-                }
+                render={({ field: { onChange, value } }) => {
+                  const gender = watchedValues.gender || 'male';
+                  const options = gender === 'female' ? bodyTypeOptionsAll.female : bodyTypeOptionsAll.male;
+                  return renderDropdownSelector('Body Type', options, value, onChange, true);
+                }}
               />
 
               <Button
@@ -2121,15 +2125,15 @@ const styles = StyleSheet.create({
   },
   gridRow: {
     justifyContent: 'space-between',
-    paddingHorizontal: getResponsiveSpacing(4),
+    paddingHorizontal: getResponsiveSpacing(8),
   },
   gridSeparator: {
     height: getResponsiveSpacing(12),
   },
   mediaItem: {
     position: 'relative',
-    width: (SIZES.width - 56) / 2,
-    marginHorizontal: getResponsiveSpacing(4),
+    width: '48%',
+    marginHorizontal: 0,
   },
   imageContainer: {
     width: '100%',
