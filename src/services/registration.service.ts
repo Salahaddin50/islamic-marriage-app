@@ -732,7 +732,7 @@ export class RegistrationService {
         date_of_birth: profileData.dateOfBirth,
         country: profileData.country,
         city: profileData.city,
-        bio: profileData.aboutMe || '',
+        about_me: (profileData as any).aboutMe || '',
         phone_code: (profileData as any).phoneCode || null,
         mobile_number: (profileData as any).mobileNumber || null,
         updated_at: new Date().toISOString(),
