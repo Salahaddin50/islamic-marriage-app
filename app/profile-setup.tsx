@@ -1423,7 +1423,7 @@ const ProfileSetup: React.FC = () => {
 
               <Button
                 title={isLoading ? "Completing Registration..." : "Complete Registration"}
-                onPress={handlePolygamyComplete}
+                onPress={handleCompleteProfile}
                 style={styles.continueButton}
                 disabled={isLoading || (
                   watchedValues.gender === 'male' ? !polygamyDetails.seekingWifeNumber : 
