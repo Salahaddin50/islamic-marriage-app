@@ -374,6 +374,15 @@ const HomeScreen = () => {
       if (!profile.languages_spoken || profile.languages_spoken.length === 0) missingFields.push('Languages Spoken');
       if (!profile.housing_type) missingFields.push('Housing Type');
       if (!profile.living_condition) missingFields.push('Living Condition');
+      // Gender-specific lifestyle
+      if (profile.gender === 'male') {
+        // For male, social_condition is expected; work_status is optional
+        if (!profile.social_condition) missingFields.push('Social Condition');
+      }
+      if (profile.gender === 'female') {
+        // For female, work_status is expected; social_condition is optional
+        if (!profile.work_status) missingFields.push('Work Status');
+      }
       
       // Religious details (check islamic_questionnaire JSON)
       const questionnaire = profile.islamic_questionnaire;
@@ -385,30 +394,33 @@ const HomeScreen = () => {
         if (!questionnaire.quran_reading_level) missingFields.push('Quran Reading Level');
         
         // Gender-specific religious fields
-        if (profile.gender === 'female' && !questionnaire.covering_level) {
-          missingFields.push('Covering Level');
+        if (profile.gender === 'female') {
+          // Females: covering_level expected; beard not applicable
+          if (!questionnaire.covering_level) missingFields.push('Covering Level');
         }
-        if (profile.gender === 'male' && !questionnaire.beard_practice) {
-          missingFields.push('Beard Practice');
+        if (profile.gender === 'male') {
+          // Males: beard_practice expected; covering not applicable
+          if (!questionnaire.beard_practice) missingFields.push('Beard Practice');
         }
         
         // Polygamy preferences
-        if (profile.gender === 'male' && !questionnaire.seeking_wife_number) {
-          missingFields.push('Marriage Intentions');
+        if (profile.gender === 'male') {
+          if (!questionnaire.seeking_wife_number) missingFields.push('Marriage Intentions');
         }
-        if (profile.gender === 'female' && (!questionnaire.accepted_wife_positions || questionnaire.accepted_wife_positions.length === 0)) {
-          missingFields.push('Marriage Intentions');
+        if (profile.gender === 'female') {
+          const positions = questionnaire.accepted_wife_positions;
+          if (!Array.isArray(positions) || positions.length === 0) missingFields.push('Marriage Intentions');
         }
       }
 
       // Check for photos (minimum 3 required)
-      const { data: mediaCount } = await supabase
+      const { count: photoCount } = await supabase
         .from('media_references')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('media_type', 'photo');
 
-      if (!mediaCount || mediaCount < 3) {
+      if ((photoCount ?? 0) < 3) {
         missingFields.push('Photos (minimum 3 required)');
       }
 
