@@ -231,6 +231,8 @@ const HOME_CACHE_KEY = 'hume_home_profiles_cache_v1';
 let cachedFilters: any = null;
 const FILTERS_CACHE_KEY = 'hume_filters_cache';
 const RESET_FLAG_KEY = 'hume_reset_filters_on_login';
+// In-memory session flag: resets on full page reload (web) or app restart (native)
+let didForceRefreshThisSession = false;
 
 // Cross-platform storage utility
 const Storage = {
@@ -1078,6 +1080,17 @@ const HomeScreen = () => {
 
         // Otherwise, restore previous filters
         await restoreFiltersFromCache();
+        // If this is a full refresh (page reload) and we haven't forced once this session, reset filters
+        if (!didForceRefreshThisSession && typeof window !== 'undefined' && window.performance && performance.getEntriesByType) {
+          const navs = performance.getEntriesByType('navigation') as any[];
+          const isReload = Array.isArray(navs) && navs[0] && navs[0].type === 'reload';
+          if (isReload) {
+            await resetAllFilters();
+            await fetchUserProfiles(true);
+            didForceRefreshThisSession = true;
+            return;
+          }
+        }
         
         const isFresh = cachedUsers && (Date.now() - cachedAt) < CACHE_TTL_MS;
         if (isFresh) {
