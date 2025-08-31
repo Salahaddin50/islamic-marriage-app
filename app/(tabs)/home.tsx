@@ -15,6 +15,8 @@ import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { useMatchStore } from '@/src/store';
 import { InterestsService, InterestStatus } from '@/src/services/interests';
+import { FlatGrid } from 'react-native-super-grid';
+import { imageCache } from '@/utils/imageCache';
 
 // Cached profile image to prevent reloading
 let cachedProfileImageUrl: string | null = null;
@@ -267,6 +269,7 @@ const HomeScreen = () => {
   const PAGE_SIZE = 24;
   const [filterLoading, setFilterLoading] = useState(false);
   const refRBSheet = useRef<any>(null);
+  const imagePreloadRef = useRef(new Set<string>());
 
   const [ageRange, setAgeRange] = useState([20, 50]); // Initial age range values
   const [formState, dispatchFormState] = useReducer(reducer, initialState);
@@ -535,6 +538,20 @@ const HomeScreen = () => {
   }, []);
 
 
+
+  // Smart prefetching of next batch
+  const prefetchNextBatch = React.useCallback(async (currentUsers: UserProfileWithMedia[]) => {
+    if (currentUsers.length < 10) return;
+    
+    // Extract image URIs to preload
+    const imageUris = currentUsers
+      .slice(-6) // Last 6 items
+      .map(user => typeof user.image === 'object' && user.image?.uri ? user.image.uri : null)
+      .filter(Boolean) as string[];
+    
+    // Preload in background
+    imageCache.preloadBatch(imageUris).catch(() => {});
+  }, []);
 
   // Fetch user profiles from database
   const fetchUserProfiles = async (ignoreFilters: boolean = false, isFilter: boolean = false, isLoadMore: boolean = false) => {
@@ -826,12 +843,38 @@ const HomeScreen = () => {
 
         // Append or replace depending on load mode
         if (isLoadMore) {
-          setUsers(prev => [...prev, ...usersWithMedia]);
+          const newUsers = [...users, ...usersWithMedia];
+          setUsers(newUsers);
           setPage(prev => prev + 1);
+          // Smart prefetch for smooth scrolling
+          prefetchNextBatch(newUsers);
+          // Aggressive image preloading for next visible items
+          const nextImages = usersWithMedia
+            .slice(0, 6)
+            .map(u => typeof u.image === 'object' && u.image?.uri ? u.image.uri : null)
+            .filter(Boolean) as string[];
+          nextImages.forEach(uri => {
+            if (!imagePreloadRef.current.has(uri)) {
+              imagePreloadRef.current.add(uri);
+              imageCache.preloadImage(uri).catch(() => {});
+            }
+          });
         } else {
           setUsers(usersWithMedia);
           setPage(0);
           setHasMore(true);
+          // Preload first batch of images aggressively
+          const firstImages = usersWithMedia
+            .slice(0, 8)
+            .map(u => typeof u.image === 'object' && u.image?.uri ? u.image.uri : null)
+            .filter(Boolean) as string[];
+          firstImages.forEach(uri => {
+            if (!imagePreloadRef.current.has(uri)) {
+              imagePreloadRef.current.add(uri);
+              imageCache.preloadImage(uri).catch(() => {});
+            }
+          });
+          prefetchNextBatch(usersWithMedia);
         }
         // cache results for instant navigation back
         cachedUsers = isLoadMore && Array.isArray(cachedUsers)
@@ -1064,6 +1107,17 @@ const HomeScreen = () => {
     );
   };
 
+
+  // Optimized render with smart preloading
+  React.useEffect(() => {
+    if (users.length > 0) {
+      // Preload visible images immediately
+      const visibleImages = users.slice(0, 8)
+        .map(user => typeof user.image === 'object' && user.image?.uri ? user.image.uri : null)
+        .filter(Boolean) as string[];
+      imageCache.preloadBatch(visibleImages).catch(() => {});
+    }
+  }, [users]);
 
   const renderItem = React.useCallback(({ item }: { item: UserProfileWithMedia }) => {
     const cardHeight = isGalleryView ? baseHeight * 1.3 : baseHeight; // More vertical in gallery view
@@ -1546,33 +1600,49 @@ const HomeScreen = () => {
       <View style={[styles.container, { backgroundColor: COLORS.white }]}>
         {renderHeader()}
         <View style={{ flex: 1 }}>
-        <FlatList
-          key={isGalleryView ? 'gallery' : 'grid'}
+        <FlatGrid
+          itemDimension={isGalleryView ? windowWidth - 32 : baseWidth * 1.155 * 1.05}
           data={users}
-          renderItem={renderItem}
+          style={{ flex: 1 }}
+          spacing={isGalleryView ? 0 : 12}
+          renderItem={({ item, index }) => {
+            const cardHeight = isGalleryView ? baseHeight * 1.3 : baseHeight;
+            const isSilhouette = !item.image?.uri || item.image === images.femaleSilhouette || item.image === images.maleSilhouette;
+            return (
+              <MatchCard
+                name={item.name}
+                age={item.age}
+                image={item.image}
+                height={item.height}
+                weight={item.weight}
+                country={item.country}
+                city={item.city}
+                onPress={() => navigation.navigate("matchdetails", { userId: item.user_id })}
+                containerStyle={[styles.cardContainer, { width: cardWidth, height: cardHeight }]}
+                imageStyle={{ resizeMode: 'cover', alignSelf: 'center' }}
+                locked={!item.unlocked && !isSilhouette}
+              />
+            );
+          }}
           keyExtractor={(item) => item.id}
-          numColumns={isGalleryView ? 1 : 2}
-          columnWrapperStyle={isGalleryView ? undefined : styles.columnWrapper}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContainer}
-            initialNumToRender={8}
-            maxToRenderPerBatch={8}
-            windowSize={7}
-            removeClippedSubviews={!isGalleryView}
-            updateCellsBatchingPeriod={50}
-            getItemLayout={!isGalleryView ? getItemLayout : undefined}
-            onEndReachedThreshold={0.5}
-            onEndReached={() => {
-              if (!isFetchingMore && hasMore) {
-                fetchUserProfiles(false, false, true);
-              }
-            }}
-            ListFooterComponent={isFetchingMore ? (
-              <View style={{ paddingVertical: 16 }}>
-                <ActivityIndicator size="small" color={COLORS.primary} />
-              </View>
-            ) : null}
-          />
+                      initialNumToRender={4}
+            maxToRenderPerBatch={4}
+            windowSize={3}
+            removeClippedSubviews={true}
+            onEndReachedThreshold={0.2}
+          onEndReached={() => {
+            if (!isFetchingMore && hasMore && users.length >= PAGE_SIZE) {
+              fetchUserProfiles(false, false, true);
+            }
+          }}
+          ListFooterComponent={isFetchingMore ? (
+            <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+              <ActivityIndicator size="small" color={COLORS.primary} />
+            </View>
+          ) : null}
+        />
           {filterLoading && (
             <View style={styles.filterLoadingOverlay}>
               <ActivityIndicator size="large" color={COLORS.primary} />

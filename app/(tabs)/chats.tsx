@@ -8,6 +8,8 @@ import { MessageRequestsService, MessageRequestRecord } from '@/src/services/mes
 import { supabase } from '@/src/config/supabase';
 import { useNavigation } from 'expo-router';
 import { NavigationProp, useIsFocused } from '@react-navigation/native';
+import { Platform } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 
 // Define the types for the route and focused props
 interface TabRoute {
@@ -36,6 +38,29 @@ const Messages = () => {
   const [outgoing, setOutgoing] = useState<MessageRequestRecord[]>([]);
   const [approved, setApproved] = useState<MessageRequestRecord[]>([]);
   const [profilesById, setProfilesById] = useState<Record<string, { name: string; avatar?: any; phone?: string }>>({});
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 20;
+  const CACHE_KEY = 'hume_messages_cache_v1';
+
+  // Storage utility
+  const Storage = {
+    async setItem(key: string, value: string) {
+      if (Platform.OS === 'web') {
+        localStorage.setItem(key, value);
+      } else {
+        await SecureStore.setItemAsync(key, value);
+      }
+    },
+    async getItem(key: string): Promise<string | null> {
+      if (Platform.OS === 'web') {
+        return localStorage.getItem(key);
+      } else {
+        return await SecureStore.getItemAsync(key);
+      }
+    },
+  };
   const [loading, setLoading] = useState(true);
   const [myUserId, setMyUserId] = useState<string | null>(null);
 
@@ -74,26 +99,71 @@ const Messages = () => {
     setProfilesById(prev => ({ ...prev, ...map }));
   };
 
-  const loadAll = async () => {
+  const loadAll = async (isLoadMore: boolean = false) => {
     try {
-      setLoading(true);
+      if (isLoadMore) {
+        setIsFetchingMore(true);
+      } else {
+        // Load from cache first for instant render
+        try {
+          const cached = await Storage.getItem(CACHE_KEY);
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (parsed.incoming) setIncoming(parsed.incoming);
+            if (parsed.outgoing) setOutgoing(parsed.outgoing);
+            if (parsed.approved) setApproved(parsed.approved);
+            if (parsed.profilesById) setProfilesById(parsed.profilesById);
+            if (parsed.myUserId) setMyUserId(parsed.myUserId);
+            setLoading(false);
+          }
+        } catch {}
+        setLoading(true);
+      }
+      
       const { data: { user } } = await supabase.auth.getUser();
       setMyUserId(user?.id || null);
+      
+      const offset = isLoadMore ? (page + 1) * PAGE_SIZE : 0;
       const [inc, out, appr] = await Promise.all([
-        MessageRequestsService.listIncoming(),
-        MessageRequestsService.listOutgoing(),
-        MessageRequestsService.listApproved(),
+        MessageRequestsService.listIncoming({ limit: PAGE_SIZE, offset }),
+        MessageRequestsService.listOutgoing({ limit: PAGE_SIZE, offset }),
+        MessageRequestsService.listApproved({ limit: PAGE_SIZE, offset }),
       ]);
-      setIncoming(inc);
-      setOutgoing(out);
-      setApproved(appr);
+      
+      if (isLoadMore) {
+        setIncoming(prev => [...prev, ...inc]);
+        setOutgoing(prev => [...prev, ...out]);
+        setApproved(prev => [...prev, ...appr]);
+        setPage(prev => prev + 1);
+        setHasMore(inc.length === PAGE_SIZE || out.length === PAGE_SIZE || appr.length === PAGE_SIZE);
+      } else {
+        setIncoming(inc);
+        setOutgoing(out);
+        setApproved(appr);
+        setPage(0);
+        setHasMore(inc.length === PAGE_SIZE || out.length === PAGE_SIZE || appr.length === PAGE_SIZE);
+      }
+      
       const ids: string[] = [];
       inc.forEach(r => ids.push(r.sender_id));
       out.forEach(r => ids.push(r.receiver_id));
       appr.forEach(r => { ids.push(r.sender_id, r.receiver_id); });
       await loadProfiles(ids);
+      
+      // Cache for instant next load
+      if (!isLoadMore) {
+        try {
+          await Storage.setItem(CACHE_KEY, JSON.stringify({
+            incoming: inc, outgoing: out, approved: appr, profilesById, myUserId: user?.id
+          }));
+        } catch {}
+      }
     } finally {
-      setLoading(false);
+      if (isLoadMore) {
+        setIsFetchingMore(false);
+      } else {
+        setLoading(false);
+      }
     }
   };
 

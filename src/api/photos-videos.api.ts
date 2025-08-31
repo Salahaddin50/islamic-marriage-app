@@ -27,11 +27,10 @@ async function getUserProfileId(authUserId: string): Promise<{ id: string } | nu
   }
 
   console.log('⚠️ No user profile found for auth user:', authUserId);
-  console.log('💡 User needs to complete profile setup first');
-  
-  // Don't create profile here - that should be done during registration
-  // Just return null to indicate no profile exists
-  return null;
+  // Allow media operations to associate with the authenticated user id directly
+  // without forcing a premature user_profiles insert. The DB uses auth.users(id)
+  // in media_references RLS, so this is safe.
+  return { id: authUserId };
 }
 
 /**

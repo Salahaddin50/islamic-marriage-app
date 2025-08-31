@@ -133,6 +133,24 @@ export const RESPONSIVE_SIZES = {
 // Safe navigation utility for handling back navigation when history is lost
 export const safeGoBack = (navigation: any, router: any, fallbackRoute: string = '/(tabs)/home') => {
   try {
+    // Determine context-aware fallback on web
+    let effectiveFallback = fallbackRoute;
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const path = window.location?.pathname || '';
+      const isPreLogin = (
+        path === '/' ||
+        path.startsWith('/welcome') ||
+        path.startsWith('/login') ||
+        path.startsWith('/signup') ||
+        path.startsWith('/register') ||
+        path.startsWith('/auth') ||
+        path.startsWith('/onboarding') ||
+        path.startsWith('/index')
+      );
+      if (isPreLogin) {
+        effectiveFallback = '/';
+      }
+    }
     // First try the standard navigation back
     if (navigation?.canGoBack && navigation.canGoBack()) {
       navigation.goBack();
@@ -147,11 +165,11 @@ export const safeGoBack = (navigation: any, router: any, fallbackRoute: string =
     
     // If both fail, navigate to fallback route
     if (router?.replace) {
-      router.replace(fallbackRoute);
+      router.replace(effectiveFallback);
     } else if (router?.push) {
-      router.push(fallbackRoute);
+      router.push(effectiveFallback);
     } else if (navigation?.navigate) {
-      navigation.navigate(fallbackRoute);
+      navigation.navigate(effectiveFallback);
     }
   } catch (error) {
     // Last resort: redirect to home on web or navigate to fallback
@@ -163,7 +181,7 @@ export const safeGoBack = (navigation: any, router: any, fallbackRoute: string =
         window.location.href = '/';
       }
     } else if (router?.replace) {
-      router.replace(fallbackRoute);
+      router.replace('/(tabs)/home');
     }
   }
 };

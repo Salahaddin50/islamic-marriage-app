@@ -4,6 +4,7 @@ import { Image } from 'expo-image';
 import type { StyleProp } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '@/constants';
+import { imageCache } from '../utils/imageCache';
 
 interface MatchCardProps {
   name: string;
@@ -47,6 +48,21 @@ const MatchCard: React.FC<MatchCardProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   
+  // Optimize image URI for caching
+  const optimizedImageUri = React.useMemo(() => {
+    if (typeof image === 'object' && image && 'uri' in image && typeof image.uri === 'string') {
+      return imageCache.getCachedImage(image.uri);
+    }
+    return image;
+  }, [image]);
+
+  const optimizedImage = React.useMemo(() => {
+    if (typeof image === 'object' && image && 'uri' in image && typeof image.uri === 'string') {
+      return { uri: optimizedImageUri as string };
+    }
+    return image;
+  }, [image, optimizedImageUri]);
+
   return (
     <TouchableOpacity onPress={onPress} style={[styles.container, containerStyle]}>
       {isLoading && (
@@ -55,13 +71,14 @@ const MatchCard: React.FC<MatchCardProps> = ({
         </View>
       )}
       <Image
-        source={image}
+        source={optimizedImage}
         contentFit="cover"
         contentPosition="top"
         style={[styles.image, imageStyle]}
         blurRadius={locked ? 15 : 0}
         cachePolicy="memory-disk"
         transition={200}
+        priority="high"
         onLoadStart={() => setIsLoading(true)}
         onLoad={() => setIsLoading(false)}
         onError={() => {

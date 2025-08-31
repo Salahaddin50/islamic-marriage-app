@@ -212,79 +212,15 @@ const ProfileSetup: React.FC = () => {
     setCurrentStep(5);
   };
 
-  // Step 5: Complete Registration
+  // Step 5: Continue to final confirmation (do not submit yet)
   const handlePolygamyComplete = async () => {
-    setIsLoading(true);
-    try {
-      const completeProfile = {
-        basicInfo: comprehensiveData.basicInfo,
-        physicalDetails,
-        lifestyleDetails,
-        religiousDetails,
-        polygamyDetails,
-        gender: watchedValues.gender,
-      };
-
-      await RegistrationService.createComprehensiveProfile(completeProfile);
-      
-      // Show success message and navigate to home
-      Alert.alert(
-        'Profile Complete!',
-        'Your Islamic dating profile has been created successfully!',
-        [
-          {
-            text: 'Start Browsing',
-            onPress: () => router.replace('/(tabs)/home')
-          }
-        ],
-        { cancelable: false }
-      );
-      
-      // Automatic navigation after 2 seconds as backup
-      setTimeout(() => {
-        router.replace('/(tabs)/home');
-      }, 2000);
-    } catch (error: any) {
-      console.error('Profile completion error:', error);
-      Alert.alert('Error', 'Failed to complete profile. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    setCurrentStep(6);
   };
 
-  // Ensure minimal profile for media uploads
+  // Do NOT create any user_profiles rows before final submit; allow media step to work without it
   const ensureMinimalProfileForMedia = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return false;
-      const { data: existing } = await supabase
-        .from('user_profiles')
-        .select('user_id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      if (existing) return true;
-
-      const basic = watchedValues;
-      if (!basic.firstName || !basic.gender || !basic.dateOfBirth || !basic.country || !basic.city) {
-        return false;
-      }
-      const { error } = await supabase
-        .from('user_profiles')
-        .insert({
-          user_id: user.id,
-          first_name: basic.firstName,
-          last_name: basic.lastName || '',
-          gender: basic.gender,
-          date_of_birth: new Date(basic.dateOfBirth).toISOString().split('T')[0],
-          country: basic.country,
-          city: basic.city,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
-      return !error;
-    } catch (e) {
-      return false;
-    }
+    const { data: { user } } = await supabase.auth.getUser();
+    return !!user; // only ensure authenticated; no inserts here
   };
 
   const loadMyMedia = async () => {

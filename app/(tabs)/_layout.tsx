@@ -17,6 +17,18 @@ const TabLayout = () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user && isMounted) {
           router.replace('/');
+          return;
+        }
+        // Guard: if authenticated but no completed profile, force profile-setup
+        if (session?.user && isMounted) {
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('user_id')
+            .eq('user_id', session.user.id)
+            .maybeSingle();
+          if (!profile) {
+            router.replace('/profile-setup');
+          }
         }
       } catch {}
     };
@@ -24,7 +36,21 @@ const TabLayout = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session?.user) {
         router.replace('/');
+        return;
       }
+      // Guard on auth change as well
+      (async () => {
+        try {
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('user_id')
+            .eq('user_id', session.user.id)
+            .maybeSingle();
+          if (!profile) {
+            router.replace('/profile-setup');
+          }
+        } catch {}
+      })();
     });
     return () => {
       isMounted = false;
