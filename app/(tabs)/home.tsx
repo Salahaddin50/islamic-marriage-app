@@ -310,10 +310,15 @@ const HomeScreen = () => {
   const [isGalleryView, setIsGalleryView] = useState(false);
   const { isLoading: profileLoading } = useProfilePicture(refreshTrigger);
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-  const baseWidth = ((windowWidth - 64) / 2) * 0.88; // baseline width
+  // Ensure 2 columns in grid view on all screen sizes with equal spacing
+  const GRID_SPACING = 16;
+  const H_PADDING = 32; // content horizontal padding (16 left + 16 right)
+  const availableWidth = windowWidth - H_PADDING; // Total width minus side padding
+  const cardWidth = isGalleryView
+    ? availableWidth
+    : Math.floor((availableWidth - GRID_SPACING) / 2); // Two cards with one gap between
   // Make cards more vertical to match mobile phone aspect ratio (9:16 or similar)
-  const baseHeight = baseWidth * 1.6; // Much more vertical ratio for mobile photos
-  const cardWidth = isGalleryView ? windowWidth - 32 : baseWidth * 1.155 * 1.05; // gallery view: full width, grid view: increased width
+  const baseHeight = cardWidth * 1.6; // vertical ratio for mobile photos
 
   // Options arrays (matching database enums)
   const eyeColorOptions = ['Brown', 'Black', 'Hazel', 'Green', 'Blue', 'Gray', 'Amber'];
@@ -1152,13 +1157,6 @@ const HomeScreen = () => {
     return (
       <View style={styles.headerContainer}>
         <View style={styles.viewLeft}>
-          <TouchableOpacity onLongPress={refreshProfile}>
-            <SimpleHeaderAvatar 
-              size={50}
-              displayName={displayName}
-              isLoading={profileLoading}
-            />
-          </TouchableOpacity>
           <View style={styles.viewNameContainer}>
             <Text style={styles.greeeting}>Salam Aleykoum 👋</Text>
             <Text style={[styles.title, {
@@ -1167,6 +1165,17 @@ const HomeScreen = () => {
           </View>
         </View>
         <View style={styles.viewRight}>
+          {/* Premium Crown Icon placeholder (before the bell) */}
+          <TouchableOpacity
+            onPress={() => {}}
+            style={styles.notifButton}
+          >
+            <Image
+              source={icons.crown2}
+              resizeMode='contain'
+              style={[styles.bellIcon, { tintColor: COLORS.black }]}
+            />
+          </TouchableOpacity>
           <TouchableOpacity
             onPress={() => navigation.navigate('settingsnotifications')}
             style={styles.notifButton}
@@ -1726,10 +1735,14 @@ const HomeScreen = () => {
         {renderHeader()}
         <View style={{ flex: 1 }}>
         <FlatGrid
-          itemDimension={isGalleryView ? windowWidth - 32 : baseWidth * 1.155 * 1.05}
+          itemDimension={isGalleryView ? windowWidth - 32 : cardWidth}
           data={users}
           style={{ flex: 1 }}
-          spacing={isGalleryView ? 0 : 12}
+          spacing={isGalleryView ? 0 : GRID_SPACING}
+          contentContainerStyle={styles.listContainer}
+          staticDimension={undefined}
+          fixed={false}
+          maxItemsPerRow={isGalleryView ? 1 : 2}
           renderItem={({ item, index }) => {
             const cardHeight = isGalleryView ? baseHeight * 1.3 : baseHeight;
             const isSilhouette = !item.image?.uri || item.image === images.femaleSilhouette || item.image === images.maleSilhouette;
@@ -1743,7 +1756,7 @@ const HomeScreen = () => {
                 country={item.country}
                 city={item.city}
                 onPress={() => navigation.navigate("matchdetails", { userId: item.user_id })}
-                containerStyle={[styles.cardContainer, { width: cardWidth, height: cardHeight }]}
+                containerStyle={[styles.cardContainer, { width: '100%', height: cardHeight }]}
                 imageStyle={{ resizeMode: 'cover', alignSelf: 'center' }}
                 locked={!item.unlocked && !isSilhouette}
               />
@@ -1751,7 +1764,6 @@ const HomeScreen = () => {
           }}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContainer}
                       initialNumToRender={4}
             maxToRenderPerBatch={4}
             windowSize={3}
@@ -2291,7 +2303,8 @@ const styles = StyleSheet.create({
   listContainer: {
     paddingBottom: isMobileWeb() ? 160 : 140,
     paddingTop: 16,
-    paddingHorizontal: 16,
+    paddingLeft: 0,
+    paddingRight: 16,
   },
   columnWrapper: {
     justifyContent: 'space-between',

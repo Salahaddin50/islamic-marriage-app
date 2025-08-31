@@ -982,24 +982,19 @@ const ProfileSetup: React.FC = () => {
           const isObject = typeof option === 'object';
           const optionValue = isObject ? option.value : option;
           const optionLabel = isObject ? option.label : option;
-          const normalizedSelected = (selectedValue || '').toString().trim().toLowerCase();
-          const isSelected = normalizedSelected.length > 0 && (
-            normalizedSelected === optionValue.toString().trim().toLowerCase() ||
-            normalizedSelected === optionLabel.toString().trim().toLowerCase()
-          );
           
           return (
             <TouchableOpacity
               key={optionValue}
               style={[
                 styles.optionChip,
-                isSelected && styles.optionChipSelected
+                selectedValue === optionValue && styles.optionChipSelected
               ]}
               onPress={() => onSelect(optionValue)}
             >
               <Text style={[
                 styles.optionChipText,
-                isSelected && styles.optionChipTextSelected
+                selectedValue === optionValue && styles.optionChipTextSelected
               ]}>
                 {optionLabel}
               </Text>
