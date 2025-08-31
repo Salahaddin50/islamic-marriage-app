@@ -4,7 +4,7 @@
 // Multi-step profile completion after initial signup
 // ============================================================================
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert, KeyboardAvoidingView, Platform, TouchableOpacity, ScrollView, TextInput, FlatList, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from 'expo-router';
@@ -143,6 +143,7 @@ const ProfileSetup: React.FC = () => {
   };
 
   // Form states for each step
+  const [basicInfoData, setBasicInfoData] = useState<Partial<BasicInfoForm>>({});
   const [physicalDetails, setPhysicalDetails] = useState<Partial<PhysicalDetails>>({});
   const [lifestyleDetails, setLifestyleDetails] = useState<Partial<LifestyleDetails>>({});
   const [religiousDetails, setReligiousDetails] = useState<Partial<ReligiousDetails>>({});
@@ -155,6 +156,7 @@ const ProfileSetup: React.FC = () => {
     formState: { errors },
     watch,
     setValue,
+    reset: resetBasicForm,
   } = useForm<BasicInfoForm>({
     resolver: zodResolver(basicInfoSchema),
           defaultValues: {
@@ -187,6 +189,135 @@ const ProfileSetup: React.FC = () => {
   });
 
   const watchedValues = watch();
+
+  // Fetch existing profile data on component mount
+  useEffect(() => {
+    const fetchExistingProfile = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (profile) {
+          console.log('Fetched existing profile data:', profile);
+          
+          // Populate Step 1 (Basic Info) fields
+          console.log('Setting Step 1 values:', {
+            firstName: profile.first_name,
+            lastName: profile.last_name,
+            height_cm: profile.height_cm,
+            weight_kg: profile.weight_kg,
+            occupation: profile.occupation
+          });
+          
+          // Populate Step 1 (Basic Info) using state + form reset approach
+          const basicData = {
+            firstName: profile.first_name || '',
+            lastName: profile.last_name || '',
+            aboutMe: profile.about_me || '',
+            gender: profile.gender as GenderType,
+            dateOfBirth: profile.date_of_birth || '',
+            country: profile.country || '',
+            city: profile.city || '',
+            phoneCode: profile.phone_code || '',
+            mobileNumber: profile.mobile_number || '',
+          };
+          console.log('Setting basic info data:', basicData);
+          setBasicInfoData(basicData);
+
+          // Set date picker state
+          if (profile.date_of_birth) {
+            setSelectedDate(profile.date_of_birth);
+          }
+
+          // Set country/city states
+          if (profile.country) {
+            setSelectedCountry(profile.country);
+            const cities = getCitiesForCountry(profile.country);
+            setAvailableCities(cities.map(city => city.value));
+          }
+
+          // Populate Step 2 (Physical Details)
+          const physicalData = {
+            height: profile.height_cm || undefined,
+            weight: profile.weight_kg || undefined,
+            eyeColor: profile.eye_color || undefined,
+            hairColor: profile.hair_color || undefined,
+            skinColor: profile.skin_tone || undefined,
+            bodyType: profile.body_type || undefined,
+          };
+          console.log('Setting Physical Details:', physicalData);
+          setPhysicalDetails(physicalData);
+
+          // Populate Step 3 (Lifestyle Details)
+          const lifestyleData = {
+            education: profile.education_level || undefined,
+            occupation: profile.occupation || undefined,
+            languagesSpoken: profile.languages_spoken || [],
+            income: profile.monthly_income || undefined,
+            socialCondition: profile.social_condition || undefined,
+            workStatus: profile.work_status || undefined,
+            housingType: profile.housing_type || undefined,
+            livingCondition: profile.living_condition || undefined,
+          };
+          console.log('Setting Lifestyle Details:', lifestyleData);
+          setLifestyleDetails(lifestyleData);
+
+          // Populate Step 4 (Religious Details) and Step 6 (Polygamy Details)
+          if (profile.islamic_questionnaire) {
+            const questionnaire = profile.islamic_questionnaire;
+            
+            setReligiousDetails({
+              religiousLevel: questionnaire.religious_level || undefined,
+              prayerFrequency: questionnaire.prayer_frequency || undefined,
+              quranReading: questionnaire.quran_reading_level || undefined,
+              hijabPractice: questionnaire.hijab_practice || undefined,
+              coveringLevel: questionnaire.covering_level || undefined,
+              beardPractice: questionnaire.beard_practice || undefined,
+            });
+
+            setPolygamyDetails({
+              seekingWifeNumber: questionnaire.seeking_wife_number || undefined,
+              acceptedWifePositions: questionnaire.accepted_wife_positions || [],
+            });
+          }
+
+          // Load existing media (photos/videos) for Step 5
+          await loadMyMedia();
+        }
+      } catch (error) {
+        console.error('Error fetching existing profile:', error);
+      }
+    };
+
+    fetchExistingProfile();
+  }, [setValue]);
+
+  // Reset form defaults when state changes (to populate forms with fetched data)
+  useEffect(() => {
+    console.log('Resetting basicForm with:', basicInfoData);
+    resetBasicForm(basicInfoData);
+  }, [basicInfoData, resetBasicForm]);
+
+  useEffect(() => {
+    console.log('Resetting physicalForm with:', physicalDetails);
+    physicalForm.reset(physicalDetails);
+  }, [physicalDetails, physicalForm]);
+
+  useEffect(() => {
+    console.log('Resetting lifestyleForm with:', lifestyleDetails);
+    lifestyleForm.reset(lifestyleDetails);
+  }, [lifestyleDetails, lifestyleForm]);
+
+  useEffect(() => {
+    console.log('Resetting religiousForm with:', religiousDetails);
+    religiousForm.reset(religiousDetails);
+  }, [religiousDetails, religiousForm]);
 
   // Step 1: Basic Info
   const handleBasicInfo = async (data: BasicInfoForm) => {
@@ -1021,6 +1152,7 @@ const ProfileSetup: React.FC = () => {
                   <Input
                     id="firstName"
                     placeholder="First Name *"
+                    value={value}
                     onInputChanged={(id, text) => onChange(text)}
                     errorText={errors.firstName?.message}
                     icon={icons.user}
@@ -1035,6 +1167,7 @@ const ProfileSetup: React.FC = () => {
                   <Input
                     id="lastName"
                     placeholder="Last Name"
+                    value={value}
                     onInputChanged={(id, text) => onChange(text)}
                     errorText={errors.lastName?.message}
                     icon={icons.user}
@@ -1230,6 +1363,7 @@ const ProfileSetup: React.FC = () => {
                       <Input
                         id="height"
                         placeholder="Height (cm) *"
+                        value={value ? String(value) : ''}
                         onInputChanged={(id, text) => onChange(parseInt(text) || 0)}
                         errorText={physicalForm.formState.errors.height?.message}
                         keyboardType="numeric"
@@ -1245,6 +1379,7 @@ const ProfileSetup: React.FC = () => {
                       <Input
                         id="weight"
                         placeholder="Weight (kg) *"
+                        value={value ? String(value) : ''}
                         onInputChanged={(id, text) => onChange(parseInt(text) || 0)}
                         errorText={physicalForm.formState.errors.weight?.message}
                         keyboardType="numeric"
@@ -1340,6 +1475,7 @@ const ProfileSetup: React.FC = () => {
                       <Input
                         id="occupation"
                         placeholder="Occupation/Work *"
+                        value={value}
                         onInputChanged={(id, text) => onChange(text)}
                         errorText={lifestyleForm.formState.errors.occupation?.message}
                       />
@@ -1387,6 +1523,7 @@ const ProfileSetup: React.FC = () => {
                         <Input
                           id="occupation"
                           placeholder="Occupation (Optional)"
+                          value={value}
                           onInputChanged={(id, text) => onChange(text)}
                         />
                       )}

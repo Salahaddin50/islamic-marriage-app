@@ -1,9 +1,9 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, FlatList, useWindowDimensions, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, FlatList, useWindowDimensions, ScrollView, Alert, Modal } from 'react-native';
 import React, { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, icons, images, SIZES } from '@/constants';
 import { getResponsiveWidth, getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '@/utils/responsive';
-import { useNavigation } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import { NavigationProp, useFocusEffect } from '@react-navigation/native';
 import { menbers } from '@/data';
 import { supabase } from '@/src/config/supabase';
@@ -261,6 +261,7 @@ const Storage = {
 
 const HomeScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
+  const router = useRouter();
   const [users, setUsers] = useState<UserProfileWithMedia[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
@@ -270,6 +271,8 @@ const HomeScreen = () => {
   const [filterLoading, setFilterLoading] = useState(false);
   const refRBSheet = useRef<any>(null);
   const imagePreloadRef = useRef(new Set<string>());
+  const [showIncompleteProfileModal, setShowIncompleteProfileModal] = useState(false);
+  const [redirectCountdown, setRedirectCountdown] = useState(2);
 
   const [ageRange, setAgeRange] = useState([20, 50]); // Initial age range values
   const [formState, dispatchFormState] = useReducer(reducer, initialState);
@@ -329,6 +332,112 @@ const HomeScreen = () => {
   const coveringLevelOptions = ['will_cover', 'hijab', 'niqab'];
   const beardPracticeOptions = ['Full Beard', 'Trimmed Beard', 'Mustache Only', 'Clean Shaven'];
   const acceptedWifeOptions = ['2', '3', '4'];
+
+  // Check if user profile is complete
+  const checkProfileCompleteness = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!profile) {
+        console.log('No profile found, redirecting to setup');
+        setShowIncompleteProfileModal(true);
+        return;
+      }
+
+      // Check mandatory fields
+      const missingFields = [];
+      
+      // Basic info
+      if (!profile.first_name) missingFields.push('First Name');
+      if (!profile.gender) missingFields.push('Gender');
+      if (!profile.date_of_birth) missingFields.push('Date of Birth');
+      if (!profile.country) missingFields.push('Country');
+      if (!profile.city) missingFields.push('City');
+      
+      // Physical details
+      if (!profile.height_cm) missingFields.push('Height');
+      if (!profile.weight_kg) missingFields.push('Weight');
+      if (!profile.eye_color) missingFields.push('Eye Color');
+      if (!profile.hair_color) missingFields.push('Hair Color');
+      if (!profile.skin_tone) missingFields.push('Skin Tone');
+      if (!profile.body_type) missingFields.push('Body Type');
+      
+      // Lifestyle details
+      if (!profile.education_level) missingFields.push('Education Level');
+      if (!profile.languages_spoken || profile.languages_spoken.length === 0) missingFields.push('Languages Spoken');
+      if (!profile.housing_type) missingFields.push('Housing Type');
+      if (!profile.living_condition) missingFields.push('Living Condition');
+      
+      // Religious details (check islamic_questionnaire JSON)
+      const questionnaire = profile.islamic_questionnaire;
+      if (!questionnaire || typeof questionnaire !== 'object') {
+        missingFields.push('Religious Information');
+      } else {
+        if (!questionnaire.religious_level) missingFields.push('Religious Level');
+        if (!questionnaire.prayer_frequency) missingFields.push('Prayer Frequency');
+        if (!questionnaire.quran_reading_level) missingFields.push('Quran Reading Level');
+        
+        // Gender-specific religious fields
+        if (profile.gender === 'female' && !questionnaire.covering_level) {
+          missingFields.push('Covering Level');
+        }
+        if (profile.gender === 'male' && !questionnaire.beard_practice) {
+          missingFields.push('Beard Practice');
+        }
+        
+        // Polygamy preferences
+        if (profile.gender === 'male' && !questionnaire.seeking_wife_number) {
+          missingFields.push('Marriage Intentions');
+        }
+        if (profile.gender === 'female' && (!questionnaire.accepted_wife_positions || questionnaire.accepted_wife_positions.length === 0)) {
+          missingFields.push('Marriage Intentions');
+        }
+      }
+
+      // Check for photos (minimum 3 required)
+      const { data: mediaCount } = await supabase
+        .from('media_references')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('media_type', 'photo');
+
+      if (!mediaCount || mediaCount < 3) {
+        missingFields.push('Photos (minimum 3 required)');
+      }
+
+      if (missingFields.length > 0) {
+        console.log('Missing mandatory fields:', missingFields);
+        setShowIncompleteProfileModal(true);
+        setRedirectCountdown(2);
+      }
+    } catch (error) {
+      console.error('Error checking profile completeness:', error);
+    }
+  };
+
+  // Handle automatic redirect countdown
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (showIncompleteProfileModal && redirectCountdown > 0) {
+      interval = setInterval(() => {
+        setRedirectCountdown(prev => prev - 1);
+      }, 1000);
+    } else if (showIncompleteProfileModal && redirectCountdown === 0) {
+      setShowIncompleteProfileModal(false);
+      router.push('/profile-setup');
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [showIncompleteProfileModal, redirectCountdown, router]);
 
   const inputChangedHandler = useCallback(
     (inputId: string, inputValue: string) => {
@@ -957,9 +1066,13 @@ const HomeScreen = () => {
         if (isFresh) {
           setUsers(cachedUsers as UserProfileWithMedia[]);
           setLoading(false);
+          // Check profile completeness after profiles are loaded
+          await checkProfileCompleteness();
           return;
         }
-    fetchUserProfiles();
+        await fetchUserProfiles();
+        // Check profile completeness after profiles are fetched
+        await checkProfileCompleteness();
       };
       
       initializeScreen();
@@ -1650,6 +1763,28 @@ const HomeScreen = () => {
             </View>
           )}
         </View>
+
+        {/* Incomplete Profile Modal */}
+        <Modal
+          visible={showIncompleteProfileModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => {}}
+        >
+          <View style={styles.fullscreenContainer}>
+            <View style={[styles.modalCard, { maxWidth: 380 }]}>
+              <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 16, textAlign: 'center', color: COLORS.primary }]}>
+                Complete Your Profile
+              </Text>
+              <Text style={[styles.modalText, { textAlign: 'center', marginBottom: 20 }]}>
+                Your profile is incomplete. Please complete all mandatory fields to access the app and start connecting with other users.
+              </Text>
+              <Text style={[styles.modalText, { textAlign: 'center', fontSize: 18, fontFamily: 'semiBold', color: COLORS.primary }]}>
+                Redirecting in {redirectCountdown} seconds...
+              </Text>
+            </View>
+          </View>
+        </Modal>
 
         <RBSheet
           ref={refRBSheet}
@@ -2430,6 +2565,52 @@ const styles = StyleSheet.create({
     color: COLORS.greyscale900,
     marginTop: 12,
     textAlign: 'center',
+  },
+  // Modal styles
+  fullscreenContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  modalCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 340,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalText: {
+    fontSize: 16,
+    fontFamily: 'regular',
+    color: COLORS.greyscale900,
+    lineHeight: 24,
+  },
+  modalButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 4,
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontFamily: 'semiBold',
+    color: COLORS.white,
+  },
+  confirmButton: {
+    backgroundColor: COLORS.primary,
   },
 })
 
