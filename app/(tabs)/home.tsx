@@ -312,15 +312,26 @@ const HomeScreen = () => {
   const [isGalleryView, setIsGalleryView] = useState(false);
   const { isLoading: profileLoading } = useProfilePicture(refreshTrigger);
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-  // Ensure 2 columns in grid view on all screen sizes with equal spacing
-  const GRID_SPACING = 16;
-  const H_PADDING = 32; // content horizontal padding (16 left + 16 right)
-  const availableWidth = windowWidth - H_PADDING; // Total width minus side padding
-  const cardWidth = isGalleryView
-    ? availableWidth
-    : Math.floor((availableWidth - GRID_SPACING) / 2); // Two cards with one gap between
-  // Make cards more vertical to match mobile phone aspect ratio (9:16 or similar)
-  const baseHeight = cardWidth * 1.6; // vertical ratio for mobile photos
+  
+  // Professional layout system with proper spacing
+  const CONTAINER_PADDING = 16; // Base container padding
+  const GALLERY_SIDE_GAP = 16; // Side gaps for gallery view centering
+  const GALLERY_CARD_MARGIN = 12; // Vertical margin between gallery cards
+  
+  // Grid view dimensions (matching skeleton)
+  const gridAvailableWidth = windowWidth - (CONTAINER_PADDING * 2);
+  const gridCardWidth = Math.floor(gridAvailableWidth * 0.48);
+  const gridSpacing = Math.floor(gridAvailableWidth * 0.04);
+  const gridCardHeight = 220;
+
+  // Gallery view dimensions with proper centering
+  const galleryAvailableWidth = windowWidth - (GALLERY_SIDE_GAP * 2);
+  const galleryCardWidth = Math.floor(galleryAvailableWidth * 0.94); // Slightly narrower for better centering
+  const galleryCardHeight = 280;
+
+  // Dynamic dimensions based on view mode
+  const cardWidth = isGalleryView ? galleryCardWidth : gridCardWidth;
+  const cardHeight = isGalleryView ? galleryCardHeight : gridCardHeight;
 
   // Options arrays (matching database enums)
   const eyeColorOptions = ['Brown', 'Black', 'Hazel', 'Green', 'Blue', 'Gray', 'Amber'];
@@ -1266,9 +1277,29 @@ const HomeScreen = () => {
     }
   }, [users]);
 
-  const renderItem = React.useCallback(({ item }: { item: UserProfileWithMedia }) => {
-    const cardHeight = isGalleryView ? baseHeight * 1.3 : baseHeight; // More vertical in gallery view
+  const renderMatchCard = useCallback(({ item }: { item: UserProfileWithMedia }) => {
     const isSilhouette = !item.image?.uri || item.image === images.femaleSilhouette || item.image === images.maleSilhouette;
+    
+    if (isGalleryView) {
+      return (
+        <View style={[styles.galleryCardWrapper, { width: galleryCardWidth }]}>
+          <MatchCard
+            name={item.name}
+            age={item.age}
+            image={item.image}
+            height={item.height}
+            weight={item.weight}
+            country={item.country}
+            city={item.city}
+            onPress={() => navigation.navigate("matchdetails", { userId: item.user_id })}
+            containerStyle={[styles.cardContainer, { width: '100%', height: cardHeight }]}
+            imageStyle={{ resizeMode: 'cover', alignSelf: 'center' }}
+            locked={!item.unlocked && !isSilhouette}
+          />
+        </View>
+      );
+    }
+    
     return (
       <MatchCard
         name={item.name}
@@ -1279,21 +1310,22 @@ const HomeScreen = () => {
         country={item.country}
         city={item.city}
         onPress={() => navigation.navigate("matchdetails", { userId: item.user_id })}
-        containerStyle={[styles.cardContainer, { width: cardWidth, height: cardHeight }]}
-        imageStyle={{ resizeMode: 'cover', alignSelf: 'center' }} // Ensure full photo display, top-aligned
+        containerStyle={[styles.cardContainer, { width: '100%', height: cardHeight }]}
+        imageStyle={{ resizeMode: 'cover', alignSelf: 'center' }}
         locked={!item.unlocked && !isSilhouette}
       />
     );
-  }, [navigation, cardWidth, baseHeight, isGalleryView]);
+  }, [navigation, cardHeight, isGalleryView, galleryCardWidth]);
 
   const getItemLayout = React.useCallback((_: any, index: number) => {
-    const cardHeight = isGalleryView ? baseHeight * 1.3 : baseHeight;
+    const itemHeight = isGalleryView ? galleryCardHeight : gridCardHeight;
+    const verticalSpacing = isGalleryView ? GALLERY_CARD_MARGIN : gridSpacing;
     const columnsPerRow = isGalleryView ? 1 : 2;
     const rowIndex = Math.floor(index / columnsPerRow);
-    const rowHeight = cardHeight + 24; // card height + marginBottom
+    const rowHeight = itemHeight + verticalSpacing;
     const offset = 16 + rowIndex * rowHeight; // list paddingTop = 16
     return { length: rowHeight, offset, index };
-  }, [baseHeight, isGalleryView]);
+  }, [isGalleryView, galleryCardHeight, gridCardHeight, gridSpacing, GALLERY_CARD_MARGIN]);
 
   if (loading) {
     return (
@@ -1748,33 +1780,18 @@ const HomeScreen = () => {
         {renderHeader()}
         <View style={{ flex: 1 }}>
         <FlatGrid
-          itemDimension={isGalleryView ? windowWidth - 32 : cardWidth}
+          itemDimension={cardWidth}
           data={users}
           style={{ flex: 1 }}
-          spacing={isGalleryView ? 0 : GRID_SPACING}
-          contentContainerStyle={styles.listContainer}
+          spacing={isGalleryView ? GALLERY_CARD_MARGIN : gridSpacing}
+          contentContainerStyle={[
+            isGalleryView ? styles.galleryListContainer : styles.gridListContainer,
+            isGalleryView && { alignItems: 'center' }
+          ]}
           staticDimension={undefined}
           fixed={false}
           maxItemsPerRow={isGalleryView ? 1 : 2}
-          renderItem={({ item, index }) => {
-            const cardHeight = isGalleryView ? baseHeight * 1.3 : baseHeight;
-            const isSilhouette = !item.image?.uri || item.image === images.femaleSilhouette || item.image === images.maleSilhouette;
-            return (
-              <MatchCard
-                name={item.name}
-                age={item.age}
-                image={item.image}
-                height={item.height}
-                weight={item.weight}
-                country={item.country}
-                city={item.city}
-                onPress={() => navigation.navigate("matchdetails", { userId: item.user_id })}
-                containerStyle={[styles.cardContainer, { width: '100%', height: cardHeight }]}
-                imageStyle={{ resizeMode: 'cover', alignSelf: 'center' }}
-                locked={!item.unlocked && !isSilhouette}
-              />
-            );
-          }}
+          renderItem={renderMatchCard}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
                       initialNumToRender={4}
@@ -2313,17 +2330,24 @@ const styles = StyleSheet.create({
     width: 24,
     tintColor: COLORS.black
   },
-  listContainer: {
+  gridListContainer: {
     paddingBottom: isMobileWeb() ? 160 : 140,
     paddingTop: 16,
-    paddingLeft: 0,
-    paddingRight: 16,
+    paddingHorizontal: 16,
+  },
+  galleryListContainer: {
+    paddingBottom: isMobileWeb() ? 160 : 140,
+    paddingTop: 16,
+    paddingHorizontal: 16, // Base padding for the container
+  },
+  galleryCardWrapper: {
+    alignItems: 'center',
+    marginBottom: 12, // Vertical spacing between gallery cards
   },
   columnWrapper: {
     justifyContent: 'space-between',
   },
   cardContainer: {
-    marginBottom: 24,
     marginRight: 0,
   },
   loadingContainer: {
