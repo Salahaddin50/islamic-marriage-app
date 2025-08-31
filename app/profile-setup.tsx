@@ -189,6 +189,33 @@ const ProfileSetup: React.FC = () => {
   });
 
   const watchedValues = watch();
+  // Dynamic step-complete checks to style Continue button
+  const step1Complete = Boolean(
+    (watchedValues?.firstName || '').trim() &&
+    watchedValues?.gender &&
+    (watchedValues?.dateOfBirth || '').trim() &&
+    (watchedValues?.country || '').trim() &&
+    (watchedValues?.city || '').trim() &&
+    (watchedValues?.phoneCode || '').trim() &&
+    (watchedValues?.mobileNumber || '').trim()
+  );
+  const physicalWatch = physicalForm.watch();
+  const step2Complete = Boolean(
+    physicalWatch?.height && physicalWatch?.weight &&
+    physicalWatch?.eyeColor && physicalWatch?.hairColor &&
+    physicalWatch?.skinColor && physicalWatch?.bodyType
+  );
+  const lifestyleWatch = lifestyleForm.watch();
+  const step3Complete = Boolean(
+    lifestyleWatch?.education &&
+    Array.isArray(lifestyleWatch?.languagesSpoken) && lifestyleWatch.languagesSpoken.length > 0 &&
+    lifestyleWatch?.housingType && lifestyleWatch?.livingCondition
+  );
+  const religiousWatch = religiousForm.watch();
+  const step4Complete = Boolean(
+    religiousWatch?.religiousLevel && religiousWatch?.prayerFrequency && religiousWatch?.quranReading &&
+    ((watchedValues?.gender === 'female') ? !!religiousWatch?.coveringLevel : true)
+  );
 
   // Fetch existing profile data on component mount
   useEffect(() => {
@@ -363,8 +390,8 @@ const ProfileSetup: React.FC = () => {
         console.log('Step 1 data saved to database');
       }
       
-      setComprehensiveData({ ...comprehensiveData, basicInfo: data });
-      setCurrentStep(2);
+    setComprehensiveData({ ...comprehensiveData, basicInfo: data });
+    setCurrentStep(2);
     } catch (error) {
       console.error('Error saving Step 1 data:', error);
       Alert.alert('Error', 'Failed to save data. Please try again.');
@@ -396,8 +423,8 @@ const ProfileSetup: React.FC = () => {
         console.log('Step 2 data saved to database');
       }
       
-      setPhysicalDetails(data);
-      setCurrentStep(3);
+    setPhysicalDetails(data);
+    setCurrentStep(3);
     } catch (error) {
       console.error('Error saving Step 2 data:', error);
       Alert.alert('Error', 'Failed to save data. Please try again.');
@@ -431,8 +458,8 @@ const ProfileSetup: React.FC = () => {
         console.log('Step 3 data saved to database');
       }
       
-      setLifestyleDetails(data);
-      setCurrentStep(4);
+    setLifestyleDetails(data);
+    setCurrentStep(4);
     } catch (error) {
       console.error('Error saving Step 3 data:', error);
       Alert.alert('Error', 'Failed to save data. Please try again.');
@@ -479,8 +506,8 @@ const ProfileSetup: React.FC = () => {
         console.log('Step 4 data saved to database');
       }
       
-      setReligiousDetails(data);
-      setCurrentStep(5);
+    setReligiousDetails(data);
+    setCurrentStep(5);
     } catch (error) {
       console.error('Error saving Step 4 data:', error);
       Alert.alert('Error', 'Failed to save data. Please try again.');
@@ -538,7 +565,7 @@ const ProfileSetup: React.FC = () => {
             onPress: () => {
               console.log('Navigating to tabs...');
               router.replace('/(tabs)/home');
-            }
+          }
           }
         ]
       );
@@ -1078,7 +1105,7 @@ const ProfileSetup: React.FC = () => {
             wifePositionsAccepted: polygamyDetails.acceptedWifePositions || [],
             acceptPolygamy: (polygamyDetails.acceptedWifePositions || []).length > 0,
             maritalStatus: 'never_married',
-          };
+      };
 
       // Register with simplified preferences  
       console.log('Creating profile with data:', registrationData);
@@ -1343,7 +1370,14 @@ const ProfileSetup: React.FC = () => {
               <Button
                 title="Continue"
                 onPress={handleSubmit(handleBasicInfo)}
-                style={styles.continueButton}
+                style={[styles.continueButton, step1Complete ? { backgroundColor: COLORS.primary, borderColor: COLORS.primary } : { backgroundColor: COLORS.white, borderColor: COLORS.primary }]}
+                textColor={step1Complete ? COLORS.white : COLORS.primary}
+              />
+              <Button
+                title="Fill Later"
+                onPress={async () => { try { await supabase.auth.signOut(); } catch {} finally { router.replace('/'); } }}
+                style={[styles.continueButton, { backgroundColor: COLORS.white, borderColor: COLORS.primary }]}
+                textColor={COLORS.primary}
               />
             </View>
           </ScrollView>
@@ -1428,7 +1462,14 @@ const ProfileSetup: React.FC = () => {
               <Button
                 title="Continue"
                 onPress={physicalForm.handleSubmit(handlePhysicalDetailsNext)}
-                style={styles.continueButton}
+                style={[styles.continueButton, step2Complete ? { backgroundColor: COLORS.primary, borderColor: COLORS.primary } : { backgroundColor: COLORS.white, borderColor: COLORS.primary }]}
+                textColor={step2Complete ? COLORS.white : COLORS.primary}
+              />
+              <Button
+                title="Fill Later"
+                onPress={async () => { try { await supabase.auth.signOut(); } catch {} finally { router.replace('/'); } }}
+                style={[styles.continueButton, { backgroundColor: COLORS.white, borderColor: COLORS.primary }]}
+                textColor={COLORS.primary}
               />
             </View>
           </ScrollView>
@@ -1555,7 +1596,14 @@ const ProfileSetup: React.FC = () => {
               <Button
                 title="Continue"
                 onPress={lifestyleForm.handleSubmit(handleLifestyleNext)}
-                style={styles.continueButton}
+                style={[styles.continueButton, step3Complete ? { backgroundColor: COLORS.primary, borderColor: COLORS.primary } : { backgroundColor: COLORS.white, borderColor: COLORS.primary }]}
+                textColor={step3Complete ? COLORS.white : COLORS.primary}
+              />
+              <Button
+                title="Fill Later"
+                onPress={async () => { try { await supabase.auth.signOut(); } catch {} finally { router.replace('/'); } }}
+                style={[styles.continueButton, { backgroundColor: COLORS.white, borderColor: COLORS.primary }]}
+                textColor={COLORS.primary}
               />
             </View>
           </ScrollView>
@@ -1615,7 +1663,14 @@ const ProfileSetup: React.FC = () => {
               <Button
                 title="Continue"
                 onPress={religiousForm.handleSubmit(handleReligiousNext)}
-                style={styles.continueButton}
+                style={[styles.continueButton, step4Complete ? { backgroundColor: COLORS.primary, borderColor: COLORS.primary } : { backgroundColor: COLORS.white, borderColor: COLORS.primary }]}
+                textColor={step4Complete ? COLORS.white : COLORS.primary}
+              />
+              <Button
+                title="Fill Later"
+                onPress={async () => { try { await supabase.auth.signOut(); } catch {} finally { router.replace('/'); } }}
+                style={[styles.continueButton, { backgroundColor: COLORS.white, borderColor: COLORS.primary }]}
+                textColor={COLORS.primary}
               />
             </View>
           </ScrollView>
