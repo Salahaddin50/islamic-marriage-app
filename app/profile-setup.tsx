@@ -186,103 +186,7 @@ const ProfileSetup: React.FC = () => {
     defaultValues: religiousDetails,
   });
 
-  // Update form defaults when state changes
-  React.useEffect(() => {
-    physicalForm.reset(physicalDetails);
-  }, [physicalDetails, physicalForm]);
-
-  React.useEffect(() => {
-    lifestyleForm.reset(lifestyleDetails);
-  }, [lifestyleDetails, lifestyleForm]);
-
-  React.useEffect(() => {
-    religiousForm.reset(religiousDetails);
-  }, [religiousDetails, religiousForm]);
-
   const watchedValues = watch();
-
-  // Fetch existing profile data on component mount
-  React.useEffect(() => {
-    const fetchExistingProfile = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (profile) {
-          console.log('Fetched existing profile data:', profile);
-          
-          // Populate Step 1 form with existing data
-          setValue('firstName', profile.first_name || '');
-          setValue('lastName', profile.last_name || '');
-          setValue('aboutMe', profile.about_me || '');
-          setValue('gender', profile.gender);
-          setValue('dateOfBirth', profile.date_of_birth || '');
-          setValue('country', profile.country || '');
-          setValue('city', profile.city || '');
-          setValue('phoneCode', profile.phone_code || '');
-          setValue('mobileNumber', profile.mobile_number || '');
-
-          // Set selected date for date picker
-          if (profile.date_of_birth) {
-            setSelectedDate(profile.date_of_birth);
-          }
-
-          // Set country and update cities
-          if (profile.country) {
-            setSelectedCountry(profile.country);
-            const cities = getCitiesForCountry(profile.country);
-            setAvailableCities(cities.map(city => city.value));
-          }
-
-          // Populate Step 2 (Physical Details)
-          setPhysicalDetails({
-            height: profile.height_cm,
-            weight: profile.weight_kg,
-            eyeColor: profile.eye_color,
-            hairColor: profile.hair_color,
-            skinColor: profile.skin_tone,
-            bodyType: profile.body_type,
-          });
-
-          // Populate Step 3 (Lifestyle Details)
-          setLifestyleDetails({
-            education: profile.education_level,
-            occupation: profile.occupation,
-            languagesSpoken: profile.languages_spoken || [],
-          });
-
-          // Populate Step 4 & 6 (Religious & Polygamy Details from JSON)
-          if (profile.islamic_questionnaire) {
-            const questionnaire = profile.islamic_questionnaire;
-            
-            setReligiousDetails({
-              religiousLevel: questionnaire.religious_level,
-              prayerFrequency: questionnaire.prayer_frequency,
-              quranReading: questionnaire.quran_reading_level,
-              hijabPractice: questionnaire.hijab_practice,
-              coveringLevel: questionnaire.covering_level,
-              beardPractice: questionnaire.beard_practice,
-            });
-
-            setPolygamyDetails({
-              seekingWifeNumber: questionnaire.seeking_wife_number,
-              acceptedWifePositions: questionnaire.accepted_wife_positions,
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching existing profile:', error);
-      }
-    };
-
-    fetchExistingProfile();
-  }, [setValue]);
 
   // Step 1: Basic Info
   const handleBasicInfo = async (data: BasicInfoForm) => {
@@ -382,8 +286,13 @@ const ProfileSetup: React.FC = () => {
           .from('user_profiles')
           .update({
             education_level: data.education,
-            occupation: data.occupation,
+            occupation: data.occupation || null,
             languages_spoken: data.languagesSpoken,
+            monthly_income: data.income || null,
+            social_condition: data.socialCondition || null,
+            work_status: data.workStatus || null,
+            housing_type: data.housingType || null,
+            living_condition: data.livingCondition || null,
             updated_at: new Date().toISOString(),
           })
           .eq('user_id', user.id);
