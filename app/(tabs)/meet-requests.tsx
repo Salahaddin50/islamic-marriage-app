@@ -10,6 +10,7 @@ import { useNavigation } from 'expo-router';
 import { NavigationProp, useIsFocused } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
+import { WebView } from 'react-native-webview';
 
 const MeetRequestsScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
@@ -53,6 +54,9 @@ const MeetRequestsScreen = () => {
   const [nowTick, setNowTick] = useState<number>(Date.now());
   const [showJoinInfoModal, setShowJoinInfoModal] = useState(false);
   const [selectedMeetRow, setSelectedMeetRow] = useState<MeetRecord | null>(null);
+  const [showJitsiModal, setShowJitsiModal] = useState(false);
+  const [jitsiHtml, setJitsiHtml] = useState<string | null>(null);
+  const [myDisplayName, setMyDisplayName] = useState<string>('');
 
   const formatRequestTime = (iso?: string) => {
     if (!iso) return '';
@@ -178,6 +182,29 @@ const MeetRequestsScreen = () => {
   };
 
   useEffect(() => { loadAll(); }, []);
+
+  // Prefetch display name for Jitsi auto-join
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data } = await supabase
+          .from('user_profiles')
+          .select('first_name,last_name')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        const dn = [data?.first_name, data?.last_name].filter(Boolean).join(' ').trim();
+        setMyDisplayName(dn || 'Guest');
+      } catch {}
+    })();
+  }, []);
+
+  const buildJitsiHtml = (meetLink: string, displayName: string) => {
+    const roomName = (() => { try { return new URL(meetLink).pathname.replace(/^\//, ''); } catch { return meetLink.split('/').pop() || ''; } })();
+    const safeName = (displayName || 'Guest').replace(/'/g, "\'");
+    return `<!DOCTYPE html><html><head><meta name=viewport content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no" /><script src="https://meet.jit.si/external_api.js"></script><style>html,body,#j{margin:0;padding:0;height:100%;width:100%;background:#000;overflow:hidden}</style></head><body><div id=j></div><script>const api=new JitsiMeetExternalAPI('meet.jit.si',{roomName:'${roomName}',parentNode:document.getElementById('j'),userInfo:{displayName:'${safeName}'},configOverwrite:{prejoinPageEnabled:false,disableDeepLinking:true,startWithAudioMuted:false,startWithVideoMuted:false,toolbarButtons:['microphone','camera','hangup'],enableWelcomePage:false,defaultLanguage:'en',disable1On1Mode:false,enableClosePage:false},interfaceConfigOverwrite:{MOBILE_APP_PROMO:false,HIDE_INVITE_MORE_HEADER:true,TOOLBAR_BUTTONS:['microphone','camera','hangup'],DISABLE_JOIN_LEAVE_NOTIFICATIONS:true}});api.executeCommand('toggleTileView', false);api.addEventListener('videoConferenceJoined',function(){try{document.body.style.background='#000';}catch(e){}});api.addEventListener('videoConferenceLeft',function(){if(window.ReactNativeWebView&&window.ReactNativeWebView.postMessage){window.ReactNativeWebView.postMessage('left');}});</script></body></html>`;
+  };
 
   // Refresh when tab/screen gains focus
   useEffect(() => {
@@ -485,7 +512,9 @@ const MeetRequestsScreen = () => {
                     onPress={() => {
                       setShowJoinInfoModal(false);
                       if (selectedMeetRow?.meet_link) {
-                        Linking.openURL(selectedMeetRow.meet_link);
+                        const html = buildJitsiHtml(selectedMeetRow.meet_link, myDisplayName);
+                        setJitsiHtml(html);
+                        setShowJitsiModal(true);
                       }
                     }}
                   >
@@ -495,6 +524,38 @@ const MeetRequestsScreen = () => {
                 )}
               </View>
             </View>
+          </View>
+        </Modal>
+
+        {/* Fullscreen Jitsi Modal */}
+        <Modal visible={showJitsiModal} transparent={true} animationType="fade" onRequestClose={() => setShowJitsiModal(false)}>
+          <View style={{ position:'absolute', top:0, left:0, right:0, bottom:0, backgroundColor:'#000', justifyContent:'center', alignItems:'center' }}>
+            <View style={{ width: '100%', height: '100%', backgroundColor:'#000', overflow:'hidden' }}>
+              {!!jitsiHtml && (
+                Platform.OS === 'web' ? (
+                  <iframe
+                    srcDoc={jitsiHtml as any}
+                    style={{ width: '100%', height: '100%', border: 0 } as any}
+                    allow="camera; microphone; fullscreen; display-capture; autoplay"
+                  />
+                ) : (
+                  <WebView
+                    originWhitelist={["*"]}
+                    source={{ html: jitsiHtml }}
+                    onMessage={(e) => { if (e.nativeEvent.data === 'left') { setShowJitsiModal(false); } }}
+                    allowsInlineMediaPlayback
+                    mediaPlaybackRequiresUserAction={false}
+                    javaScriptEnabled
+                    domStorageEnabled
+                    startInLoadingState
+                    style={{ flex:1 }}
+                  />
+                )
+              )}
+            </View>
+            <TouchableOpacity style={[styles.modalButton, { marginTop: 12, backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth:1 }]} onPress={() => setShowJitsiModal(false)}>
+              <Text style={[styles.modalButtonText, { color: COLORS.primary }]}>Close</Text>
+            </TouchableOpacity>
           </View>
         </Modal>
       </View>
@@ -608,3 +669,6 @@ const styles = StyleSheet.create({
 export default MeetRequestsScreen;
 
 
+
+// Jitsi Modal appended at root to avoid layout conflicts
+// Rendered inside the component above; this placeholder ensures typings are satisfied
