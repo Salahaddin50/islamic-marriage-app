@@ -722,8 +722,24 @@ const ProfileSetup: React.FC = () => {
         city: watchedValues.city!,
       };
 
+      // Build minimal preferences payload from polygamy selections
+      const preferencesPayload = watchedValues.gender === 'male' 
+        ? {
+            seekingWifeNumber: polygamyDetails.seekingWifeNumber 
+              ? [polygamyDetails.seekingWifeNumber]
+              : [],
+            acceptPolygamy: !!polygamyDetails.seekingWifeNumber,
+            currentWives: 0,
+            maxWives: 4,
+          }
+        : {
+            wifePositionsAccepted: polygamyDetails.acceptedWifePositions || [],
+            acceptPolygamy: (polygamyDetails.acceptedWifePositions || []).length > 0,
+            maritalStatus: 'never_married',
+          };
+
       // Register with simplified preferences  
-      await RegistrationService.createProfileWithPreferences(registrationData, islamicPreferences);
+      await RegistrationService.createProfileWithPreferences(registrationData, preferencesPayload);
 
       Alert.alert(
         'Profile Complete!',
