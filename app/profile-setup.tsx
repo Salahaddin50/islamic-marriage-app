@@ -190,31 +190,235 @@ const ProfileSetup: React.FC = () => {
 
   // Step 1: Basic Info
   const handleBasicInfo = async (data: BasicInfoForm) => {
-    setComprehensiveData({ ...comprehensiveData, basicInfo: data });
-    setCurrentStep(2);
+    setIsLoading(true);
+    try {
+      // Save basic info to database immediately
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const profileData = {
+          user_id: user.id,
+          first_name: data.firstName,
+          last_name: data.lastName || '',
+          about_me: data.aboutMe || '',
+          gender: data.gender,
+          date_of_birth: data.dateOfBirth,
+          country: data.country,
+          city: data.city,
+          phone_code: data.phoneCode || null,
+          mobile_number: data.mobileNumber || null,
+          updated_at: new Date().toISOString(),
+        };
+
+        // Check if profile exists
+        const { data: existing } = await supabase
+          .from('user_profiles')
+          .select('user_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (existing) {
+          // Update existing profile
+          await supabase
+            .from('user_profiles')
+            .update(profileData)
+            .eq('user_id', user.id);
+        } else {
+          // Create new profile
+          await supabase
+            .from('user_profiles')
+            .insert({ ...profileData, created_at: new Date().toISOString() });
+        }
+        
+        console.log('Step 1 data saved to database');
+      }
+      
+      setComprehensiveData({ ...comprehensiveData, basicInfo: data });
+      setCurrentStep(2);
+    } catch (error) {
+      console.error('Error saving Step 1 data:', error);
+      Alert.alert('Error', 'Failed to save data. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Step 2: Physical Details
-  const handlePhysicalDetailsNext = (data: PhysicalDetails) => {
-    setPhysicalDetails(data);
-    setCurrentStep(3);
+  const handlePhysicalDetailsNext = async (data: PhysicalDetails) => {
+    setIsLoading(true);
+    try {
+      // Save physical details to database
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('user_profiles')
+          .update({
+            height_cm: data.height,
+            weight_kg: data.weight,
+            eye_color: data.eyeColor,
+            hair_color: data.hairColor,
+            skin_tone: data.skinColor,
+            body_type: data.bodyType,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', user.id);
+        
+        console.log('Step 2 data saved to database');
+      }
+      
+      setPhysicalDetails(data);
+      setCurrentStep(3);
+    } catch (error) {
+      console.error('Error saving Step 2 data:', error);
+      Alert.alert('Error', 'Failed to save data. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Step 3: Lifestyle & Work
-  const handleLifestyleNext = (data: LifestyleDetails) => {
-    setLifestyleDetails(data);
-    setCurrentStep(4);
+  const handleLifestyleNext = async (data: LifestyleDetails) => {
+    setIsLoading(true);
+    try {
+      // Save lifestyle details to database
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('user_profiles')
+          .update({
+            education_level: data.education,
+            occupation: data.occupation,
+            languages_spoken: data.languagesSpoken,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', user.id);
+        
+        console.log('Step 3 data saved to database');
+      }
+      
+      setLifestyleDetails(data);
+      setCurrentStep(4);
+    } catch (error) {
+      console.error('Error saving Step 3 data:', error);
+      Alert.alert('Error', 'Failed to save data. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Step 4: Religious Commitment
-  const handleReligiousNext = (data: ReligiousDetails) => {
-    setReligiousDetails(data);
-    setCurrentStep(5);
+  const handleReligiousNext = async (data: ReligiousDetails) => {
+    setIsLoading(true);
+    try {
+      // Save religious details to database as JSON
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // Get existing questionnaire data
+        const { data: existingProfile } = await supabase
+          .from('user_profiles')
+          .select('islamic_questionnaire')
+          .eq('user_id', user.id)
+          .single();
+
+        const existingQuestionnaire = existingProfile?.islamic_questionnaire || {};
+        
+        const updatedQuestionnaire = {
+          ...existingQuestionnaire,
+          religious_level: data.religiousLevel,
+          prayer_frequency: data.prayerFrequency,
+          quran_reading_level: data.quranReading,
+          hijab_practice: data.hijabPractice,
+          covering_level: watchedValues.gender === 'female' ? data.coveringLevel : null,
+          beard_practice: data.beardPractice,
+          updated_at: new Date().toISOString(),
+        };
+
+        await supabase
+          .from('user_profiles')
+          .update({
+            islamic_questionnaire: updatedQuestionnaire,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', user.id);
+        
+        console.log('Step 4 data saved to database');
+      }
+      
+      setReligiousDetails(data);
+      setCurrentStep(5);
+    } catch (error) {
+      console.error('Error saving Step 4 data:', error);
+      Alert.alert('Error', 'Failed to save data. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Step 5: Continue to final confirmation (do not submit yet)
   const handlePolygamyComplete = async () => {
     setCurrentStep(6);
+  };
+
+  // Step 6: Save polygamy preferences and complete
+  const handlePolygamyNext = async () => {
+    setIsLoading(true);
+    try {
+      // Save polygamy preferences to database
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // Get existing questionnaire data
+        const { data: existingProfile } = await supabase
+          .from('user_profiles')
+          .select('islamic_questionnaire')
+          .eq('user_id', user.id)
+          .single();
+
+        const existingQuestionnaire = existingProfile?.islamic_questionnaire || {};
+        
+        const updatedQuestionnaire = {
+          ...existingQuestionnaire,
+          seeking_wife_number: watchedValues.gender === 'male' ? polygamyDetails.seekingWifeNumber : null,
+          accepted_wife_positions: watchedValues.gender === 'female' ? polygamyDetails.acceptedWifePositions : null,
+          updated_at: new Date().toISOString(),
+        };
+
+        await supabase
+          .from('user_profiles')
+          .update({
+            islamic_questionnaire: updatedQuestionnaire,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', user.id);
+        
+        console.log('Step 6 data saved to database');
+      }
+      
+      // Navigate to app
+      Alert.alert(
+        'Profile Complete!',
+        'Your profile has been set up successfully. Welcome to Hume!',
+        [
+          {
+            text: 'Start Browsing',
+            onPress: () => {
+              console.log('Navigating to tabs...');
+              router.replace('/(tabs)/home');
+            }
+          }
+        ]
+      );
+      
+      // Automatic navigation after 2 seconds as backup
+      setTimeout(() => {
+        console.log('Auto-navigating to home...');
+        router.replace('/(tabs)/home');
+      }, 2000);
+      
+    } catch (error) {
+      console.error('Error saving Step 6 data:', error);
+      Alert.alert('Error', 'Failed to save data. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Do NOT create any user_profiles rows before final submit; allow media step to work without it
@@ -739,7 +943,11 @@ const ProfileSetup: React.FC = () => {
           };
 
       // Register with simplified preferences  
-      await RegistrationService.createProfileWithPreferences(registrationData, preferencesPayload);
+      console.log('Creating profile with data:', registrationData);
+      console.log('Preferences payload:', preferencesPayload);
+      
+      const result = await RegistrationService.createProfileWithPreferences(registrationData, preferencesPayload);
+      console.log('Profile creation result:', result);
 
       Alert.alert(
         'Profile Complete!',
@@ -747,10 +955,19 @@ const ProfileSetup: React.FC = () => {
         [
           {
             text: 'Start Browsing',
-            onPress: () => navigation.navigate('(tabs)')
+            onPress: () => {
+              console.log('Navigating to tabs...');
+              router.replace('/(tabs)/home');
+            }
           }
         ]
       );
+      
+      // Automatic navigation after 2 seconds as backup
+      setTimeout(() => {
+        console.log('Auto-navigating to home...');
+        router.replace('/(tabs)/home');
+      }, 2000);
     } catch (error: any) {
       console.error('Profile completion error:', error);
       Alert.alert('Error', 'Failed to complete profile. Please try again.');
@@ -1439,7 +1656,7 @@ const ProfileSetup: React.FC = () => {
 
               <Button
                 title={isLoading ? "Completing Registration..." : "Complete Registration"}
-                onPress={handleCompleteProfile}
+                onPress={handlePolygamyNext}
                 style={styles.continueButton}
                 disabled={isLoading || (
                   watchedValues.gender === 'male' ? !polygamyDetails.seekingWifeNumber : 
