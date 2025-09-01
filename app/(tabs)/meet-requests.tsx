@@ -28,6 +28,7 @@ const MeetRequestsScreen = () => {
   ]);
 
   const [profilesById, setProfilesById] = useState<Record<string, { name: string; avatar?: any }>>({});
+  const [myUserId, setMyUserId] = useState<string | null>(null);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
@@ -126,7 +127,13 @@ const MeetRequestsScreen = () => {
         if (v === '1') setRingMuted(true);
         if (Platform.OS === 'web') {
           const s = (typeof window !== 'undefined') ? window.localStorage.getItem(WEB_SOUND_ENABLED_KEY) : null;
-          setWebSoundEnabled(s === '1');
+          if (s === null) {
+            try { if (typeof window !== 'undefined') { window.localStorage.setItem(WEB_SOUND_ENABLED_KEY, '1'); } } catch {}
+            setWebSoundEnabled(true); // default enabled
+          } else {
+            // treat any value other than '0' as enabled to be permissive
+            setWebSoundEnabled(s !== '0');
+          }
         }
       } catch {}
     })();
@@ -188,6 +195,11 @@ const MeetRequestsScreen = () => {
 
   const loadAll = async (isLoadMore: boolean = false) => {
     try {
+      // ensure my user id for display logic
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setMyUserId(user?.id || null);
+      } catch {}
       if (isLoadMore) {
         setIsFetchingMore(true);
       } else {
@@ -429,30 +441,7 @@ const MeetRequestsScreen = () => {
         <Image source={icons.videoCamera2} contentFit='contain' style={[styles.headerLogo, {tintColor: COLORS.primary}]} />
         <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>Meet Requests</Text>
       </View>
-      <View style={styles.headerRight}>
-        {Platform.OS === 'web' && !webSoundEnabled && (
-          <TouchableOpacity
-            onPress={() => {
-              try {
-                if (typeof window !== 'undefined') {
-                  window.localStorage.setItem(WEB_SOUND_ENABLED_KEY, '1');
-                }
-                setWebSoundEnabled(true);
-              } catch {}
-            }}
-            style={{
-              paddingHorizontal: 12,
-              paddingVertical: 8,
-              borderRadius: 18,
-              borderWidth: 1,
-              borderColor: COLORS.primary,
-              backgroundColor: COLORS.tansparentPrimary,
-            }}
-          >
-            <Text style={{ color: COLORS.primary, fontFamily: 'medium' }}>Enable sound</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      <View style={styles.headerRight} />
     </View>
   );
 
@@ -577,12 +566,13 @@ const MeetRequestsScreen = () => {
         approved.map((row, idx) => {
           const scheduledMs = row.scheduled_at ? new Date(row.scheduled_at).getTime() : NaN;
           const canJoin = !!row.meet_link && !Number.isNaN(scheduledMs) && (nowTick >= (scheduledMs - 10 * 60 * 1000));
+          const otherUserId = myUserId && row.sender_id === myUserId ? row.receiver_id : row.sender_id;
           return (
             <Row
               key={row.id}
               row={row}
               idx={idx}
-              otherUserId={row.sender_id}
+              otherUserId={otherUserId}
               scheduledText={row.scheduled_at ? formatMeetingDate(row.scheduled_at) : ''}
               scheduledAtISO={row.scheduled_at || undefined}
               requestText={formatRequestTime(row.updated_at)}

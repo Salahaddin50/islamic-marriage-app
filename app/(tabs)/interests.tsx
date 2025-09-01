@@ -33,6 +33,7 @@ const InterestsScreen = () => {
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 20;
   const CACHE_KEY = 'hume_interests_cache_v1';
+  const [myUserId, setMyUserId] = useState<string | null>(null);
 
   // Storage utility
   const Storage = {
@@ -112,6 +113,11 @@ const InterestsScreen = () => {
 
   const loadAll = async (isLoadMore: boolean = false) => {
     try {
+      // ensure my user id
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setMyUserId(user?.id || null);
+      } catch {}
       if (isLoadMore) {
         setIsFetchingMore(true);
       } else {
@@ -383,7 +389,7 @@ const InterestsScreen = () => {
             <Text style={styles.subtitle}>No approved interests</Text>
           ) : (
             approved.map((row, idx) => {
-              const otherUserId = row.sender_id; // Simplified
+              const otherUserId = myUserId && row.sender_id === myUserId ? row.receiver_id : row.sender_id;
               const other = profilesById[otherUserId];
               return (
                 <View key={row.id} style={[styles.userContainer, idx % 2 !== 0 ? styles.oddBackground : null]}>

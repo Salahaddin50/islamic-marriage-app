@@ -10,6 +10,9 @@ const TabLayout = () => {
   const [approvedInterestNewCount, setApprovedInterestNewCount] = useState<number>(0);
   const [approvedMeetNewCount, setApprovedMeetNewCount] = useState<number>(0);
   const [approvedMessageNewCount, setApprovedMessageNewCount] = useState<number>(0);
+  const [receivedInterestPendingCount, setReceivedInterestPendingCount] = useState<number>(0);
+  const [receivedMeetPendingCount, setReceivedMeetPendingCount] = useState<number>(0);
+  const [receivedMessagePendingCount, setReceivedMessagePendingCount] = useState<number>(0);
   useEffect(() => {
     let isMounted = true;
     const checkAuth = async () => {
@@ -65,9 +68,13 @@ const TabLayout = () => {
     const loadCounts = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { setApprovedInterestNewCount(0); setApprovedMeetNewCount(0); setApprovedMessageNewCount(0); return; }
+        if (!user) {
+          setApprovedInterestNewCount(0); setApprovedMeetNewCount(0); setApprovedMessageNewCount(0);
+          setReceivedInterestPendingCount(0); setReceivedMeetPendingCount(0); setReceivedMessagePendingCount(0);
+          return;
+        }
 
-        const [interestsCountRes, meetsCountRes, messagesCountRes] = await Promise.all([
+        const [interestsCountRes, meetsCountRes, messagesCountRes, interestsPendingRes, meetsPendingRes, messagesPendingRes] = await Promise.all([
           supabase
             .from('interests')
             .select('*', { count: 'exact', head: true })
@@ -83,11 +90,29 @@ const TabLayout = () => {
             .select('*', { count: 'exact', head: true })
             .eq('status', 'accepted')
             .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`),
+          supabase
+            .from('interests')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'pending')
+            .eq('receiver_id', user.id),
+          supabase
+            .from('meet_requests')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'pending')
+            .eq('receiver_id', user.id),
+          supabase
+            .from('message_requests')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'pending')
+            .eq('receiver_id', user.id),
         ]);
 
         setApprovedInterestNewCount(interestsCountRes.count || 0);
         setApprovedMeetNewCount(meetsCountRes.count || 0);
         setApprovedMessageNewCount(messagesCountRes.count || 0);
+        setReceivedInterestPendingCount(interestsPendingRes.count || 0);
+        setReceivedMeetPendingCount(meetsPendingRes.count || 0);
+        setReceivedMessagePendingCount(messagesPendingRes.count || 0);
       } catch {}
     };
 
@@ -101,7 +126,7 @@ const TabLayout = () => {
       .subscribe();
 
     // Poll as a fallback to ensure counts reflect local deletes/updates quickly
-    intervalId = setInterval(loadCounts, 1000);
+    intervalId = setInterval(loadCounts, 3000);
 
     return () => {
       if (channel) supabase.removeChannel(channel);
@@ -188,9 +213,11 @@ const TabLayout = () => {
                       tintColor: focused ? COLORS.primary : COLORS.gray3,
                     }}
                   />
-                  {approvedInterestNewCount > 0 && (
+                  {(receivedInterestPendingCount > 0 || approvedInterestNewCount > 0) && (
                     <View style={{ position: 'absolute', top: isMobileWeb() ? 1 : 3, left: isMobileWeb() ? 26 : 30, backgroundColor: COLORS.primary, minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}>
-                      <Text style={{ color: COLORS.white, fontSize: 10, fontFamily: 'bold' }}>{approvedInterestNewCount > 99 ? '99+' : approvedInterestNewCount}</Text>
+                      <Text style={{ color: COLORS.white, fontSize: 10, fontFamily: 'bold' }}>
+                        {receivedInterestPendingCount > 0 ? 'new' : (approvedInterestNewCount > 99 ? '99+' : approvedInterestNewCount)}
+                      </Text>
                     </View>
                   )}
                 </View>
@@ -225,9 +252,11 @@ const TabLayout = () => {
                       tintColor: focused ? COLORS.primary : COLORS.gray3,
                     }}
                   />
-                  {approvedMeetNewCount > 0 && (
+                  {(receivedMeetPendingCount > 0 || approvedMeetNewCount > 0) && (
                     <View style={{ position: 'absolute', top: isMobileWeb() ? 1 : 3, left: isMobileWeb() ? 26 : 30, backgroundColor: COLORS.primary, minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}>
-                      <Text style={{ color: COLORS.white, fontSize: 10, fontFamily: 'bold' }}>{approvedMeetNewCount > 99 ? '99+' : approvedMeetNewCount}</Text>
+                      <Text style={{ color: COLORS.white, fontSize: 10, fontFamily: 'bold' }}>
+                        {receivedMeetPendingCount > 0 ? 'new' : (approvedMeetNewCount > 99 ? '99+' : approvedMeetNewCount)}
+                      </Text>
                     </View>
                   )}
                 </View>
@@ -262,9 +291,11 @@ const TabLayout = () => {
                       tintColor: focused ? COLORS.primary : COLORS.gray3,
                     }}
                   />
-                  {approvedMessageNewCount > 0 && (
+                  {(receivedMessagePendingCount > 0 || approvedMessageNewCount > 0) && (
                     <View style={{ position: 'absolute', top: isMobileWeb() ? 1 : 3, left: isMobileWeb() ? 26 : 30, backgroundColor: COLORS.primary, minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}>
-                      <Text style={{ color: COLORS.white, fontSize: 10, fontFamily: 'bold' }}>{approvedMessageNewCount > 99 ? '99+' : approvedMessageNewCount}</Text>
+                      <Text style={{ color: COLORS.white, fontSize: 10, fontFamily: 'bold' }}>
+                        {receivedMessagePendingCount > 0 ? 'new' : (approvedMessageNewCount > 99 ? '99+' : approvedMessageNewCount)}
+                      </Text>
                     </View>
                   )}
                 </View>
