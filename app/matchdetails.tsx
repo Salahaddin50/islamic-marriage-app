@@ -633,7 +633,7 @@ const MatchDetails = () => {
     const renderHeader = () => {
         return (
             <View style={styles.headerContainer}>
-        <TouchableOpacity onPress={() => safeGoBack(navigation, router, '/(tabs)/home')}>
+        <TouchableOpacity onPress={() => safeGoBack(navigation, router, '/(tabs)/home')} style={styles.headerBackButton} hitSlop={{ top: 8, left: 8, right: 8, bottom: 8 }}>
                     <Image
                         source={icons.back}
             contentFit="contain"
@@ -1545,15 +1545,30 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         position: "absolute",
-        top: 32,
+        top: 16,
         zIndex: 999,
         left: 16,
         right: 16
     },
+    headerBackButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255,255,255,0.92)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.15)',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 4,
+    },
     backIcon: {
-        width: 24,
-        height: 24,
-        tintColor: COLORS.white
+        width: 26,
+        height: 26,
+        tintColor: COLORS.black
     },
     bookmarkIcon: {
         width: 24,
