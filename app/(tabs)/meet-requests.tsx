@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, useWindowDimensions, Linking, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, useWindowDimensions, Linking, Alert, Modal, Vibration } from 'react-native';
 import { COLORS, SIZES, images, icons } from '@/constants';
 import { Image } from 'expo-image';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
@@ -57,6 +57,31 @@ const MeetRequestsScreen = () => {
   const [showJitsiModal, setShowJitsiModal] = useState(false);
   const [jitsiHtml, setJitsiHtml] = useState<string | null>(null);
   const [myDisplayName, setMyDisplayName] = useState<string>('');
+  const [showRingModal, setShowRingModal] = useState(false);
+  const [ringMeetRow, setRingMeetRow] = useState<MeetRecord | null>(null);
+  const [ringDismissedIds, setRingDismissedIds] = useState<Set<string>>(new Set());
+  const [highlightMeetId, setHighlightMeetId] = useState<string | null>(null);
+  const [blinkOn, setBlinkOn] = useState(false);
+  const [ringMuted, setRingMuted] = useState<boolean>(false);
+  const ringAudioRef = React.useRef<any>(null);
+  const RING_SOUND_URL = 'https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg';
+  const RING_MUTE_KEY = 'HUME_RING_MUTED';
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const v = await SecureStore.getItemAsync(RING_MUTE_KEY);
+        if (v === '1') setRingMuted(true);
+      } catch {}
+    })();
+  }, []);
+
+  // Simple blinking effect for highlight
+  useEffect(() => {
+    if (!highlightMeetId) return;
+    const id = setInterval(() => setBlinkOn(prev => !prev), 600);
+    return () => clearInterval(id);
+  }, [highlightMeetId]);
 
   const formatRequestTime = (iso?: string) => {
     if (!iso) return '';
@@ -250,6 +275,45 @@ const MeetRequestsScreen = () => {
     }
   };
 
+  // Ring when any approved meeting is joinable
+  useEffect(() => {
+    try {
+      const joinable = approved.find(r => r.meet_link && isTimeToJoin(r.scheduled_at) && !ringDismissedIds.has(r.id));
+      if (isFocused && joinable) {
+        setRingMeetRow(joinable);
+        setShowRingModal(true);
+        // Web ring sound (native requires installing expo-av)
+        (async () => {
+          try {
+            if (!ringMuted && Platform.OS === 'web') {
+              if (ringAudioRef.current) {
+                try { ringAudioRef.current.pause(); } catch {}
+                ringAudioRef.current = null;
+              }
+              const audio = new (window as any).Audio(RING_SOUND_URL);
+              audio.loop = true;
+              await audio.play().catch(() => {});
+              ringAudioRef.current = audio;
+            }
+          } catch {}
+        })();
+        // Native vibration loop (web may ignore)
+        if (Platform.OS !== 'web') {
+          Vibration.vibrate([500, 400, 500, 800], true);
+        }
+      }
+    } catch {}
+    return () => {
+      if (Platform.OS !== 'web') {
+        Vibration.cancel();
+      }
+      if (ringAudioRef.current) {
+        try { ringAudioRef.current.pause(); ringAudioRef.current.currentTime = 0; } catch {}
+        ringAudioRef.current = null;
+      }
+    };
+  }, [approved, nowTick, isFocused]);
+
   useEffect(() => {
     const ch = supabase
       .channel('meet-requests-realtime')
@@ -298,7 +362,11 @@ const MeetRequestsScreen = () => {
     const scheduledMs = scheduledAtISO ? new Date(scheduledAtISO).getTime() : NaN;
     const canJoin = !!row.meet_link && !Number.isNaN(scheduledMs) && (nowTick >= (scheduledMs - 10 * 60 * 1000));
     return (
-      <View key={row.id} style={[styles.userContainer, idx % 2 !== 0 ? styles.oddBackground : null]}>
+      <View key={row.id} style={[
+        styles.userContainer,
+        idx % 2 !== 0 ? styles.oddBackground : null,
+        (highlightMeetId === row.id) ? { backgroundColor: blinkOn ? 'rgba(255,215,0,0.15)' : 'rgba(255,215,0,0.35)' } : null,
+      ]}>
         <TouchableOpacity style={styles.userImageContainer} onPress={() => navigation.navigate('matchdetails' as never, { userId: otherUserId } as never)}>
           <Image source={other?.avatar ? (typeof other.avatar === 'string' ? { uri: other.avatar } : other.avatar) : images.maleSilhouette} contentFit='cover' style={styles.userImage} />
         </TouchableOpacity>
@@ -531,6 +599,78 @@ const MeetRequestsScreen = () => {
           </View>
         </Modal>
 
+        {/* Ring (Incoming Meeting) Modal */}
+        <Modal visible={showRingModal} transparent animationType="fade" onRequestClose={() => { setShowRingModal(false); }}>
+          <View style={styles.modalContainer}>
+            <View style={styles.ringCard}>
+              <TouchableOpacity style={styles.jitsiCloseButton} onPress={() => {
+                if (ringMeetRow) {
+                  setRingDismissedIds(prev => new Set(prev).add(ringMeetRow.id));
+                  setHighlightMeetId(ringMeetRow.id);
+                }
+                setShowRingModal(false);
+                setRingMeetRow(null);
+                setIndex(2);
+                if (Platform.OS !== 'web') Vibration.cancel();
+              }}>
+                <Text style={styles.jitsiCloseButtonText}>×</Text>
+              </TouchableOpacity>
+              <Image source={icons.videoCamera2} contentFit='contain' style={{ width: 42, height: 42, tintColor: COLORS.primary, marginBottom: 12 }} />
+              <Text style={[styles.modalTitle, { marginBottom: 6 }]}>Meeting is ready</Text>
+              <Text style={[styles.infoText, { textAlign: 'center', marginBottom: 16 }]}>
+                {ringMeetRow?.scheduled_at ? `Scheduled for ${formatMeetingDate(ringMeetRow.scheduled_at)}` : ''}
+              </Text>
+              <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+                <TouchableOpacity
+                  onPress={async () => {
+                    try {
+                      const newMuted = !ringMuted;
+                      setRingMuted(newMuted);
+                      await SecureStore.setItemAsync(RING_MUTE_KEY, newMuted ? '1' : '0');
+                      if (newMuted && ringAudioRef.current) {
+                        try { ringAudioRef.current.pause(); ringAudioRef.current = null; } catch {}
+                      }
+                    } catch {}
+                  }}
+                  style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 18, borderWidth: 1, borderColor: COLORS.primary, backgroundColor: ringMuted ? COLORS.tansparentPrimary : COLORS.white }}
+                >
+                  <Text style={{ color: COLORS.primary, fontFamily: 'medium' }}>{ringMuted ? 'Unmute' : 'Mute'}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.joinButton]}
+                  onPress={() => {
+                    if (!ringMeetRow?.meet_link) return;
+                    setShowRingModal(false);
+                    setSelectedMeetRow(ringMeetRow);
+                    setShowJoinInfoModal(true);
+                    if (Platform.OS !== 'web') Vibration.cancel();
+                    if (ringAudioRef.current) { try { ringAudioRef.current.pause(); ringAudioRef.current = null; } catch {} }
+                  }}
+                >
+                  <Image source={icons.videoCamera2} contentFit='contain' style={{ width: 18, height: 18, tintColor: COLORS.white, marginRight: 8 }} />
+                  <Text style={styles.modalButtonText}>Join</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.cancelButton]}
+                  onPress={() => {
+                    if (ringMeetRow) {
+                      setRingDismissedIds(prev => new Set(prev).add(ringMeetRow.id));
+                      setHighlightMeetId(ringMeetRow.id);
+                    }
+                    setShowRingModal(false);
+                    setRingMeetRow(null);
+                    setIndex(2);
+                    if (Platform.OS !== 'web') Vibration.cancel();
+                    if (ringAudioRef.current) { try { ringAudioRef.current.pause(); ringAudioRef.current = null; } catch {} }
+                  }}
+                >
+                  <Text style={[styles.modalButtonText, { color: COLORS.primary }]}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
         {/* Centered Jitsi Modal */}
         <Modal visible={showJitsiModal} transparent={true} animationType="fade" onRequestClose={() => setShowJitsiModal(false)}>
           <View style={styles.modalContainer}>
@@ -689,6 +829,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'bold',
     color: COLORS.white,
+  },
+  ringCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 20,
+    width: '100%',
+    maxWidth: 360,
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center' },
   headerLogo: { height: 36, width: 36, tintColor: COLORS.primary },
