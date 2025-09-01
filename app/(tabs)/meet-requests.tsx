@@ -64,7 +64,8 @@ const MeetRequestsScreen = () => {
   const [blinkOn, setBlinkOn] = useState(false);
   const [ringMuted, setRingMuted] = useState<boolean>(false);
   const ringAudioRef = React.useRef<any>(null);
-  const RING_SOUND_URL = 'https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg';
+  const ringNativeRef = React.useRef<any>(null);
+  const RING_SOUND_URL = 'https://assets.mixkit.co/sfx/preview/mixkit-old-telephone-ring-135.mp3';
   const RING_MUTE_KEY = 'HUME_RING_MUTED';
 
   useEffect(() => {
@@ -146,7 +147,7 @@ const MeetRequestsScreen = () => {
           }
         } catch {}
         if (!usedCache && incoming.length === 0 && outgoing.length === 0 && approved.length === 0) {
-          setLoading(true);
+        setLoading(true);
         }
       }
       
@@ -282,7 +283,7 @@ const MeetRequestsScreen = () => {
       if (isFocused && joinable) {
         setRingMeetRow(joinable);
         setShowRingModal(true);
-        // Web ring sound (native requires installing expo-av)
+        // Web ring sound only (native uses hidden web audio iframe below)
         (async () => {
           try {
             if (!ringMuted && Platform.OS === 'web') {
@@ -615,27 +616,24 @@ const MeetRequestsScreen = () => {
               }}>
                 <Text style={styles.jitsiCloseButtonText}>×</Text>
               </TouchableOpacity>
-              <Image source={icons.videoCamera2} contentFit='contain' style={{ width: 42, height: 42, tintColor: COLORS.primary, marginBottom: 12 }} />
-              <Text style={[styles.modalTitle, { marginBottom: 6 }]}>Meeting is ready</Text>
+              <View style={{ alignItems: 'center', marginBottom: 12 }}>
+                <View style={styles.ringAvatarWrapper}>
+                  <View style={[styles.ringPulse, blinkOn && styles.ringPulseAlt]} />
+                  <View style={[styles.ringPulse, { width: 110, height: 110, opacity: 0.2 }]} />
+                  <Image
+                    source={ringMeetRow ? (profilesById[ringMeetRow.sender_id]?.avatar ? (typeof profilesById[ringMeetRow.sender_id].avatar === 'string' ? { uri: profilesById[ringMeetRow.sender_id].avatar } : profilesById[ringMeetRow.sender_id].avatar) : images.maleSilhouette) : images.maleSilhouette}
+                    contentFit='cover'
+                    style={{ width: 84, height: 84, borderRadius: 42 }}
+                  />
+                </View>
+              </View>
+              <Text style={[styles.modalTitle, { marginBottom: 6 }]}>
+                {ringMeetRow ? (profilesById[ringMeetRow.sender_id]?.name || 'Incoming meeting') : 'Incoming meeting'}
+              </Text>
               <Text style={[styles.infoText, { textAlign: 'center', marginBottom: 16 }]}>
                 {ringMeetRow?.scheduled_at ? `Scheduled for ${formatMeetingDate(ringMeetRow.scheduled_at)}` : ''}
               </Text>
               <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
-                <TouchableOpacity
-                  onPress={async () => {
-                    try {
-                      const newMuted = !ringMuted;
-                      setRingMuted(newMuted);
-                      await SecureStore.setItemAsync(RING_MUTE_KEY, newMuted ? '1' : '0');
-                      if (newMuted && ringAudioRef.current) {
-                        try { ringAudioRef.current.pause(); ringAudioRef.current = null; } catch {}
-                      }
-                    } catch {}
-                  }}
-                  style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 18, borderWidth: 1, borderColor: COLORS.primary, backgroundColor: ringMuted ? COLORS.tansparentPrimary : COLORS.white }}
-                >
-                  <Text style={{ color: COLORS.primary, fontFamily: 'medium' }}>{ringMuted ? 'Unmute' : 'Mute'}</Text>
-                </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.modalButton, styles.joinButton]}
                   onPress={() => {
@@ -679,28 +677,28 @@ const MeetRequestsScreen = () => {
                 <Text style={styles.jitsiCloseButtonText}>×</Text>
               </TouchableOpacity>
               <View style={styles.jitsiVideoContainer}>
-                {!!jitsiHtml && (
-                  Platform.OS === 'web' ? (
-                    <iframe
-                      srcDoc={jitsiHtml as any}
-                      style={{ width: '100%', height: '100%', border: 0 } as any}
-                      allow="camera; microphone; fullscreen; display-capture; autoplay"
-                    />
-                  ) : (
-                    <WebView
-                      originWhitelist={["*"]}
-                      source={{ html: jitsiHtml }}
-                      onMessage={(e) => { if (e.nativeEvent.data === 'left') { setShowJitsiModal(false); } }}
-                      allowsInlineMediaPlayback
-                      mediaPlaybackRequiresUserAction={false}
-                      javaScriptEnabled
-                      domStorageEnabled
-                      startInLoadingState
-                      style={{ flex:1 }}
-                    />
-                  )
-                )}
-              </View>
+              {!!jitsiHtml && (
+                Platform.OS === 'web' ? (
+                  <iframe
+                    srcDoc={jitsiHtml as any}
+                    style={{ width: '100%', height: '100%', border: 0 } as any}
+                    allow="camera; microphone; fullscreen; display-capture; autoplay"
+                  />
+                ) : (
+                  <WebView
+                    originWhitelist={["*"]}
+                    source={{ html: jitsiHtml }}
+                    onMessage={(e) => { if (e.nativeEvent.data === 'left') { setShowJitsiModal(false); } }}
+                    allowsInlineMediaPlayback
+                    mediaPlaybackRequiresUserAction={false}
+                    javaScriptEnabled
+                    domStorageEnabled
+                    startInLoadingState
+                    style={{ flex:1 }}
+                  />
+                )
+              )}
+            </View>
             </View>
           </View>
         </Modal>
@@ -842,6 +840,23 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+  },
+  ringAvatarWrapper: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  ringPulse: {
+    position: 'absolute',
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: COLORS.tansparentPrimary,
+  },
+  ringPulseAlt: {
+    opacity: 0.35,
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center' },
   headerLogo: { height: 36, width: 36, tintColor: COLORS.primary },
