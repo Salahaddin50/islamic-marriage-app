@@ -531,35 +531,37 @@ const MeetRequestsScreen = () => {
           </View>
         </Modal>
 
-        {/* Fullscreen Jitsi Modal */}
+        {/* Centered Jitsi Modal */}
         <Modal visible={showJitsiModal} transparent={true} animationType="fade" onRequestClose={() => setShowJitsiModal(false)}>
-          <View style={{ position:'absolute', top:0, left:0, right:0, bottom:0, backgroundColor:'#000', justifyContent:'center', alignItems:'center' }}>
-            <View style={{ width: '100%', height: '100%', backgroundColor:'#000', overflow:'hidden' }}>
-              {!!jitsiHtml && (
-                Platform.OS === 'web' ? (
-                  <iframe
-                    srcDoc={jitsiHtml as any}
-                    style={{ width: '100%', height: '100%', border: 0 } as any}
-                    allow="camera; microphone; fullscreen; display-capture; autoplay"
-                  />
-                ) : (
-                  <WebView
-                    originWhitelist={["*"]}
-                    source={{ html: jitsiHtml }}
-                    onMessage={(e) => { if (e.nativeEvent.data === 'left') { setShowJitsiModal(false); } }}
-                    allowsInlineMediaPlayback
-                    mediaPlaybackRequiresUserAction={false}
-                    javaScriptEnabled
-                    domStorageEnabled
-                    startInLoadingState
-                    style={{ flex:1 }}
-                  />
-                )
-              )}
+          <View style={styles.modalContainer}>
+            <View style={styles.jitsiCard}>
+              <TouchableOpacity style={styles.jitsiCloseButton} onPress={() => setShowJitsiModal(false)}>
+                <Text style={styles.jitsiCloseButtonText}>×</Text>
+              </TouchableOpacity>
+              <View style={styles.jitsiVideoContainer}>
+                {!!jitsiHtml && (
+                  Platform.OS === 'web' ? (
+                    <iframe
+                      srcDoc={jitsiHtml as any}
+                      style={{ width: '100%', height: '100%', border: 0 } as any}
+                      allow="camera; microphone; fullscreen; display-capture; autoplay"
+                    />
+                  ) : (
+                    <WebView
+                      originWhitelist={["*"]}
+                      source={{ html: jitsiHtml }}
+                      onMessage={(e) => { if (e.nativeEvent.data === 'left') { setShowJitsiModal(false); } }}
+                      allowsInlineMediaPlayback
+                      mediaPlaybackRequiresUserAction={false}
+                      javaScriptEnabled
+                      domStorageEnabled
+                      startInLoadingState
+                      style={{ flex:1 }}
+                    />
+                  )
+                )}
+              </View>
             </View>
-            <TouchableOpacity style={[styles.modalButton, { marginTop: 12, backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth:1 }]} onPress={() => setShowJitsiModal(false)}>
-              <Text style={[styles.modalButtonText, { color: COLORS.primary }]}>Close</Text>
-            </TouchableOpacity>
           </View>
         </Modal>
       </View>
@@ -622,6 +624,42 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 8,
+  },
+  jitsiCard: {
+    backgroundColor: COLORS.black,
+    borderRadius: 16,
+    width: '100%',
+    maxWidth: 900,
+    height: 680,
+    maxHeight: '92%',
+    overflow: 'hidden',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+  },
+  jitsiVideoContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  jitsiCloseButton: {
+    position: 'absolute',
+    top: 6,
+    right: 8,
+    zIndex: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  jitsiCloseButtonText: {
+    fontSize: 22,
+    fontFamily: 'bold',
+    color: COLORS.black,
+    marginTop: -1,
   },
   modalButton: {
     height: 48,
