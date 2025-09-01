@@ -69,6 +69,55 @@ const MeetRequestsScreen = () => {
   const RING_MUTE_KEY = 'HUME_RING_MUTED';
   const WEB_SOUND_ENABLED_KEY = 'HUME_WEB_SOUND_ENABLED';
   const [webSoundEnabled, setWebSoundEnabled] = useState<boolean>(false);
+  // WebAudio beep fallback (reliable on web)
+  const ringCtxRef = React.useRef<any>(null);
+  const ringGainRef = React.useRef<any>(null);
+  const ringOscRef = React.useRef<any>(null);
+  const ringBeepTimerRef = React.useRef<any>(null);
+
+  const startWebBeep = () => {
+    try {
+      if (Platform.OS !== 'web') return;
+      if (ringCtxRef.current) return; // already running
+      const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, ctx.currentTime);
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      ringCtxRef.current = ctx;
+      ringGainRef.current = gain;
+      ringOscRef.current = osc;
+      // 1.2s on, 0.8s off loop
+      const pattern = () => {
+        try {
+          const now = ctx.currentTime;
+          gain.gain.cancelScheduledValues(now);
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.exponentialRampToValueAtTime(0.2, now + 0.05);
+          gain.gain.setValueAtTime(0.2, now + 1.2);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.25);
+        } catch {}
+      };
+      pattern();
+      ringBeepTimerRef.current = setInterval(pattern, 2000);
+    } catch {}
+  };
+
+  const stopWebBeep = () => {
+    try {
+      if (Platform.OS !== 'web') return;
+      if (ringBeepTimerRef.current) { clearInterval(ringBeepTimerRef.current); ringBeepTimerRef.current = null; }
+      if (ringOscRef.current) { try { ringOscRef.current.stop(); } catch {} ringOscRef.current = null; }
+      if (ringCtxRef.current) { try { ringCtxRef.current.close(); } catch {} ringCtxRef.current = null; }
+      ringGainRef.current = null;
+    } catch {}
+  };
 
   useEffect(() => {
     (async () => {
@@ -307,18 +356,11 @@ const MeetRequestsScreen = () => {
       if (isFocused && joinable) {
         setRingMeetRow(joinable);
         setShowRingModal(true);
-        // Web ring sound only (native uses hidden web audio iframe below)
+        // Web: start beep if enabled
         (async () => {
           try {
             if (!ringMuted && Platform.OS === 'web' && webSoundEnabled) {
-              if (ringAudioRef.current) {
-                try { ringAudioRef.current.pause(); } catch {}
-                ringAudioRef.current = null;
-              }
-              const audio = new (window as any).Audio(RING_SOUND_URL);
-              audio.loop = true;
-              await audio.play().catch(() => {});
-              ringAudioRef.current = audio;
+              startWebBeep();
             }
           } catch {}
         })();
@@ -332,6 +374,7 @@ const MeetRequestsScreen = () => {
         setShowRingModal(false);
         if (Platform.OS !== 'web') Vibration.cancel();
         if (ringAudioRef.current) { try { ringAudioRef.current.pause(); ringAudioRef.current = null; } catch {} }
+        stopWebBeep();
         setRingMeetRow(null);
       }
     } catch {}
@@ -343,6 +386,7 @@ const MeetRequestsScreen = () => {
         try { ringAudioRef.current.pause(); ringAudioRef.current.currentTime = 0; } catch {}
         ringAudioRef.current = null;
       }
+      stopWebBeep();
     };
   }, [approved, nowTick, isFocused]);
 
@@ -675,7 +719,19 @@ const MeetRequestsScreen = () => {
                   <View style={[styles.ringPulse, blinkOn && styles.ringPulseAlt]} />
                   <View style={[styles.ringPulse, { width: 110, height: 110, opacity: 0.2 }]} />
                   <Image
-                    source={ringMeetRow ? (profilesById[ringMeetRow.sender_id]?.avatar ? (typeof profilesById[ringMeetRow.sender_id].avatar === 'string' ? { uri: profilesById[ringMeetRow.sender_id].avatar } : profilesById[ringMeetRow.sender_id].avatar) : images.maleSilhouette) : images.maleSilhouette}
+                    source={
+                      ringMeetRow
+                        ? (
+                            profilesById[ringMeetRow.sender_id]?.avatar
+                              ? (
+                                  typeof profilesById[ringMeetRow.sender_id].avatar === 'string'
+                                    ? { uri: profilesById[ringMeetRow.sender_id].avatar }
+                                    : profilesById[ringMeetRow.sender_id].avatar
+                                )
+                              : images.maleSilhouette
+                          )
+                        : images.maleSilhouette
+                    }
                     contentFit='cover'
                     style={{ width: 84, height: 84, borderRadius: 42 }}
                   />
@@ -697,6 +753,7 @@ const MeetRequestsScreen = () => {
                     setShowJoinInfoModal(true);
                     if (Platform.OS !== 'web') Vibration.cancel();
                     if (ringAudioRef.current) { try { ringAudioRef.current.pause(); ringAudioRef.current = null; } catch {} }
+                    stopWebBeep();
                   }}
                 >
                   <Image source={icons.videoCamera2} contentFit='contain' style={{ width: 18, height: 18, tintColor: COLORS.white, marginRight: 8 }} />
@@ -714,6 +771,7 @@ const MeetRequestsScreen = () => {
                     setIndex(2);
                     if (Platform.OS !== 'web') Vibration.cancel();
                     if (ringAudioRef.current) { try { ringAudioRef.current.pause(); ringAudioRef.current = null; } catch {} }
+                    stopWebBeep();
                   }}
                 >
                   <Text style={[styles.modalButtonText, { color: COLORS.primary }]}>Close</Text>
