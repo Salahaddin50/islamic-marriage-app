@@ -67,22 +67,32 @@ const MeetRequestsScreen = () => {
   const ringNativeRef = React.useRef<any>(null);
   const RING_SOUND_URL = 'https://assets.mixkit.co/sfx/preview/mixkit-old-telephone-ring-135.mp3';
   const RING_MUTE_KEY = 'HUME_RING_MUTED';
+  const WEB_SOUND_ENABLED_KEY = 'HUME_WEB_SOUND_ENABLED';
+  const [webSoundEnabled, setWebSoundEnabled] = useState<boolean>(false);
 
   useEffect(() => {
     (async () => {
       try {
         const v = await SecureStore.getItemAsync(RING_MUTE_KEY);
         if (v === '1') setRingMuted(true);
+        if (Platform.OS === 'web') {
+          const s = (typeof window !== 'undefined') ? window.localStorage.getItem(WEB_SOUND_ENABLED_KEY) : null;
+          setWebSoundEnabled(s === '1');
+        }
       } catch {}
     })();
   }, []);
 
-  // Simple blinking effect for highlight
+  // Blinking effect runs while any approved row is within the ring window
   useEffect(() => {
-    if (!highlightMeetId) return;
+    const anyInWindow = approved?.some(r => isWithinRingWindow(r.scheduled_at));
+    if (!anyInWindow) {
+      setBlinkOn(false);
+      return;
+    }
     const id = setInterval(() => setBlinkOn(prev => !prev), 600);
     return () => clearInterval(id);
-  }, [highlightMeetId]);
+  }, [approved, nowTick]);
 
   const formatRequestTime = (iso?: string) => {
     if (!iso) return '';
@@ -276,17 +286,31 @@ const MeetRequestsScreen = () => {
     }
   };
 
+  // Helper: ring window = 10 minutes before until 1 hour after start
+  const isWithinRingWindow = (scheduledAt: string | null): boolean => {
+    if (!scheduledAt) return false;
+    try {
+      const scheduledMs = new Date(scheduledAt).getTime();
+      if (Number.isNaN(scheduledMs)) return false;
+      const startWindow = scheduledMs - 10 * 60 * 1000; // 10 min before
+      const endWindow = scheduledMs + 60 * 60 * 1000;   // 1 hour after start
+      return nowTick >= startWindow && nowTick <= endWindow;
+    } catch {
+      return false;
+    }
+  };
+
   // Ring when any approved meeting is joinable
   useEffect(() => {
     try {
-      const joinable = approved.find(r => r.meet_link && isTimeToJoin(r.scheduled_at) && !ringDismissedIds.has(r.id));
+      const joinable = approved.find(r => r.meet_link && isWithinRingWindow(r.scheduled_at) && !ringDismissedIds.has(r.id));
       if (isFocused && joinable) {
         setRingMeetRow(joinable);
         setShowRingModal(true);
         // Web ring sound only (native uses hidden web audio iframe below)
         (async () => {
           try {
-            if (!ringMuted && Platform.OS === 'web') {
+            if (!ringMuted && Platform.OS === 'web' && webSoundEnabled) {
               if (ringAudioRef.current) {
                 try { ringAudioRef.current.pause(); } catch {}
                 ringAudioRef.current = null;
@@ -302,6 +326,13 @@ const MeetRequestsScreen = () => {
         if (Platform.OS !== 'web') {
           Vibration.vibrate([500, 400, 500, 800], true);
         }
+      }
+      // If outside window while modal is showing, dismiss
+      if (showRingModal && ringMeetRow && !isWithinRingWindow(ringMeetRow.scheduled_at)) {
+        setShowRingModal(false);
+        if (Platform.OS !== 'web') Vibration.cancel();
+        if (ringAudioRef.current) { try { ringAudioRef.current.pause(); ringAudioRef.current = null; } catch {} }
+        setRingMeetRow(null);
       }
     } catch {}
     return () => {
@@ -354,7 +385,30 @@ const MeetRequestsScreen = () => {
         <Image source={icons.videoCamera2} contentFit='contain' style={[styles.headerLogo, {tintColor: COLORS.primary}]} />
         <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>Meet Requests</Text>
       </View>
-      <View style={styles.headerRight} />
+      <View style={styles.headerRight}>
+        {Platform.OS === 'web' && !webSoundEnabled && (
+          <TouchableOpacity
+            onPress={() => {
+              try {
+                if (typeof window !== 'undefined') {
+                  window.localStorage.setItem(WEB_SOUND_ENABLED_KEY, '1');
+                }
+                setWebSoundEnabled(true);
+              } catch {}
+            }}
+            style={{
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              borderRadius: 18,
+              borderWidth: 1,
+              borderColor: COLORS.primary,
+              backgroundColor: COLORS.tansparentPrimary,
+            }}
+          >
+            <Text style={{ color: COLORS.primary, fontFamily: 'medium' }}>Enable sound</Text>
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   );
 
@@ -366,7 +420,7 @@ const MeetRequestsScreen = () => {
       <View key={row.id} style={[
         styles.userContainer,
         idx % 2 !== 0 ? styles.oddBackground : null,
-        (highlightMeetId === row.id) ? { backgroundColor: blinkOn ? 'rgba(255,215,0,0.15)' : 'rgba(255,215,0,0.35)' } : null,
+        (isWithinRingWindow(scheduledAtISO || null)) ? { backgroundColor: blinkOn ? 'rgba(255,215,0,0.15)' : 'rgba(255,215,0,0.35)' } : null,
       ]}>
         <TouchableOpacity style={styles.userImageContainer} onPress={() => navigation.navigate('matchdetails' as never, { userId: otherUserId } as never)}>
           <Image source={other?.avatar ? (typeof other.avatar === 'string' ? { uri: other.avatar } : other.avatar) : images.maleSilhouette} contentFit='cover' style={styles.userImage} />
