@@ -13,6 +13,7 @@ const TabLayout = () => {
   const [receivedInterestPendingCount, setReceivedInterestPendingCount] = useState<number>(0);
   const [receivedMeetPendingCount, setReceivedMeetPendingCount] = useState<number>(0);
   const [receivedMessagePendingCount, setReceivedMessagePendingCount] = useState<number>(0);
+  // Global ring overlay removed
   useEffect(() => {
     let isMounted = true;
     const checkAuth = async () => {

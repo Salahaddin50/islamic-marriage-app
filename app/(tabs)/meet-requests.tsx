@@ -393,14 +393,14 @@ const MeetRequestsScreen = () => {
     }
   };
 
-  // Helper: ring window = 10 minutes before until 1 hour after start
+  // Helper: ring window = 5 minutes before until 5 minutes after start
   const isWithinRingWindow = (scheduledAt: string | null): boolean => {
     if (!scheduledAt) return false;
     try {
       const scheduledMs = new Date(scheduledAt).getTime();
       if (Number.isNaN(scheduledMs)) return false;
-      const startWindow = scheduledMs - 10 * 60 * 1000; // 10 min before
-      const endWindow = scheduledMs + 60 * 60 * 1000;   // 1 hour after start
+      const startWindow = scheduledMs - 5 * 60 * 1000; // 5 min before
+      const endWindow = scheduledMs + 5 * 60 * 1000;   // 5 min after start
       return nowTick >= startWindow && nowTick <= endWindow;
     } catch {
       return false;
