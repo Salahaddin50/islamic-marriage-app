@@ -104,7 +104,8 @@ const Messages = () => {
       if (isLoadMore) {
         setIsFetchingMore(true);
       } else {
-        // Load from cache first for instant render
+        // Load from cache first for instant render and avoid flashing the loading state
+        let usedCache = false;
         try {
           const cached = await Storage.getItem(CACHE_KEY);
           if (cached) {
@@ -115,9 +116,12 @@ const Messages = () => {
             if (parsed.profilesById) setProfilesById(parsed.profilesById);
             if (parsed.myUserId) setMyUserId(parsed.myUserId);
             setLoading(false);
+            usedCache = true;
           }
         } catch {}
-        setLoading(true);
+        if (!usedCache && incoming.length === 0 && outgoing.length === 0 && approved.length === 0) {
+          setLoading(true);
+        }
       }
       
       const { data: { user } } = await supabase.auth.getUser();
