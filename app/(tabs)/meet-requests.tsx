@@ -70,6 +70,7 @@ const MeetRequestsScreen = () => {
   const RING_MUTE_KEY = 'HUME_RING_MUTED';
   const WEB_SOUND_ENABLED_KEY = 'HUME_WEB_SOUND_ENABLED';
   const [webSoundEnabled, setWebSoundEnabled] = useState<boolean>(false);
+  const [needSoundUnlock, setNeedSoundUnlock] = useState<boolean>(false);
   // WebAudio beep fallback (reliable on web)
   const ringCtxRef = React.useRef<any>(null);
   const ringGainRef = React.useRef<any>(null);
@@ -83,6 +84,12 @@ const MeetRequestsScreen = () => {
       const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
       if (!AudioCtx) return;
       const ctx = new AudioCtx();
+      try { if (ctx.state === 'suspended') { ctx.resume().catch(() => {}); } } catch {}
+      if (ctx.state !== 'running') {
+        setNeedSoundUnlock(true);
+        try { ctx.close(); } catch {}
+        return;
+      }
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
@@ -413,6 +420,7 @@ const MeetRequestsScreen = () => {
         ringAudioRef.current = null;
       }
       stopWebBeep();
+      setNeedSoundUnlock(false);
     };
   }, [approved, nowTick, isFocused]);
 
@@ -752,6 +760,22 @@ const MeetRequestsScreen = () => {
                 {ringMeetRow?.scheduled_at ? `Scheduled for ${formatMeetingDate(ringMeetRow.scheduled_at)}` : ''}
               </Text>
               <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+                {Platform.OS === 'web' && needSoundUnlock && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      // A user gesture to unlock audio
+                      try {
+                        if (!ringMuted) {
+                          setNeedSoundUnlock(false);
+                          startWebBeep();
+                        }
+                      } catch {}
+                    }}
+                    style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 18, borderWidth: 1, borderColor: COLORS.primary, backgroundColor: COLORS.tansparentPrimary }}
+                  >
+                    <Text style={{ color: COLORS.primary, fontFamily: 'medium' }}>enable sound</Text>
+                  </TouchableOpacity>
+                )}
                 <TouchableOpacity
                   style={[styles.modalButton, styles.joinButton]}
                   onPress={() => {
