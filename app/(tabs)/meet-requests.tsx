@@ -307,6 +307,20 @@ const MeetRequestsScreen = () => {
     return `<!DOCTYPE html><html><head><meta name=viewport content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no" /><script src="https://meet.jit.si/external_api.js"></script><style>html,body,#j{margin:0;padding:0;height:100%;width:100%;background:#000;overflow:hidden}</style></head><body><div id=j></div><script>const api=new JitsiMeetExternalAPI('meet.jit.si',{roomName:'${roomName}',parentNode:document.getElementById('j'),userInfo:{displayName:'${safeName}'},configOverwrite:{prejoinPageEnabled:false,disableDeepLinking:true,startWithAudioMuted:false,startWithVideoMuted:false,toolbarButtons:['microphone','camera','hangup'],enableWelcomePage:false,defaultLanguage:'en',disable1On1Mode:false,enableClosePage:false},interfaceConfigOverwrite:{MOBILE_APP_PROMO:false,HIDE_INVITE_MORE_HEADER:true,TOOLBAR_BUTTONS:['microphone','camera','hangup'],DISABLE_JOIN_LEAVE_NOTIFICATIONS:true}});api.executeCommand('toggleTileView', false);api.addEventListener('videoConferenceJoined',function(){try{document.body.style.background='#000';}catch(e){}});api.addEventListener('videoConferenceLeft',function(){if(window.ReactNativeWebView&&window.ReactNativeWebView.postMessage){window.ReactNativeWebView.postMessage('left');}});</script></body></html>`;
   };
 
+  // Normalize any meeting link to meet.jit.si domain to avoid JaaS dev limits
+  const toMeetJitsiUrl = (link?: string | null) => {
+    if (!link) return null;
+    try {
+      const url = new URL(link);
+      const room = url.pathname.replace(/^\//, '');
+      return `https://meet.jit.si/${room}`;
+    } catch {
+      const seg = (link.split('/').pop() || '').trim();
+      if (!seg) return `https://meet.jit.si/hume-${Date.now().toString(36)}`;
+      return `https://meet.jit.si/${seg}`;
+    }
+  };
+
   // Refresh when tab/screen gains focus
   useEffect(() => {
     if (isFocused) {
@@ -474,7 +488,10 @@ const MeetRequestsScreen = () => {
                   {!hideInlineJoin && row.meet_link && (
                     <TouchableOpacity
                       onPress={() => {
-                        if (canJoin) { Linking.openURL(row.meet_link as string); }
+                        if (canJoin) {
+                          const url = toMeetJitsiUrl(row.meet_link);
+                          if (url) Linking.openURL(url);
+                        }
                         else { Alert.alert('Meeting not active yet', 'Join link will be active 10 minutes before the scheduled time.'); }
                       }}
                       disabled={!canJoin}
@@ -673,7 +690,8 @@ const MeetRequestsScreen = () => {
                     onPress={() => {
                       setShowJoinInfoModal(false);
                       if (selectedMeetRow?.meet_link) {
-                        const html = buildJitsiHtml(selectedMeetRow.meet_link, myDisplayName);
+                        const normalized = toMeetJitsiUrl(selectedMeetRow.meet_link);
+                        const html = buildJitsiHtml(normalized || selectedMeetRow.meet_link, myDisplayName);
                         setJitsiHtml(html);
                         setShowJitsiModal(true);
                       }
