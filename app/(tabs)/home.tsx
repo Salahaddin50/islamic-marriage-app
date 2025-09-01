@@ -9,6 +9,8 @@ import { menbers } from '@/data';
 import { supabase } from '@/src/config/supabase';
 import { useProfilePicture } from '@/hooks/useProfilePicture';
 import MatchCard from '@/components/MatchCard';
+import GalleryView from '@/components/GalleryView';
+import GridView from '@/components/GridView';
 import HomeListSkeleton from '@/components/HomeListSkeleton';
 import { Database } from '@/src/types/database.types';
 import { Platform } from 'react-native';
@@ -1277,45 +1279,24 @@ const HomeScreen = () => {
     }
   }, [users]);
 
-  const renderMatchCard = useCallback(({ item }: { item: UserProfileWithMedia }) => {
-    const isSilhouette = !item.image?.uri || item.image === images.femaleSilhouette || item.image === images.maleSilhouette;
-    
-    if (isGalleryView) {
-      return (
-        <View style={[styles.galleryCardWrapper, { width: galleryCardWidth }]}>
-          <MatchCard
-            name={item.name}
-            age={item.age}
-            image={item.image}
-            height={item.height}
-            weight={item.weight}
-            country={item.country}
-            city={item.city}
-            onPress={() => navigation.navigate("matchdetails", { userId: item.user_id })}
-            containerStyle={[styles.cardContainer, { width: '100%', height: cardHeight }]}
-            imageStyle={{ resizeMode: 'cover', alignSelf: 'center' }}
-            locked={!item.unlocked && !isSilhouette}
-          />
-        </View>
-      );
-    }
-    
-    return (
-      <MatchCard
-        name={item.name}
-        age={item.age}
-        image={item.image}
-        height={item.height}
-        weight={item.weight}
-        country={item.country}
-        city={item.city}
-        onPress={() => navigation.navigate("matchdetails", { userId: item.user_id })}
-        containerStyle={[styles.cardContainer, { width: '100%', height: cardHeight }]}
-        imageStyle={{ resizeMode: 'cover', alignSelf: 'center' }}
-        locked={!item.unlocked && !isSilhouette}
-      />
-    );
-  }, [navigation, cardHeight, isGalleryView, galleryCardWidth]);
+  const mappedData = React.useMemo(() => {
+    return users.map((u, index) => {
+      const isSilhouette = !u.image?.uri || u.image === images.femaleSilhouette || u.image === images.maleSilhouette;
+      return {
+        id: u.id,
+        name: u.name,
+        age: u.age,
+        image: u.image,
+        height: u.height,
+        weight: u.weight,
+        country: u.country,
+        city: u.city,
+        locked: !u.unlocked && !isSilhouette,
+        onPress: () => navigation.navigate('matchdetails', { userId: u.user_id }),
+        index
+      };
+    });
+  }, [users, navigation]);
 
   const getItemLayout = React.useCallback((_: any, index: number) => {
     const itemHeight = isGalleryView ? galleryCardHeight : gridCardHeight;
@@ -1779,37 +1760,50 @@ const HomeScreen = () => {
       <View style={[styles.container, { backgroundColor: COLORS.white }]}>
         {renderHeader()}
         <View style={{ flex: 1 }}>
-        <FlatGrid
-          itemDimension={cardWidth}
-          data={users}
-          style={{ flex: 1 }}
-          spacing={isGalleryView ? GALLERY_CARD_MARGIN : gridSpacing}
-          contentContainerStyle={[
-            isGalleryView ? styles.galleryListContainer : styles.gridListContainer,
-            isGalleryView && { alignItems: 'center' }
-          ]}
-          staticDimension={undefined}
-          fixed={false}
-          maxItemsPerRow={isGalleryView ? 1 : 2}
-          renderItem={renderMatchCard}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
-                      initialNumToRender={4}
+        {isGalleryView ? (
+          <GalleryView
+            data={mappedData}
+            cardWidth={galleryCardWidth}
+            cardHeight={galleryCardHeight}
+            initialNumToRender={4}
             maxToRenderPerBatch={4}
             windowSize={3}
             removeClippedSubviews={true}
             onEndReachedThreshold={0.2}
-          onEndReached={() => {
-            if (!isFetchingMore && hasMore && users.length >= PAGE_SIZE) {
-              fetchUserProfiles(false, false, true);
-            }
-          }}
-          ListFooterComponent={isFetchingMore ? (
-            <View style={{ paddingVertical: 16, alignItems: 'center' }}>
-              <ActivityIndicator size="small" color={COLORS.primary} />
-            </View>
-          ) : null}
-        />
+            onEndReached={() => {
+              if (!isFetchingMore && hasMore && users.length >= PAGE_SIZE) {
+                fetchUserProfiles(false, false, true);
+              }
+            }}
+            footer={isFetchingMore ? (
+              <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              </View>
+            ) : null}
+          />
+        ) : (
+          <GridView
+            data={mappedData}
+            cardWidth={gridCardWidth}
+            cardHeight={gridCardHeight}
+            spacing={gridSpacing}
+            initialNumToRender={4}
+            maxToRenderPerBatch={4}
+            windowSize={3}
+            removeClippedSubviews={true}
+            onEndReachedThreshold={0.2}
+            onEndReached={() => {
+              if (!isFetchingMore && hasMore && users.length >= PAGE_SIZE) {
+                fetchUserProfiles(false, false, true);
+              }
+            }}
+            footer={isFetchingMore ? (
+              <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              </View>
+            ) : null}
+          />
+        )}
           {filterLoading && (
             <View style={styles.filterLoadingOverlay}>
               <ActivityIndicator size="large" color={COLORS.primary} />
