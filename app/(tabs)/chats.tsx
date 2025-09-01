@@ -76,27 +76,49 @@ const Messages = () => {
     return digits.length > 6 ? digits : undefined;
   };
 
+  const PROFILES_CACHE_KEY = 'hume_profiles_cache_v1';
+
   const loadProfiles = async (userIds: string[]) => {
     const uniqueIds = Array.from(new Set(userIds.filter(Boolean)));
     if (uniqueIds.length === 0) return;
-    const { data } = await supabase
-      .from('user_profiles')
-      .select('user_id, first_name, last_name, profile_picture_url, gender, phone_code, mobile_number')
-      .in('user_id', uniqueIds);
+    // 1) Read cache
+    let cache: Record<string, { name: string; avatar?: any; phone?: string }> = {};
+    try {
+      const raw = await Storage.getItem(PROFILES_CACHE_KEY);
+      if (raw) cache = JSON.parse(raw) || {};
+    } catch {}
+
+    const toFetch = uniqueIds.filter(id => !cache[id] || cache[id].phone === undefined);
     const map: Record<string, { name: string; avatar?: any; phone?: string }> = {};
-    (data || []).forEach((row: any) => {
-      const name = (row.first_name || 'Member').toString();
-      map[row.user_id] = {
-        name,
-        avatar: row.profile_picture_url
-          ? row.profile_picture_url
-          : (row.gender && typeof row.gender === 'string' && row.gender.toLowerCase() === 'female'
-              ? images.femaleSilhouette
-              : images.maleSilhouette),
-        phone: sanitizePhone(row.phone_code, row.mobile_number),
-      };
+
+    if (toFetch.length > 0) {
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('user_id, first_name, last_name, profile_picture_url, gender, phone_code, mobile_number')
+        .in('user_id', toFetch);
+      (data || []).forEach((row: any) => {
+        const name = (row.first_name || 'Member').toString();
+        map[row.user_id] = {
+          name,
+          avatar: row.profile_picture_url
+            ? row.profile_picture_url
+            : (row.gender && typeof row.gender === 'string' && row.gender.toLowerCase() === 'female'
+                ? images.femaleSilhouette
+                : images.maleSilhouette),
+          phone: sanitizePhone(row.phone_code, row.mobile_number),
+        };
+      });
+      const newCache = { ...cache, ...map };
+      try { await Storage.setItem(PROFILES_CACHE_KEY, JSON.stringify(newCache)); } catch {}
+      cache = newCache;
+    }
+
+    uniqueIds.forEach(id => {
+      const entry = cache[id];
+      if (entry) map[id] = entry;
     });
-    setProfilesById(prev => ({ ...prev, ...map }));
+
+    if (Object.keys(map).length > 0) setProfilesById(prev => ({ ...prev, ...map }));
   };
 
   const loadAll = async (isLoadMore: boolean = false) => {

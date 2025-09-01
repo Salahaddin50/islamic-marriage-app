@@ -178,14 +178,27 @@ const MeetRequestsScreen = () => {
     }
   };
 
+  const PROFILES_CACHE_KEY = 'hume_profiles_cache_v1';
+
   const loadProfiles = async (userIds: string[]) => {
     const uniqueIds = Array.from(new Set(userIds.filter(Boolean)));
     if (uniqueIds.length === 0) return;
+    // 1) Read cache
+    let cache: Record<string, { name: string; avatar?: any }> = {};
+    try {
+      const raw = await Storage.getItem(PROFILES_CACHE_KEY);
+      if (raw) cache = JSON.parse(raw) || {};
+    } catch {}
+
+    const toFetch = uniqueIds.filter(id => !cache[id]);
+    const map: Record<string, { name: string; avatar?: any }> = {};
+
+    // 2) If missing, fetch from DB
+    if (toFetch.length > 0) {
     const { data } = await supabase
       .from('user_profiles')
       .select('user_id, first_name, last_name, profile_picture_url, gender')
-      .in('user_id', uniqueIds);
-    const map: Record<string, { name: string; avatar?: any }> = {};
+        .in('user_id', toFetch);
     (data || []).forEach((row: any) => {
       const name = (row.first_name || 'Member').toString();
       map[row.user_id] = {
@@ -197,7 +210,19 @@ const MeetRequestsScreen = () => {
               : images.maleSilhouette),
       };
     });
-    setProfilesById(prev => ({ ...prev, ...map }));
+      // merge into cache and persist
+      const newCache = { ...cache, ...map };
+      try { await Storage.setItem(PROFILES_CACHE_KEY, JSON.stringify(newCache)); } catch {}
+      cache = newCache;
+    }
+
+    // 3) Merge cache entries for requested IDs into state
+    uniqueIds.forEach(id => {
+      const entry = cache[id];
+      if (entry) map[id] = entry;
+    });
+
+    if (Object.keys(map).length > 0) setProfilesById(prev => ({ ...prev, ...map }));
   };
 
   const loadAll = async (isLoadMore: boolean = false) => {
@@ -463,7 +488,41 @@ const MeetRequestsScreen = () => {
         <Image source={icons.videoCamera2} contentFit='contain' style={[styles.headerLogo, {tintColor: COLORS.primary}]} />
         <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>Meet Requests</Text>
       </View>
-      <View style={styles.headerRight} />
+      <View style={styles.headerRight}>
+        <TouchableOpacity
+          onPress={() => {
+            try {
+              if (Platform.OS === 'web') {
+                const next = !webSoundEnabled;
+                if (typeof window !== 'undefined') {
+                  window.localStorage.setItem(WEB_SOUND_ENABLED_KEY, next ? '1' : '0');
+                }
+                setWebSoundEnabled(next);
+                if (!next) {
+                  stopWebBeep();
+                } else {
+                  // If a ring is visible, attempt to start immediately
+                  if (showRingModal || showJoinInfoModal) startWebBeep();
+                }
+              } else {
+                const nextMuted = !ringMuted;
+                setRingMuted(nextMuted);
+                SecureStore.setItemAsync(RING_MUTE_KEY, nextMuted ? '1' : '0').catch(() => {});
+                if (nextMuted) {
+                  Vibration.cancel();
+                }
+              }
+            } catch {}
+          }}
+          style={{ paddingHorizontal: 8, paddingVertical: 6 }}
+        >
+          <Image
+            source={Platform.OS === 'web' ? (webSoundEnabled ? icons.mediumVolume : icons.noSound) : (!ringMuted ? icons.mediumVolume : icons.noSound)}
+            contentFit='contain'
+            style={{ width: 22, height: 22, tintColor: Platform.OS === 'web' ? (webSoundEnabled ? COLORS.primary : COLORS.black) : (!ringMuted ? COLORS.primary : COLORS.black) }}
+          />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -760,6 +819,34 @@ const MeetRequestsScreen = () => {
                 {ringMeetRow?.scheduled_at ? `Scheduled for ${formatMeetingDate(ringMeetRow.scheduled_at)}` : ''}
               </Text>
               <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+                {/* Permanent sound toggle in ring popup */}
+                <TouchableOpacity
+                  onPress={() => {
+                    try {
+                      if (Platform.OS === 'web') {
+                        const next = !webSoundEnabled;
+                        if (typeof window !== 'undefined') {
+                          window.localStorage.setItem(WEB_SOUND_ENABLED_KEY, next ? '1' : '0');
+                        }
+                        setWebSoundEnabled(next);
+                        if (!next) { stopWebBeep(); }
+                        else { startWebBeep(); }
+                      } else {
+                        const nextMuted = !ringMuted;
+                        setRingMuted(nextMuted);
+                        SecureStore.setItemAsync(RING_MUTE_KEY, nextMuted ? '1' : '0').catch(() => {});
+                        if (nextMuted) { Vibration.cancel(); }
+                      }
+                    } catch {}
+                  }}
+                  style={{ paddingHorizontal: 8, paddingVertical: 6 }}
+                >
+                  <Image
+                    source={Platform.OS === 'web' ? (webSoundEnabled ? icons.mediumVolume : icons.noSound) : (!ringMuted ? icons.mediumVolume : icons.noSound)}
+                    contentFit='contain'
+                    style={{ width: 22, height: 22, tintColor: Platform.OS === 'web' ? (webSoundEnabled ? COLORS.primary : COLORS.black) : (!ringMuted ? COLORS.primary : COLORS.black) }}
+                  />
+                </TouchableOpacity>
                 {Platform.OS === 'web' && needSoundUnlock && (
                   <TouchableOpacity
                     onPress={() => {

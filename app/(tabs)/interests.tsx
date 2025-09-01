@@ -65,27 +65,42 @@ const InterestsScreen = () => {
     return age;
   };
 
+  const PROFILES_CACHE_KEY = 'hume_profiles_cache_v1';
+
   const loadProfiles = async (userIds: string[]) => {
     const uniqueIds = Array.from(new Set(userIds.filter(Boolean)));
     if (uniqueIds.length === 0) return;
-    const { data } = await supabase
-      .from('user_profiles')
-      .select('user_id, first_name, last_name, date_of_birth, profile_picture_url, gender')
-      .in('user_id', uniqueIds);
+    // 1) cache
+    let cache: Record<string, { name: string; age?: number; avatar?: any }> = {};
+    try { const raw = await Storage.getItem(PROFILES_CACHE_KEY); if (raw) cache = JSON.parse(raw) || {}; } catch {}
+
+    const toFetch = uniqueIds.filter(id => !cache[id] || cache[id].age === undefined);
     const map: Record<string, { name: string; age?: number; avatar?: any }> = {};
-    (data || []).forEach((row: any) => {
-      const name = (row.first_name || 'Member').toString();
-      map[row.user_id] = {
-        name,
-        age: calculateAge(row.date_of_birth),
-        avatar: row.profile_picture_url
-          ? row.profile_picture_url
-          : (row.gender && typeof row.gender === 'string' && row.gender.toLowerCase() === 'female'
-              ? images.femaleSilhouette
-              : images.maleSilhouette),
-      };
-    });
-    setProfilesById(prev => ({ ...prev, ...map }));
+
+    if (toFetch.length > 0) {
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('user_id, first_name, last_name, date_of_birth, profile_picture_url, gender')
+        .in('user_id', toFetch);
+      (data || []).forEach((row: any) => {
+        const name = (row.first_name || 'Member').toString();
+        map[row.user_id] = {
+          name,
+          age: calculateAge(row.date_of_birth),
+          avatar: row.profile_picture_url
+            ? row.profile_picture_url
+            : (row.gender && typeof row.gender === 'string' && row.gender.toLowerCase() === 'female'
+                ? images.femaleSilhouette
+                : images.maleSilhouette),
+        };
+      });
+      const newCache = { ...cache, ...map };
+      try { await Storage.setItem(PROFILES_CACHE_KEY, JSON.stringify(newCache)); } catch {}
+      cache = newCache;
+    }
+
+    uniqueIds.forEach(id => { const entry = cache[id]; if (entry) map[id] = entry; });
+    if (Object.keys(map).length > 0) setProfilesById(prev => ({ ...prev, ...map }));
   };
 
   const formatChatTime = (iso?: string) => {
