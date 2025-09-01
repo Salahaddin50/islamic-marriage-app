@@ -1571,8 +1571,8 @@ const styles = StyleSheet.create({
         backgroundColor: "white",
         borderTopRightRadius: 32,
         borderTopLeftRadius: 32,
-        marginTop: -32,
-        paddingVertical: 16
+        marginTop: -24,
+        paddingVertical: 12
     },
     fullName: {
         fontSize: getResponsiveFontSize(28),
@@ -1784,7 +1784,7 @@ const styles = StyleSheet.create({
     // AutoSlider styles
     autoSliderContainer: {
         width: SIZES.width,
-        height: SIZES.height * 0.45,
+        height: SIZES.height * 0.5,
         position: 'relative',
     },
     autoSliderScroll: {
@@ -1795,14 +1795,14 @@ const styles = StyleSheet.create({
     },
     autoSliderImageContainer: {
         width: SIZES.width,
-        height: SIZES.height * 0.45,
+        height: SIZES.height * 0.5,
         justifyContent: 'center',
         alignItems: 'center',
         overflow: 'hidden',
     },
     autoSliderImage: {
         width: SIZES.width,
-        height: SIZES.height * 0.45,
+        height: SIZES.height * 0.5,
     },
     lockOverlayDetails: {
         position: 'absolute',
