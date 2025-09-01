@@ -105,7 +105,7 @@ const OptimizedMatchCard: React.FC<OptimizedMatchCardProps> = memo(({
 
       {/* Gradient overlay */}
       <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.7)']}
+        colors={['transparent', 'rgba(150, 16, 255, 0.8)', 'rgba(150, 16, 255, 0.9)']}
         style={styles.gradient}
       >
         <View style={styles.content}>
@@ -127,7 +127,7 @@ const OptimizedMatchCard: React.FC<OptimizedMatchCardProps> = memo(({
 
       {/* Lock overlay */}
       {locked && (
-        <View style={styles.lockOverlay}>
+        <View style={styles.lockOverlay} pointerEvents="none">
           <View style={styles.lockIcon}>
             <Text style={styles.lockText}>🔒</Text>
           </View>
@@ -201,24 +201,19 @@ const styles = StyleSheet.create({
   },
   lockOverlay: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    top: 8,
+    right: 8,
   },
   lockIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   lockText: {
-    fontSize: 24,
+    fontSize: 14,
   },
 });
 
