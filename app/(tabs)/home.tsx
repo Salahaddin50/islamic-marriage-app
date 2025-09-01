@@ -780,11 +780,15 @@ const HomeScreen = () => {
         query = query.eq('city', selectedCity);
       }
 
-      // Apply physical filters
-      if (shouldApplyFilters && heightRange && heightRange[0] && heightRange[1]) {
+      // Apply physical filters (only when user deviates from defaults)
+      const isDefaultHeight = Array.isArray(heightRange) && heightRange[0] === 150 && heightRange[1] === 200;
+      const isDefaultWeight = Array.isArray(weightRange) && weightRange[0] === 40 && weightRange[1] === 120;
+      const isDefaultAge = Array.isArray(ageRange) && ageRange[0] === 20 && ageRange[1] === 50;
+
+      if (shouldApplyFilters && heightRange && heightRange[0] && heightRange[1] && !isDefaultHeight) {
         query = query.gte('height_cm', heightRange[0]).lte('height_cm', heightRange[1]);
       }
-      if (shouldApplyFilters && weightRange && weightRange[0] && weightRange[1]) {
+      if (shouldApplyFilters && weightRange && weightRange[0] && weightRange[1] && !isDefaultWeight) {
         query = query.gte('weight_kg', weightRange[0]).lte('weight_kg', weightRange[1]);
       }
       if (shouldApplyFilters && selectedEyeColor.length) {
@@ -956,8 +960,8 @@ const HomeScreen = () => {
                      (today.getMonth() < birthDate.getMonth() || 
                       (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate()) ? 1 : 0);
 
-          // Apply age filter
-          if (shouldApplyFilters && ageRange[0] && ageRange[1] && ageRange[0] > 0 && ageRange[1] > 0 && (age < ageRange[0] || age > ageRange[1])) {
+          // Apply age filter only when non-default
+          if (shouldApplyFilters && ageRange[0] && ageRange[1] && ageRange[0] > 0 && ageRange[1] > 0 && !isDefaultAge && (age < ageRange[0] || age > ageRange[1])) {
             return null; // Will be filtered out
           }
 
