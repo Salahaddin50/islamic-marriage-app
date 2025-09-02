@@ -26,6 +26,24 @@ const Profile = () => {
 
   const [isPublicProfile, setIsPublicProfile] = useState(true);
 
+  // Load current visibility from database
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data } = await supabase
+          .from('user_profiles')
+          .select('is_public')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (typeof data?.is_public === 'boolean') {
+          setIsPublicProfile(data.is_public);
+        }
+      } catch {}
+    })();
+  }, []);
+
   const renderHeader = () => {
     return (
       <TouchableOpacity style={styles.headerContainer}>
@@ -47,7 +65,17 @@ const Profile = () => {
           </Text>
           <Switch
             value={isPublicProfile}
-            onValueChange={setIsPublicProfile}
+            onValueChange={async (value) => {
+              setIsPublicProfile(value);
+              try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return;
+                await supabase
+                  .from('user_profiles')
+                  .update({ is_public: value })
+                  .eq('user_id', user.id);
+              } catch {}
+            }}
             trackColor={{ 
               false: COLORS.grayscale400, 
               true: COLORS.primary 

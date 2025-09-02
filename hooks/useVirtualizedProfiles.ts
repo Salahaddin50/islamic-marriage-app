@@ -120,7 +120,8 @@ export const useVirtualizedProfiles = (options: UseVirtualizedProfilesOptions = 
           city,
           country,
           gender,
-          profile_picture_url
+          profile_picture_url,
+          is_public
         `)
         .order('created_at', { ascending: false })
         .range(start, end);
@@ -133,6 +134,9 @@ export const useVirtualizedProfiles = (options: UseVirtualizedProfilesOptions = 
       if (oppositeGender.current) {
         query = query.eq('gender', oppositeGender.current);
       }
+
+      // Only show public profiles on home feed
+      query = query.eq('is_public', true);
 
       // Apply location filters if provided
       if (filters.selectedCountry) {

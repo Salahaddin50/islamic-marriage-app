@@ -744,7 +744,8 @@ const HomeScreen = () => {
           country,
           gender,
           profile_picture_url,
-          islamic_questionnaire
+          islamic_questionnaire,
+          is_public
         `)
         .order('created_at', { ascending: false })
         .range(start, end);
@@ -753,6 +754,9 @@ const HomeScreen = () => {
       if (currentUser?.id) {
         query = query.neq('user_id', currentUser.id);
       }
+
+      // Hide private profiles from the home feed
+      query = query.eq('is_public', true);
 
       // Note: We'll calculate age on the client side since age column might be null
 
@@ -955,6 +959,10 @@ const HomeScreen = () => {
         } catch {}
 
         const usersWithMedia = profilesData.map((profile) => {
+          // Extra safety: never render private profiles on home
+          if ((profile as any).is_public === false) {
+            return null;
+          }
           // Calculate age from date_of_birth
           const birthDate = new Date(profile.date_of_birth);
           const today = new Date();
