@@ -5,7 +5,7 @@
 // ============================================================================
 
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, KeyboardAvoidingView, Platform, TouchableOpacity, ScrollView, TextInput, FlatList, Modal } from 'react-native';
+import { View, Text, StyleSheet, Alert, KeyboardAvoidingView, Platform, TouchableOpacity, ScrollView, TextInput, FlatList, Modal, PanResponder, GestureResponderEvent, PanResponderGestureState } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from 'expo-router';
 import { router } from 'expo-router';
@@ -133,6 +133,37 @@ const ProfileSetup: React.FC = () => {
   const [fullScreenType, setFullScreenType] = useState<'photo' | 'video'>('video');
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Step 5: Custom left-side slider (scroll handle) to make vertical scrolling easier over media
+  const mediaScrollRef = useRef<ScrollView>(null);
+  const [mediaContentHeight, setMediaContentHeight] = useState(1);
+  const [mediaContainerHeight, setMediaContainerHeight] = useState(1);
+  const [mediaScrollY, setMediaScrollY] = useState(0);
+  const handleMinHeight = 36;
+  const handleHeight = Math.max(handleMinHeight, Math.min(mediaContainerHeight, (mediaContainerHeight / Math.max(mediaContentHeight, 1)) * mediaContainerHeight));
+  const handleMaxY = Math.max(0, mediaContainerHeight - handleHeight);
+  const handleY = Math.min(handleMaxY, Math.max(0, (mediaScrollY / Math.max(1, mediaContentHeight - mediaContainerHeight)) * handleMaxY));
+
+  const panStartRef = useRef({ y: 0, handleStartY: 0 });
+  const panResponder = React.useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (_evt: GestureResponderEvent, _gs: PanResponderGestureState) => {
+        panStartRef.current = { y: 0, handleStartY: handleY };
+      },
+      onPanResponderMove: (_evt: GestureResponderEvent, gs: PanResponderGestureState) => {
+        const dy = gs.dy;
+        const nextHandleY = Math.min(handleMaxY, Math.max(0, panStartRef.current.handleStartY + dy));
+        const fraction = handleMaxY > 0 ? nextHandleY / handleMaxY : 0;
+        const targetScrollY = fraction * Math.max(0, mediaContentHeight - mediaContainerHeight);
+        if (mediaScrollRef.current) {
+          mediaScrollRef.current.scrollTo({ y: targetScrollY, animated: false });
+        }
+      },
+      onPanResponderRelease: () => {},
+      onPanResponderTerminationRequest: () => true,
+    })
+  ).current;
 
   // Helper: convert CDN to direct URL to avoid CORS issues on web
   const getDirectUrl = (url: string) => {
@@ -1678,12 +1709,18 @@ const ProfileSetup: React.FC = () => {
 
         {/* Step 5: Photos & Videos (3 photos required) */}
         {currentStep === 5 && (
-          <ScrollView 
-            style={styles.stepContainer} 
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.mediaScrollContent}
-            keyboardShouldPersistTaps="handled"
-          >
+          <View style={{ flex: 1, position: 'relative' }}>
+            <ScrollView 
+              ref={mediaScrollRef}
+              style={styles.stepContainer} 
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.mediaScrollContent}
+              keyboardShouldPersistTaps="handled"
+              onLayout={(e) => { setMediaContainerHeight(e.nativeEvent.layout.height || 1); }}
+              onContentSizeChange={(_w, h) => { setMediaContentHeight(h || 1); }}
+              onScroll={(e) => { setMediaScrollY(e.nativeEvent.contentOffset.y || 0); }}
+              scrollEventThrottle={16}
+            >
             <Text style={styles.stepTitle}>Photos & Videos</Text>
             <Text style={styles.stepSubtitle}>Add at least 3 photos. Videos are optional.</Text>
 
@@ -1749,7 +1786,13 @@ const ProfileSetup: React.FC = () => {
                 disabled={mediaLoading || mediaUploading || photos.length < 3}
               />
             </View>
-          </ScrollView>
+            </ScrollView>
+
+            {/* Left-side slider track and handle (touch area) */}
+            <View style={styles.leftSliderTrack} {...panResponder.panHandlers}>
+              <View style={[styles.leftSliderHandle, { height: handleHeight, transform: [{ translateY: handleY }] }]} />
+            </View>
+          </View>
         )}
 
         {/* Step 6: Marriage Intentions */}
@@ -2305,6 +2348,26 @@ const styles = StyleSheet.create({
   },
   mediaScrollContent: {
     paddingBottom: getResponsiveSpacing(120),
+  },
+
+  // Left-side slider for Step 5 media scroll
+  leftSliderTrack: {
+    position: 'absolute',
+    left: 6,
+    top: 0,
+    bottom: 0,
+    width: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    // subtle area, keep mostly transparent to avoid visual noise
+    backgroundColor: 'transparent',
+  },
+  leftSliderHandle: {
+    position: 'absolute',
+    width: 6,
+    borderRadius: 3,
+    backgroundColor: COLORS.greyscale400,
+    opacity: 0.7,
   },
 
 });
