@@ -171,6 +171,24 @@ const faqsRoute = () => {
 
 const contactUsRoute = () => {
     const navigation = useNavigation<NavigationProp<any>>();
+    const handleEmail = () => {
+        const email = 'asim.mammadov82@outlook.com';
+        const subject = encodeURIComponent('Support request');
+        const mailto = `mailto:${email}?subject=${subject}`;
+        try {
+            // @ts-ignore
+            require('react-native').Linking.openURL(mailto);
+        } catch (e) {}
+    };
+    const handleWhatsApp = () => {
+        // Using wa.me works across platforms
+        const phone = '966503531437';
+        const url = `https://wa.me/${phone}`;
+        try {
+            // @ts-ignore
+            require('react-native').Linking.openURL(url);
+        } catch (e) {}
+    };
 
     return (
         <View style={[styles.routeContainer, {
@@ -178,33 +196,13 @@ const contactUsRoute = () => {
         }]}>
             <HelpCenterItem
                 icon={icons.headset}
-                title="Customer Service"
-                onPress={() => navigation.navigate("customerservice")}
+                title="Contact Us"
+                onPress={handleEmail}
             />
             <HelpCenterItem
                 icon={icons.whatsapp}
-                title="Whatsapp"
-                onPress={() => console.log('Whatsapp')}
-            />
-            <HelpCenterItem
-                icon={icons.world}
-                title="Website"
-                onPress={() => console.log('Website')}
-            />
-            <HelpCenterItem
-                icon={icons.facebook2}
-                title="Facebook"
-                onPress={() => console.log('Facebook')}
-            />
-            <HelpCenterItem
-                icon={icons.twitter}
-                title="Twitter"
-                onPress={() => console.log("Twitter")}
-            />
-            <HelpCenterItem
-                icon={icons.instagram}
-                title="Instagram"
-                onPress={() => console.log("Instagram")}
+                title="WhatsApp"
+                onPress={handleWhatsApp}
             />
         </View>
     )

@@ -28,100 +28,24 @@ const SettingsLanguage = () => {
                   onBackPress={() => router.push('/(tabs)/profile')}
                 />
                 <ScrollView showsVerticalScrollIndicator={false}>
-                    <Text style={[styles.title, { color: COLORS.black }]}>Suggested</Text>
+                    <Text style={[styles.title, { color: COLORS.black }]}>Languages</Text>
                     <View style={{ marginTop: 12 }}>
                         <LanguageItem
-                            checked={selectedItem === 'English (US)'}
-                            name="English (US)"
-                            onPress={() => handleCheckboxPress('English (US)')}
+                            checked={selectedItem === 'English'}
+                            name="English"
+                            onPress={() => handleCheckboxPress('English')}
                         />
                         <LanguageItem
-                            checked={selectedItem === 'English (UK)'}
-                            name="English (UK)"
-                            onPress={() => handleCheckboxPress('English (UK)')}
+                            checked={selectedItem === 'Russian'}
+                            name="Russian"
+                            onPress={() => handleCheckboxPress('Russian')}
+                        />
+                        <LanguageItem
+                            checked={selectedItem === 'Arabic'}
+                            name="Arabic"
+                            onPress={() => handleCheckboxPress('Arabic')}
                         />
                     </View>
-                    <Text style={[styles.title, { color: COLORS.black }]}>Others</Text>
-                    <LanguageItem
-                        checked={selectedItem === 'Mandarin'}
-                        name="Mandarin"
-                        onPress={() => handleCheckboxPress('Mandarin')}
-                    />
-                    <LanguageItem
-                        checked={selectedItem === 'Hindi'}
-                        name="Hindi"
-                        onPress={() => handleCheckboxPress('Hindi')}
-                    />
-                    <LanguageItem
-                        checked={selectedItem === 'Spanish'}
-                        name="Spanish"
-                        onPress={() => handleCheckboxPress('Spanish')}
-                    />
-                    <LanguageItem
-                        checked={selectedItem === 'French'}
-                        name="French"
-                        onPress={() => handleCheckboxPress('French')}
-                    />
-                    <LanguageItem
-                        checked={selectedItem === 'Arabic'}
-                        name="Arabic"
-                        onPress={() => handleCheckboxPress('Arabic')}
-                    />
-                    <LanguageItem
-                        checked={selectedItem === 'Bengali'}
-                        name="Bengali"
-                        onPress={() => handleCheckboxPress('Bengali')}
-                    />
-                    <LanguageItem
-                        checked={selectedItem === 'Russian'}
-                        name="Russian"
-                        onPress={() => handleCheckboxPress('Russian')}
-                    />
-                    <LanguageItem
-                        checked={selectedItem === 'Indonesia'}
-                        name="Indonesia"
-                        onPress={() => handleCheckboxPress('Indonesia')}
-                    />
-                    <LanguageItem
-                        checked={selectedItem === 'Chinese'}
-                        name="Chinese"
-                        onPress={() => handleCheckboxPress('Chinese')}
-                    />
-                    <LanguageItem
-                        checked={selectedItem === 'Vietnamese'}
-                        name="Vietnamese"
-                        onPress={() => handleCheckboxPress('Vietnamese')}
-                    />
-                    <LanguageItem
-                        checked={selectedItem === 'Marathi'}
-                        name="Marathi"
-                        onPress={() => handleCheckboxPress('Marathi')}
-                    />
-                    <LanguageItem
-                        checked={selectedItem === 'Yue Chinese (Cantonese)'}
-                        name="Yue Chinese (Cantonese)"
-                        onPress={() => handleCheckboxPress('Yue Chinese (Cantonese)')}
-                    />
-                    <LanguageItem
-                        checked={selectedItem === 'Southern Min (Hokkien)'}
-                        name="Southern Min (Hokkien)"
-                        onPress={() => handleCheckboxPress('Southern Min (Hokkien)')}
-                    />
-                    <LanguageItem
-                        checked={selectedItem === 'Persian (Farsi)'}
-                        name="Persian (Farsi)"
-                        onPress={() => handleCheckboxPress('Persian (Farsi)')}
-                    />
-                    <LanguageItem
-                        checked={selectedItem === 'Polish'}
-                        name="Polish"
-                        onPress={() => handleCheckboxPress('Polish')}
-                    />
-                    <LanguageItem
-                        checked={selectedItem === 'Kannada'}
-                        name="Kannada"
-                        onPress={() => handleCheckboxPress('Kannada')}
-                    />
                 </ScrollView>
             </View>
         </SafeAreaView>

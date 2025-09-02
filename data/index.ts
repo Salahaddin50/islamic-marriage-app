@@ -104,72 +104,126 @@ export const userAddresses = [
 export const faqKeywords = [
     {
         id: "1",
-        name: "General"
+        name: "Getting Started"
     },
     {
         id: "2",
-        name: "Account"
+        name: "Islamic Features"
     },
     {
         id: "3",
-        name: "Safety"
+        name: "Video Meetings"
     },
     {
         id: "4",
-        name: "Matches"
+        name: "Finding Partners"
     },
     {
         id: "5",
-        name: "Payment"
+        name: "Privacy & Safety"
+    },
+    {
+        id: "6",
+        name: "Account"
     }
 ];
 
 export const faqs = [
     {
-        question: 'How do I create a profile on the app?',
-        answer: 'To create a profile, download the app, sign up using your email or social media account, and complete your profile details, including adding photos.',
-        type: "General"
+        question: 'How do I create my profile?',
+        answer: 'Sign up with your email, complete the registration process including your Islamic preferences, upload photos, and verify your account. The setup includes personal details, religious practices, and marriage intentions.',
+        type: "Getting Started"
     },
     {
-        question: 'Can I change my profile information after signing up?',
-        answer: 'Yes, you can update your profile details at any time by navigating to the "Edit Profile" section in the app settings.',
+        question: 'What makes this app different from other dating apps?',
+        answer: 'Hume is specifically designed for halal partner search with complete privacy protection. Users can stay private while looking for a halal partner, with photos and videos kept secure until requested. We focus on serious marriage intentions with family involvement.',
+        type: "Getting Started"
+    },
+    {
+        question: 'Can I stay private while using the app?',
+        answer: 'Yes, absolutely! You can maintain complete privacy while searching for a halal partner. Your personal information and media are protected, and you control what information is shared and when.',
+        type: "Getting Started"
+    },
+    {
+        question: 'How does polygamy support work for men?',
+        answer: 'Men can specify the number of wives they are looking for: 2nd wife, 3rd wife, or 4th wife. This helps women understand the marriage position being offered and make informed decisions according to Islamic principles.',
+        type: "Islamic Features"
+    },
+    {
+        question: 'What options do women have regarding polygamy?',
+        answer: 'Women can choose to accept polygamy and specify which marriage positions they would consider (1st, 2nd, 3rd, or 4th wife). This ensures clear understanding of the marriage arrangement from the beginning.',
+        type: "Islamic Features"
+    },
+    {
+        question: 'What Islamic preferences can I set?',
+        answer: 'You can specify your prayer frequency, Quran reading habits, hijab preferences, halal diet adherence, and religious practice level. These help in finding compatible partners who share similar Islamic values and practices.',
+        type: "Islamic Features"
+    },
+    {
+        question: 'How are photos and videos handled?',
+        answer: 'All photos and videos are kept private and secure. They will only be opened and shared based on your specific request. This ensures Islamic modesty principles are maintained while allowing meaningful connections.',
+        type: "Privacy & Safety"
+    },
+    {
+        question: 'How do video meetings work?',
+        answer: 'Users can arrange video calls on an agreed time window. Once both parties agree on a suitable time, a secure video meeting can be scheduled. This allows face-to-face interaction in a controlled, respectful environment.',
+        type: "Video Meetings"
+    },
+    {
+        question: 'Can I schedule video meetings in advance?',
+        answer: 'Yes! You can propose a time window that works for you, and the other person can agree to the timing. This ensures both parties are prepared and available for meaningful conversation.',
+        type: "Video Meetings"
+    },
+    {
+        question: 'Who can participate in video meetings?',
+        answer: 'Video meetings can include family members or guardians as appropriate according to Islamic guidelines. This ensures proper supervision and family involvement in the marriage process.',
+        type: "Video Meetings"
+    },
+    {
+        question: 'How do I find potential partners?',
+        answer: 'You can filter profiles based on your preferences, select profiles that interest you, send requests to connect, and arrange meetings. Our system helps you find compatible partners while maintaining Islamic principles.',
+        type: "Finding Partners"
+    },
+    {
+        question: 'What happens after I send a connection request?',
+        answer: 'The other person will receive your request and can choose to accept or decline. If accepted, you can begin communicating and potentially arrange a video meeting to get to know each other better.',
+        type: "Finding Partners"
+    },
+    {
+        question: 'How are profiles verified?',
+        answer: 'Our dedicated agents carefully verify all profiles to ensure authenticity. We check identity documents, verify photos, and confirm the information provided to maintain a trustworthy community.',
+        type: "Privacy & Safety"
+    },
+    {
+        question: 'Are families informed about meetings?',
+        answer: 'Yes, our agents ensure that families of brides are properly informed before any meetings take place. This maintains Islamic traditions of family involvement and ensures appropriate supervision.',
+        type: "Privacy & Safety"
+    },
+    {
+        question: 'How do you ensure user safety?',
+        answer: 'We implement profile verification by our agents, secure data storage, family notification systems, and provide Islamic interaction guidelines. All activities are monitored to maintain a safe, halal environment.',
+        type: "Privacy & Safety"
+    },
+    {
+        question: 'Can I control who sees my information?',
+        answer: 'Yes, you have complete control over your privacy. Your photos, videos, and personal details remain private until you specifically choose to share them with someone you\'re interested in connecting with.',
+        type: "Privacy & Safety"
+    },
+    {
+        question: 'Can I edit my preferences after registration?',
+        answer: 'Yes, you can update your Islamic preferences, marriage intentions, and other profile details anytime through your profile settings. This allows you to refine your search as your preferences evolve.',
         type: "Account"
     },
     {
-        question: 'What steps does the app take to ensure user safety?',
-        answer: 'The app includes features such as profile verification, in-app reporting, and safety tips to provide a secure dating environment.',
-        type: "Safety"
+        question: 'What if I want to change my polygamy preferences?',
+        answer: 'You can modify your marriage intention preferences at any time. For men, you can change which wife number you\'re seeking (2nd, 3rd, 4th). For women, you can adjust which positions you would consider.',
+        type: "Account"
     },
     {
-        question: 'How do I find and connect with potential matches?',
-        answer: 'You can browse profiles, use filters to refine your search, and swipe or like profiles to show interest. If there’s mutual interest, you can start a conversation.',
-        type: "Matches"
-    },
-    {
-        question: 'Is there a way to boost my profile visibility?',
-        answer: 'Yes, the app offers features like profile boosts and highlights to increase your visibility to other users.',
-        type: "Payment"
-    },
-    {
-        question: 'How can I block or report another user?',
-        answer: 'To block or report a user, go to their profile, tap the menu icon, and select "Block" or "Report." Provide details for our review team to address the issue.',
-        type: "Safety"
-    },
-    {
-        question: 'Can I adjust my preferences for finding matches?',
-        answer: 'Yes, you can customize your match preferences by adjusting filters such as age, location, and interests in the settings menu.',
-        type: "Matches"
-    },
-    {
-        question: 'What should I do if I encounter a payment issue?',
-        answer: 'If you experience payment issues, contact support through the app’s help section or check your payment settings to ensure accurate billing details.',
-        type: "Payment"
-    },
-    {
-        question: 'Does the app offer customer support?',
-        answer: 'Yes, you can reach our customer support team via the help section in the app for assistance with any issues or questions.',
-        type: "General"
-    },
+        question: 'How do I delete my account?',
+        answer: 'Contact our support team through the Contact Us section. We will help you delete your account and all associated data while ensuring all privacy regulations are followed and any ongoing connections are handled appropriately.',
+        type: "Account"
+    }
 ];
 
 export const messsagesData = [

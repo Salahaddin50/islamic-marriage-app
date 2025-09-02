@@ -237,6 +237,7 @@ export default function RootLayout() {
         <Stack.Screen name="settingshelpcenter" />
         <Stack.Screen name="settingsinvitefriends" />
         <Stack.Screen name="settingslanguage" />
+        <Stack.Screen name="settingsnikahreminder" />
         <Stack.Screen name="settingsnotifications" />
         <Stack.Screen name="settingspayment" />
         <Stack.Screen name="settingsprivacypolicy" />

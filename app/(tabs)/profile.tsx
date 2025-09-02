@@ -260,6 +260,11 @@ const Profile = () => {
           onPress={() => navigate("settingshelpcenter")}
         />
         <SettingsItem
+          icon={icons.bookmark2}
+          name="Reminder about Poligamy Sunnah"
+          onPress={() => navigate("settingsnikahreminder")}
+        />
+        <SettingsItem
           icon={icons.people4}
           name="Invite Friends"
           onPress={async () => {
