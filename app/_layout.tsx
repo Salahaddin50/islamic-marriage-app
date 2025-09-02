@@ -11,6 +11,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { FontAwesome } from '@expo/vector-icons';
 import { illustrations, images } from '@/constants';
 import { Asset } from 'expo-asset';
+import { NotificationProvider } from '@/src/contexts/NotificationContext';
+import GlobalNotificationPopup from '@/components/GlobalNotificationPopup';
+import { NotificationRecord } from '@/src/services/notifications';
+import React from 'react';
 
 // Import CSS for web builds
 if (Platform.OS === 'web') {
@@ -63,6 +67,31 @@ export default function RootLayout() {
     ...FontAwesome.font
   });
   const [assetsReady, setAssetsReady] = useState(false);
+  const [currentNotification, setCurrentNotification] = useState<NotificationRecord | null>(null);
+  const [showPopup, setShowPopup] = useState(false);
+
+  // Handle web notification events - must be before asset loading useEffect
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      const handleShowPopup = (event: CustomEvent) => {
+        setCurrentNotification(event.detail);
+        setShowPopup(true);
+      };
+
+      const handleHidePopup = () => {
+        setShowPopup(false);
+        setCurrentNotification(null);
+      };
+
+      window.addEventListener('showNotificationPopup', handleShowPopup as any);
+      window.addEventListener('hideNotificationPopup', handleHidePopup);
+
+      return () => {
+        window.removeEventListener('showNotificationPopup', handleShowPopup as any);
+        window.removeEventListener('hideNotificationPopup', handleHidePopup);
+      };
+    }
+  }, []);
 
   useEffect(() => {
     const preloadAssets = async () => {
@@ -172,7 +201,10 @@ export default function RootLayout() {
     return null;
   }
 
+
+
   return (
+    <NotificationProvider>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="onboarding2" />
@@ -221,5 +253,15 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="+not-found" />
       </Stack>
+      
+      <GlobalNotificationPopup
+        notification={currentNotification}
+        visible={showPopup}
+        onDismiss={() => {
+          setShowPopup(false);
+          setCurrentNotification(null);
+        }}
+      />
+    </NotificationProvider>
   );
 }

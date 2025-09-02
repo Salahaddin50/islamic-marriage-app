@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import React from 'react';
 import { COLORS, SIZES, icons } from '@/constants';
 import { Image } from 'expo-image';
@@ -11,6 +11,8 @@ type NotificationCardProps = {
   time: string;
   type: string;
   isNew: boolean;
+  onPress?: () => void;
+  onDelete?: () => void;
 };
 
 const NotificationCard: React.FC<NotificationCardProps> = ({
@@ -19,20 +21,37 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
   date,
   time,
   type,
-  isNew
+  isNew,
+  onPress,
+  onDelete
 }) => {
   const getIcon = (type: NotificationCardProps['type']) => {
     switch (type) {
       case 'Security':
+      case 'Account':
         return icons.squareCheckbox2;
       case 'Card':
-        return icons.ticket;
       case 'Payment':
         return icons.wallet2;
       case 'Update':
         return icons.infoSquare2;
-      case 'Account':
-        return icons.profile2;
+      case 'photo_request':
+      case 'photo_shared':
+        return icons.gallery;
+      case 'video_call_request':
+      case 'video_call_approved':
+        return icons.videoCamera2;
+      case 'whatsapp_request':
+      case 'whatsapp_shared':
+        return icons.telephone;
+      case 'interest_received':
+      case 'interest_accepted':
+        return icons.heart;
+      case 'meet_request_received':
+      case 'meet_request_accepted':
+        return icons.videoCamera2;
+      case 'message_received':
+        return icons.message;
       default:
         return icons.squareCheckbox2;
     }
@@ -73,7 +92,11 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <TouchableOpacity 
+      style={[styles.container, isNew && styles.newContainer]} 
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
       <View style={styles.headerContainer}>
         <View style={styles.headerLeftContainer}>
           <View style={[styles.iconContainer, { backgroundColor: getIconBackgroundColor(type) }]}>
@@ -83,7 +106,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
               style={[styles.icon, { tintColor: getIconColor(type) }]}
             />
           </View>
-          <View>
+          <View style={styles.textContainer}>
             <Text style={[styles.title, {
               color: COLORS.greyscale900,
             }]}>{title}</Text>
@@ -92,30 +115,51 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
             }]}>{getTimeAgo(date)} | {time}</Text>
           </View>
         </View>
-        {
-          isNew && (
+        <View style={styles.rightContainer}>
+          {isNew && (
             <View style={styles.headerRightContainer}>
               <Text style={styles.headerText}>New</Text>
             </View>
-          )
-        }
+          )}
+          {onDelete && (
+            <TouchableOpacity
+              onPress={onDelete}
+              style={styles.deleteButton}
+            >
+              <Image
+                source={icons.close}
+                contentFit='contain'
+                style={styles.deleteIcon}
+              />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
       <Text style={[styles.description, {
         color: COLORS.grayscale700
       }]}>{description}</Text>
-    </View>
+    </TouchableOpacity>
   )
 };
 
 const styles = StyleSheet.create({
   container: {
     width: SIZES.width - 32,
-    marginBottom: 12
+    marginBottom: 12,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.grayscale200
+  },
+  newContainer: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.tansparentPrimary
   },
   headerContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     marginBottom: 12
   },
   headerRightContainer: {
@@ -124,7 +168,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.primary
+    backgroundColor: COLORS.primary,
+    marginBottom: 4
   },
   headerText: {
     fontSize: 10,
@@ -133,35 +178,52 @@ const styles = StyleSheet.create({
   },
   headerLeftContainer: {
     flexDirection: "row",
-    alignItems: "center"
+    alignItems: "center",
+    flex: 1
+  },
+  rightContainer: {
+    alignItems: 'flex-end'
   },
   iconContainer: {
-    height: 60,
-    width: 60,
-    borderRadius: 9999,
+    height: 50,
+    width: 50,
+    borderRadius: 25,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 16
+    marginRight: 12
   },
   icon: {
-    height: 28,
-    width: 28
+    height: 24,
+    width: 24
+  },
+  textContainer: {
+    flex: 1
   },
   title: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: "bold",
     color: COLORS.greyscale900,
-    marginBottom: 6
+    marginBottom: 4
   },
   date: {
-    fontSize: 14,
+    fontSize: 12,
     fontFamily: "regular",
     color: COLORS.grayscale700
   },
   description: {
     fontSize: 14,
     fontFamily: "regular",
-    color: COLORS.grayscale700
+    color: COLORS.grayscale700,
+    lineHeight: 20
+  },
+  deleteButton: {
+    padding: 4,
+    marginTop: 4
+  },
+  deleteIcon: {
+    width: 16,
+    height: 16,
+    tintColor: COLORS.grayscale600
   }
 });
 

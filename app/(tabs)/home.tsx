@@ -19,6 +19,7 @@ import { useMatchStore } from '@/src/store';
 import { InterestsService, InterestStatus } from '@/src/services/interests';
 import { FlatGrid } from 'react-native-super-grid';
 import { imageCache } from '@/utils/imageCache';
+import { useNotifications } from '@/src/contexts/NotificationContext';
 
 // Cached profile image to prevent reloading
 let cachedProfileImageUrl: string | null = null;
@@ -265,6 +266,7 @@ const Storage = {
 
 const HomeScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
+  const { unreadCount } = useNotifications();
   const router = useRouter();
   const [users, setUsers] = useState<UserProfileWithMedia[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1207,7 +1209,7 @@ const HomeScreen = () => {
             />
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => navigation.navigate('settingsnotifications')}
+            onPress={() => navigation.navigate('notifications')}
             style={styles.notifButton}
           >
             <Image
@@ -1215,6 +1217,13 @@ const HomeScreen = () => {
               resizeMode='contain'
               style={[styles.bellIcon, { tintColor: COLORS.greyscale900 }]}
             />
+            {unreadCount > 0 && (
+              <View style={styles.notificationBadge}>
+                <Text style={styles.notificationBadgeText}>
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setIsGalleryView(!isGalleryView)}
@@ -2316,6 +2325,26 @@ const styles = StyleSheet.create({
   notifButton: {
     padding: 4,
     marginRight: 4,
+    position: 'relative',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: COLORS.red,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: COLORS.white,
+  },
+  notificationBadgeText: {
+    color: COLORS.white,
+    fontSize: 11,
+    fontFamily: 'bold',
+    textAlign: 'center',
   },
   bellIcon: {
     height: 24,

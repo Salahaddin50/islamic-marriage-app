@@ -1,4 +1,5 @@
 import { supabase } from '@/src/config/supabase';
+import { NotificationsService } from './notifications';
 
 export type InterestStatus = 'none' | 'pending' | 'accepted' | 'rejected';
 
@@ -17,6 +18,17 @@ export const InterestsService = {
     if (!user) throw new Error('Not authenticated');
     if (user.id === targetUserId) throw new Error('Cannot send interest to yourself');
 
+    // Get sender profile for notification
+    const { data: senderProfile } = await supabase
+      .from('user_profiles')
+      .select('first_name, last_name, age')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    const senderName = senderProfile 
+      ? `${senderProfile.first_name || 'Someone'} ${senderProfile.last_name || ''}`.trim()
+      : 'Someone';
+
     // Upsert ignoring duplicates to avoid RLS update failures on existing rows
     const { error } = await supabase
       .from('interests')
@@ -27,6 +39,21 @@ export const InterestsService = {
       const existing = await this.getInterestBetween(user.id, targetUserId);
       if (existing) return existing;
       throw error;
+    }
+
+    // Create notification for the receiver
+    try {
+      await NotificationsService.create({
+        user_id: targetUserId,
+        sender_id: user.id,
+        sender_name: senderName,
+        sender_age: senderProfile?.age || undefined,
+        type: 'photo_request',
+        title: 'Photo Request',
+        message: `${senderName}, ${senderProfile?.age || ''} requests your photo`
+      });
+    } catch (notificationError) {
+      console.log('Failed to create interest notification:', notificationError);
     }
 
     // Fetch the row to return the current state
@@ -54,11 +81,51 @@ export const InterestsService = {
   },
 
   async accept(interestId: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    // Get the interest record to find the sender
+    const { data: interest } = await supabase
+      .from('interests')
+      .select('sender_id, receiver_id')
+      .eq('id', interestId)
+      .maybeSingle();
+
+    if (!interest) throw new Error('Interest not found');
+
+    // Get accepter profile for notification
+    const { data: accepterProfile } = await supabase
+      .from('user_profiles')
+      .select('first_name, last_name, age')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    const accepterName = accepterProfile 
+      ? `${accepterProfile.first_name || 'Someone'} ${accepterProfile.last_name || ''}`.trim()
+      : 'Someone';
+
+    // Update the interest status
     const { error } = await supabase
       .from('interests')
       .update({ status: 'accepted' })
       .eq('id', interestId);
+    
     if (error) throw error;
+
+    // Create notification for the original sender
+    try {
+      await NotificationsService.create({
+        user_id: interest.sender_id,
+        sender_id: user.id,
+        sender_name: accepterName,
+        sender_age: accepterProfile?.age || undefined,
+        type: 'photo_shared',
+        title: 'Photos Shared',
+        message: `${accepterName}, ${accepterProfile?.age || ''} has shared photos with you`
+      });
+    } catch (notificationError) {
+      console.log('Failed to create interest accepted notification:', notificationError);
+    }
   },
 
   async reject(interestId: string): Promise<void> {
