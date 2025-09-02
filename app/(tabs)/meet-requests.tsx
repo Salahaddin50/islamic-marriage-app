@@ -12,6 +12,7 @@ import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { AGORA_APP_ID } from '@/src/config/agora';
+import AcceptConfirmationModal from '@/components/AcceptConfirmationModal';
 
 const MeetRequestsScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
@@ -28,7 +29,7 @@ const MeetRequestsScreen = () => {
     { key: 'approved', title: 'Approved (0)' },
   ]);
 
-  const [profilesById, setProfilesById] = useState<Record<string, { name: string; avatar?: any }>>({});
+  const [profilesById, setProfilesById] = useState<Record<string, { name: string; age?: number; avatar?: any }>>({});
   const [myUserId, setMyUserId] = useState<string | null>(null);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -76,6 +77,22 @@ const MeetRequestsScreen = () => {
   const [needSoundUnlock, setNeedSoundUnlock] = useState<boolean>(false);
   // WebAudio beep fallback (reliable on web)
   const ringCtxRef = React.useRef<any>(null);
+  
+  const calculateAge = (dateOfBirth?: string | null): number | undefined => {
+    if (!dateOfBirth) return undefined;
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+  
+  // Modal state for accept confirmation
+  const [showAcceptModal, setShowAcceptModal] = useState(false);
+  const [selectedMeetRequest, setSelectedMeetRequest] = useState<MeetRecord | null>(null);
   const ringGainRef = React.useRef<any>(null);
   const ringOscRef = React.useRef<any>(null);
   const ringBeepTimerRef = React.useRef<any>(null);
@@ -234,12 +251,13 @@ const MeetRequestsScreen = () => {
     if (toFetch.length > 0) {
     const { data } = await supabase
       .from('user_profiles')
-      .select('user_id, first_name, last_name, profile_picture_url, gender')
+      .select('user_id, first_name, last_name, date_of_birth, profile_picture_url, gender')
         .in('user_id', toFetch);
     (data || []).forEach((row: any) => {
       const name = (row.first_name || 'Member').toString();
       map[row.user_id] = {
         name,
+        age: calculateAge(row.date_of_birth),
         avatar: row.profile_picture_url
           ? row.profile_picture_url
           : (row.gender && typeof row.gender === 'string' && row.gender.toLowerCase() === 'female'
@@ -335,10 +353,17 @@ const MeetRequestsScreen = () => {
     }
   };
 
-  const accept = async (id: string) => {
-    await MeetService.accept(id);
+  const handleAcceptClick = (meetRequest: MeetRecord) => {
+    setSelectedMeetRequest(meetRequest);
+    setShowAcceptModal(true);
+  };
+
+  const confirmAccept = async () => {
+    if (!selectedMeetRequest) return;
+    await MeetService.accept(selectedMeetRequest.id);
     await loadAll();
     setIndex(2);
+    setSelectedMeetRequest(null);
   };
 
   const reject = async (id: string) => {
@@ -808,7 +833,7 @@ const MeetRequestsScreen = () => {
             requestText={formatRequestTime(row.created_at)}
             actions={
               <>
-                <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.primary }]} onPress={() => accept(row.id)}>
+                <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.primary }]} onPress={() => handleAcceptClick(row)}>
                   <Text style={styles.tinyBtnText}>Accept</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={() => reject(row.id)}>
@@ -1319,6 +1344,19 @@ const MeetRequestsScreen = () => {
           </View>
         </Modal>
         )}
+        
+        {/* Accept Confirmation Modal */}
+        <AcceptConfirmationModal
+          visible={showAcceptModal}
+          onClose={() => {
+            setShowAcceptModal(false);
+            setSelectedMeetRequest(null);
+          }}
+          onAccept={confirmAccept}
+          userName={selectedMeetRequest ? (profilesById[selectedMeetRequest.sender_id]?.name || 'Member') : ''}
+          userAge={selectedMeetRequest ? (profilesById[selectedMeetRequest.sender_id]?.age || 0) : 0}
+          requestType="video"
+        />
       </View>
     </SafeAreaView>
   );

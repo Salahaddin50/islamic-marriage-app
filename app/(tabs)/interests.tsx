@@ -11,6 +11,7 @@ import { useNavigation } from 'expo-router';
 import { NavigationProp, useIsFocused } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
+import AcceptConfirmationModal from '@/components/AcceptConfirmationModal';
 
 const InterestsScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
@@ -34,6 +35,10 @@ const InterestsScreen = () => {
   const PAGE_SIZE = 20;
   const CACHE_KEY = 'hume_interests_cache_v1';
   const [myUserId, setMyUserId] = useState<string | null>(null);
+  
+  // Modal state for accept confirmation
+  const [showAcceptModal, setShowAcceptModal] = useState(false);
+  const [selectedInterest, setSelectedInterest] = useState<InterestRecord | null>(null);
 
   // Storage utility
   const Storage = {
@@ -200,10 +205,17 @@ const InterestsScreen = () => {
     }
   };
 
-  const accept = async (id: string) => {
-    await InterestsService.accept(id);
+  const handleAcceptClick = (interest: InterestRecord) => {
+    setSelectedInterest(interest);
+    setShowAcceptModal(true);
+  };
+
+  const confirmAccept = async () => {
+    if (!selectedInterest) return;
+    await InterestsService.accept(selectedInterest.id);
     await loadAll();
     setIndex(2); // Switch to Approved tab
+    setSelectedInterest(null);
   };
 
   const reject = async (id: string) => {
@@ -344,7 +356,7 @@ const InterestsScreen = () => {
                         </Text>
                       </TouchableOpacity>
                       <View style={styles.rowActions}>
-                        <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.primary }]} onPress={() => accept(row.id)}>
+                        <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.primary }]} onPress={() => handleAcceptClick(row)}>
                           <Text style={styles.tinyBtnText}>Accept</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={() => reject(row.id)}>
@@ -471,6 +483,19 @@ const InterestsScreen = () => {
           onIndexChange={setIndex}
           initialLayout={{ width: layout.width }}
           renderTabBar={renderTabBar}
+        />
+        
+        {/* Accept Confirmation Modal */}
+        <AcceptConfirmationModal
+          visible={showAcceptModal}
+          onClose={() => {
+            setShowAcceptModal(false);
+            setSelectedInterest(null);
+          }}
+          onAccept={confirmAccept}
+          userName={selectedInterest ? (profilesById[selectedInterest.sender_id]?.name || 'Member') : ''}
+          userAge={selectedInterest ? (profilesById[selectedInterest.sender_id]?.age || 0) : 0}
+          requestType="photo"
         />
       </View>
     </SafeAreaView>
