@@ -624,6 +624,7 @@ const MeetRequestsScreen = () => {
           
           // Start ringing sound/vibration
           if (webSoundEnabled) startWebBeep(false);
+          else setNeedSoundUnlock(true);
           if (Platform.OS !== 'web') {
             try { Vibration.vibrate([500, 500, 500, 500], true); } catch {}
           }
@@ -695,8 +696,8 @@ const MeetRequestsScreen = () => {
                 if (!next) {
                   stopWebBeep();
                 } else {
-                  // If a ring is visible, attempt to start immediately
-                  if (showRingModal || showJoinInfoModal) startWebBeep(false);
+                  // If a call UI is visible, attempt to start immediately
+                  if (incomingCall || outgoingCall) startWebBeep(false);
                 }
               } else {
                 const nextMuted = !ringMuted;
@@ -775,10 +776,24 @@ const MeetRequestsScreen = () => {
     );
   };
 
+  const SkeletonRow = ({ idx }: { idx: number }) => (
+    <View style={[styles.userContainer, idx % 2 !== 0 ? styles.oddBackground : null]}>
+      <View style={styles.userImageContainer}>
+        <View style={[styles.userImage, { backgroundColor: '#eee' }]} />
+      </View>
+      <View style={{ flex: 1, justifyContent: 'center', gap: 8 }}>
+        <View style={{ height: 14, width: '40%', backgroundColor: '#eee', borderRadius: 6 }} />
+        <View style={{ height: 12, width: '60%', backgroundColor: '#f2f2f2', borderRadius: 6 }} />
+      </View>
+    </View>
+  );
+
   const ReceivedRoute = () => (
     <ScrollView style={{ flex: 1, width: '100%' }}>
       {loading ? (
-        <Text style={styles.subtitle}>Loading…</Text>
+        <>
+          {Array.from({ length: 6 }).map((_, i) => (<SkeletonRow key={i} idx={i} />))}
+        </>
       ) : incoming.length === 0 ? (
         <Text style={styles.subtitle}>No received meet requests</Text>
       ) : (
@@ -810,7 +825,9 @@ const MeetRequestsScreen = () => {
   const SentRoute = () => (
     <ScrollView style={{ flex: 1, width: '100%' }}>
       {loading ? (
-        <Text style={styles.subtitle}>Loading…</Text>
+        <>
+          {Array.from({ length: 6 }).map((_, i) => (<SkeletonRow key={i} idx={i} />))}
+        </>
       ) : outgoing.length === 0 ? (
         <Text style={styles.subtitle}>No sent meet requests</Text>
       ) : (
@@ -837,7 +854,9 @@ const MeetRequestsScreen = () => {
   const ApprovedRoute = () => (
     <ScrollView style={{ flex: 1, width: '100%' }}>
       {loading ? (
-        <Text style={styles.subtitle}>Loading…</Text>
+        <>
+          {Array.from({ length: 6 }).map((_, i) => (<SkeletonRow key={i} idx={i} />))}
+        </>
       ) : approved.length === 0 ? (
         <Text style={styles.subtitle}>No approved meet requests</Text>
       ) : (
@@ -884,6 +903,7 @@ const MeetRequestsScreen = () => {
                           
                           // Start outgoing call beeps
                           if (webSoundEnabled) startWebBeep(true);
+                          else setNeedSoundUnlock(true);
                           
                           // Send call signal to the other user
                           await sendCallSignal(receiverId, channel, row.id);
@@ -1022,6 +1042,23 @@ const MeetRequestsScreen = () => {
                 </View>
                 
                 <View style={styles.ringButtonsContainer}>
+                  {Platform.OS === 'web' && needSoundUnlock && (
+                    <TouchableOpacity
+                      onPress={() => {
+                        try {
+                          setNeedSoundUnlock(false);
+                          startWebBeep(false);
+                        } catch {}
+                      }}
+                      style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: COLORS.primary, backgroundColor: COLORS.tansparentPrimary, alignItems: 'center', justifyContent: 'center', marginRight: 12 }}
+                    >
+                      <Image
+                        source={webSoundEnabled ? icons.mediumVolume : icons.noSound}
+                        contentFit='contain'
+                        style={{ width: 18, height: 18, tintColor: COLORS.primary }}
+                      />
+                    </TouchableOpacity>
+                  )}
                   <TouchableOpacity style={[styles.ringButton, styles.rejectButton]} onPress={rejectCall}>
                     <Image source={icons.telephone} contentFit='contain' style={[styles.ringButtonIcon, { tintColor: 'white', transform: [{ rotate: '135deg' }] }]} />
                   </TouchableOpacity>
@@ -1063,6 +1100,23 @@ const MeetRequestsScreen = () => {
                 </View>
                 
                 <View style={styles.ringButtonsContainer}>
+                  {Platform.OS === 'web' && needSoundUnlock && (
+                    <TouchableOpacity
+                      onPress={() => {
+                        try {
+                          setNeedSoundUnlock(false);
+                          startWebBeep(true);
+                        } catch {}
+                      }}
+                      style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: COLORS.primary, backgroundColor: COLORS.tansparentPrimary, alignItems: 'center', justifyContent: 'center', marginRight: 12 }}
+                    >
+                      <Image
+                        source={webSoundEnabled ? icons.mediumVolume : icons.noSound}
+                        contentFit='contain'
+                        style={{ width: 18, height: 18, tintColor: COLORS.primary }}
+                      />
+                    </TouchableOpacity>
+                  )}
                   <TouchableOpacity style={[styles.ringButton, styles.rejectButton]} onPress={cancelOutgoingCall}>
                     <Image source={icons.telephone} contentFit='contain' style={[styles.ringButtonIcon, { tintColor: 'white', transform: [{ rotate: '135deg' }] }]} />
                   </TouchableOpacity>

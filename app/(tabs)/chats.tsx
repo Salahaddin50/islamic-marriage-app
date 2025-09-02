@@ -236,10 +236,24 @@ const Messages = () => {
     );
   };
 
+  const SkeletonRow = ({ idx }: { idx: number }) => (
+    <View style={[styles.userContainer, idx % 2 !== 0 ? styles.oddBackground : null]}>
+      <View style={styles.userImageContainer}>
+        <View style={[styles.userImage, { backgroundColor: '#eee' }]} />
+      </View>
+      <View style={{ flex: 1, justifyContent: 'center', gap: 8 }}>
+        <View style={{ height: 14, width: '40%', backgroundColor: '#eee', borderRadius: 6 }} />
+        <View style={{ height: 12, width: '60%', backgroundColor: '#f2f2f2', borderRadius: 6 }} />
+      </View>
+    </View>
+  );
+
   const ReceivedRoute = () => (
     <ScrollView style={{ flex: 1, width: '100%' }}>
       {loading ? (
-        <Text style={styles.subtitle}>Loading…</Text>
+        <>
+          {Array.from({ length: 6 }).map((_, i) => (<SkeletonRow key={i} idx={i} />))}
+        </>
       ) : incoming.length === 0 ? (
         <Text style={styles.subtitle}>No received chat requests</Text>
       ) : (
@@ -275,7 +289,9 @@ const Messages = () => {
   const SentRoute = () => (
     <ScrollView style={{ flex: 1, width: '100%' }}>
       {loading ? (
-        <Text style={styles.subtitle}>Loading…</Text>
+        <>
+          {Array.from({ length: 6 }).map((_, i) => (<SkeletonRow key={i} idx={i} />))}
+        </>
       ) : outgoing.length === 0 ? (
         <Text style={styles.subtitle}>No sent chat requests</Text>
       ) : (
@@ -299,7 +315,9 @@ const Messages = () => {
   const ApprovedRoute = () => (
     <ScrollView style={{ flex: 1, width: '100%' }}>
       {loading ? (
-        <Text style={styles.subtitle}>Loading…</Text>
+        <>
+          {Array.from({ length: 6 }).map((_, i) => (<SkeletonRow key={i} idx={i} />))}
+        </>
       ) : approved.length === 0 ? (
         <Text style={styles.subtitle}>No approved chat requests</Text>
       ) : (

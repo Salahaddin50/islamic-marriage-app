@@ -305,10 +305,24 @@ const InterestsScreen = () => {
     </View>
   );
 
+  const SkeletonRow = ({ idx }: { idx: number }) => (
+    <View style={[styles.userContainer, idx % 2 !== 0 ? styles.oddBackground : null]}>
+      <View style={styles.userImageContainer}>
+        <View style={[styles.userImage, { backgroundColor: '#eee' }]} />
+      </View>
+      <View style={{ flex: 1, justifyContent: 'center', gap: 8 }}>
+        <View style={{ height: 14, width: '40%', backgroundColor: '#eee', borderRadius: 6 }} />
+        <View style={{ height: 12, width: '60%', backgroundColor: '#f2f2f2', borderRadius: 6 }} />
+      </View>
+    </View>
+  );
+
   const ReceivedRoute = () => (
     <ScrollView style={{ flex: 1, width: '100%' }}>
       {loading ? (
-        <Text style={styles.subtitle}>Loading…</Text>
+        <>
+          {Array.from({ length: 6 }).map((_, i) => (<SkeletonRow key={i} idx={i} />))}
+        </>
       ) : (
         <>
           {incoming.length === 0 ? (
@@ -320,7 +334,7 @@ const InterestsScreen = () => {
               return (
                 <View key={row.id} style={[styles.userContainer, idx % 2 !== 0 ? styles.oddBackground : null]}>
                   <TouchableOpacity style={styles.userImageContainer} onPress={() => navigation.navigate('matchdetails' as never, { userId: otherUserId } as never)}>
-                    <Image source={other?.avatar ? (typeof other.avatar === 'string' ? { uri: other.avatar } : other.avatar) : images.user} contentFit='cover' style={styles.userImage} />
+                    <Image source={other?.avatar ? (typeof other.avatar === 'string' ? { uri: other.avatar } : other.avatar) : images.maleSilhouette} contentFit='cover' style={styles.userImage} />
                   </TouchableOpacity>
                   <View style={{ flexDirection: 'row', width: SIZES.width - 104 }}>
                     <View style={styles.userInfoContainer}>
@@ -354,7 +368,9 @@ const InterestsScreen = () => {
   const SentRoute = () => (
     <ScrollView style={{ flex: 1, width: '100%' }}>
       {loading ? (
-        <Text style={styles.subtitle}>Loading…</Text>
+        <>
+          {Array.from({ length: 6 }).map((_, i) => (<SkeletonRow key={i} idx={i} />))}
+        </>
       ) : (
         <>
           {outgoing.length === 0 ? (
@@ -366,7 +382,7 @@ const InterestsScreen = () => {
               return (
                 <View key={row.id} style={[styles.userContainer, idx % 2 !== 0 ? styles.oddBackground : null]}>
                   <TouchableOpacity style={styles.userImageContainer} onPress={() => navigation.navigate('matchdetails' as never, { userId: otherUserId } as never)}>
-                    <Image source={other?.avatar ? (typeof other.avatar === 'string' ? { uri: other.avatar } : other.avatar) : images.user} contentFit='cover' style={styles.userImage} />
+                    <Image source={other?.avatar ? (typeof other.avatar === 'string' ? { uri: other.avatar } : other.avatar) : images.maleSilhouette} contentFit='cover' style={styles.userImage} />
                   </TouchableOpacity>
                   <View style={{ flexDirection: 'row', width: SIZES.width - 104 }}>
                     <View style={styles.userInfoContainer}>
@@ -397,7 +413,9 @@ const InterestsScreen = () => {
   const ApprovedRoute = () => (
     <ScrollView style={{ flex: 1, width: '100%' }}>
       {loading ? (
-        <Text style={styles.subtitle}>Loading…</Text>
+        <>
+          {Array.from({ length: 6 }).map((_, i) => (<SkeletonRow key={i} idx={i} />))}
+        </>
       ) : (
         <>
           {approved.length === 0 ? (
@@ -409,7 +427,7 @@ const InterestsScreen = () => {
               return (
                 <View key={row.id} style={[styles.userContainer, idx % 2 !== 0 ? styles.oddBackground : null]}>
                   <TouchableOpacity style={styles.userImageContainer} onPress={() => navigation.navigate('matchdetails' as never, { userId: otherUserId } as never)}>
-                    <Image source={other?.avatar ? (typeof other.avatar === 'string' ? { uri: other.avatar } : other.avatar) : images.user} contentFit='cover' style={styles.userImage} />
+                    <Image source={other?.avatar ? (typeof other.avatar === 'string' ? { uri: other.avatar } : other.avatar) : images.maleSilhouette} contentFit='cover' style={styles.userImage} />
                   </TouchableOpacity>
                   <View style={{ flexDirection: 'row', width: SIZES.width - 104 }}>
                     <View style={styles.userInfoContainer}>
@@ -582,6 +600,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'regular',
     color: COLORS.black,
+  },
+  userInfoContainer: {
+    flex: 1,
   },
   rowTitle: {
     fontSize: 15,
