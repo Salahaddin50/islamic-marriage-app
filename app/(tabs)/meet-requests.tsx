@@ -79,8 +79,25 @@ const MeetRequestsScreen = () => {
   const ringGainRef = React.useRef<any>(null);
   const ringOscRef = React.useRef<any>(null);
   const ringBeepTimerRef = React.useRef<any>(null);
+  
+  // Call signaling state
+  const [incomingCall, setIncomingCall] = useState<{
+    callerId: string;
+    callerName: string;
+    callerAvatar?: string;
+    channel: string;
+    meetId: string;
+  } | null>(null);
+  const [isCallActive, setIsCallActive] = useState(false);
+  const [outgoingCall, setOutgoingCall] = useState<{
+    receiverId: string;
+    receiverName: string;
+    receiverAvatar?: string;
+    channel: string;
+    meetId: string;
+  } | null>(null);
 
-  const startWebBeep = () => {
+  const startWebBeep = (isOutgoing = false) => {
     try {
       if (Platform.OS !== 'web') return;
       if (ringCtxRef.current) return; // already running
@@ -96,7 +113,7 @@ const MeetRequestsScreen = () => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(440, ctx.currentTime);
+      osc.frequency.setValueAtTime(isOutgoing ? 350 : 440, ctx.currentTime); // Lower tone for outgoing
       gain.gain.setValueAtTime(0, ctx.currentTime);
       osc.connect(gain);
       gain.connect(ctx.destination);
@@ -104,19 +121,36 @@ const MeetRequestsScreen = () => {
       ringCtxRef.current = ctx;
       ringGainRef.current = gain;
       ringOscRef.current = osc;
-      // 1.2s on, 0.8s off loop
-      const pattern = () => {
-        try {
-          const now = ctx.currentTime;
-          gain.gain.cancelScheduledValues(now);
-          gain.gain.setValueAtTime(0.0001, now);
-          gain.gain.exponentialRampToValueAtTime(0.2, now + 0.05);
-          gain.gain.setValueAtTime(0.2, now + 1.2);
-          gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.25);
-        } catch {}
-      };
-      pattern();
-      ringBeepTimerRef.current = setInterval(pattern, 2000);
+      
+      if (isOutgoing) {
+        // Outgoing call beep: short beeps like WhatsApp
+        const pattern = () => {
+          try {
+            const now = ctx.currentTime;
+            gain.gain.cancelScheduledValues(now);
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.exponentialRampToValueAtTime(0.15, now + 0.05);
+            gain.gain.setValueAtTime(0.15, now + 0.4);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
+          } catch {}
+        };
+        pattern();
+        ringBeepTimerRef.current = setInterval(pattern, 1500);
+      } else {
+        // Incoming call ring: longer rings
+        const pattern = () => {
+          try {
+            const now = ctx.currentTime;
+            gain.gain.cancelScheduledValues(now);
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.exponentialRampToValueAtTime(0.2, now + 0.05);
+            gain.gain.setValueAtTime(0.2, now + 1.2);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.25);
+          } catch {}
+        };
+        pattern();
+        ringBeepTimerRef.current = setInterval(pattern, 2000);
+      }
     } catch {}
   };
 
@@ -433,6 +467,134 @@ const MeetRequestsScreen = () => {
 
   // Ring popup removed – we keep only blinking and direct call via Call button
 
+  // Call signaling functions
+  const sendCallSignal = async (receiverId: string, channel: string, meetId: string) => {
+    if (!myUserId) return;
+    
+    const callerProfile = profilesById[myUserId];
+    const signalData = {
+      type: 'incoming_call',
+      caller_id: myUserId,
+      caller_name: callerProfile?.name || 'Someone',
+      caller_avatar: callerProfile?.avatar,
+      receiver_id: receiverId,
+      channel: channel,
+      meet_id: meetId,
+      timestamp: new Date().toISOString()
+    };
+
+    // Send via Supabase realtime
+    await supabase
+      .channel('call-signals')
+      .send({
+        type: 'broadcast',
+        event: 'call_signal',
+        payload: signalData
+      });
+  };
+
+  const endCallSignal = async (receiverId: string, channel: string) => {
+    if (!myUserId) return;
+    
+    const signalData = {
+      type: 'call_ended',
+      caller_id: myUserId,
+      receiver_id: receiverId,
+      channel: channel,
+      timestamp: new Date().toISOString()
+    };
+
+    await supabase
+      .channel('call-signals')
+      .send({
+        type: 'broadcast',
+        event: 'call_signal',
+        payload: signalData
+      });
+  };
+
+  const acceptCall = async () => {
+    if (!incomingCall) return;
+    
+    // Send acceptance signal back to caller
+    const acceptData = {
+      type: 'call_accepted',
+      caller_id: incomingCall.callerId,
+      receiver_id: myUserId,
+      channel: incomingCall.channel,
+      timestamp: new Date().toISOString()
+    };
+
+    await supabase
+      .channel('call-signals')
+      .send({
+        type: 'broadcast',
+        event: 'call_signal',
+        payload: acceptData
+      });
+    
+    setIncomingCall(null);
+    setIsCallActive(true);
+    stopWebBeep();
+    
+    // Join the call
+    const channel = incomingCall.channel;
+    if (Platform.OS === 'web') {
+      const html = buildAgoraWebHtml(channel, myDisplayName || 'Guest');
+      setWebCallHtml(html);
+      setShowWebCallModal(true);
+    } else {
+      // @ts-ignore
+      navigation.navigate('call' as never, { channel } as never);
+    }
+  };
+
+  const rejectCall = async () => {
+    if (!incomingCall) return;
+    
+    // Send rejection signal back to caller
+    const rejectData = {
+      type: 'call_rejected',
+      caller_id: incomingCall.callerId,
+      receiver_id: myUserId,
+      channel: incomingCall.channel,
+      timestamp: new Date().toISOString()
+    };
+
+    await supabase
+      .channel('call-signals')
+      .send({
+        type: 'broadcast',
+        event: 'call_signal',
+        payload: rejectData
+      });
+    
+    setIncomingCall(null);
+    stopWebBeep();
+  };
+
+  const cancelOutgoingCall = async () => {
+    if (!outgoingCall) return;
+    
+    setOutgoingCall(null);
+    stopWebBeep();
+    
+    // Send cancellation signal
+    await endCallSignal(outgoingCall.receiverId, outgoingCall.channel);
+  };
+
+  const startVideoCall = (channel: string) => {
+    setIsCallActive(true);
+    if (Platform.OS === 'web') {
+      const html = buildAgoraWebHtml(channel, myDisplayName || 'Guest');
+      setWebCallHtml(html);
+      setShowWebCallModal(true);
+    } else {
+      // @ts-ignore
+      navigation.navigate('call' as never, { channel } as never);
+    }
+  };
+
   useEffect(() => {
     const ch = supabase
       .channel('meet-requests-realtime')
@@ -440,6 +602,54 @@ const MeetRequestsScreen = () => {
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
+
+  // Call signaling subscription
+  useEffect(() => {
+    if (!myUserId) return;
+
+    const callChannel = supabase
+      .channel('call-signals')
+      .on('broadcast', { event: 'call_signal' }, (payload) => {
+        const data = payload.payload;
+        
+        if (data.receiver_id === myUserId && data.type === 'incoming_call') {
+          // Show incoming call UI
+          setIncomingCall({
+            callerId: data.caller_id,
+            callerName: data.caller_name,
+            callerAvatar: data.caller_avatar,
+            channel: data.channel,
+            meetId: data.meet_id
+          });
+          
+          // Start ringing sound/vibration
+          if (webSoundEnabled) startWebBeep(false);
+          if (Platform.OS !== 'web') {
+            try { Vibration.vibrate([500, 500, 500, 500], true); } catch {}
+          }
+        } else if (data.receiver_id === myUserId && data.type === 'call_ended') {
+          // Call was ended by caller
+          setIncomingCall(null);
+          setIsCallActive(false);
+          stopWebBeep();
+          if (Platform.OS !== 'web') {
+            try { Vibration.cancel(); } catch {}
+          }
+        } else if (data.caller_id === myUserId && data.type === 'call_accepted') {
+          // Our outgoing call was accepted
+          setOutgoingCall(null);
+          stopWebBeep();
+          startVideoCall(data.channel);
+        } else if (data.caller_id === myUserId && data.type === 'call_rejected') {
+          // Our outgoing call was rejected
+          setOutgoingCall(null);
+          stopWebBeep();
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(callChannel); };
+  }, [myUserId, webSoundEnabled]);
 
   // Mark approved meets as seen whenever the Approved tab becomes active
   useEffect(() => {
@@ -486,7 +696,7 @@ const MeetRequestsScreen = () => {
                   stopWebBeep();
                 } else {
                   // If a ring is visible, attempt to start immediately
-                  if (showRingModal || showJoinInfoModal) startWebBeep();
+                  if (showRingModal || showJoinInfoModal) startWebBeep(false);
                 }
               } else {
                 const nextMuted = !ringMuted;
@@ -650,21 +860,33 @@ const MeetRequestsScreen = () => {
                 <>
                   <TouchableOpacity
                     style={[styles.tinyBtn, { backgroundColor: COLORS.primary }]}
-                    onPress={() => {
+                    onPress={async () => {
                       try {
                         if (!canCall) {
                       setSelectedMeetRow(row);
                       setShowJoinInfoModal(true);
                           return;
                         }
+                        
                         const channel = row.id;
-                        if (Platform.OS === 'web') {
-                          const html = buildAgoraWebHtml(channel, myDisplayName || 'Guest');
-                          setWebCallHtml(html);
-                          setShowWebCallModal(true);
-                        } else {
-                          // @ts-ignore
-                          navigation.navigate('call' as never, { channel } as never);
+                        const receiverId = otherUserId;
+                        
+                        if (receiverId) {
+                          // Show outgoing call interface
+                          const receiverProfile = profilesById[receiverId];
+                          setOutgoingCall({
+                            receiverId,
+                            receiverName: receiverProfile?.name || 'User',
+                            receiverAvatar: receiverProfile?.avatar,
+                            channel,
+                            meetId: row.id
+                          });
+                          
+                          // Start outgoing call beeps
+                          if (webSoundEnabled) startWebBeep(true);
+                          
+                          // Send call signal to the other user
+                          await sendCallSignal(receiverId, channel, row.id);
                         }
                       } catch {}
                     }}
@@ -772,6 +994,84 @@ const MeetRequestsScreen = () => {
           </View>
         </Modal>
 
+        {/* Incoming Call Modal */}
+        {incomingCall && (
+          <Modal visible={true} transparent animationType="fade" onRequestClose={rejectCall}>
+            <View style={styles.modalContainer}>
+              <View style={styles.ringCard}>
+                <View style={{ alignItems: 'center', marginBottom: 20 }}>
+                  <View style={styles.ringAvatarWrapper}>
+                    <View style={[styles.ringPulse, blinkOn && styles.ringPulseAlt]} />
+                    <View style={[styles.ringPulse, { width: 110, height: 110, opacity: 0.2 }]} />
+                    <Image
+                      source={
+                        incomingCall.callerAvatar 
+                          ? (typeof incomingCall.callerAvatar === 'string' ? { uri: incomingCall.callerAvatar } : incomingCall.callerAvatar)
+                          : images.maleSilhouette
+                      }
+                      contentFit='cover'
+                      style={styles.ringAvatar}
+                    />
+                  </View>
+                  <Text style={[styles.ringCallerName, { color: COLORS.greyscale900 }]}>
+                    {incomingCall.callerName}
+                  </Text>
+                  <Text style={[styles.ringCallText, { color: COLORS.greyscale600 }]}>
+                    Incoming video call...
+                  </Text>
+                </View>
+                
+                <View style={styles.ringButtonsContainer}>
+                  <TouchableOpacity style={[styles.ringButton, styles.rejectButton]} onPress={rejectCall}>
+                    <Image source={icons.telephone} contentFit='contain' style={[styles.ringButtonIcon, { tintColor: 'white', transform: [{ rotate: '135deg' }] }]} />
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity style={[styles.ringButton, styles.acceptButton]} onPress={acceptCall}>
+                    <Image source={icons.telephone} contentFit='contain' style={[styles.ringButtonIcon, { tintColor: 'white' }]} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
+        )}
+
+        {/* Outgoing Call Modal */}
+        {outgoingCall && (
+          <Modal visible={true} transparent animationType="fade" onRequestClose={cancelOutgoingCall}>
+            <View style={styles.modalContainer}>
+              <View style={styles.ringCard}>
+                <View style={{ alignItems: 'center', marginBottom: 20 }}>
+                  <View style={styles.ringAvatarWrapper}>
+                    <View style={[styles.ringPulse, blinkOn && styles.ringPulseAlt]} />
+                    <View style={[styles.ringPulse, { width: 110, height: 110, opacity: 0.2 }]} />
+                    <Image
+                      source={
+                        outgoingCall.receiverAvatar 
+                          ? (typeof outgoingCall.receiverAvatar === 'string' ? { uri: outgoingCall.receiverAvatar } : outgoingCall.receiverAvatar)
+                          : images.maleSilhouette
+                      }
+                      contentFit='cover'
+                      style={styles.ringAvatar}
+                    />
+                  </View>
+                  <Text style={[styles.ringCallerName, { color: COLORS.greyscale900 }]}>
+                    {outgoingCall.receiverName}
+                  </Text>
+                  <Text style={[styles.ringCallText, { color: COLORS.greyscale600 }]}>
+                    Calling...
+                  </Text>
+                </View>
+                
+                <View style={styles.ringButtonsContainer}>
+                  <TouchableOpacity style={[styles.ringButton, styles.rejectButton]} onPress={cancelOutgoingCall}>
+                    <Image source={icons.telephone} contentFit='contain' style={[styles.ringButtonIcon, { tintColor: 'white', transform: [{ rotate: '135deg' }] }]} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
+        )}
+
         {/* Ring (Incoming Meeting) Modal */}
         <Modal visible={showRingModal} transparent animationType="fade" onRequestClose={() => { setShowRingModal(false); }}>
           <View style={styles.modalContainer}>
@@ -829,7 +1129,7 @@ const MeetRequestsScreen = () => {
                         }
                         setWebSoundEnabled(next);
                         if (!next) { stopWebBeep(); }
-                        else { startWebBeep(); }
+                        else { startWebBeep(false); }
                       } else {
                         const nextMuted = !ringMuted;
                         setRingMuted(nextMuted);
@@ -853,7 +1153,7 @@ const MeetRequestsScreen = () => {
                       try {
                         if (!ringMuted) {
                           setNeedSoundUnlock(false);
-                          startWebBeep();
+                          startWebBeep(false);
                         }
                       } catch {}
                     }}
@@ -938,7 +1238,18 @@ const MeetRequestsScreen = () => {
           <Modal visible={showWebCallModal} transparent={true} animationType="fade" onRequestClose={() => setShowWebCallModal(false)}>
             <View style={styles.modalContainer}>
               <View style={styles.jitsiCard}>
-                <TouchableOpacity style={styles.jitsiCloseButton} onPress={() => setShowWebCallModal(false)}>
+                <TouchableOpacity style={styles.jitsiCloseButton} onPress={() => {
+                  setShowWebCallModal(false);
+                  setIsCallActive(false);
+                  // End call signal if this was an active call
+                  if (isCallActive && approved.length > 0) {
+                    const currentCall = approved.find(row => row.id === webCallHtml?.match(/channel='([^']+)'/)?.[1]);
+                    if (currentCall && myUserId) {
+                      const otherUserId = currentCall.sender_id === myUserId ? currentCall.receiver_id : currentCall.sender_id;
+                      endCallSignal(otherUserId, currentCall.id);
+                    }
+                  }
+                }}>
                   <Text style={styles.jitsiCloseButtonText}>×</Text>
             </TouchableOpacity>
                 <View style={styles.jitsiVideoContainer}>
@@ -1110,6 +1421,11 @@ const styles = StyleSheet.create({
   ringPulseAlt: {
     opacity: 0.35,
   },
+  ringAvatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+  },
   headerLeft: { flexDirection: 'row', alignItems: 'center' },
   headerLogo: { height: 36, width: 36, tintColor: COLORS.primary },
   headerTitle: { fontSize: 20, fontFamily: 'bold', color: COLORS.black, marginLeft: 12 },
@@ -1126,6 +1442,44 @@ const styles = StyleSheet.create({
   rowActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   tinyBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14 },
   tinyBtnText: { fontSize: 12, color: COLORS.white, fontFamily: 'semiBold' },
+  ringButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    paddingHorizontal: 40,
+  },
+  ringButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  acceptButton: {
+    backgroundColor: '#4CAF50',
+  },
+  rejectButton: {
+    backgroundColor: '#F44336',
+  },
+  ringButtonIcon: {
+    width: 24,
+    height: 24,
+  },
+  ringCallerName: {
+    fontSize: 20,
+    fontFamily: 'bold',
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  ringCallText: {
+    fontSize: 16,
+    fontFamily: 'regular',
+  },
 });
 
 export default MeetRequestsScreen;
