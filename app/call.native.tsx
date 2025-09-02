@@ -1,11 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-// Web fallback screen (native implementation in call.native.tsx)
+// Temporary native fallback until react-native-agora is installed and linked.
+// To enable native calling: install the SDK and revert to the Agora implementation.
 export default function CallScreen() {
   return (
     <View style={styles.fallback}>
-      <Text style={styles.txt}>Calls run in a modal on web. Use the Call button on the Approved card.</Text>
+      <Text style={styles.txt}>Native calling is not yet installed. Please install react-native-agora and rebuild.</Text>
     </View>
   );
 }
@@ -15,4 +16,4 @@ const styles = StyleSheet.create({
   txt: { textAlign:'center' }
 });
 
-// end
+

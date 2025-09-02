@@ -11,6 +11,7 @@ import { NavigationProp, useIsFocused } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import { WebView } from 'react-native-webview';
+import { AGORA_APP_ID } from '@/src/config/agora';
 
 const MeetRequestsScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
@@ -57,6 +58,8 @@ const MeetRequestsScreen = () => {
   const [selectedMeetRow, setSelectedMeetRow] = useState<MeetRecord | null>(null);
   const [showJitsiModal, setShowJitsiModal] = useState(false);
   const [jitsiHtml, setJitsiHtml] = useState<string | null>(null);
+  const [showWebCallModal, setShowWebCallModal] = useState(false);
+  const [webCallHtml, setWebCallHtml] = useState<string | null>(null);
   const [myDisplayName, setMyDisplayName] = useState<string>('');
   const [showRingModal, setShowRingModal] = useState(false);
   const [ringMeetRow, setRingMeetRow] = useState<MeetRecord | null>(null);
@@ -339,6 +342,13 @@ const MeetRequestsScreen = () => {
     return `<!DOCTYPE html><html><head><meta name=viewport content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no" /><script src="https://meet.jit.si/external_api.js"></script><style>html,body,#j{margin:0;padding:0;height:100%;width:100%;background:#000;overflow:hidden}</style></head><body><div id=j></div><script>const api=new JitsiMeetExternalAPI('meet.jit.si',{roomName:'${roomName}',parentNode:document.getElementById('j'),userInfo:{displayName:'${safeName}'},configOverwrite:{prejoinPageEnabled:false,disableDeepLinking:true,startWithAudioMuted:false,startWithVideoMuted:false,toolbarButtons:['microphone','camera','hangup'],enableWelcomePage:false,defaultLanguage:'en',disable1On1Mode:false,enableClosePage:false},interfaceConfigOverwrite:{MOBILE_APP_PROMO:false,HIDE_INVITE_MORE_HEADER:true,TOOLBAR_BUTTONS:['microphone','camera','hangup'],DISABLE_JOIN_LEAVE_NOTIFICATIONS:true}});api.executeCommand('toggleTileView', false);api.addEventListener('videoConferenceJoined',function(){try{document.body.style.background='#000';}catch(e){}});api.addEventListener('videoConferenceLeft',function(){if(window.ReactNativeWebView&&window.ReactNativeWebView.postMessage){window.ReactNativeWebView.postMessage('left');}});</script></body></html>`;
   };
 
+  // Build Agora Web call HTML (web only): joins channel and shows local/remote
+  const buildAgoraWebHtml = (channelId: string, displayName: string) => {
+    const safeChannel = (channelId || 'default').replace(/[^a-zA-Z0-9-_]/g, '');
+    const safeName = (displayName || 'Guest').replace(/'/g, "\'");
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"/><meta name=viewport content="width=device-width, initial-scale=1"/><style>html,body,#app{margin:0;padding:0;height:100%;width:100%;background:#000;overflow:hidden}#videos{position:relative;width:100%;height:100%}#local{position:absolute;right:12px;top:12px;width:160px;height:120px;border-radius:8px;overflow:hidden}#remote{position:absolute;left:0;top:0;right:0;bottom:0}</style><script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.18.0.js"></script></head><body><div id="app"><div id="videos"><div id="remote"></div><div id="local"></div></div></div><script>const appId='${AGORA_APP_ID}';const channel='${safeChannel}';const userName='${safeName}';let client,localTrack,localMic;async function start(){try{client=AgoraRTC.createClient({mode:'rtc',codec:'vp8'});client.on('user-published',async(user,mediaType)=>{await client.subscribe(user,mediaType);if(mediaType==='video'){const remoteTrack=user.videoTrack;remoteTrack.play('remote');}if(mediaType==='audio'){user.audioTrack.play();}});client.on('user-unpublished',(user)=>{});await client.join(appId,channel,null,null);localTrack=await AgoraRTC.createCameraVideoTrack();localMic=await AgoraRTC.createMicrophoneAudioTrack();localTrack.play('local');await client.publish([localTrack,localMic]);}catch(e){console.error(e);}}function cleanup(){try{if(localTrack){localTrack.stop();localTrack.close();}if(localMic){localMic.stop();localMic.close();}if(client){client.leave();}}catch(e){};}window.addEventListener('beforeunload',cleanup);start();</script></body></html>`;
+  };
+
   // Normalize any meeting link to meet.jit.si domain to avoid JaaS dev limits
   const toMeetJitsiUrl = (link?: string | null) => {
     if (!link) return null;
@@ -393,61 +403,21 @@ const MeetRequestsScreen = () => {
     }
   };
 
-  // Helper: ring window = 5 minutes before until 5 minutes after start
+  // Helper: ring window = 60 minutes before until 60 minutes after start
   const isWithinRingWindow = (scheduledAt: string | null): boolean => {
     if (!scheduledAt) return false;
     try {
       const scheduledMs = new Date(scheduledAt).getTime();
       if (Number.isNaN(scheduledMs)) return false;
-      const startWindow = scheduledMs - 5 * 60 * 1000; // 5 min before
-      const endWindow = scheduledMs + 5 * 60 * 1000;   // 5 min after start
+      const startWindow = scheduledMs - 60 * 60 * 1000; // 60 min before
+      const endWindow = scheduledMs + 60 * 60 * 1000;   // 60 min after start
       return nowTick >= startWindow && nowTick <= endWindow;
     } catch {
       return false;
     }
   };
 
-  // Ring when any approved meeting is joinable
-  useEffect(() => {
-    try {
-      const joinable = approved.find(r => r.meet_link && isWithinRingWindow(r.scheduled_at) && !ringDismissedIds.has(r.id));
-      if (isFocused && joinable) {
-        setRingMeetRow(joinable);
-        setShowRingModal(true);
-        // Web: start beep if enabled
-        (async () => {
-          try {
-            if (!ringMuted && Platform.OS === 'web' && webSoundEnabled) {
-              startWebBeep();
-            }
-          } catch {}
-        })();
-        // Native vibration loop (web may ignore)
-        if (Platform.OS !== 'web') {
-          Vibration.vibrate([500, 400, 500, 800], true);
-        }
-      }
-      // If outside window while modal is showing, dismiss
-      if (showRingModal && ringMeetRow && !isWithinRingWindow(ringMeetRow.scheduled_at)) {
-        setShowRingModal(false);
-        if (Platform.OS !== 'web') Vibration.cancel();
-        if (ringAudioRef.current) { try { ringAudioRef.current.pause(); ringAudioRef.current = null; } catch {} }
-        stopWebBeep();
-        setRingMeetRow(null);
-      }
-    } catch {}
-    return () => {
-      if (Platform.OS !== 'web') {
-        Vibration.cancel();
-      }
-      if (ringAudioRef.current) {
-        try { ringAudioRef.current.pause(); ringAudioRef.current.currentTime = 0; } catch {}
-        ringAudioRef.current = null;
-      }
-      stopWebBeep();
-      setNeedSoundUnlock(false);
-    };
-  }, [approved, nowTick, isFocused]);
+  // Ring popup removed – we keep only blinking and direct call via Call button
 
   useEffect(() => {
     const ch = supabase
@@ -650,6 +620,7 @@ const MeetRequestsScreen = () => {
         approved.map((row, idx) => {
           const scheduledMs = row.scheduled_at ? new Date(row.scheduled_at).getTime() : NaN;
           const canJoin = !!row.meet_link && !Number.isNaN(scheduledMs) && (nowTick >= (scheduledMs - 10 * 60 * 1000));
+          const canCall = isWithinRingWindow(row.scheduled_at || null);
           const otherUserId = myUserId && row.sender_id === myUserId ? row.receiver_id : row.sender_id;
           return (
             <Row
@@ -666,11 +637,25 @@ const MeetRequestsScreen = () => {
                   <TouchableOpacity
                     style={[styles.tinyBtn, { backgroundColor: COLORS.primary }]}
                     onPress={() => {
+                      try {
+                        if (!canCall) {
                       setSelectedMeetRow(row);
                       setShowJoinInfoModal(true);
+                          return;
+                        }
+                        const channel = row.id;
+                        if (Platform.OS === 'web') {
+                          const html = buildAgoraWebHtml(channel, myDisplayName || 'Guest');
+                          setWebCallHtml(html);
+                          setShowWebCallModal(true);
+                        } else {
+                          // @ts-ignore
+                          navigation.navigate('call' as never, { channel } as never);
+                        }
+                      } catch {}
                     }}
                   >
-                    <Text style={styles.tinyBtnText}>Join</Text>
+                    <Text style={styles.tinyBtnText}>Call</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={() => withdraw(row.id)}>
                     <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>Cancel</Text>
@@ -707,7 +692,7 @@ const MeetRequestsScreen = () => {
         >
           <View style={styles.modalContainer}>
             <View style={styles.modalCard}>
-              <Text style={styles.modalTitle}>Video Meeting Access</Text>
+              <Text style={styles.modalTitle}>Video Call Access</Text>
               
               <View style={styles.meetingInfoContainer}>
                 {selectedMeetRow?.scheduled_at && (
@@ -723,7 +708,7 @@ const MeetRequestsScreen = () => {
                     style={{ width: 24, height: 24, tintColor: COLORS.primary, marginRight: 12 }} 
                   />
                   <Text style={styles.infoText}>
-                    Meeting access is available 10 minutes before the scheduled time
+                    Video call is available 60 minutes before and after the scheduled time
                   </Text>
                 </View>
                 
@@ -735,9 +720,9 @@ const MeetRequestsScreen = () => {
                   />
                   <Text style={styles.infoText}>
                     {selectedMeetRow && selectedMeetRow.scheduled_at ? 
-                      isTimeToJoin(selectedMeetRow.scheduled_at) ? 
-                        "You can join the meeting now" : 
-                        "Meeting is not yet available to join" 
+                      isWithinRingWindow(selectedMeetRow.scheduled_at) ? 
+                        "You can call now" : 
+                        "Video call is not yet available" 
                       : ""}
                   </Text>
                 </View>
@@ -751,7 +736,7 @@ const MeetRequestsScreen = () => {
                   <Text style={[styles.modalButtonText, { color: COLORS.primary }]}>Close</Text>
                 </TouchableOpacity>
                 
-                {selectedMeetRow && selectedMeetRow.meet_link && isTimeToJoin(selectedMeetRow.scheduled_at) && (
+                {selectedMeetRow && selectedMeetRow.meet_link && isWithinRingWindow(selectedMeetRow.scheduled_at) && (
                   <TouchableOpacity 
                     style={[styles.modalButton, styles.joinButton]} 
                     onPress={() => {
@@ -765,7 +750,7 @@ const MeetRequestsScreen = () => {
                     }}
                   >
                     <Image source={icons.videoCamera2} contentFit="contain" style={{ width: 18, height: 18, tintColor: COLORS.white, marginRight: 8 }} />
-                    <Text style={styles.modalButtonText}>Join Now</Text>
+                    <Text style={styles.modalButtonText}>Call Now</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -933,6 +918,28 @@ const MeetRequestsScreen = () => {
             </View>
           </View>
         </Modal>
+
+        {/* Web-only Agora Call Modal */}
+        {Platform.OS === 'web' && (
+          <Modal visible={showWebCallModal} transparent={true} animationType="fade" onRequestClose={() => setShowWebCallModal(false)}>
+            <View style={styles.modalContainer}>
+              <View style={styles.jitsiCard}>
+                <TouchableOpacity style={styles.jitsiCloseButton} onPress={() => setShowWebCallModal(false)}>
+                  <Text style={styles.jitsiCloseButtonText}>×</Text>
+            </TouchableOpacity>
+                <View style={styles.jitsiVideoContainer}>
+                  {!!webCallHtml && (
+                    <iframe
+                      srcDoc={webCallHtml as any}
+                      style={{ width: '100%', height: '100%', border: 0 } as any}
+                      allow="camera; microphone; fullscreen; autoplay"
+                    />
+                  )}
+                </View>
+              </View>
+          </View>
+        </Modal>
+        )}
       </View>
     </SafeAreaView>
   );
