@@ -13,6 +13,7 @@ import MatchDetailsSkeleton from '@/components/MatchDetailsSkeleton';
 import { InterestsService, InterestStatus } from '@/src/services/interests';
 import { MeetService, MeetOverallStatus } from '@/src/services/meet';
 import { MessageRequestsService } from '@/src/services/message-requests.service';
+import { calculateTimeDifference, getLocalTimeForUser, TimeDifferenceResult } from '@/utils/timezoneUtils';
 
 // Types for user profile data (comprehensive - matches database)
 interface UserProfile {
@@ -111,6 +112,8 @@ const MatchDetails = () => {
   const [messageStatus, setMessageStatus] = useState<'none' | 'pending' | 'accepted' | 'rejected'>('none');
   const [isMessageSender, setIsMessageSender] = useState(false);
   const [messageRecordId, setMessageRecordId] = useState<string | null>(null);
+  const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(null);
+  const [timeDifference, setTimeDifference] = useState<TimeDifferenceResult | null>(null);
   const todayDateStr = useMemo(() => {
     const d = new Date();
     const y = d.getFullYear();
@@ -322,6 +325,55 @@ const MatchDetails = () => {
       setIsLoading(false);
     }
   };
+
+  // Load current user profile for timezone comparison
+  useEffect(() => {
+    const loadCurrentUserProfile = async () => {
+      try {
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          console.log('❌ No authenticated user found');
+          return;
+        }
+        console.log('✅ User found:', user.id);
+
+        const { data: profile, error } = await supabase
+          .from('user_profiles')
+          .select('country')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        console.log('📊 Profile query result:', { profile, error });
+        if (profile) {
+          console.log('✅ Current user location:', profile);
+          setCurrentUserProfile(profile as any);
+        } else {
+          console.log('❌ No profile found for current user');
+        }
+      } catch (error) {
+
+      }
+    };
+
+    loadCurrentUserProfile();
+  }, []);
+
+  // Calculate timezone difference when both profiles are available
+  useEffect(() => {
+    if (currentUserProfile && userProfile) {
+
+      const timeDiff = calculateTimeDifference(
+        currentUserProfile.country,
+        userProfile.country
+      );
+
+      setTimeDifference(timeDiff);
+    } else {
+
+      setTimeDifference(null);
+    }
+  }, [currentUserProfile, userProfile]);
 
   // Memoized helper functions for better performance
   const formatEnumValue = useCallback((value?: string) => {
@@ -1292,6 +1344,47 @@ const MatchDetails = () => {
         <View style={styles.fullscreenContainer}>
           <View style={styles.modalCard}>
             <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 8 }]}>Schedule Video Meet</Text>
+            
+            {/* Timezone Information */}
+            {(timeDifference || (currentUserProfile && userProfile)) && (
+              <View style={styles.timezoneInfoContainer}>
+                <View style={styles.timezoneInfoRow}>
+                  <Image
+                    source={icons.world}
+                    contentFit="contain"
+                    style={[styles.timezoneIcon, { tintColor: timeDifference?.isSignificant ? COLORS.red : COLORS.primary }]}
+                  />
+                  <Text style={[styles.timezoneText, { color: timeDifference?.isSignificant ? COLORS.red : COLORS.grayscale700 }]}>
+                    {timeDifference ? timeDifference.message : 'Calculating time difference...'}
+                  </Text>
+                </View>
+                {timeDifference?.isSignificant && (
+                  <Text style={styles.timezoneWarning}>
+                    ⚠️ Please consider the time difference when selecting a meeting time
+                  </Text>
+                )}
+
+              </View>
+            )}
+            
+            {/* Always show timezone reminder */}
+            {!timeDifference && !currentUserProfile && (
+              <View style={styles.timezoneReminderContainer}>
+                <View style={styles.timezoneInfoRow}>
+                  <Image
+                    source={icons.clock}
+                    contentFit="contain"
+                    style={[styles.timezoneIcon, { tintColor: COLORS.primary }]}
+                  />
+                  <Text style={[styles.timezoneText, { color: COLORS.grayscale700 }]}>
+                    Please consider time zones when scheduling your meeting
+                  </Text>
+                </View>
+              </View>
+            )}
+            
+
+            
             {Platform.OS === 'web' ? (
               // Two-step picker on web: date then time
               <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -1313,6 +1406,38 @@ const MatchDetails = () => {
                       onChange={(e: any) => { setMeetTime(e.target.value); }}
                       style={{ width: '85%', padding: 12, fontSize: 16, borderRadius: 10, border: '1px solid #e9e9ef', display: 'block', margin: '0 auto' }}
                     />
+                  </div>
+                )}
+                
+                {/* Show time in both timezones when both date and time are selected */}
+                {meetDate && meetTime && timeDifference && timeDifference.hoursDifference > 0 && (
+                  <div style={{ width: '100%', marginBottom: 12, padding: 12, backgroundColor: '#f8f9fa', borderRadius: 8, border: '1px solid #e9ecef' }}>
+                    <div style={{ fontSize: 14, fontWeight: '600', marginBottom: 8, textAlign: 'center', color: '#495057' }}>Meeting Time Comparison</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                      <div style={{ textAlign: 'center', flex: 1 }}>
+                        <div style={{ fontWeight: '500', color: '#6c757d' }}>Your Time</div>
+                        <div style={{ color: '#495057' }}>{meetTime}</div>
+                      </div>
+                      <div style={{ textAlign: 'center', flex: 1 }}>
+                        <div style={{ fontWeight: '500', color: '#6c757d' }}>Their Time</div>
+                        <div style={{ color: '#495057' }}>
+                          {(() => {
+                            try {
+                              const selectedDateTime = new Date(`${meetDate}T${meetTime}`);
+                              const timeComparison = getLocalTimeForUser(
+                                selectedDateTime,
+                                currentUserProfile?.country,
+                                userProfile?.country
+                              );
+                              return timeComparison?.otherUserTime || meetTime;
+                            } catch {
+                              return meetTime;
+                            }
+                          })()
+                        }
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1963,6 +2088,45 @@ const styles = StyleSheet.create({
         fontSize: getResponsiveFontSize(16),
         fontFamily: 'semibold',
         textAlign: 'center',
+    },
+    timezoneInfoContainer: {
+        backgroundColor: COLORS.tansparentPrimary,
+        borderRadius: 12,
+        padding: 12,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: COLORS.primary,
+    },
+    timezoneInfoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 4,
+    },
+    timezoneIcon: {
+        width: 16,
+        height: 16,
+        marginRight: 8,
+    },
+    timezoneText: {
+        fontSize: getResponsiveFontSize(14),
+        fontFamily: 'medium',
+        flex: 1,
+    },
+    timezoneWarning: {
+        fontSize: getResponsiveFontSize(12),
+        fontFamily: 'regular',
+        color: COLORS.red,
+        fontStyle: 'italic',
+        textAlign: 'center',
+    },
+
+    timezoneReminderContainer: {
+        backgroundColor: COLORS.grayscale100,
+        borderRadius: 12,
+        padding: 12,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: COLORS.grayscale400,
     },
     
     // AutoSlider video indicator styles

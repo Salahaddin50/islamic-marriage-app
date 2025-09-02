@@ -36,49 +36,7 @@ const Notifications = () => {
         return unsubscribe;
     }, [navigation, unreadCount, markAllAsRead]);
 
-    // Test function to create sample notifications
-    const createTestNotifications = async () => {
-        try {
-            const testNotifications = [
-                {
-                    sender_name: 'Sarah Johnson',
-                    sender_age: 27,
-                    type: 'photo_request' as const,
-                    title: 'Photo Request',
-                    message: 'Sarah Johnson, 27 requests your photo'
-                },
-                {
-                    sender_name: 'Emma Wilson', 
-                    sender_age: 24,
-                    type: 'photo_shared' as const,
-                    title: 'Photos Shared',
-                    message: 'Emma Wilson, 24 has shared photos with you'
-                },
-                {
-                    sender_name: 'Michael Chen',
-                    sender_age: 29,
-                    type: 'video_call_request' as const,
-                    title: 'Video Call Request', 
-                    message: 'Michael Chen, 29 requests a video call'
-                }
-            ];
 
-            const currentUserId = await NotificationsService.getCurrentUserId();
-            
-            for (const notif of testNotifications) {
-                await NotificationsService.create({
-                    user_id: currentUserId,
-                    sender_id: currentUserId, // Using same user as sender for testing
-                    ...notif
-                });
-            }
-            
-            console.log('Created test notifications!');
-            refreshNotifications();
-        } catch (error) {
-            console.error('Error creating test notifications:', error);
-        }
-    };
 
     /**
     * Render header
@@ -114,13 +72,6 @@ const Notifications = () => {
                                 tintColor: soundEnabled ? COLORS.primary : COLORS.black
                             }]}
                         />
-                    </TouchableOpacity>
-                    {/* Temporary test button */}
-                    <TouchableOpacity
-                        onPress={createTestNotifications}
-                        style={styles.testButton}
-                    >
-                        <Text style={styles.testButtonText}>Test</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -336,18 +287,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         lineHeight: 24
     },
-    testButton: {
-        backgroundColor: COLORS.primary,
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 16,
-        marginLeft: 8
-    },
-    testButtonText: {
-        color: COLORS.white,
-        fontSize: 12,
-        fontFamily: 'bold'
-    }
+
 })
 
 export default Notifications
