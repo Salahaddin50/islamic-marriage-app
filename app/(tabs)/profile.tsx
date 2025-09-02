@@ -24,6 +24,8 @@ const Profile = () => {
   const refRBSheet = useRef<any>(null);
   const { navigate } = useNavigation<Nav>();
 
+  const [isPublicProfile, setIsPublicProfile] = useState(true);
+
   const renderHeader = () => {
     return (
       <TouchableOpacity style={styles.headerContainer}>
@@ -37,7 +39,23 @@ const Profile = () => {
             color: COLORS.greyscale900
           }]}>Profile</Text>
         </View>
-        <View />
+        <View style={styles.headerRight}>
+          <Text style={[styles.profileModeText, {
+            color: COLORS.greyscale900
+          }]}>
+            {isPublicProfile ? 'Public' : 'Private'}
+          </Text>
+          <Switch
+            value={isPublicProfile}
+            onValueChange={setIsPublicProfile}
+            trackColor={{ 
+              false: COLORS.grayscale400, 
+              true: COLORS.primary 
+            }}
+            thumbColor={isPublicProfile ? 'rgba(24,26,32,1.00)' : COLORS.white}
+            style={styles.profileSwitch}
+          />
+        </View>
       </TouchableOpacity>
     )
   }
@@ -153,22 +171,27 @@ const Profile = () => {
           name="Edit Profile"
           onPress={() => navigate("editprofile")}
         />
-        <SettingsItem
-          icon={icons.settings}
-          name="Settings"
-          onPress={() => navigate("settingshelpcenter")}
-        />
-        <SettingsItem
-          icon={icons.wallet2Outline}
-          name="Payment"
-          onPress={() => navigate("settingspayment")}
-        />
+        {/* Hidden sections - Settings, Payment, Security (can be re-enabled in future) */}
+        {false && (
+          <>
+            <SettingsItem
+              icon={icons.settings}
+              name="Settings"
+              onPress={() => navigate("settingshelpcenter")}
+            />
+            <SettingsItem
+              icon={icons.wallet2Outline}
+              name="Payment"
+              onPress={() => navigate("settingspayment")}
+            />
+            <SettingsItem
+              icon={icons.shieldOutline}
+              name="Security"
+              onPress={() => navigate("settingssecurity")}
+            />
+          </>
+        )}
         {/* Topup removed per request */}
-        <SettingsItem
-          icon={icons.shieldOutline}
-          name="Security"
-          onPress={() => navigate("settingssecurity")}
-        />
         <TouchableOpacity
           onPress={() => navigate("settingslanguage")}
           style={styles.settingsItemContainer}>
@@ -339,6 +362,19 @@ const styles = StyleSheet.create({
   headerLeft: {
     flexDirection: "row",
     alignItems: "center"
+  },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center"
+  },
+  profileModeText: {
+    fontSize: getResponsiveFontSize(16),
+    fontFamily: "semiBold",
+    color: COLORS.greyscale900,
+    marginRight: getResponsiveSpacing(8)
+  },
+  profileSwitch: {
+    transform: [{ scaleX: 0.9 }, { scaleY: 0.9 }]
   },
   logo: {
     height: isMobileWeb() ? 28 : 32,
