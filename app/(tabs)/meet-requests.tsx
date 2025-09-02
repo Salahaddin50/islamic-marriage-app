@@ -149,9 +149,9 @@ const MeetRequestsScreen = () => {
     })();
   }, []);
 
-  // Blinking effect runs while any approved row is within the ring window
+  // Blinking effect runs while any approved row is within the blink window
   useEffect(() => {
-    const anyInWindow = approved?.some(r => isWithinRingWindow(r.scheduled_at));
+    const anyInWindow = approved?.some(r => isWithinBlinkWindow(r.scheduled_at));
     if (!anyInWindow) {
       setBlinkOn(false);
       return;
@@ -346,7 +346,7 @@ const MeetRequestsScreen = () => {
   const buildAgoraWebHtml = (channelId: string, displayName: string) => {
     const safeChannel = (channelId || 'default').replace(/[^a-zA-Z0-9-_]/g, '');
     const safeName = (displayName || 'Guest').replace(/'/g, "\'");
-    return `<!DOCTYPE html><html><head><meta charset="utf-8"/><meta name=viewport content="width=device-width, initial-scale=1"/><style>html,body,#app{margin:0;padding:0;height:100%;width:100%;background:#000;overflow:hidden}#videos{position:relative;width:100%;height:100%}#local{position:absolute;right:12px;top:12px;width:160px;height:120px;border-radius:8px;overflow:hidden}#remote{position:absolute;left:0;top:0;right:0;bottom:0}</style><script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.18.0.js"></script></head><body><div id="app"><div id="videos"><div id="remote"></div><div id="local"></div></div></div><script>const appId='${AGORA_APP_ID}';const channel='${safeChannel}';const userName='${safeName}';let client,localTrack,localMic;async function start(){try{client=AgoraRTC.createClient({mode:'rtc',codec:'vp8'});client.on('user-published',async(user,mediaType)=>{await client.subscribe(user,mediaType);if(mediaType==='video'){const remoteTrack=user.videoTrack;remoteTrack.play('remote');}if(mediaType==='audio'){user.audioTrack.play();}});client.on('user-unpublished',(user)=>{});await client.join(appId,channel,null,null);localTrack=await AgoraRTC.createCameraVideoTrack();localMic=await AgoraRTC.createMicrophoneAudioTrack();localTrack.play('local');await client.publish([localTrack,localMic]);}catch(e){console.error(e);}}function cleanup(){try{if(localTrack){localTrack.stop();localTrack.close();}if(localMic){localMic.stop();localMic.close();}if(client){client.leave();}}catch(e){};}window.addEventListener('beforeunload',cleanup);start();</script></body></html>`;
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"/><meta name=viewport content="width=device-width, initial-scale=1"/><style>html,body,#app{margin:0;padding:0;height:100%;width:100%;background:#000;overflow:hidden}#videos{position:relative;width:100%;height:100%}#local{position:absolute;right:12px;top:12px;width:160px;height:120px;border-radius:8px;overflow:hidden}#remote{position:absolute;left:0;top:0;right:0;bottom:0}#status{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:white;font-family:Arial;text-align:center;padding:20px;background:rgba(0,0,0,0.8);border-radius:8px;max-width:80%;}</style><script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.18.0.js"></script></head><body><div id="app"><div id="videos"><div id="remote"></div><div id="local"></div></div><div id="status">Connecting...</div></div><script>const appId='${AGORA_APP_ID}';const channel='${safeChannel}';const userName='${safeName}';let client,localTrack,localMic;async function start(){const statusEl=document.getElementById('status');try{statusEl.textContent='Initializing...';client=AgoraRTC.createClient({mode:'rtc',codec:'vp8'});client.on('user-published',async(user,mediaType)=>{await client.subscribe(user,mediaType);if(mediaType==='video'){user.videoTrack.play('remote');}if(mediaType==='audio'){user.audioTrack.play();}statusEl.style.display='none';});statusEl.textContent='Joining call...';const uid=Math.floor(Math.random()*100000);await client.join(appId,channel,null,uid);statusEl.textContent='Starting camera...';localTrack=await AgoraRTC.createCameraVideoTrack();localMic=await AgoraRTC.createMicrophoneAudioTrack();localTrack.play('local');await client.publish([localTrack,localMic]);statusEl.style.display='none';}catch(e){console.error('Agora error:',e);if(e.message && e.message.includes('CAN_NOT_GET_GATEWAY_SERVER')){statusEl.innerHTML='<div style="color:#ff6b6b;line-height:1.4;">⚠️ Authentication Error<br/><br/>This Agora App ID requires a security certificate and token generation.<br/><br/>To enable video calls:<br/>• Set up a token server<br/>• Or disable the certificate in Agora Console<br/><br/><small>Contact your developer for assistance.</small></div>';}else{statusEl.innerHTML='<div style="color:#ff6b6b;">Call failed: '+e.message+'<br/><small>Please try again</small></div>';}}}function cleanup(){try{if(localTrack){localTrack.stop();localTrack.close();}if(localMic){localMic.stop();localMic.close();}if(client){client.leave();}}catch(e){}}window.addEventListener('beforeunload',cleanup);start();</script></body></html>`;
   };
 
   // Normalize any meeting link to meet.jit.si domain to avoid JaaS dev limits
@@ -411,6 +411,20 @@ const MeetRequestsScreen = () => {
       if (Number.isNaN(scheduledMs)) return false;
       const startWindow = scheduledMs - 60 * 60 * 1000; // 60 min before
       const endWindow = scheduledMs + 60 * 60 * 1000;   // 60 min after start
+      return nowTick >= startWindow && nowTick <= endWindow;
+    } catch {
+      return false;
+    }
+  };
+
+  // Helper: blink window = 60 minutes before until 5 minutes after start
+  const isWithinBlinkWindow = (scheduledAt: string | null): boolean => {
+    if (!scheduledAt) return false;
+    try {
+      const scheduledMs = new Date(scheduledAt).getTime();
+      if (Number.isNaN(scheduledMs)) return false;
+      const startWindow = scheduledMs - 60 * 60 * 1000; // 60 min before
+      const endWindow = scheduledMs + 5 * 60 * 1000;    // 5 min after start
       return nowTick >= startWindow && nowTick <= endWindow;
     } catch {
       return false;
@@ -504,7 +518,7 @@ const MeetRequestsScreen = () => {
       <View key={row.id} style={[
         styles.userContainer,
         idx % 2 !== 0 ? styles.oddBackground : null,
-        (isWithinRingWindow(scheduledAtISO || null)) ? { backgroundColor: blinkOn ? 'rgba(255,215,0,0.15)' : 'rgba(255,215,0,0.35)' } : null,
+        (isWithinBlinkWindow(scheduledAtISO || null)) ? { backgroundColor: blinkOn ? 'rgba(255,215,0,0.15)' : 'rgba(255,215,0,0.35)' } : null,
       ]}>
         <TouchableOpacity style={styles.userImageContainer} onPress={() => navigation.navigate('matchdetails' as never, { userId: otherUserId } as never)}>
           <Image source={other?.avatar ? (typeof other.avatar === 'string' ? { uri: other.avatar } : other.avatar) : images.maleSilhouette} contentFit='cover' style={styles.userImage} />
