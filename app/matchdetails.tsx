@@ -1309,7 +1309,7 @@ const MatchDetails = () => {
               <View style={styles.infoStepNumberContainer}>
                 <Text style={styles.infoStepNumber}>5</Text>
               </View>
-              <Text style={styles.infoStepText}>Join the meeting at the scheduled time (available 10 minutes before)</Text>
+              <Text style={styles.infoStepText}>Join the meeting at the scheduled time (available 60 minutes before)</Text>
             </View>
             
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>

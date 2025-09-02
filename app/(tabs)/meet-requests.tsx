@@ -476,6 +476,19 @@ const MeetRequestsScreen = () => {
     }
   };
 
+  // Helper: after ring window = later than 60 minutes after start
+  const isAfterRingWindow = (scheduledAt: string | null): boolean => {
+    if (!scheduledAt) return false;
+    try {
+      const scheduledMs = new Date(scheduledAt).getTime();
+      if (Number.isNaN(scheduledMs)) return false;
+      const endWindow = scheduledMs + 60 * 60 * 1000; // 60 min after start
+      return nowTick > endWindow;
+    } catch {
+      return false;
+    }
+  };
+
   // Helper: blink window = 60 minutes before until 5 minutes after start
   const isWithinBlinkWindow = (scheduledAt: string | null): boolean => {
     if (!scheduledAt) return false;
@@ -1000,11 +1013,13 @@ const MeetRequestsScreen = () => {
                     style={{ width: 24, height: 24, tintColor: COLORS.primary, marginRight: 12 }} 
                   />
                   <Text style={styles.infoText}>
-                    {selectedMeetRow && selectedMeetRow.scheduled_at ? 
-                      isWithinRingWindow(selectedMeetRow.scheduled_at) ? 
-                        "You can call now" : 
-                        "Video call is not yet available" 
-                      : ""}
+                    {selectedMeetRow && selectedMeetRow.scheduled_at ? (
+                      isWithinRingWindow(selectedMeetRow.scheduled_at)
+                        ? "You can call now"
+                        : isAfterRingWindow(selectedMeetRow.scheduled_at)
+                          ? "Video call window has ended. Please cancel this call request and send new request  from the profile's page"
+                          : "Video call is not yet available"
+                    ) : ""}
                   </Text>
                 </View>
               </View>
