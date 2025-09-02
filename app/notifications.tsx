@@ -5,7 +5,7 @@ import { COLORS, icons } from '@/constants';
 import { Image } from 'expo-image';
 import { ScrollView } from 'react-native-virtualized-view';
 import NotificationCard from '@/components/NotificationCard';
-import { useNavigation } from 'expo-router';
+import { useNavigation, router } from 'expo-router';
 import { NavigationProp } from '@react-navigation/native';
 import { useNotifications } from '@/src/contexts/NotificationContext';
 import { NotificationsService } from '@/src/services/notifications';
@@ -141,6 +141,43 @@ const Notifications = () => {
         </View>
     );
 
+    const getNavigationTarget = (type: string) => {
+        switch (type) {
+            case 'photo_request':
+            case 'photo_shared':
+            case 'interest_received':
+            case 'interest_accepted':
+                return '/(tabs)/interests';
+            case 'video_call_request':
+            case 'video_call_approved':
+            case 'meet_request_received':
+            case 'meet_request_accepted':
+                return '/(tabs)/meet-requests';
+            case 'whatsapp_request':
+            case 'whatsapp_shared':
+            case 'message_received':
+                return '/(tabs)/chats';
+            default:
+                return null;
+        }
+    };
+
+    const handleNotificationPress = (item: any) => {
+        if (!item.is_read) {
+            markAsRead(item.id);
+        }
+        // Navigate to the relevant tab based on notification type
+        const target = getNavigationTarget(item.type);
+        if (target) {
+            router.push(target);
+        }
+    };
+
+    const handleUserPress = (userId: string) => {
+        // Navigate to the sender's match details page
+        router.push(`/matchdetails?userId=${userId}`);
+    };
+
     const renderNotification = ({ item, index }: { item: any, index: number }) => (
         <NotificationCard
             title={item.title}
@@ -152,12 +189,11 @@ const Notifications = () => {
             })}
             type={item.type}
             isNew={!item.is_read}
-            onPress={() => {
-                if (!item.is_read) {
-                    markAsRead(item.id);
-                }
-            }}
+            senderId={item.sender_id}
+            senderName={item.sender_name}
+            onPress={() => handleNotificationPress(item)}
             onDelete={() => deleteNotification(item.id)}
+            onUserPress={handleUserPress}
         />
     );
 

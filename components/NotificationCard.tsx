@@ -11,8 +11,11 @@ type NotificationCardProps = {
   time: string;
   type: string;
   isNew: boolean;
+  senderId?: string;
+  senderName?: string;
   onPress?: () => void;
   onDelete?: () => void;
+  onUserPress?: (userId: string) => void;
 };
 
 const NotificationCard: React.FC<NotificationCardProps> = ({
@@ -22,8 +25,11 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
   time,
   type,
   isNew,
+  senderId,
+  senderName,
   onPress,
-  onDelete
+  onDelete,
+  onUserPress
 }) => {
   const getIcon = (type: NotificationCardProps['type']) => {
     switch (type) {
@@ -37,21 +43,18 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
         return icons.infoSquare2;
       case 'photo_request':
       case 'photo_shared':
-        return icons.gallery;
-      case 'video_call_request':
-      case 'video_call_approved':
-        return icons.videoCamera2;
-      case 'whatsapp_request':
-      case 'whatsapp_shared':
-        return icons.telephone;
       case 'interest_received':
       case 'interest_accepted':
-        return icons.heart;
+        return icons.heart2; // Match interests tab icon
+      case 'video_call_request':
+      case 'video_call_approved':
       case 'meet_request_received':
       case 'meet_request_accepted':
-        return icons.videoCamera2;
+        return icons.videoCamera2; // Match meet requests tab icon
+      case 'whatsapp_request':
+      case 'whatsapp_shared':
       case 'message_received':
-        return icons.message;
+        return icons.chat; // Match chats tab icon
       default:
         return icons.squareCheckbox2;
     }
@@ -135,9 +138,23 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
           )}
         </View>
       </View>
-      <Text style={[styles.description, {
-        color: COLORS.grayscale700
-      }]}>{description}</Text>
+      <View style={styles.descriptionContainer}>
+        {senderName && senderId && onUserPress ? (
+          <Text style={[styles.description, { color: COLORS.grayscale700 }]}>
+            <Text 
+              style={[styles.clickableName]}
+              onPress={() => onUserPress(senderId)}
+            >
+              {senderName}
+            </Text>
+            <Text>{description.replace(senderName, '')}</Text>
+          </Text>
+        ) : (
+          <Text style={[styles.description, {
+            color: COLORS.grayscale700
+          }]}>{description}</Text>
+        )}
+      </View>
     </TouchableOpacity>
   )
 };
@@ -185,25 +202,32 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end'
   },
   iconContainer: {
-    height: 50,
-    width: 50,
-    borderRadius: 25,
+    height: 36,
+    width: 36,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12
   },
   icon: {
-    height: 24,
-    width: 24
+    height: 18,
+    width: 18
   },
   textContainer: {
     flex: 1
   },
+  descriptionContainer: {
+    marginTop: 4
+  },
+  clickableName: {
+    color: COLORS.primary,
+    textDecorationLine: 'underline',
+    fontFamily: 'bold'
+  },
   title: {
     fontSize: 16,
     fontFamily: "bold",
-    color: COLORS.greyscale900,
-    marginBottom: 4
+    color: COLORS.greyscale900
   },
   date: {
     fontSize: 12,

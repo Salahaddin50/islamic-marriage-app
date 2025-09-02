@@ -77,21 +77,18 @@ const GlobalNotificationPopup: React.FC<GlobalNotificationPopupProps> = ({
     switch (type) {
       case 'photo_request':
       case 'photo_shared':
-        return icons.gallery;
-      case 'video_call_request':
-      case 'video_call_approved':
-        return icons.videoCamera2;
-      case 'whatsapp_request':
-      case 'whatsapp_shared':
-        return icons.telephone;
       case 'interest_received':
       case 'interest_accepted':
-        return icons.heart;
+        return icons.heart2; // Match interests tab icon
+      case 'video_call_request':
+      case 'video_call_approved':
       case 'meet_request_received':
       case 'meet_request_accepted':
-        return icons.videoCamera2;
+        return icons.videoCamera2; // Match meet requests tab icon
+      case 'whatsapp_request':
+      case 'whatsapp_shared':
       case 'message_received':
-        return icons.message;
+        return icons.chat; // Match chats tab icon
       default:
         return icons.notificationBell;
     }
