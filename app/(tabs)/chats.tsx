@@ -71,9 +71,16 @@ const Messages = () => {
 
   const sanitizePhone = (phoneCode?: string | null, mobile?: string | null): string | undefined => {
     if (!mobile) return undefined;
-    const raw = `${phoneCode || ''}${mobile}`;
-    const digits = raw.replace(/\D/g, '');
-    return digits.length > 6 ? digits : undefined;
+    const ccDigits = (phoneCode || '').replace(/\D/g, '');
+    let localDigits = (mobile || '').replace(/\D/g, '');
+    // If the local number already includes the country code, strip it
+    if (ccDigits && localDigits.startsWith(ccDigits)) {
+      localDigits = localDigits.slice(ccDigits.length);
+    }
+    // Remove any leading trunk zeros from the local number (e.g., 050... -> 50...)
+    localDigits = localDigits.replace(/^0+/, '');
+    const combined = `${ccDigits}${localDigits}`;
+    return combined.length > 6 ? combined : undefined;
   };
 
   const PROFILES_CACHE_KEY = 'hume_profiles_cache_v1';
