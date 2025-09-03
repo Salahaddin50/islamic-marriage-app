@@ -9,6 +9,7 @@ import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { router } from 'expo-router';
 import { Image } from 'expo-image';
 import HelpCenterItem from '@/components/HelpCenterItem';
+import { safeGoBack } from '../utils/responsive';
 
 interface KeywordItemProps {
     item: {
@@ -254,9 +255,9 @@ const SettingsHelpCenter = () => {
             <View style={styles.headerContainer}>
                 <View style={styles.headerLeft}>
                     <TouchableOpacity
-                        onPress={() => router.push('/(tabs)/profile')}>
+                        onPress={() => safeGoBack(navigation, router, '/(tabs)/profile')}>
                         <Image
-                            source={icons.back}
+                            source={icons.arrowBack}
                             contentFit='contain'
                             style={[styles.backIcon, {
                                 tintColor: COLORS.greyscale900

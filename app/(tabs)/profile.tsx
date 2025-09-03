@@ -76,11 +76,13 @@ const Profile = () => {
                   .eq('user_id', user.id);
               } catch {}
             }}
-            trackColor={{ 
-              false: COLORS.grayscale400, 
-              true: COLORS.primary 
+            trackColor={{
+              false: COLORS.grayscale400,
+              true: COLORS.primary
             }}
-            thumbColor={isPublicProfile ? 'rgba(24,26,32,1.00)' : COLORS.white}
+            thumbColor={COLORS.white} // Inactive thumb color
+            ios_backgroundColor={COLORS.grayscale400} // iOS track background for inactive state
+            activeThumbColor={'#000000'} // Explicitly black thumb when active
             style={styles.profileSwitch}
           />
         </View>

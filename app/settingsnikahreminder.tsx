@@ -5,6 +5,8 @@ import { router } from 'expo-router';
 import { Image } from 'expo-image';
 import { COLORS, icons, SIZES } from '../constants';
 import { TouchableOpacity } from 'react-native-gesture-handler';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { safeGoBack } from '../utils/responsive';
 
 const Section: React.FC<{ title: string } & React.PropsWithChildren> = ({ title, children }) => (
   <View style={styles.section}>
@@ -16,11 +18,12 @@ const Section: React.FC<{ title: string } & React.PropsWithChildren> = ({ title,
 );
 
 export default function SettingsNikahReminder() {
+  const navigation = useNavigation<NavigationProp<any>>();
   const renderHeader = () => (
     <View style={styles.headerContainer}>
       <View style={styles.headerLeft}>
-        <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
-          <Image source={icons.back} contentFit="contain" style={[styles.backIcon, { tintColor: COLORS.greyscale900 }]} />
+        <TouchableOpacity onPress={() => safeGoBack(navigation, router, '/(tabs)/profile')}>
+          <Image source={icons.arrowBack} contentFit="contain" style={[styles.backIcon, { tintColor: COLORS.greyscale900 }]} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>Reminder about Poligamy Sunnah</Text>
       </View>
