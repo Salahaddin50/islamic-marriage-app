@@ -20,6 +20,7 @@ import OrSeparator from '../../components/OrSeparator';
 import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '../../utils/responsive';
 import RegistrationService from '../services/registration.service';
 import { supabase } from '../config/supabase';
+import DesktopMobileNotice from '../../components/DesktopMobileNotice';
 
 // ================================
 // VALIDATION SCHEMA
@@ -271,6 +272,7 @@ const SimpleSignup: React.FC<Props> = ({ onGoogleSignup, onSignupSuccess }) => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardContainer}
       >
+        <DesktopMobileNotice />
         <Header showBackButton={true} />
         
         <ScrollView 

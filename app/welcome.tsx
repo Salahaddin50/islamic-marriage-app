@@ -12,6 +12,7 @@ import SocialButtonV2 from "../components/SocialButtonV2";
 import { useNavigation } from "expo-router";
 import { getResponsiveFontSize, getResponsiveSpacing, getResponsiveWidth, isMobileWeb } from "../utils/responsive";
 import { supabase } from "../src/config/supabase";
+import DesktopMobileNotice from "../components/DesktopMobileNotice";
 
 type Nav = {
     navigate: (value: string) => void
@@ -59,6 +60,7 @@ const Welcome = () => {
                 style={styles.container}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             >
+                <DesktopMobileNotice />
                 {/* Main Content */}
                 <View style={styles.contentContainer}>
                     {/* Logo Section */}

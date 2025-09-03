@@ -185,3 +185,47 @@ export const safeGoBack = (navigation: any, router: any, fallbackRoute: string =
     }
   }
 };
+
+// Web-only: strip __EXPO_ROUTER_key from URL without reload
+export const stripExpoRouterKeyFromUrl = () => {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+  try {
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('__EXPO_ROUTER_key')) {
+      url.searchParams.delete('__EXPO_ROUTER_key');
+      const clean = url.pathname + (url.search ? url.search : '') + url.hash;
+      window.history.replaceState(window.history.state, document.title, clean);
+    }
+  } catch {}
+};
+
+// Install listeners to keep URLs clean on web
+export const installUrlSanitizer = () => {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+  try {
+    // Run once on load
+    stripExpoRouterKeyFromUrl();
+
+    // Patch pushState/replaceState to sanitize after navigation
+    const originalPush = window.history.pushState;
+    const originalReplace = window.history.replaceState;
+
+    window.history.pushState = function (...args: any[]) {
+      // @ts-ignore
+      const res = originalPush.apply(this, args as any);
+      // Defer to next tick so location reflects new URL
+      setTimeout(stripExpoRouterKeyFromUrl, 0);
+      return res;
+    } as any;
+
+    window.history.replaceState = function (...args: any[]) {
+      // @ts-ignore
+      const res = originalReplace.apply(this, args as any);
+      setTimeout(stripExpoRouterKeyFromUrl, 0);
+      return res;
+    } as any;
+
+    // Also handle back/forward
+    window.addEventListener('popstate', () => setTimeout(stripExpoRouterKeyFromUrl, 0));
+  } catch {}
+};

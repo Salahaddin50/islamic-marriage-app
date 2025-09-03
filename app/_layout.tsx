@@ -15,6 +15,7 @@ import { NotificationProvider } from '@/src/contexts/NotificationContext';
 import GlobalNotificationPopup from '@/components/GlobalNotificationPopup';
 import { NotificationRecord } from '@/src/services/notifications';
 import React from 'react';
+import { installUrlSanitizer } from '@/utils/responsive';
 
 // Import CSS for web builds
 if (Platform.OS === 'web') {
@@ -73,6 +74,9 @@ export default function RootLayout() {
   // Handle web notification events - must be before asset loading useEffect
   useEffect(() => {
     if (Platform.OS === 'web') {
+      // Install URL sanitizer to remove __EXPO_ROUTER_key from URLs
+      installUrlSanitizer();
+
       const handleShowPopup = (event: CustomEvent) => {
         setCurrentNotification(event.detail);
         setShowPopup(true);

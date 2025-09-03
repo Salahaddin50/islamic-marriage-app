@@ -7,7 +7,7 @@ import { useNavigation, useLocalSearchParams, useRouter } from 'expo-router';
 import { NavigationProp } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { supabase } from '@/src/config/supabase';
-import { getResponsiveFontSize, getResponsiveSpacing, safeGoBack } from '@/utils/responsive';
+import { getResponsiveFontSize, getResponsiveSpacing, safeGoBack, isDesktopWeb } from '@/utils/responsive';
 import { DEFAULT_VIDEO_THUMBNAIL } from '@/constants/defaultThumbnails';
 import MatchDetailsSkeleton from '@/components/MatchDetailsSkeleton';
 import { InterestsService, InterestStatus } from '@/src/services/interests';
@@ -594,11 +594,14 @@ const MatchDetails = () => {
   const renderAutoSlider = () => {
     const sliderImages = getSliderImages();
     const canViewPhotos = interestStatus === 'accepted' || (interestStatus === 'pending' && !isInterestSender);
+    const desktop = Platform.OS === 'web' && isDesktopWeb();
+    const sliderMaxWidth = desktop ? Math.min(SIZES.width, 720) : SIZES.width;
+    const sidePadding = desktop ? Math.max((SIZES.width - sliderMaxWidth) / 2, 32) : 0;
     
     // AutoSlider debug (removed for cleaner output)
     
     return (
-      <View style={styles.autoSliderContainer}>
+      <View style={[styles.autoSliderContainer, desktop && { paddingHorizontal: sidePadding }]}>
         <ScrollView 
           horizontal 
           pagingEnabled 
@@ -618,7 +621,7 @@ const MatchDetails = () => {
                   openFullscreenImage(media.uri);
                 }
               }}
-              style={styles.autoSliderImageContainer}
+              style={[styles.autoSliderImageContainer, desktop && { width: sliderMaxWidth }]}
             >
               <Image
                 source={{ 
@@ -626,7 +629,7 @@ const MatchDetails = () => {
                     ? media.fallbackUri 
                     : media.uri 
                 }}
-                style={styles.autoSliderImage}
+                style={[styles.autoSliderImage, desktop && { width: sliderMaxWidth }]}
                 blurRadius={!canViewPhotos && media.type === 'photo' && media.id !== 'silhouette' ? 15 : 0}
                 contentFit="cover"
                 contentPosition="top"

@@ -1,6 +1,8 @@
 import { StyleSheet } from 'react-native';
 import { COLORS, FONTS, SIZES } from '../constants';
 
+const isDesktop = SIZES.width > 1024;
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -10,16 +12,16 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     illustration: {
-        height: SIZES.width * 1.1,
-        width: SIZES.width * 1.1,
-        position: "absolute",
-        bottom: 360
+        height: isDesktop ? Math.min(SIZES.width * 0.5, 520) : SIZES.width * 1.1,
+        width: isDesktop ? Math.min(SIZES.width * 0.5, 520) : SIZES.width * 1.1,
+        position: 'absolute',
+        bottom: isDesktop ? 280 : 360,
     },
     ornament: {
-        position: "absolute",
-        bottom: 372,
+        position: 'absolute',
+        bottom: isDesktop ? 300 : 372,
         zIndex: -99,
-        width: SIZES.width * 0.7
+        width: isDesktop ? Math.min(SIZES.width * 0.3, 360) : SIZES.width * 0.7,
     },
     titleContainer: {
         marginVertical: 18,
@@ -28,19 +30,22 @@ const styles = StyleSheet.create({
     title: {
         ...FONTS.h3,
         color: COLORS.black,
-        textAlign: "center",
+        textAlign: 'center',
     },
     subTitle: {
         ...FONTS.h3,
         color: COLORS.primary,
-        textAlign: "center",
+        textAlign: 'center',
         marginTop: 8,
     },
     description: {
         ...FONTS.body3,
         color: COLORS.black,
         textAlign: 'center',
-        marginBottom: 16
+        marginBottom: 16,
+        maxWidth: isDesktop ? 640 : undefined,
+        alignSelf: 'center',
+        paddingHorizontal: isDesktop ? 24 : 0,
     },
     dotsContainer: {
         marginBottom: 20,
@@ -52,20 +57,26 @@ const styles = StyleSheet.create({
         padding: 22,
         borderTopLeftRadius: SIZES.radius,
         borderTopRightRadius: SIZES.radius,
-        height: 360,
+        height: isDesktop ? 300 : 360,
+        width: '100%',
+        maxWidth: isDesktop ? 720 : undefined,
+        alignSelf: 'center',
+        backgroundColor: 'transparent',
     },
     nextButton: {
-        width: SIZES.width - 44,
+        width: isDesktop ? 400 : SIZES.width - 44,
+        alignSelf: 'center',
         marginBottom: SIZES.padding,
         backgroundColor: COLORS.primary,
         borderColor: COLORS.primary,
-        marginTop: 22
+        marginTop: 22,
     },
     skipButton: {
-        width: SIZES.width - 44,
+        width: isDesktop ? 400 : SIZES.width - 44,
+        alignSelf: 'center',
         marginBottom: SIZES.padding,
         backgroundColor: 'transparent',
-        borderColor: COLORS.primary
+        borderColor: COLORS.primary,
     },
 });
 

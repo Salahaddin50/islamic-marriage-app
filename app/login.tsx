@@ -20,6 +20,7 @@ import OrSeparator from '../components/OrSeparator';
 import { useNavigation, useRouter, router } from 'expo-router';
 import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '../utils/responsive';
 import * as SecureStore from 'expo-secure-store';
+import DesktopMobileNotice from '../components/DesktopMobileNotice';
 
 const isTestMode = true;
 
@@ -172,6 +173,7 @@ const Login = () => {
                 style={styles.container}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             >
+                <DesktopMobileNotice />
                 <Header title="" showBackButton={false} />
                 <ScrollView 
                     showsVerticalScrollIndicator={false}

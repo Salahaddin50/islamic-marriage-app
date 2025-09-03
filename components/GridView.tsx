@@ -28,6 +28,7 @@ interface GridViewProps {
   maxToRenderPerBatch?: number;
   windowSize?: number;
   removeClippedSubviews?: boolean;
+  numColumns?: number;
 }
 
 const GridView: React.FC<GridViewProps> = ({ 
@@ -38,13 +39,15 @@ const GridView: React.FC<GridViewProps> = ({
   initialNumToRender,
   maxToRenderPerBatch,
   windowSize,
-  removeClippedSubviews
+  removeClippedSubviews,
+  numColumns = 2,
 }) => {
   return (
     <FlatList
+      key={`grid-${numColumns}`}
       data={data}
       keyExtractor={(item) => item.id}
-      numColumns={2}
+      numColumns={numColumns}
       initialNumToRender={initialNumToRender}
       maxToRenderPerBatch={maxToRenderPerBatch}
       windowSize={windowSize}
@@ -79,12 +82,10 @@ const GridView: React.FC<GridViewProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 16,
     paddingHorizontal: 16,
-    backgroundColor: COLORS.white
   },
 });
 
-export default memo(GridView);
+export default GridView;
 
 

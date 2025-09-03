@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, Fla
 import React, { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, icons, images, SIZES } from '@/constants';
-import { getResponsiveWidth, getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '@/utils/responsive';
+import { getResponsiveWidth, getResponsiveFontSize, getResponsiveSpacing, isMobileWeb, isDesktopWeb } from '@/utils/responsive';
 import { useNavigation, useRouter } from 'expo-router';
 import { NavigationProp, useFocusEffect } from '@react-navigation/native';
 import { menbers } from '@/data';
@@ -20,6 +20,7 @@ import { InterestsService, InterestStatus } from '@/src/services/interests';
 import { FlatGrid } from 'react-native-super-grid';
 import { imageCache } from '@/utils/imageCache';
 import { useNotifications } from '@/src/contexts/NotificationContext';
+import DesktopMobileNotice from '@/components/DesktopMobileNotice';
 
 // Cached profile image to prevent reloading
 let cachedProfileImageUrl: string | null = null;
@@ -322,10 +323,14 @@ const HomeScreen = () => {
   const GALLERY_SIDE_GAP = 16; // Side gaps for gallery view centering
   const GALLERY_CARD_MARGIN = 12; // Vertical margin between gallery cards
   
-  // Grid view dimensions (matching skeleton)
+  // Determine desktop columns
+  const desktopColumns = isDesktopWeb() ? 4 : 2;
+  const isDesktop = isDesktopWeb();
+  
+  // Grid view dimensions (matching skeleton) - adjust for desktop columns
   const gridAvailableWidth = windowWidth - (CONTAINER_PADDING * 2);
-  const gridCardWidth = Math.floor(gridAvailableWidth * 0.48);
   const gridSpacing = Math.floor(gridAvailableWidth * 0.04);
+  const gridCardWidth = Math.floor((gridAvailableWidth - gridSpacing * (desktopColumns - 1)) / desktopColumns);
   const gridCardHeight = 220;
 
   // Gallery view dimensions with proper centering
@@ -1235,7 +1240,7 @@ const HomeScreen = () => {
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setIsGalleryView(!isGalleryView)}
-            style={styles.galleryButton}>
+            style={[styles.galleryButton, isDesktopWeb() && { display: 'none' }]}>
             {isGalleryView ? (
               // Big card view: single rounded rectangle
               <View style={styles.gridIcon}>
@@ -1778,10 +1783,11 @@ const HomeScreen = () => {
 
               return (
     <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
-      <View style={[styles.container, { backgroundColor: COLORS.white }]}>
-        {renderHeader()}
+      <View style={[styles.container, { backgroundColor: COLORS.white }]}> 
+        {renderHeader()} 
+        <DesktopMobileNotice />
         <View style={{ flex: 1 }}>
-        {isGalleryView ? (
+        {isGalleryView && !isDesktop ? (
           <GalleryView
             data={mappedData}
             cardWidth={galleryCardWidth}
@@ -1808,6 +1814,7 @@ const HomeScreen = () => {
             cardWidth={gridCardWidth}
             cardHeight={gridCardHeight}
             spacing={gridSpacing}
+            numColumns={desktopColumns}
             initialNumToRender={4}
             maxToRenderPerBatch={4}
             windowSize={3}
