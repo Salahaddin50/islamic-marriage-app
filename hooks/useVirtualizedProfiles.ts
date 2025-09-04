@@ -57,19 +57,13 @@ export const useVirtualizedProfiles = (options: UseVirtualizedProfilesOptions = 
       const { data: { user: me } } = await supabase.auth.getUser();
       if (!me) return { pendingIncoming: new Set(), approved: new Set(), loadTime: now };
 
-      const [incomingPending, approvedList] = await Promise.all([
-        InterestsService.listIncoming({ limit: 100, offset: 0 }),
-        InterestsService.listApproved({ limit: 100, offset: 0 }),
-      ]);
-
-      const pendingIncoming = new Set(incomingPending.map(r => r.sender_id));
-      const approved = new Set();
-      approvedList.forEach(r => {
-        if (r.sender_id === me.id) approved.add(r.receiver_id);
-        else if (r.receiver_id === me.id) approved.add(r.sender_id);
-      });
-
-      const result = { pendingIncoming, approved, loadTime: now };
+      // Use optimized batch loading
+      const interests = await InterestsService.loadAllInterestsForUser();
+      const result = { 
+        pendingIncoming: interests.pendingIncoming, 
+        approved: interests.approved, 
+        loadTime: now 
+      };
       interestCache.current = result;
       return result;
     } catch {

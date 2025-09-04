@@ -739,13 +739,13 @@ const HomeScreen = () => {
       const start = isLoadMore ? (page + 1) * PAGE_SIZE : 0;
       const end = start + PAGE_SIZE - 1;
 
+      // Optimized query with computed age and better field selection
       let query = supabase
         .from('user_profiles')
         .select(`
           id,
           user_id,
           first_name,
-          last_name,
           date_of_birth,
           height_cm,
           weight_kg,
@@ -753,9 +753,9 @@ const HomeScreen = () => {
           country,
           gender,
           profile_picture_url,
-          islamic_questionnaire,
-          is_public
+          islamic_questionnaire
         `)
+        .eq('is_public', true) // Apply early for better index usage
         .order('created_at', { ascending: false })
         .range(start, end);
 
@@ -763,9 +763,6 @@ const HomeScreen = () => {
       if (currentUser?.id) {
         query = query.neq('user_id', currentUser.id);
       }
-
-      // Hide private profiles from the home feed
-      query = query.eq('is_public', true);
 
       // Note: We'll calculate age on the client side since age column might be null
 
@@ -914,80 +911,74 @@ const HomeScreen = () => {
         }
       });
 
-      // Build a fallback map of profile picture URLs from media_references for users
-      // who don't have profile_picture_url set in user_profiles
+      // Optimized fallback for profile pictures - only query if needed
       let userIdToProfilePic: Record<string, string> = {};
       if (profilesData && profilesData.length > 0) {
-        try {
-          const missingUserIds = profilesData
-            .filter((p: any) => !p.profile_picture_url)
-            .map((p: any) => p.user_id);
+        const missingUserIds = profilesData
+          .filter((p: any) => !p.profile_picture_url)
+          .map((p: any) => p.user_id);
 
-          if (missingUserIds.length > 0) {
+        if (missingUserIds.length > 0) {
+          try {
+            // More efficient query with only essential fields
             const { data: mediaRows } = await supabase
               .from('media_references')
-              .select('user_id, do_spaces_cdn_url, do_spaces_url, external_url, is_profile_picture, media_type')
+              .select('user_id, do_spaces_cdn_url, do_spaces_url, external_url')
               .in('user_id', missingUserIds)
               .eq('is_profile_picture', true)
-              .eq('media_type', 'photo');
+              .eq('media_type', 'photo')
+              .limit(missingUserIds.length); // Limit to exact number needed
 
-            if (mediaRows && mediaRows.length > 0) {
-              mediaRows.forEach((row: any) => {
-                const url = row.do_spaces_cdn_url || row.do_spaces_url || row.external_url;
-                if (url) {
-                  userIdToProfilePic[row.user_id] = url;
-                }
-              });
-            }
+            mediaRows?.forEach((row: any) => {
+              const url = row.do_spaces_cdn_url || row.do_spaces_url || row.external_url;
+              if (url) {
+                userIdToProfilePic[row.user_id] = url;
+              }
+            });
+          } catch (e) {
+            // Silent error handling for media references
           }
-        } catch (e) {
-          // Silent error handling for media references
         }
       }
 
       if (profilesData && profilesData.length > 0) {
-        // Preload interests to compute media visibility
+        // Optimized batch loading for interests (single query instead of 3)
         let pendingIncomingFrom: Set<string> = new Set();
         let approvedWith: Set<string> = new Set();
         try {
-          const { data: { user: me } } = await supabase.auth.getUser();
-          if (me) {
-            const [outgoingPending, incomingPending, approvedList] = await Promise.all([
-              InterestsService.listOutgoing(),
-              InterestsService.listIncoming(),
-              InterestsService.listApproved(),
-            ]);
-            // Incoming pending interests = other users who sent to me → their photos should be open
-            incomingPending.forEach(r => pendingIncomingFrom.add(r.sender_id));
-            // Approved interests → photos open both ways
-            approvedList.forEach(r => {
-              if (r.sender_id === me.id) approvedWith.add(r.receiver_id);
-              else if (r.receiver_id === me.id) approvedWith.add(r.sender_id);
-            });
-          }
-        } catch {}
+          const interests = await InterestsService.loadAllInterestsForUser();
+          pendingIncomingFrom = interests.pendingIncoming;
+          approvedWith = interests.approved;
+        } catch (error) {
+          console.error('Failed to load interests:', error);
+        }
+
+        // Pre-calculate current date for age calculations (performance optimization)
+        const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth();
+        const currentDate = new Date().getDate();
 
         const usersWithMedia = profilesData.map((profile) => {
-          // Extra safety: never render private profiles on home
-          if ((profile as any).is_public === false) {
+          // Optimized age calculation using pre-calculated values
+          const birthDate = new Date(profile.date_of_birth);
+          const birthYear = birthDate.getFullYear();
+          const birthMonth = birthDate.getMonth();
+          const birthDay = birthDate.getDate();
+          
+          const age = currentYear - birthYear - 
+                     ((currentMonth < birthMonth || 
+                      (currentMonth === birthMonth && currentDate < birthDay)) ? 1 : 0);
+
+          // Apply age filter early for performance
+          if (shouldApplyFilters && !isDefaultAge && (age < ageRange[0] || age > ageRange[1])) {
             return null;
           }
-          // Calculate age from date_of_birth
-          const birthDate = new Date(profile.date_of_birth);
-          const today = new Date();
-          const age = today.getFullYear() - birthDate.getFullYear() - 
-                     (today.getMonth() < birthDate.getMonth() || 
-                      (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate()) ? 1 : 0);
 
-          // Apply age filter only when non-default
-          if (shouldApplyFilters && ageRange[0] && ageRange[1] && ageRange[0] > 0 && ageRange[1] > 0 && !isDefaultAge && (age < ageRange[0] || age > ageRange[1])) {
-            return null; // Will be filtered out
-          }
-
-          // Use profile_picture_url from user_profiles, or fallback to media_references map
+          // Optimized image URL selection
           const imageUrl = (profile as any).profile_picture_url || userIdToProfilePic[(profile as any).user_id];
 
-          const isFemale = (profile as any).gender === 'female' || (profile as any).gender === 'Female';
+          // Simplified gender check
+          const isFemale = (profile as any).gender?.toLowerCase() === 'female';
 
           const processedProfile = {
             id: profile.id,

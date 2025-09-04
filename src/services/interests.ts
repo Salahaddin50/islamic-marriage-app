@@ -190,6 +190,65 @@ export const InterestsService = {
       .delete()
       .eq('id', interestId);
     if (error) throw error;
+  },
+
+  // Optimized batch loading for home screen performance
+  async loadAllInterestsForUser(): Promise<{
+    pendingIncoming: Set<string>;
+    pendingOutgoing: Set<string>;
+    approved: Set<string>;
+  }> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return {
+        pendingIncoming: new Set(),
+        pendingOutgoing: new Set(),
+        approved: new Set()
+      };
+    }
+
+    try {
+      // Single query to get all interests involving the current user
+      const { data: interests, error } = await supabase
+        .from('interests')
+        .select('sender_id, receiver_id, status')
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .limit(500); // Reasonable limit for performance
+
+      if (error) throw error;
+
+      const pendingIncoming = new Set<string>();
+      const pendingOutgoing = new Set<string>();
+      const approved = new Set<string>();
+
+      interests?.forEach(interest => {
+        const isUserSender = interest.sender_id === user.id;
+        const otherUserId = isUserSender ? interest.receiver_id : interest.sender_id;
+
+        switch (interest.status) {
+          case 'pending':
+            if (isUserSender) {
+              pendingOutgoing.add(otherUserId);
+            } else {
+              pendingIncoming.add(otherUserId);
+            }
+            break;
+          case 'accepted':
+            approved.add(otherUserId);
+            break;
+          // 'rejected' interests are ignored for home screen purposes
+        }
+      });
+
+      return { pendingIncoming, pendingOutgoing, approved };
+    } catch (error) {
+      console.error('Failed to load interests batch:', error);
+      return {
+        pendingIncoming: new Set(),
+        pendingOutgoing: new Set(),
+        approved: new Set()
+      };
+    }
   }
 };
 

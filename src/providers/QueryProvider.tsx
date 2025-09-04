@@ -9,6 +9,7 @@ import React from 'react';
 import { QueryClient, QueryClientProvider, focusManager, keepPreviousData } from '@tanstack/react-query';
 import { AppState, Platform } from 'react-native';
 import { CONFIG } from '../config';
+import { queryClient as optimizedQueryClient } from '../config/queryClient';
 
 // ================================
 // QUERY CLIENT CONFIGURATION
@@ -125,7 +126,7 @@ function setupFocusManager() {
 // QUERY CLIENT INSTANCE
 // ================================
 
-const queryClient = createQueryClient();
+const queryClient = optimizedQueryClient;
 
 // ================================
 // ERROR BOUNDARY FOR QUERIES
