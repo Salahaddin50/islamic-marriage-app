@@ -316,9 +316,11 @@ const HomeScreen = () => {
   const [oppositeGender, setOppositeGender] = useState<string | null>(null);
   const [isGalleryView, setIsGalleryView] = useState(false);
   const [crownColor, setCrownColor] = useState<string>('#666666');
+  const [currentPackage, setCurrentPackage] = useState<string | null>(null);
   const [isMale, setIsMale] = useState<boolean | null>(null);
   const { isLoading: profileLoading } = useProfilePicture(refreshTrigger);
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const refCrownSheet = useRef<any>(null);
   
   // Professional layout system with proper spacing
   const CONTAINER_PADDING = 16; // Base container padding
@@ -1211,8 +1213,10 @@ const HomeScreen = () => {
           golden_premium: '#B8860B',
         };
         setCrownColor(colors[currentPackage] || '#666666');
+        setCurrentPackage(currentPackage);
       } else {
         setCrownColor('#666666');
+        setCurrentPackage(null);
       }
     } catch (e) {
       console.log('Error loading crown color:', e);
@@ -1292,7 +1296,7 @@ const HomeScreen = () => {
           {/* Premium Crown Icon - links to membership packages (male only) */}
           {isMale && (
             <TouchableOpacity
-              onPress={() => navigation.navigate('membership' as never)}
+              onPress={() => refCrownSheet.current?.open()}
               style={styles.notifButton}
             >
               <Image
@@ -2362,6 +2366,63 @@ const HomeScreen = () => {
             />
           </View>
         </RBSheet>
+
+        {/* Crown Menu Bottom Sheet */}
+        <RBSheet
+          ref={refCrownSheet}
+          closeOnPressMask={true}
+          height={120}
+          customStyles={{
+            wrapper: {
+              backgroundColor: "rgba(0,0,0,0.5)",
+            },
+            draggableIcon: {
+              backgroundColor: COLORS.grayscale200,
+              height: 4
+            },
+            container: {
+              borderTopRightRadius: 32,
+              borderTopLeftRadius: 32,
+              height: 120,
+              backgroundColor: COLORS.white
+            }
+          }}
+        >
+          <View style={styles.crownMenuContainer}>
+            <View style={styles.crownMenuContent}>
+              <Image
+                source={icons.crown2}
+                resizeMode='contain'
+                style={[styles.crownMenuIcon, { tintColor: crownColor }]}
+              />
+              <Text style={styles.crownMenuPackage}>
+                {currentPackage ? (
+                  currentPackage === 'premium' ? 'Premium' : 
+                  currentPackage === 'vip_premium' ? 'VIP Premium' : 
+                  currentPackage === 'golden_premium' ? 'Golden Premium' : 'Premium'
+                ) : 'No Package'}
+              </Text>
+            </View>
+            
+            <TouchableOpacity
+              onPress={() => {
+                if (currentPackage !== 'golden_premium') {
+                  refCrownSheet.current?.close();
+                  navigation.navigate('membership' as never);
+                }
+              }}
+              disabled={currentPackage === 'golden_premium'}
+              style={styles.upgradeTextButton}
+            >
+              <Text style={[
+                styles.upgradeText,
+                currentPackage === 'golden_premium' && styles.upgradeTextDisabled
+              ]}>
+                {currentPackage === 'golden_premium' ? 'Max Level' : 'Upgrade'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </RBSheet>
       </View>
     </SafeAreaView>
   )
@@ -2796,6 +2857,39 @@ const styles = StyleSheet.create({
   },
   confirmButton: {
     backgroundColor: COLORS.primary,
+  },
+  // Crown Menu Styles
+  crownMenuContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  crownMenuContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  crownMenuIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 12,
+  },
+  crownMenuPackage: {
+    fontSize: 18,
+    fontFamily: 'semiBold',
+    color: COLORS.greyscale900,
+  },
+  upgradeTextButton: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  upgradeText: {
+    fontSize: 16,
+    fontFamily: 'semiBold',
+    color: COLORS.primary,
+    textAlign: 'center',
+  },
+  upgradeTextDisabled: {
+    color: COLORS.grayscale400,
   },
 })
 
