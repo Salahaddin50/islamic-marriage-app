@@ -5,6 +5,7 @@ import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import { COLORS, SIZES, icons } from '../constants';
 import { Image } from 'expo-image';
 import Header from '../components/Header';
+import Button from '../components/Button';
 import { Octicons } from "@expo/vector-icons";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useNavigation, useFocusEffect } from 'expo-router';
@@ -500,7 +501,7 @@ const Membership = () => {
     );
 
     const PackagesTab = () => (
-        <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+        <ScrollView style={styles.tabContent} contentContainerStyle={styles.tabContentContainer} showsVerticalScrollIndicator={false}>
             <View style={styles.tabHeader}>
                 <Text style={[styles.tabTitle, { color: COLORS.greyscale900 }] }>
                     Choose Your Package
@@ -511,21 +512,20 @@ const Membership = () => {
             </View>
             {packages.map(renderPackage)}
             {(currentFromPayments === 'vip_premium' || currentFromPayments === 'golden_premium') && (
-                <TouchableOpacity onPress={openSupport} style={styles.supportInlineButton} activeOpacity={0.9}>
-                    <MaterialCommunityIcons name="whatsapp" size={18} color={COLORS.white} />
-                    <Text style={styles.supportInlineText}>Get Full Support</Text>
-                </TouchableOpacity>
+                <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
+                    <Button title="Get Full Support" filled onPress={openSupport} style={styles.bigButtonPurple} />
+                </View>
             )}
         </ScrollView>
     );
 
     const PaymentRecordTab = () => (
-        <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+        <ScrollView style={styles.tabContent} contentContainerStyle={styles.tabContentContainer} showsVerticalScrollIndicator={false}>
             <View style={styles.tabHeader}>
-                <Text style={[styles.tabTitle, { color: COLORS.greyscale900 }]}>
+                <Text style={[styles.tabTitle, { color: COLORS.greyscale900 }] }>
                     Payment History
                 </Text>
-                <Text style={[styles.tabSubtitle, { color: COLORS.grayscale700 }]}>
+                <Text style={[styles.tabSubtitle, { color: COLORS.grayscale700 }] }>
                     Your transaction records
                 </Text>
             </View>
@@ -533,7 +533,7 @@ const Membership = () => {
                 paymentRecords.map(renderPaymentRecord)
             ) : (
                 <View style={styles.emptyState}>
-                    <Text style={[styles.emptyText, { color: COLORS.grayscale700 }]}>
+                    <Text style={[styles.emptyText, { color: COLORS.grayscale700 }] }>
                         No payment records found
                     </Text>
                 </View>
@@ -572,6 +572,8 @@ const Membership = () => {
 
                 {/* Floating action button for payment */}
                 {index === 0 && selectedPackage && (() => {
+                    // If any package is pending, do not allow upgrades/payments
+                    if (pendingPackageTypes.size > 0) return null;
                     const baselinePrice = getBaselinePrice();
                     const hasCompletedForSelected = paymentRecords.some(r => r.status === 'completed' && (
                         (Array.isArray(r.paymentDetails) && r.paymentDetails.some((ev: any) => ev?.target_package === selectedPackage.id)) || r.packageType === selectedPackage.id
@@ -584,13 +586,9 @@ const Membership = () => {
                     const amount = isUpgrade ? (selectedPackage.price - baselinePrice) : selectedPackage.price;
                     const label = isUpgrade ? `Pay the difference $${amount}` : `Proceed for Payment $${amount}`;
                     return (
-                        <TouchableOpacity
-                            onPress={() => processPackagePurchase(selectedPackage, amount)}
-                            style={styles.fabButton}
-                            activeOpacity={0.9}
-                        >
-                            <Text style={styles.fabButtonText}>{label}</Text>
-                        </TouchableOpacity>
+                        <View style={styles.fabButtonWrapper}>
+                            <Button title={label} filled onPress={() => processPackagePurchase(selectedPackage, amount)} style={styles.bigButton} />
+                        </View>
                     );
                 })()}
 
@@ -652,6 +650,9 @@ const styles = StyleSheet.create({
     tabContent: {
         flex: 1,
         backgroundColor: COLORS.white,
+    },
+    tabContentContainer: {
+        paddingBottom: getResponsiveSpacing(180), // extra space for floating FAB and safe areas
     },
     tabHeader: {
         padding: getResponsiveSpacing(8),
@@ -788,27 +789,15 @@ const styles = StyleSheet.create({
         color: COLORS.greyScale800,
         flex: 1,
     },
-    // Floating action button
-    fabButton: {
+    fabButtonWrapper: {
         position: 'absolute',
-        left: 16, // matchdetails
+        left: 16,
         right: 16,
-        bottom: 24, // matchdetails
-        backgroundColor: COLORS.primary, // matchdetails primary
-        height: 42, // matchdetails
-        borderRadius: 10, // matchdetails
-        alignItems: 'center',
-        justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.18,
-        shadowRadius: 3,
-        elevation: 5,
+        bottom: 24,
     },
-    fabButtonText: {
-        color: COLORS.white,
-        fontSize: 16,
-        fontFamily: 'bold',
+    bigButton: {
+        height: 52,
+        borderRadius: 25,
     },
     supportInlineButton: {
         marginTop: 12,
@@ -825,6 +814,12 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.18,
         shadowRadius: 3,
         elevation: 5,
+    },
+    bigButtonPurple: {
+        height: 52,
+        borderRadius: 25,
+        backgroundColor: '#6A1B9A',
+        borderColor: '#6A1B9A',
     },
     supportInlineText: {
         color: COLORS.white,

@@ -25,6 +25,7 @@ const Profile = () => {
   const { navigate } = useNavigation<Nav>();
 
   const [isPublicProfile, setIsPublicProfile] = useState(true);
+  const [isMale, setIsMale] = useState<boolean | null>(null);
 
   // Load current visibility from database
   useEffect(() => {
@@ -34,11 +35,14 @@ const Profile = () => {
         if (!user) return;
         const { data } = await supabase
           .from('user_profiles')
-          .select('is_public')
+          .select('is_public, gender')
           .eq('user_id', user.id)
           .maybeSingle();
         if (typeof data?.is_public === 'boolean') {
           setIsPublicProfile(data.is_public);
+        }
+        if (data?.gender) {
+          setIsMale(String(data.gender).toLowerCase() === 'male');
         }
       } catch {}
     })();
@@ -181,11 +185,13 @@ const Profile = () => {
 
     return (
       <View style={styles.settingsContainer}>
-        <SettingsItem
-          icon={icons.crown2}
-          name="My Membership"
-          onPress={() => navigate("membership")}
-        />
+        {isMale && (
+          <SettingsItem
+            icon={icons.crown2}
+            name="My Membership"
+            onPress={() => navigate("membership")}
+          />
+        )}
         <SettingsItem
           icon={icons.image}
           name="My Photos and Videos"

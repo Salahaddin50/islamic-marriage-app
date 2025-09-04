@@ -316,6 +316,7 @@ const HomeScreen = () => {
   const [oppositeGender, setOppositeGender] = useState<string | null>(null);
   const [isGalleryView, setIsGalleryView] = useState(false);
   const [crownColor, setCrownColor] = useState<string>('#666666');
+  const [isMale, setIsMale] = useState<boolean | null>(null);
   const { isLoading: profileLoading } = useProfilePicture(refreshTrigger);
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   
@@ -1150,35 +1151,66 @@ const HomeScreen = () => {
     fetchUserProfiles(false, false, false);
   };
 
-  // Load user crown color based on package
+  // Load user crown color based on package (matching membership page logic)
   const loadCrownColor = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Fetch only the active package type without relational joins
-      const { data: packageData, error } = await supabase
-        .from('user_packages')
-        .select('package_type')
+      // Fetch payment records to determine current package (same logic as membership page)
+      const { data: paymentRecords, error } = await supabase
+        .from('payment_records')
+        .select('package_type, status, payment_details, created_at')
         .eq('user_id', user.id)
-        .eq('is_active', true)
-        .single();
+        .order('created_at', { ascending: false });
 
       if (error) {
-        // If table not found or policies not set, fallback to default
         console.log('loadCrownColor error:', error.message);
         setCrownColor('#666666');
         return;
       }
 
-      if (packageData?.package_type) {
+      // Find the latest completed payment (matching membership page logic)
+      let currentPackage: string | null = null;
+      if (paymentRecords && paymentRecords.length > 0) {
+        let latestTarget = { pkg: null as string | null, ts: 0 };
+        
+        for (const record of paymentRecords) {
+          if (record.status === 'completed') {
+            const ts = new Date(record.created_at).getTime();
+            let target: string | null = null;
+            
+            // Check payment_details for target_package
+            if (Array.isArray(record.payment_details)) {
+              for (const event of record.payment_details) {
+                if (event?.target_package) {
+                  target = event.target_package;
+                  break;
+                }
+              }
+            }
+            
+            // Fallback to package_type
+            if (!target) {
+              target = record.package_type;
+            }
+            
+            if (target && ts >= latestTarget.ts) {
+              latestTarget = { pkg: target, ts };
+            }
+          }
+        }
+        currentPackage = latestTarget.pkg;
+      }
+
+      if (currentPackage) {
         // Map to app colors (Premium Purple, VIP Green, Golden Dark Gold)
         const colors: Record<string, string> = {
           premium: '#6A1B9A',
           vip_premium: '#34A853',
           golden_premium: '#B8860B',
         };
-        setCrownColor(colors[packageData.package_type] || '#666666');
+        setCrownColor(colors[currentPackage] || '#666666');
       } else {
         setCrownColor('#666666');
       }
@@ -1198,7 +1230,7 @@ const HomeScreen = () => {
         try {
           const { data: profile, error } = await supabase
             .from('user_profiles')
-            .select('first_name,last_name,profile_picture_url')
+            .select('first_name,last_name,profile_picture_url,gender')
             .eq('user_id', user.id)
             .maybeSingle();
           
@@ -1213,6 +1245,11 @@ const HomeScreen = () => {
           setDisplayName(profile.first_name);
         } else if (user.email) {
           setDisplayName(user.email.split('@')[0]);
+        }
+        // Set gender flag for crown visibility
+        if (profile?.gender) {
+          const g = String(profile.gender).toLowerCase();
+          setIsMale(g === 'male');
         }
         } catch (profileError) {
           console.log('Error in profile data fetch:', profileError);
@@ -1252,17 +1289,19 @@ const HomeScreen = () => {
           </View>
         </View>
         <View style={styles.viewRight}>
-          {/* Premium Crown Icon - links to membership packages */}
-          <TouchableOpacity
-            onPress={() => navigation.navigate('membership' as never)}
-            style={styles.notifButton}
-          >
-            <Image
-              source={icons.crown2}
-              resizeMode='contain'
-              style={[styles.bellIcon, { tintColor: crownColor || '#666666' }]}
-            />
-          </TouchableOpacity>
+          {/* Premium Crown Icon - links to membership packages (male only) */}
+          {isMale && (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('membership' as never)}
+              style={styles.notifButton}
+            >
+              <Image
+                source={icons.crown2}
+                resizeMode='contain'
+                style={[styles.bellIcon, { tintColor: crownColor || '#666666' }]}
+              />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity
             onPress={() => navigation.navigate('notifications')}
             style={styles.notifButton}
