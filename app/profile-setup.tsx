@@ -180,6 +180,11 @@ const ProfileSetup: React.FC = () => {
   const [religiousDetails, setReligiousDetails] = useState<Partial<ReligiousDetails>>({});
   const [polygamyDetails, setPolygamyDetails] = useState<Partial<PolygamyDetails>>({});
 
+  // Polygamy Sunnah checkboxes state
+  const [polygamySunnahChecked, setPolygamySunnahChecked] = useState(false);
+  const [halalIntentionChecked, setHalalIntentionChecked] = useState(false);
+  const [fairnessIntentionChecked, setFairnessIntentionChecked] = useState(false);
+
   // Form management for Step 1 (Basic Info)
   const {
     control,
@@ -228,7 +233,10 @@ const ProfileSetup: React.FC = () => {
     (watchedValues?.country || '').trim() &&
     (watchedValues?.city || '').trim() &&
     (watchedValues?.phoneCode || '').trim() &&
-    (watchedValues?.mobileNumber || '').trim()
+    (watchedValues?.mobileNumber || '').trim() &&
+    polygamySunnahChecked &&
+    halalIntentionChecked &&
+    fairnessIntentionChecked
   );
   const physicalWatch = physicalForm.watch();
   const step2Complete = Boolean(
@@ -1398,6 +1406,59 @@ const ProfileSetup: React.FC = () => {
                 )}
               </View>
 
+              {/* Polygamy Sunnah Checkboxes */}
+              <View style={styles.checkboxContainer}>
+                <Text style={styles.checkboxSectionTitle}>Islamic Commitment (Required) *</Text>
+                
+                {/* First Checkbox */}
+                <TouchableOpacity 
+                  style={styles.checkboxItem}
+                  onPress={() => setPolygamySunnahChecked(!polygamySunnahChecked)}
+                >
+                  <View style={[styles.checkbox, polygamySunnahChecked && styles.checkboxChecked]}>
+                    {polygamySunnahChecked && (
+                      <Text style={styles.checkboxTick}>✓</Text>
+                    )}
+                  </View>
+                  <Text style={styles.checkboxText}>
+                    I understand that this site is for Polygamy Sunnah
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Second Checkbox */}
+                <TouchableOpacity 
+                  style={styles.checkboxItem}
+                  onPress={() => setHalalIntentionChecked(!halalIntentionChecked)}
+                >
+                  <View style={[styles.checkbox, halalIntentionChecked && styles.checkboxChecked]}>
+                    {halalIntentionChecked && (
+                      <Text style={styles.checkboxTick}>✓</Text>
+                    )}
+                  </View>
+                  <Text style={styles.checkboxText}>
+                    I swear Allah I am serious and looking only for halal
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Third Checkbox - Gender Specific */}
+                <TouchableOpacity 
+                  style={styles.checkboxItem}
+                  onPress={() => setFairnessIntentionChecked(!fairnessIntentionChecked)}
+                >
+                  <View style={[styles.checkbox, fairnessIntentionChecked && styles.checkboxChecked]}>
+                    {fairnessIntentionChecked && (
+                      <Text style={styles.checkboxTick}>✓</Text>
+                    )}
+                  </View>
+                  <Text style={styles.checkboxText}>
+                    {watchedValues?.gender === 'male' 
+                      ? 'I swear Allah I intend to be fair in my new wife'
+                      : 'I swear Allah I intend to be a pious wife for my husband'
+                    }
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
               <Button
                 title="Continue"
                 onPress={handleSubmit(handleBasicInfo)}
@@ -2368,6 +2429,50 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: COLORS.greyscale400,
     opacity: 0.7,
+  },
+  checkboxContainer: {
+    marginBottom: getResponsiveSpacing(24),
+    marginTop: getResponsiveSpacing(16),
+  },
+  checkboxSectionTitle: {
+    fontSize: getResponsiveFontSize(16),
+    fontFamily: 'semiBold',
+    color: COLORS.black,
+    marginBottom: getResponsiveSpacing(16),
+  },
+  checkboxItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: getResponsiveSpacing(16),
+    paddingHorizontal: getResponsiveSpacing(4),
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+    borderRadius: 4,
+    marginRight: getResponsiveSpacing(12),
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.white,
+    marginTop: 2,
+  },
+  checkboxChecked: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  checkboxTick: {
+    color: COLORS.white,
+    fontSize: getResponsiveFontSize(12),
+    fontFamily: 'bold',
+  },
+  checkboxText: {
+    flex: 1,
+    fontSize: getResponsiveFontSize(14),
+    fontFamily: 'regular',
+    color: COLORS.black,
+    lineHeight: getResponsiveFontSize(20),
   },
 
 });
