@@ -314,7 +314,7 @@ const HomeScreen = () => {
   const [displayName, setDisplayName] = useState<string>('');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [oppositeGender, setOppositeGender] = useState<string | null>(null);
-  const [isGalleryView, setIsGalleryView] = useState(false);
+  const [isGalleryView, setIsGalleryView] = useState(true);
   const [crownColor, setCrownColor] = useState<string>('#666666');
   const [currentPackage, setCurrentPackage] = useState<string | null>(null);
   const [isMale, setIsMale] = useState<boolean | null>(null);
