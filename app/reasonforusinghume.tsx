@@ -6,7 +6,7 @@ import { ScrollView } from 'react-native-virtualized-view';
 import { COLORS, SIZES } from '@/constants';
 import Button from '@/components/Button';
 import { useNavigation } from 'expo-router';
-import ReasonZawajplusItem from '@/components/ReasonZawajplusItem';
+import ReasonZawajplusItem from '@/components/ReasonHumeItem';
 
 const reasons = [
     "Find meaningful connections",
