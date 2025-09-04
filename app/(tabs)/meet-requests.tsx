@@ -493,7 +493,11 @@ const MeetRequestsScreen = () => {
 
   // Tick every minute for enabling join 10 minutes before
   useEffect(() => {
-    const id = setInterval(() => setNowTick(Date.now()), 60000);
+    const id = setInterval(() => {
+      const now = Date.now();
+      console.log('Updating nowTick:', new Date(now).toLocaleString());
+      setNowTick(now);
+    }, 60000);
     return () => clearInterval(id);
   }, []);
   
@@ -1075,13 +1079,28 @@ const MeetRequestsScreen = () => {
                     style={{ width: 24, height: 24, tintColor: COLORS.primary, marginRight: 12 }} 
                   />
                   <Text style={styles.infoText}>
-                    {selectedMeetRow && selectedMeetRow.scheduled_at ? (
-                      isWithinRingWindow(selectedMeetRow.scheduled_at)
-                        ? "You can call now"
-                        : isAfterRingWindow(selectedMeetRow.scheduled_at)
-                          ? "Video call window has ended. Please cancel this call request and send new request  from the profile's page"
-                          : "Video call is not yet available"
-                    ) : ""}
+                    {selectedMeetRow && selectedMeetRow.scheduled_at ? (() => {
+                      const withinWindow = isWithinRingWindow(selectedMeetRow.scheduled_at);
+                      const afterWindow = isAfterRingWindow(selectedMeetRow.scheduled_at);
+                      
+                      // Debug logging
+                      console.log('Call window check:', {
+                        scheduledAt: selectedMeetRow.scheduled_at,
+                        nowTick,
+                        withinWindow,
+                        afterWindow,
+                        scheduledMs: new Date(selectedMeetRow.scheduled_at).getTime(),
+                        endWindow: new Date(selectedMeetRow.scheduled_at).getTime() + 60 * 60 * 1000
+                      });
+                      
+                      if (withinWindow) {
+                        return "You can call now";
+                      } else if (afterWindow) {
+                        return "Video call window has ended. Please cancel this call request and send new request from the profile's page";
+                      } else {
+                        return "Video call is not yet available";
+                      }
+                    })() : ""}
                   </Text>
                 </View>
               </View>
