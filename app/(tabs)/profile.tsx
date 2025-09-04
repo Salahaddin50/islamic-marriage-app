@@ -183,8 +183,8 @@ const Profile = () => {
       <View style={styles.settingsContainer}>
         <SettingsItem
           icon={icons.crown2}
-          name="My Menbership"
-          onPress={() => navigate("menbership")}
+          name="My Membership"
+          onPress={() => navigate("membership")}
         />
         <SettingsItem
           icon={icons.image}

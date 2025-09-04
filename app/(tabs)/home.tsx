@@ -315,6 +315,7 @@ const HomeScreen = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [oppositeGender, setOppositeGender] = useState<string | null>(null);
   const [isGalleryView, setIsGalleryView] = useState(false);
+  const [crownColor, setCrownColor] = useState<string>('#666666');
   const { isLoading: profileLoading } = useProfilePicture(refreshTrigger);
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   
@@ -1149,6 +1150,44 @@ const HomeScreen = () => {
     fetchUserProfiles(false, false, false);
   };
 
+  // Load user crown color based on package
+  const loadCrownColor = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Fetch only the active package type without relational joins
+      const { data: packageData, error } = await supabase
+        .from('user_packages')
+        .select('package_type')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .single();
+
+      if (error) {
+        // If table not found or policies not set, fallback to default
+        console.log('loadCrownColor error:', error.message);
+        setCrownColor('#666666');
+        return;
+      }
+
+      if (packageData?.package_type) {
+        // Map to app colors (Premium Purple, VIP Green, Golden Dark Gold)
+        const colors: Record<string, string> = {
+          premium: '#6A1B9A',
+          vip_premium: '#34A853',
+          golden_premium: '#B8860B',
+        };
+        setCrownColor(colors[packageData.package_type] || '#666666');
+      } else {
+        setCrownColor('#666666');
+      }
+    } catch (e) {
+      console.log('Error loading crown color:', e);
+      setCrownColor('#666666');
+    }
+  };
+
   // Load current user's display name from Supabase profile
   useEffect(() => {
     (async () => {
@@ -1182,6 +1221,9 @@ const HomeScreen = () => {
             setDisplayName(user.email.split('@')[0]);
           }
         }
+        
+        // Load crown color
+        loadCrownColor();
       } catch (e) {
         // ignore
       }
@@ -1210,15 +1252,15 @@ const HomeScreen = () => {
           </View>
         </View>
         <View style={styles.viewRight}>
-          {/* Premium Crown Icon placeholder (before the bell) */}
+          {/* Premium Crown Icon - links to membership packages */}
           <TouchableOpacity
-            onPress={() => {}}
+            onPress={() => navigation.navigate('membership' as never)}
             style={styles.notifButton}
           >
             <Image
               source={icons.crown2}
               resizeMode='contain'
-              style={[styles.bellIcon, { tintColor: COLORS.black }]}
+              style={[styles.bellIcon, { tintColor: crownColor || '#666666' }]}
             />
           </TouchableOpacity>
           <TouchableOpacity

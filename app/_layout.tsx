@@ -254,6 +254,7 @@ export default function RootLayout() {
         <Stack.Screen name="topupconfirmpin" />
         <Stack.Screen name="topupereceipt" />
         <Stack.Screen name="paymentmethods" />
+        <Stack.Screen name="membership" />
         <Stack.Screen name="reviewsummary" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="+not-found" />
