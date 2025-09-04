@@ -29,6 +29,7 @@ interface GridViewProps {
   windowSize?: number;
   removeClippedSubviews?: boolean;
   numColumns?: number;
+  getItemLayout?: (data: any, index: number) => { length: number; offset: number; index: number };
 }
 
 const GridView: React.FC<GridViewProps> = ({ 
@@ -41,6 +42,7 @@ const GridView: React.FC<GridViewProps> = ({
   windowSize,
   removeClippedSubviews,
   numColumns = 2,
+  getItemLayout
 }) => {
   // Memoized render function for better performance
   const renderItem = React.useCallback(({ item, index }: { item: GridItem; index: number }) => (
@@ -87,6 +89,7 @@ const GridView: React.FC<GridViewProps> = ({
       columnWrapperStyle={columnWrapperStyle}
       contentContainerStyle={[styles.container, { paddingBottom: 140 }]}
       renderItem={renderItem}
+      getItemLayout={getItemLayout}
       showsVerticalScrollIndicator={false}
     />
   );

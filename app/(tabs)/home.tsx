@@ -1414,15 +1414,20 @@ const HomeScreen = () => {
     });
   }, [users]);
 
-  const getItemLayout = React.useCallback((_: any, index: number) => {
-    const itemHeight = isGalleryView ? galleryCardHeight : gridCardHeight;
-    const verticalSpacing = isGalleryView ? GALLERY_CARD_MARGIN : gridSpacing;
-    const columnsPerRow = isGalleryView ? 1 : 2;
-    const rowIndex = Math.floor(index / columnsPerRow);
-    const rowHeight = itemHeight + verticalSpacing;
-    const offset = 16 + rowIndex * rowHeight; // list paddingTop = 16
-    return { length: rowHeight, offset, index };
-  }, [isGalleryView, galleryCardHeight, gridCardHeight, gridSpacing, GALLERY_CARD_MARGIN]);
+  // Optimized getItemLayout for gallery view (single column)
+  const getGalleryItemLayout = React.useCallback((_: any, index: number) => {
+    const itemHeight = galleryCardHeight + GALLERY_CARD_MARGIN;
+    const offset = 16 + index * itemHeight; // paddingTop = 16
+    return { length: itemHeight, offset, index };
+  }, [galleryCardHeight, GALLERY_CARD_MARGIN]);
+
+  // Optimized getItemLayout for grid view (multi-column)
+  const getGridItemLayout = React.useCallback((_: any, index: number) => {
+    const rowIndex = Math.floor(index / desktopColumns);
+    const itemHeight = gridCardHeight + gridSpacing;
+    const offset = rowIndex * itemHeight;
+    return { length: itemHeight, offset, index };
+  }, [gridCardHeight, gridSpacing, desktopColumns]);
 
   if (loading) {
     return (
@@ -1895,6 +1900,7 @@ const HomeScreen = () => {
                 fetchUserProfiles(false, false, true);
               }
             }}
+            getItemLayout={getGalleryItemLayout}
             footer={isFetchingMore ? (
               <View style={{ paddingVertical: 16, alignItems: 'center' }}>
                 <ActivityIndicator size="small" color={COLORS.primary} />
@@ -1921,6 +1927,7 @@ const HomeScreen = () => {
                 fetchUserProfiles(false, false, true);
               }
             }}
+            getItemLayout={getGridItemLayout}
             footer={isFetchingMore ? (
               <View style={{ paddingVertical: 16, alignItems: 'center' }}>
                 <ActivityIndicator size="small" color={COLORS.primary} />

@@ -27,6 +27,7 @@ interface GalleryViewProps {
   maxToRenderPerBatch?: number;
   windowSize?: number;
   removeClippedSubviews?: boolean;
+  getItemLayout?: (data: any, index: number) => { length: number; offset: number; index: number };
 }
 
 const GalleryView: React.FC<GalleryViewProps> = ({ 
@@ -39,7 +40,8 @@ const GalleryView: React.FC<GalleryViewProps> = ({
   initialNumToRender,
   maxToRenderPerBatch,
   windowSize,
-  removeClippedSubviews
+  removeClippedSubviews,
+  getItemLayout
 }) => {
   // Memoized render function for better performance
   const renderItem = React.useCallback(({ item, index }: { item: GalleryItem; index: number }) => (
@@ -77,6 +79,7 @@ const GalleryView: React.FC<GalleryViewProps> = ({
       onEndReached={onEndReached}
       ListFooterComponent={footer || null}
       renderItem={renderItem}
+      getItemLayout={getItemLayout}
       showsVerticalScrollIndicator={false}
     />
   );
