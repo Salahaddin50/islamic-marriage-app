@@ -4,7 +4,7 @@
 // Simplified email/password signup with multi-step registration flow
 // ============================================================================
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, Alert, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRouter } from 'expo-router';
@@ -21,6 +21,12 @@ import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '../../
 import RegistrationService from '../services/registration.service';
 import { supabase } from '../config/supabase';
 import DesktopMobileNotice from '../../components/DesktopMobileNotice';
+import * as SecureStore from 'expo-secure-store';
+
+// Anti-spam configuration for signup
+const MAX_SIGNUP_ATTEMPTS = 3;
+const SIGNUP_LOCKOUT_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
+const SIGNUP_ATTEMPT_WINDOW = 60 * 60 * 1000; // 1 hour window for attempts
 
 // ================================
 // VALIDATION SCHEMA
@@ -44,6 +50,49 @@ const signupSchema = z.object({
 type SignupForm = z.infer<typeof signupSchema>;
 
 // ================================
+// ANTI-SPAM HELPER FUNCTIONS
+// ================================
+
+const getSignupStorageKey = (key: string) => `hume_signup_${key}`;
+
+const getSignupAttempts = async (): Promise<{ count: number; firstAttempt: number; lockedUntil?: number }> => {
+  try {
+    const data = Platform.OS === 'web' 
+      ? localStorage.getItem(getSignupStorageKey('attempts'))
+      : await SecureStore.getItemAsync(getSignupStorageKey('attempts'));
+    
+    return data ? JSON.parse(data) : { count: 0, firstAttempt: Date.now() };
+  } catch {
+    return { count: 0, firstAttempt: Date.now() };
+  }
+};
+
+const setSignupAttempts = async (attempts: { count: number; firstAttempt: number; lockedUntil?: number }) => {
+  try {
+    const data = JSON.stringify(attempts);
+    if (Platform.OS === 'web') {
+      localStorage.setItem(getSignupStorageKey('attempts'), data);
+    } else {
+      await SecureStore.setItemAsync(getSignupStorageKey('attempts'), data);
+    }
+  } catch (error) {
+    console.warn('Failed to store signup attempts:', error);
+  }
+};
+
+const clearSignupAttempts = async () => {
+  try {
+    if (Platform.OS === 'web') {
+      localStorage.removeItem(getSignupStorageKey('attempts'));
+    } else {
+      await SecureStore.deleteItemAsync(getSignupStorageKey('attempts'));
+    }
+  } catch (error) {
+    console.warn('Failed to clear signup attempts:', error);
+  }
+};
+
+// ================================
 // INTERFACES
 // ================================
 
@@ -60,6 +109,46 @@ const SimpleSignup: React.FC<Props> = ({ onGoogleSignup, onSignupSuccess }) => {
   const navigation = useNavigation();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockoutTimeRemaining, setLockoutTimeRemaining] = useState(0);
+
+  // Check for lockout status on component mount
+  useEffect(() => {
+    const checkLockoutStatus = async () => {
+      const attempts = await getSignupAttempts();
+      const now = Date.now();
+      
+      if (attempts.lockedUntil && now < attempts.lockedUntil) {
+        setIsLocked(true);
+        setLockoutTimeRemaining(Math.ceil((attempts.lockedUntil - now) / 1000));
+      } else if (attempts.lockedUntil && now >= attempts.lockedUntil) {
+        // Lockout expired, clear attempts
+        await clearSignupAttempts();
+      }
+    };
+
+    checkLockoutStatus();
+  }, []);
+
+  // Countdown timer for lockout
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isLocked && lockoutTimeRemaining > 0) {
+      timer = setInterval(() => {
+        setLockoutTimeRemaining(prev => {
+          if (prev <= 1) {
+            setIsLocked(false);
+            clearSignupAttempts();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isLocked, lockoutTimeRemaining]);
 
   // Handle post-signup navigation (similar to auth callback)
   const handlePostSignupNavigation = async () => {
@@ -126,8 +215,64 @@ const SimpleSignup: React.FC<Props> = ({ onGoogleSignup, onSignupSuccess }) => {
     }
   });
 
+  // Handle failed signup attempt
+  const handleFailedSignupAttempt = async () => {
+    const attempts = await getSignupAttempts();
+    const now = Date.now();
+    
+    // Reset attempts if outside the attempt window
+    if (now - attempts.firstAttempt > SIGNUP_ATTEMPT_WINDOW) {
+      await setSignupAttempts({ count: 1, firstAttempt: now });
+      return;
+    }
+    
+    const newCount = attempts.count + 1;
+    
+    if (newCount >= MAX_SIGNUP_ATTEMPTS) {
+      // Lock the account
+      const lockedUntil = now + SIGNUP_LOCKOUT_DURATION;
+      await setSignupAttempts({ 
+        count: newCount, 
+        firstAttempt: attempts.firstAttempt, 
+        lockedUntil 
+      });
+      
+      setIsLocked(true);
+      setLockoutTimeRemaining(Math.ceil(SIGNUP_LOCKOUT_DURATION / 1000));
+      
+      Alert.alert(
+        'Signup Temporarily Locked',
+        `Too many failed signup attempts. Please wait 30 minutes before trying again.`
+      );
+    } else {
+      // Update attempt count
+      await setSignupAttempts({ 
+        count: newCount, 
+        firstAttempt: attempts.firstAttempt 
+      });
+      
+      const remainingAttempts = MAX_SIGNUP_ATTEMPTS - newCount;
+      if (remainingAttempts <= 1) {
+        Alert.alert(
+          'Signup Failed',
+          `You have ${remainingAttempts} attempt${remainingAttempts !== 1 ? 's' : ''} remaining before signup is temporarily locked.`
+        );
+      }
+    }
+  };
+
   // Handle form submission with smart signup/login logic
   const handleSignup = async (data: SignupForm) => {
+    // Check if user is locked out
+    if (isLocked) {
+      const minutes = Math.ceil(lockoutTimeRemaining / 60);
+      Alert.alert(
+        'Signup Temporarily Locked',
+        `Too many failed signup attempts. Please try again in ${minutes} minute${minutes !== 1 ? 's' : ''}.`
+      );
+      return;
+    }
+
     setIsLoading(true);
     try {
       // First, try to create a new account
@@ -136,10 +281,17 @@ const SimpleSignup: React.FC<Props> = ({ onGoogleSignup, onSignupSuccess }) => {
       console.log('Signup result:', { user: !!user, session: !!session });
       
       if (user) {
+        // Successful signup - clear failed attempts
+        await clearSignupAttempts();
+        
         // Check if email confirmation is required
         if (!session) {
           // No active session (email confirmation required) -> send to login
-          router.push('/login');
+          Alert.alert(
+            'Account Created Successfully!',
+            'Please check your email and click the confirmation link to activate your account, then return to login.',
+            [{ text: 'Go to Login', onPress: () => router.push('/login') }]
+          );
           return;
         }
 
@@ -165,15 +317,20 @@ const SimpleSignup: React.FC<Props> = ({ onGoogleSignup, onSignupSuccess }) => {
         return;
       }
       
+      // Handle failed signup attempt for anti-spam
+      await handleFailedSignupAttempt();
+      
       // Handle other error cases
       let errorMessage = 'Something went wrong during signup. Please try again.';
       
       if (error.message.includes('Invalid email')) {
         errorMessage = 'Please enter a valid email address.';
       } else if (error.message.includes('Password')) {
-        errorMessage = 'Password must be at least 6 characters long.';
+        errorMessage = 'Password must be at least 8 characters with uppercase, lowercase, number, and special character.';
       } else if (error.message.includes('rate limit')) {
         errorMessage = 'Too many signup attempts. Please wait a moment and try again.';
+      } else if (error.message.includes('network') || error.message.includes('connection')) {
+        errorMessage = 'Network error. Please check your connection and try again.';
       } else if (error.message) {
         errorMessage = error.message;
       }
@@ -362,10 +519,19 @@ const SimpleSignup: React.FC<Props> = ({ onGoogleSignup, onSignupSuccess }) => {
             </View>
 
             <Button
-              title={isLoading ? "Creating Account..." : "Create Account"}
+              title={
+                isLocked 
+                  ? `Locked (${Math.ceil(lockoutTimeRemaining / 60)}m ${lockoutTimeRemaining % 60}s)`
+                  : isLoading 
+                    ? "Creating Account..." 
+                    : "Create Account"
+              }
               onPress={handleSubmit(handleSignup)}
-              style={styles.signupButton}
-              disabled={isLoading}
+              style={[
+                styles.signupButton,
+                isLocked && styles.lockedButton
+              ]}
+              disabled={isLoading || isLocked}
             />
 
             <View style={styles.socialContainer}>
@@ -490,6 +656,10 @@ const styles = StyleSheet.create({
   },
   signupButton: {
     marginBottom: getResponsiveSpacing(6),
+  },
+  lockedButton: {
+    backgroundColor: COLORS.greyscale500,
+    borderColor: COLORS.greyscale500,
   },
   socialContainer: {
     marginBottom: getResponsiveSpacing(12),

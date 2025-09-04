@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '../components/Header';
 import Button from '../components/Button';
 import { useNavigation } from 'expo-router';
+import { getResponsiveFontSize, getResponsiveSpacing } from '../utils/responsive';
 
 type Nav = {
     navigate: (value: string) => void
@@ -13,10 +14,13 @@ type Nav = {
 // Forgot Password Methods
 const ForgotPasswordMethods = () => {
     const { navigate } = useNavigation<Nav>();
-    const [selectedMethod, setSelectedMethod] = useState('sms');
+    const [selectedMethod, setSelectedMethod] = useState('email'); // Default to email since SMS is disabled
 
     const handleMethodPress = (method: any) => {
-        setSelectedMethod(method);
+        // Only allow email selection, SMS is disabled
+        if (method === 'email') {
+            setSelectedMethod(method);
+        }
     };
     return (
         <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
@@ -34,25 +38,27 @@ const ForgotPasswordMethods = () => {
                         color: COLORS.greyscale900
                     }]}>Select which contact details
                         should we use to reset your password</Text>
-                    <TouchableOpacity
+                    <View
                         style={[
                             styles.methodContainer,
-                            selectedMethod === 'sms' && { borderColor: COLORS.primary, borderWidth: 2 },
-                        ]}
-                        onPress={() => handleMethodPress('sms')}>
-                        <View style={styles.iconContainer}>
+                            styles.disabledMethodContainer,
+                        ]}>
+                        <View style={[styles.iconContainer, styles.disabledIconContainer]}>
                             <Image
                                 source={icons.chat}
                                 resizeMode='contain'
-                                style={styles.icon} />
+                                style={[styles.icon, styles.disabledIcon]} />
                         </View>
-                        <View>
-                            <Text style={styles.methodTitle}>via SMS:</Text>
-                            <Text style={[styles.methodSubtitle, {
-                                color: COLORS.black
-                            }]}>+1 111 ******99</Text>
+                        <View style={styles.methodContent}>
+                            <View style={styles.methodTextContainer}>
+                                <Text style={[styles.methodTitle, styles.disabledMethodTitle]}>via SMS:</Text>
+                                <Text style={[styles.methodSubtitle, styles.disabledMethodSubtitle]}>+1 111 ******99</Text>
+                            </View>
+                            <View style={styles.comingSoonBadge}>
+                                <Text style={styles.comingSoonText}>Will be activated soon</Text>
+                            </View>
                         </View>
-                    </TouchableOpacity>
+                    </View>
                     <TouchableOpacity
                         style={[
                             styles.methodContainer,
@@ -77,13 +83,8 @@ const ForgotPasswordMethods = () => {
                         title="Continue"
                         filled
                         style={styles.button}
-                        onPress={() =>
-                            navigate(
-                                selectedMethod === "sms"
-                                    ? 'forgotpasswordphonenumber'
-                                    : 'forgotpasswordemail'
-                            )
-                        }
+                        onPress={() => navigate('forgotpasswordemail')}
+                        disabled={selectedMethod !== 'email'}
                     />
                 </ScrollView>
             </View>
@@ -153,7 +154,48 @@ const styles = StyleSheet.create({
     button: {
         borderRadius: 32,
         marginVertical: 22
-    }
+    },
+    disabledMethodContainer: {
+        opacity: 0.6,
+        backgroundColor: COLORS.greyscale100,
+        borderColor: COLORS.greyscale300,
+    },
+    disabledIconContainer: {
+        backgroundColor: COLORS.greyscale200,
+    },
+    disabledIcon: {
+        tintColor: COLORS.greyscale500,
+    },
+    disabledMethodTitle: {
+        color: COLORS.greyscale500,
+    },
+    disabledMethodSubtitle: {
+        color: COLORS.greyscale400,
+    },
+    methodContent: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingRight: getResponsiveSpacing(16),
+    },
+    methodTextContainer: {
+        flex: 1,
+    },
+    comingSoonBadge: {
+        backgroundColor: COLORS.warning,
+        paddingHorizontal: getResponsiveSpacing(8),
+        paddingVertical: getResponsiveSpacing(4),
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    comingSoonText: {
+        fontSize: getResponsiveFontSize(10),
+        fontFamily: 'semiBold',
+        color: COLORS.white,
+        textAlign: 'center',
+    },
 })
 
 export default ForgotPasswordMethods
