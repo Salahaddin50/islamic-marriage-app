@@ -28,7 +28,7 @@ const SelectYourIdealMatch = () => {
             marginTop: 16,
             color: COLORS.black,
           }}>
-          What are you hoping to find on the Hume Dating App.
+          What are you hoping to find on the Zawajplus Dating App.
         </Text>
 
         <View style={styles.cardView}>

@@ -1,4 +1,4 @@
-# Google OAuth Setup for Hume Islamic Dating App
+# Google OAuth Setup for Zawajplus Islamic Dating App
 
 ## 🎯 Overview
 This guide will help you set up Google OAuth authentication for your Islamic dating app using Supabase.
@@ -13,7 +13,7 @@ This guide will help you set up Google OAuth authentication for your Islamic dat
 ### 1.1 Create Google Cloud Project
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a new project or select existing one
-3. Name it something like "Hume Islamic Dating App"
+3. Name it something like "Zawajplus Islamic Dating App"
 
 ### 1.2 Enable Google+ API
 1. Go to **APIs & Services > Library**
@@ -25,7 +25,7 @@ This guide will help you set up Google OAuth authentication for your Islamic dat
 2. Click **Create Credentials > OAuth 2.0 Client IDs**
 3. Select **Web application**
 4. Configure:
-   - **Name**: `Hume Islamic Dating Web Client`
+   - **Name**: `Zawajplus Islamic Dating Web Client`
    - **Authorized JavaScript origins**:
      - `http://localhost:8081` (for development)
      - `http://localhost:8082` (backup port)
@@ -78,7 +78,7 @@ The app is already configured to use:
 ### 4.1 Development Testing
 1. Start your development server:
    ```bash
-   cd main/Hume
+   cd main/Zawajplus
    npm start
    ```
 2. Open in web browser

@@ -1,25 +1,25 @@
-# Vercel Deployment Guide for Hume Islamic Dating App
+# Vercel Deployment Guide for Zawajplus Islamic Dating App
 
-This guide provides detailed instructions on how to deploy the Hume Islamic Dating App to Vercel, a platform for hosting web applications.
+This guide provides detailed instructions on how to deploy the Zawajplus Islamic Dating App to Vercel, a platform for hosting web applications.
 
 ## Prerequisites
 
 Before you begin, ensure you have the following:
 - A Vercel account ([Sign up here](https://vercel.com/signup))
-- GitHub repository with the Hume app codebase
+- GitHub repository with the Zawajplus app codebase
 - Node.js and npm installed on your local machine
 
 ## Step 1: Prepare Your Project for Deployment
 
-1. **Ensure your project structure** is correct. The Hume app should be in `main/Hume/` directory.
+1. **Ensure your project structure** is correct. The Zawajplus app should be in `main/Zawajplus/` directory.
 2. **Check your `vercel.json` configuration** at the root of your repository. It should look like this:
 
     ```json
     {
-      "buildCommand": "cd main/Hume && npx expo export:web",
-      "outputDirectory": "main/Hume/web-build",
-      "devCommand": "cd main/Hume && npx expo start --web",
-      "installCommand": "cd main/Hume && npm install",
+      "buildCommand": "cd main/Zawajplus && npx expo export:web",
+      "outputDirectory": "main/Zawajplus/web-build",
+      "devCommand": "cd main/Zawajplus && npx expo start --web",
+      "installCommand": "cd main/Zawajplus && npm install",
       "framework": null,
       "cleanUrls": true,
       "trailingSlash": false,
@@ -79,7 +79,7 @@ Before you begin, ensure you have the following:
    This configuration ensures that Vercel builds the Expo web app correctly and routes all requests to `index.html` for client-side routing.
 
 3. **Test the build locally** (optional but recommended):
-   - Navigate to `main/Hume`
+   - Navigate to `main/Zawajplus`
    - Run `npx expo export:web`
    - Check if `web-build` directory is created with `index.html` and other assets
 
@@ -87,15 +87,15 @@ Before you begin, ensure you have the following:
 
 1. Log in to your Vercel account.
 2. Click on **New Project**.
-3. Select **Import Git Repository** and choose your Hume app repository from GitHub.
+3. Select **Import Git Repository** and choose your Zawajplus app repository from GitHub.
 4. Vercel will automatically detect the `vercel.json` configuration and set up the build settings accordingly.
 
 ## Step 3: Configure Build Settings (if needed)
 
 If Vercel doesn't automatically configure based on `vercel.json`, manually set:
-- **Build Command**: `cd main/Hume && npx expo export:web`
-- **Output Directory**: `main/Hume/web-build`
-- **Install Command**: `cd main/Hume && npm install`
+- **Build Command**: `cd main/Zawajplus && npx expo export:web`
+- **Output Directory**: `main/Zawajplus/web-build`
+- **Install Command**: `cd main/Zawajplus && npm install`
 
 ## Step 4: Deploy Your App
 

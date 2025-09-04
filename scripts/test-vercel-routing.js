@@ -26,7 +26,7 @@ function testUrl(testUrl) {
       if (res.statusCode === 200) {
         console.log('✅ Route is working correctly!');
         // Check if the response contains our test page content
-        if (data.includes('Hume App Test Page')) {
+        if (data.includes('Zawajplus App Test Page')) {
           console.log('✅ Test page content found!');
         } else {
           console.log('❌ Test page content not found in response.');

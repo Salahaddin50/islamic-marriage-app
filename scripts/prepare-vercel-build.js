@@ -33,12 +33,12 @@ if (!fs.existsSync(indexPath)) {
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Hume App - Error</title>
+          <title>Zawajplus App - Error</title>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
         </head>
         <body>
-          <h1>Hume App</h1>
+          <h1>Zawajplus App</h1>
           <p>There was an error building the application.</p>
           <p>Please check the build logs for more information.</p>
         </body>

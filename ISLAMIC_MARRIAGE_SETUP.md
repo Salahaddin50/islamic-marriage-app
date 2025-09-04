@@ -1,6 +1,6 @@
 # Islamic Marriage Database Setup Guide
 
-This guide will help you set up the complete Islamic marriage database system with Supabase for the Hume dating app.
+This guide will help you set up the complete Islamic marriage database system with Supabase for the Zawajplus dating app.
 
 ## 🗄️ Database Schema Overview
 
@@ -25,7 +25,7 @@ The Islamic marriage database includes:
 
 ### 2. Environment Configuration
 
-Create a `.env` file in the main/Hume directory:
+Create a `.env` file in the main/Zawajplus directory:
 
 ```env
 EXPO_PUBLIC_SUPABASE_URL=https://rpzkugodaacelruquhtc.supabase.co
@@ -36,7 +36,7 @@ EXPO_PUBLIC_MEDIA_SERVER_URL=https://your-media-server.com
 EXPO_PUBLIC_MEDIA_SERVER_API_KEY=your_media_server_api_key_here
 
 # App Configuration
-EXPO_PUBLIC_APP_NAME=Hume Islamic Marriage
+EXPO_PUBLIC_APP_NAME=Zawajplus Islamic Marriage
 EXPO_PUBLIC_APP_VERSION=1.0.0
 ```
 
@@ -56,7 +56,7 @@ The schema includes:
 ### 4. Install Dependencies
 
 ```bash
-cd main/Hume
+cd main/Zawajplus
 npm install @supabase/supabase-js
 ```
 

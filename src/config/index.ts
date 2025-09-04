@@ -290,7 +290,7 @@ export const SECURITY_CONFIG = {
   // Biometric Settings
   BIOMETRIC_PROMPT: {
     TITLE: 'Authenticate with Biometrics',
-    SUBTITLE: 'Use your fingerprint or face to access Hume',
+    SUBTITLE: 'Use your fingerprint or face to access Zawajplus',
     FALLBACK_TITLE: 'Use PIN instead',
   },
   

@@ -11,6 +11,7 @@ import { useNavigation, useRouter } from 'expo-router';
 import { supabase } from '../src/config/supabase';
 import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '../utils/responsive';
 import * as SecureStore from 'expo-secure-store';
+import { EmailService } from '../src/services/email.service';
 
 // Anti-spam configuration for password reset
 const MAX_RESET_ATTEMPTS = 3;
@@ -207,10 +208,8 @@ const ForgotPasswordEmail = () => {
         try {
             const email = formState.inputValues.email.trim().toLowerCase();
 
-            // Send password reset email using Supabase
-            const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: `${window.location.protocol}//${window.location.host}/createnewpassword`,
-            });
+            // Send password reset email using custom email service
+            const { error } = await EmailService.sendPasswordReset(email);
 
             if (error) {
                 throw new Error(error.message);

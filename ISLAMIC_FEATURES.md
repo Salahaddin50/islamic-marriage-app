@@ -1,4 +1,4 @@
-# 🕌 Islamic Marriage Features - Hume Dating App
+# 🕌 Islamic Marriage Features - Zawajplus Dating App
 
 ## Overview
 

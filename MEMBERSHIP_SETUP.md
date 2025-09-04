@@ -1,7 +1,7 @@
 # Membership System Setup Guide
 
 ## Overview
-This guide will help you set up the complete membership system with packages and payment tracking for the Hume dating app.
+This guide will help you set up the complete membership system with packages and payment tracking for the Zawajplus dating app.
 
 ## Features Implemented
 
@@ -34,7 +34,7 @@ Execute the SQL file in your Supabase dashboard:
 
 ```bash
 # In Supabase SQL Editor, run:
-main/Hume/create-membership-schema.sql
+main/Zawajplus/create-membership-schema.sql
 ```
 
 This will create:

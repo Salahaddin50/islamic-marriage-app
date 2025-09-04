@@ -597,7 +597,7 @@ const ProfileSetup: React.FC = () => {
       // Navigate to app
       Alert.alert(
         'Profile Complete!',
-        'Your profile has been set up successfully. Welcome to Hume!',
+        'Your profile has been set up successfully. Welcome to Zawajplus!',
         [
           {
             text: 'Start Browsing',
@@ -1155,7 +1155,7 @@ const ProfileSetup: React.FC = () => {
 
       Alert.alert(
         'Profile Complete!',
-        'Your profile has been set up successfully. Welcome to Hume!',
+        'Your profile has been set up successfully. Welcome to Zawajplus!',
         [
           {
             text: 'Start Browsing',

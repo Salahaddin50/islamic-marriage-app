@@ -4,7 +4,7 @@
 
 ### **Step 1: Install AWS SDK**
 ```bash
-cd main/Hume
+cd main/Zawajplus
 npm install aws-sdk
 npm install @types/aws-sdk --save-dev
 ```
@@ -37,7 +37,7 @@ Your `package.json` should include:
 ## ⚙️ **ENVIRONMENT SETUP**
 
 ### **Step 1: Create .env file**
-Create `.env` file in `main/Hume/`:
+Create `.env` file in `main/Zawajplus/`:
 ```bash
 # DigitalOcean Spaces Configuration
 EXPO_PUBLIC_DO_SPACES_KEY=your_spaces_access_key_id
@@ -57,7 +57,7 @@ Add environment plugin to `app.config.js`:
 ```javascript
 module.exports = {
   expo: {
-    name: "Hume",
+    name: "Zawajplus",
     // ... existing config
     plugins: [
       [

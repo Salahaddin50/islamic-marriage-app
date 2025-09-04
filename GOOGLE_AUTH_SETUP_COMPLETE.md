@@ -2,7 +2,7 @@
 
 ## 🎯 What Was Fixed
 
-I've successfully modified your Hume Islamic Dating app so that **"Continue with Google" now goes directly to Google authentication** instead of the signup page.
+I've successfully modified your Zawajplus Islamic Dating app so that **"Continue with Google" now goes directly to Google authentication** instead of the signup page.
 
 ## 🔧 Changes Made
 

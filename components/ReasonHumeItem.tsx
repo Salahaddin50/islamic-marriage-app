@@ -3,13 +3,13 @@ import { Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Checkbox from 'expo-checkbox';
 import { COLORS, SIZES } from '@/constants';
 
-interface ReasonHumeItemProps {
+interface ReasonZawajplusItemProps {
     reason: string;
     isChecked: boolean;
     onToggle: (reason: string) => void;
 }
 
-const ReasonHumeItem: React.FC<ReasonHumeItemProps> = ({ reason, isChecked, onToggle }) => {
+const ReasonZawajplusItem: React.FC<ReasonZawajplusItemProps> = ({ reason, isChecked, onToggle }) => {
 
     return (
         <TouchableOpacity style={[styles.container, {
@@ -55,4 +55,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default ReasonHumeItem
+export default ReasonZawajplusItem

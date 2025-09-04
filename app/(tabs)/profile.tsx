@@ -277,13 +277,13 @@ const Profile = () => {
           name="Invite Friends"
           onPress={async () => {
             try {
-              const appUrl = Platform.OS === 'web' ? (typeof window !== 'undefined' ? (window.location.origin || '/') : '/') : 'https://hume.app';
-              const shareText = `Join me on Hume: ${appUrl}`;
+              const appUrl = Platform.OS === 'web' ? (typeof window !== 'undefined' ? (window.location.origin || '/') : '/') : 'https://zawajplus.com';
+              const shareText = `Join me on Zawajplus: ${appUrl}`;
               // Web Share API if available
               // @ts-ignore
               if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.share) {
                 // @ts-ignore
-                await navigator.share({ title: 'Hume', text: shareText, url: appUrl });
+                await navigator.share({ title: 'Zawajplus', text: shareText, url: appUrl });
               } else {
                 await Share.share({ message: shareText, url: appUrl });
               }

@@ -44,7 +44,7 @@ CREATE TABLE media_references (
 ## ⚙️ **SETUP INSTRUCTIONS**
 
 ### 1. **Environment Variables**
-Create `.env` file in `main/Hume/`:
+Create `.env` file in `main/Zawajplus/`:
 
 ```bash
 # Supabase (Already configured)

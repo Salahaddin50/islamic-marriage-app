@@ -6,7 +6,7 @@ import { ScrollView } from 'react-native-virtualized-view';
 import { COLORS, SIZES } from '@/constants';
 import Button from '@/components/Button';
 import { useNavigation } from 'expo-router';
-import ReasonHumeItem from '@/components/ReasonHumeItem';
+import ReasonZawajplusItem from '@/components/ReasonZawajplusItem';
 
 const reasons = [
     "Find meaningful connections",
@@ -21,8 +21,8 @@ type Nav = {
     navigate: (value: string) => void
 }
 
-// Reason for using Hume
-const ReasonForUsingHume = () => {
+// Reason for using Zawajplus
+const ReasonForUsingZawajplus = () => {
     const { navigate } = useNavigation<Nav>();
     const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
 
@@ -65,13 +65,13 @@ const ReasonForUsingHume = () => {
                 <ScrollView showsVerticalScrollIndicator={false}>
                     <Text style={[styles.title, {
                         color: COLORS.greyscale900
-                    }]}>Reason for Using Hume</Text>
+                    }]}>Reason for Using Zawajplus</Text>
                     <Text style={[styles.subtitle, {
                         color: COLORS.greyscale900
                     }]}>We want to provide the best experience according to your needs.</Text>
                     <View style={styles.reasonContainer}>
                         {reasons.map((reason, index) => (
-                            <ReasonHumeItem
+                            <ReasonZawajplusItem
                                 key={index}
                                 reason={reason}
                                 isChecked={selectedReasons.includes(reason)}
@@ -137,4 +137,4 @@ const styles = StyleSheet.create({
     }
 })
 
-export default ReasonForUsingHume
+export default ReasonForUsingZawajplus

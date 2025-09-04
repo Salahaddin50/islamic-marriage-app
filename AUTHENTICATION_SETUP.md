@@ -39,14 +39,14 @@ I've successfully implemented a complete authentication and registration system 
 ### 1. Database Setup
 ```bash
 # 1. Run the SQL schema in your Supabase dashboard
-# Execute: main/Hume/src/database/islamic-marriage-schema.sql
+# Execute: main/Zawajplus/src/database/islamic-marriage-schema.sql
 
 # 2. Set up environment variables
-# Copy and configure: main/Hume/env.example
+# Copy and configure: main/Zawajplus/env.example
 ```
 
 ### 2. Environment Configuration
-Create `.env` file in `main/Hume/`:
+Create `.env` file in `main/Zawajplus/`:
 ```env
 EXPO_PUBLIC_SUPABASE_URL=https://rpzkugodaacelruquhtc.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
@@ -56,7 +56,7 @@ EXPO_PUBLIC_MEDIA_SERVER_API_KEY=your_media_server_api_key_here
 
 ### 3. Install Dependencies
 ```bash
-cd main/Hume
+cd main/Zawajplus
 npm install
 ```
 

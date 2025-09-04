@@ -112,7 +112,7 @@ const Index = () => {
             <View style={styles.bottomContainer}>
               <View style={styles.textContainer}>
                 <Text style={styles.title}>Assalamu Aleykoum</Text>
-                <Text style={styles.subtitle}>Welcome to Hume</Text>
+                <Text style={styles.subtitle}>Welcome to Zawajplus</Text>
                 <Text style={styles.description}>
                   The only Islamic platform dedicated exclusively for polygamous marriages following Quranic principles.
                 </Text>

@@ -136,7 +136,7 @@ export const faqs = [
     },
     {
         question: 'What makes this app different from other dating apps?',
-        answer: 'Hume is specifically designed for halal partner search with complete privacy protection. Users can stay private while looking for a halal partner, with photos and videos kept secure until requested. We focus on serious marriage intentions with family involvement.',
+        answer: 'Zawajplus is specifically designed for halal partner search with complete privacy protection. Users can stay private while looking for a halal partner, with photos and videos kept secure until requested. We focus on serious marriage intentions with family involvement.',
         type: "Getting Started"
     },
     {
@@ -648,7 +648,7 @@ export const notifications = [
     {
         id: "1",
         title: "Enhanced Profile Security!",
-        description: "Hume now supports Two-Factor Authentication to keep your account secure. Enable it today!",
+        description: "Zawajplus now supports Two-Factor Authentication to keep your account secure. Enable it today!",
         date: "2024-06-04T04:52:06.501Z",
         time: "4:52 PM",
         type: "Security",
@@ -657,7 +657,7 @@ export const notifications = [
     {
         id: "2",
         title: "Profile Verified!",
-        description: "Congratulations! Your profile has been successfully verified. This boosts your visibility on Hume.",
+        description: "Congratulations! Your profile has been successfully verified. This boosts your visibility on Zawajplus.",
         date: "2024-06-04T04:52:06.501Z",
         time: "08:52 PM",
         type: "Account",
@@ -666,7 +666,7 @@ export const notifications = [
     {
         id: "3",
         title: "New App Update!",
-        description: "Update Hume now to enjoy the latest features, including advanced match filters and video chat.",
+        description: "Update Zawajplus now to enjoy the latest features, including advanced match filters and video chat.",
         date: "2024-06-04T07:12:06.501Z",
         time: "07:12 AM",
         type: "Update",
@@ -683,7 +683,7 @@ export const notifications = [
     },
     {
         id: "5",
-        title: "Welcome to Hume!",
+        title: "Welcome to Zawajplus!",
         description: "Your account setup is complete. Start exploring and connecting with amazing people today.",
         date: "2024-06-03T08:39:06.501Z",
         time: "08:39 AM",
@@ -702,7 +702,7 @@ export const notifications = [
     {
         id: "7",
         title: "Scheduled Maintenance Notice!",
-        description: "Hume will undergo scheduled maintenance on June 10, 2024, from 02:00 AM to 04:00 AM. Please plan accordingly.",
+        description: "Zawajplus will undergo scheduled maintenance on June 10, 2024, from 02:00 AM to 04:00 AM. Please plan accordingly.",
         date: "2024-06-01T03:22:06.501Z",
         time: "03:22 AM",
         type: "Update",
@@ -711,7 +711,7 @@ export const notifications = [
     {
         id: "8",
         title: "New Payment Options Available!",
-        description: "Hume now supports Google Pay and Apple Pay for seamless subscription management.",
+        description: "Zawajplus now supports Google Pay and Apple Pay for seamless subscription management.",
         date: "2024-05-30T06:15:06.501Z",
         time: "06:15 AM",
         type: "Payment",
@@ -720,7 +720,7 @@ export const notifications = [
     {
         id: "9",
         title: "Invite Friends and Earn Rewards!",
-        description: "Invite your friends to Hume and earn credits for every successful referral.",
+        description: "Invite your friends to Zawajplus and earn credits for every successful referral.",
         date: "2024-05-29T10:00:06.501Z",
         time: "10:00 AM",
         type: "Rewards",
@@ -729,7 +729,7 @@ export const notifications = [
     {
         id: "10",
         title: "Password Changed Successfully!",
-        description: "Your Hume account password has been updated. If you didn't make this change, contact support immediately.",
+        description: "Your Zawajplus account password has been updated. If you didn't make this change, contact support immediately.",
         date: "2024-05-28T04:52:06.501Z",
         time: "04:52 AM",
         type: "Security",
