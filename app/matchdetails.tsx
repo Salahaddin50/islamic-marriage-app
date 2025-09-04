@@ -103,6 +103,7 @@ const MatchDetails = () => {
   const [showVideoPreconditionModal, setShowVideoPreconditionModal] = useState(false);
   const [showChatInfoModal, setShowChatInfoModal] = useState(false);
   const [chatOathConfirmed, setChatOathConfirmed] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [scheduledAt, setScheduledAt] = useState<string>('');
   const [meetDate, setMeetDate] = useState<string>(''); // web-only date
   const [meetTime, setMeetTime] = useState<string>(''); // web-only time
@@ -121,6 +122,32 @@ const MatchDetails = () => {
     const day = String(d.getDate()).padStart(2, '0');
     return `${y}-${m}-${day}`; // Local YYYY-MM-DD
   }, []);
+
+  // Check if user has any active package (for video request validation)
+  const checkUserPackage = async (): Promise<boolean> => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      // Check if user has any completed payment (same logic as crown color)
+      const { data: paymentRecords, error } = await supabase
+        .from('payment_records')
+        .select('package_type, status, payment_details, created_at')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error || !paymentRecords || paymentRecords.length === 0) {
+        return false;
+      }
+
+      return true;
+    } catch (e) {
+      console.log('Error checking user package:', e);
+      return false;
+    }
+  };
   
   // Fullscreen media viewer state
   const [showFullscreenImage, setShowFullscreenImage] = useState(false);
@@ -1324,7 +1351,35 @@ const MatchDetails = () => {
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.infoButton, styles.confirmButton]} 
-                onPress={() => {
+                onPress={async () => {
+                  // Get current user profile if not loaded
+                  let userGender = currentUserProfile?.gender;
+                  if (!userGender) {
+                    try {
+                      const { data: { user } } = await supabase.auth.getUser();
+                      if (user) {
+                        const { data: profile } = await supabase
+                          .from('user_profiles')
+                          .select('gender')
+                          .eq('user_id', user.id)
+                          .single();
+                        userGender = profile?.gender;
+                      }
+                    } catch (e) {
+                      console.log('Error getting user profile:', e);
+                    }
+                  }
+                  
+                  // Check if male user has a package before allowing video scheduling
+                  if (userGender?.toLowerCase() === 'male') {
+                    const hasPackage = await checkUserPackage();
+                    if (!hasPackage) {
+                      setShowVideoMeetInfoModal(false);
+                      setShowUpgradeModal(true);
+                      return;
+                    }
+                  }
+                  
                   setShowVideoMeetInfoModal(false);
                   setShowMeetModal(true);
                 }}
@@ -1471,6 +1526,7 @@ const MatchDetails = () => {
                     const datePart = scheduledAt.split(' ')[0];
                     if (datePart && datePart < todayDateStr) { Alert.alert('Invalid date', 'Please select today or a future date.'); return; }
                   }
+                  
                   await MeetService.sendRequest(userId, iso);
                   setMeetStatus('pending');
                   setIsMeetSender(true);
@@ -1480,8 +1536,14 @@ const MatchDetails = () => {
                   setMeetDate('');
                   setMeetTime('');
                   Alert.alert('Video Meet', 'Request submitted and awaiting approval.');
-                } catch {
-                  Alert.alert('Error', 'Unable to send meet request');
+                } catch (error: any) {
+                  // Check if it's a package upgrade error
+                  if (error?.message?.includes('upgrade your package to Premium')) {
+                    setShowMeetModal(false);
+                    setShowUpgradeModal(true);
+                  } else {
+                    Alert.alert('Error', 'Unable to send meet request');
+                  }
                 }
               }}>
                 <Text style={styles.tinyBtnText}>Send</Text>
@@ -1600,6 +1662,42 @@ const MatchDetails = () => {
               >
                 <Image source={icons.chat} contentFit="contain" style={{ width: 18, height: 18, tintColor: COLORS.white, marginRight: 8 }} />
                 <Text style={styles.infoButtonText}>Request</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Package Upgrade Modal */}
+      <Modal
+        visible={showUpgradeModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowUpgradeModal(false)}
+      >
+        <View style={styles.fullscreenContainer}>
+          <View style={[styles.modalCard, { maxWidth: 340 }]}>
+            <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 16, textAlign: 'center', color: COLORS.primary }]}>Upgrade Required</Text>
+            
+            <Text style={[styles.infoStepText, { textAlign: 'center', marginBottom: 20 }]}>
+              You need to upgrade your package to Premium to arrange a video meet
+            </Text>
+            
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+              <TouchableOpacity 
+                style={[styles.infoButton, styles.cancelButton]} 
+                onPress={() => setShowUpgradeModal(false)}
+              >
+                <Text style={[styles.infoButtonText, { color: COLORS.primary }]}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.infoButton, styles.confirmButton]} 
+                onPress={() => {
+                  setShowUpgradeModal(false);
+                  router.push('/membership');
+                }}
+              >
+                <Text style={styles.infoButtonText}>Upgrade</Text>
               </TouchableOpacity>
             </View>
           </View>

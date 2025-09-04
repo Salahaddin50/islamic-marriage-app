@@ -21,12 +21,26 @@ export const MeetService = {
     if (!user) throw new Error('Not authenticated');
     if (user.id === targetUserId) throw new Error('Cannot send meet request to yourself');
     
-    // Get sender profile for notification
+    // Get sender profile for notification and gender check
     const { data: senderProfile } = await supabase
       .from('user_profiles')
-      .select('first_name, last_name, age')
+      .select('first_name, last_name, age, gender')
       .eq('user_id', user.id)
       .maybeSingle();
+
+    // Check if male user has a package before allowing video meet request
+    if (senderProfile?.gender?.toLowerCase() === 'male') {
+      const { data: paymentRecords, error: paymentError } = await supabase
+        .from('payment_records')
+        .select('package_type, status')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .limit(1);
+
+      if (paymentError || !paymentRecords || paymentRecords.length === 0) {
+        throw new Error('You need to upgrade your package to Premium to arrange a video meet');
+      }
+    }
 
     const senderName = senderProfile 
       ? `${senderProfile.first_name || 'Someone'} ${senderProfile.last_name || ''}`.trim()
@@ -70,12 +84,26 @@ export const MeetService = {
 
     if (!meetRequest) throw new Error('Meet request not found');
 
-    // Get accepter profile for notification
+    // Get accepter profile for notification and gender check
     const { data: accepterProfile } = await supabase
       .from('user_profiles')
-      .select('first_name, last_name, age')
+      .select('first_name, last_name, age, gender')
       .eq('user_id', user.id)
       .maybeSingle();
+
+    // Check if male user has a package before allowing video meet acceptance
+    if (accepterProfile?.gender?.toLowerCase() === 'male') {
+      const { data: paymentRecords, error: paymentError } = await supabase
+        .from('payment_records')
+        .select('package_type, status')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .limit(1);
+
+      if (paymentError || !paymentRecords || paymentRecords.length === 0) {
+        throw new Error('You need to upgrade your package to Premium to arrange a video meet');
+      }
+    }
 
     const accepterName = accepterProfile 
       ? `${accepterProfile.first_name || 'Someone'} ${accepterProfile.last_name || ''}`.trim()

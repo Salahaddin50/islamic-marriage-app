@@ -13,9 +13,11 @@ import { Platform } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { AGORA_APP_ID } from '@/src/config/agora';
 import AcceptConfirmationModal from '@/components/AcceptConfirmationModal';
+import { useRouter } from 'expo-router';
 
 const MeetRequestsScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
+  const router = useRouter();
   const isFocused = useIsFocused();
   const [incoming, setIncoming] = useState<MeetRecord[]>([]);
   const [outgoing, setOutgoing] = useState<MeetRecord[]>([]);
@@ -89,10 +91,36 @@ const MeetRequestsScreen = () => {
     }
     return age;
   };
+
+  // Check if user has any active package (for video request validation)
+  const checkUserPackage = async (): Promise<boolean> => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      // Check if user has any completed payment
+      const { data: paymentRecords, error } = await supabase
+        .from('payment_records')
+        .select('package_type, status')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .limit(1);
+
+      if (error || !paymentRecords || paymentRecords.length === 0) {
+        return false;
+      }
+
+      return true;
+    } catch (e) {
+      console.log('Error checking user package:', e);
+      return false;
+    }
+  };
   
   // Modal state for accept confirmation
   const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [selectedMeetRequest, setSelectedMeetRequest] = useState<MeetRecord | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const ringGainRef = React.useRef<any>(null);
   const ringOscRef = React.useRef<any>(null);
   const ringBeepTimerRef = React.useRef<any>(null);
@@ -263,7 +291,7 @@ const MeetRequestsScreen = () => {
           : (row.gender && typeof row.gender === 'string' && row.gender.toLowerCase() === 'female'
               ? images.femaleSilhouette
               : images.maleSilhouette),
-      };
+      } as { name: string; age?: number; avatar?: any };
     });
       // merge into cache and persist
       const newCache = { ...cache, ...map };
@@ -360,10 +388,44 @@ const MeetRequestsScreen = () => {
 
   const confirmAccept = async () => {
     if (!selectedMeetRequest) return;
-    await MeetService.accept(selectedMeetRequest.id);
-    await loadAll();
-    setIndex(2);
-    setSelectedMeetRequest(null);
+    
+    // Check if male user has a package before allowing video meet acceptance
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('gender')
+          .eq('user_id', user.id)
+          .single();
+          
+        if (profile?.gender?.toLowerCase() === 'male') {
+          const hasPackage = await checkUserPackage();
+          if (!hasPackage) {
+            setShowAcceptModal(false);
+            setShowUpgradeModal(true);
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      console.log('Error checking user profile:', e);
+    }
+    
+    try {
+      await MeetService.accept(selectedMeetRequest.id);
+      await loadAll();
+      setIndex(2);
+      setSelectedMeetRequest(null);
+    } catch (error: any) {
+      // Check if it's a package upgrade error from backend
+      if (error?.message?.includes('upgrade your package to Premium')) {
+        setShowAcceptModal(false);
+        setShowUpgradeModal(true);
+      } else {
+        Alert.alert('Error', 'Unable to accept meet request');
+      }
+    }
   };
 
   const reject = async (id: string) => {
@@ -1372,6 +1434,42 @@ const MeetRequestsScreen = () => {
           userAge={selectedMeetRequest ? (profilesById[selectedMeetRequest.sender_id]?.age || 0) : 0}
           requestType="video"
         />
+
+        {/* Package Upgrade Modal */}
+        <Modal
+          visible={showUpgradeModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowUpgradeModal(false)}
+        >
+          <View style={styles.fullscreenContainer}>
+            <View style={[styles.modalCard, { maxWidth: 340 }]}>
+              <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 16, textAlign: 'center', color: COLORS.primary }]}>Upgrade Required</Text>
+              
+              <Text style={[styles.infoStepText, { textAlign: 'center', marginBottom: 20 }]}>
+                You need to upgrade your package to Premium to arrange a video meet
+              </Text>
+              
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+                <TouchableOpacity 
+                  style={[styles.infoButton, styles.cancelButton]} 
+                  onPress={() => setShowUpgradeModal(false)}
+                >
+                  <Text style={[styles.infoButtonText, { color: COLORS.primary }]}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.infoButton, styles.confirmButton]} 
+                  onPress={() => {
+                    setShowUpgradeModal(false);
+                    router.push('/membership');
+                  }}
+                >
+                  <Text style={styles.infoButtonText}>Upgrade</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </View>
     </SafeAreaView>
   );
@@ -1586,6 +1684,36 @@ const styles = StyleSheet.create({
   ringCallText: {
     fontSize: 16,
     fontFamily: 'regular',
+  },
+  // Upgrade Modal Styles
+  fullscreenContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  infoStepText: {
+    fontSize: 14,
+    fontFamily: 'regular',
+    color: COLORS.grayscale700,
+    lineHeight: 20,
+  },
+  infoButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 25,
+    minWidth: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  confirmButton: {
+    backgroundColor: COLORS.primary,
+  },
+  infoButtonText: {
+    fontSize: 16,
+    fontFamily: 'semiBold',
+    color: COLORS.white,
   },
 });
 
