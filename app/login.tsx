@@ -135,13 +135,18 @@ const Login = () => {
 
     const inputChangedHandler = useCallback(
         (inputId: string, inputValue: string) => {
+            // Clear error when user starts typing
+            if (error) {
+                setError(null);
+            }
+            
             const result = validateInput(inputId, inputValue)
             dispatchFormState({
                 inputId,
                 validationResult: result,
                 inputValue,
             })
-        }, [dispatchFormState]);
+        }, [dispatchFormState, error]);
 
     useEffect(() => {
         if (error) {
@@ -269,14 +274,27 @@ const Login = () => {
                 // Handle failed login attempt
                 await handleFailedLoginAttempt();
                 
-                // Provide specific error messages
-                let errorMessage = 'Login failed. Please try again.';
-                if (error.message.includes('Invalid login credentials')) {
+                // Provide specific error messages based on Supabase error types
+                let errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+                
+                console.log('Supabase login error:', error.message); // Debug log
+                
+                if (error.message.includes('Invalid login credentials') || 
+                    error.message.includes('invalid_credentials') ||
+                    error.message.includes('Invalid email or password') ||
+                    error.message.includes('Email not confirmed') ||
+                    error.message.toLowerCase().includes('invalid') ||
+                    error.message.toLowerCase().includes('wrong')) {
                     errorMessage = 'Invalid email or password. Please check your credentials and try again.';
-                } else if (error.message.includes('Email not confirmed')) {
+                } else if (error.message.includes('Email not confirmed') || 
+                           error.message.includes('email_not_confirmed')) {
                     errorMessage = 'Please check your email and click the confirmation link before logging in.';
-                } else if (error.message.includes('Too many requests')) {
+                } else if (error.message.includes('Too many requests') || 
+                           error.message.includes('rate_limit')) {
                     errorMessage = 'Too many login attempts. Please wait a moment before trying again.';
+                } else if (error.message.includes('User not found') || 
+                           error.message.includes('user_not_found')) {
+                    errorMessage = 'No account found with this email address. Please check your email or sign up.';
                 }
                 
                 throw new Error(errorMessage);
@@ -464,6 +482,13 @@ const Login = () => {
                             disabled={isLoading || !formState.formIsValid || isLocked}
                         />
 
+                        {/* Error Display */}
+                        {error && (
+                            <View style={styles.errorContainer}>
+                                <Text style={styles.errorText}>{error}</Text>
+                            </View>
+                        )}
+
                         {/* Forgot Password */}
                         <TouchableOpacity
                             onPress={() => navigate("forgotpasswordmethods")}
@@ -582,6 +607,22 @@ const styles = StyleSheet.create({
     lockedButton: {
         backgroundColor: COLORS.greyscale500,
         borderColor: COLORS.greyscale500,
+    },
+    errorContainer: {
+        backgroundColor: '#ffebee',
+        borderWidth: 1,
+        borderColor: '#f44336',
+        borderRadius: 8,
+        padding: getResponsiveSpacing(12),
+        marginTop: getResponsiveSpacing(4),
+        marginHorizontal: getResponsiveSpacing(2),
+    },
+    errorText: {
+        color: '#d32f2f',
+        fontSize: getResponsiveFontSize(14),
+        fontFamily: "medium",
+        textAlign: 'center',
+        lineHeight: 20,
     },
     forgotPasswordContainer: {
         alignItems: 'center',
