@@ -42,11 +42,40 @@ const GridView: React.FC<GridViewProps> = ({
   removeClippedSubviews,
   numColumns = 2,
 }) => {
+  // Memoized render function for better performance
+  const renderItem = React.useCallback(({ item, index }: { item: GridItem; index: number }) => (
+    <View style={{ width: cardWidth, height: cardHeight }}>
+      <OptimizedMatchCard
+        id={item.id}
+        name={item.name}
+        age={item.age}
+        image={item.image}
+        height={item.height}
+        weight={item.weight}
+        country={item.country}
+        city={item.city}
+        locked={item.locked}
+        index={index}
+        onPress={item.onPress}
+        containerStyle={{ width: '100%', height: '100%' }}
+      />
+    </View>
+  ), [cardWidth, cardHeight]);
+
+  // Memoized key extractor
+  const keyExtractor = React.useCallback((item: GridItem) => item.id, []);
+
+  // Memoized column wrapper style
+  const columnWrapperStyle = React.useMemo(() => ({ 
+    justifyContent: 'space-between' as const, 
+    marginBottom: spacing 
+  }), [spacing]);
+
   return (
     <FlatList
       key={`grid-${numColumns}`}
       data={data}
-      keyExtractor={(item) => item.id}
+      keyExtractor={keyExtractor}
       numColumns={numColumns}
       initialNumToRender={initialNumToRender}
       maxToRenderPerBatch={maxToRenderPerBatch}
@@ -55,26 +84,9 @@ const GridView: React.FC<GridViewProps> = ({
       onEndReachedThreshold={onEndReachedThreshold}
       onEndReached={onEndReached}
       ListFooterComponent={footer || null}
-      columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: spacing }}
+      columnWrapperStyle={columnWrapperStyle}
       contentContainerStyle={[styles.container, { paddingBottom: 140 }]}
-      renderItem={({ item, index }) => (
-        <View style={{ width: cardWidth, height: cardHeight }}>
-          <OptimizedMatchCard
-            id={item.id}
-            name={item.name}
-            age={item.age}
-            image={item.image}
-            height={item.height}
-            weight={item.weight}
-            country={item.country}
-            city={item.city}
-            locked={item.locked}
-            index={index}
-            onPress={item.onPress}
-            containerStyle={{ width: '100%', height: '100%' }}
-          />
-        </View>
-      )}
+      renderItem={renderItem}
       showsVerticalScrollIndicator={false}
     />
   );

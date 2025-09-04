@@ -277,7 +277,7 @@ const Profile = () => {
           name="Invite Friends"
           onPress={async () => {
             try {
-              const appUrl = Platform.OS === 'web' ? (typeof window !== 'undefined' ? (window.location.origin || '/') : '/') : 'https://zawajplus.com';
+              const appUrl = Platform.OS === 'web' ? (typeof window !== 'undefined' ? (window.location.origin || '/') : '/') : 'https://zawajplus.app';
               const shareText = `Join me on Zawajplus: ${appUrl}`;
               // Web Share API if available
               // @ts-ignore

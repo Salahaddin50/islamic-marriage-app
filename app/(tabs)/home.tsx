@@ -274,7 +274,7 @@ const HomeScreen = () => {
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
-  const PAGE_SIZE = 24;
+  const PAGE_SIZE = 12; // Reduced for faster initial load
   const [filterLoading, setFilterLoading] = useState(false);
   const refRBSheet = useRef<any>(null);
   const imagePreloadRef = useRef(new Set<string>());
@@ -1390,11 +1390,17 @@ const HomeScreen = () => {
     }
   }, [users]);
 
+  // Memoized navigation handler to prevent recreating functions
+  const handleCardPress = React.useCallback((userId: string) => {
+    navigation.navigate('matchdetails', { userId });
+  }, [navigation]);
+
   const mappedData = React.useMemo(() => {
     return users.map((u, index) => {
       const isSilhouette = !u.image?.uri || u.image === images.femaleSilhouette || u.image === images.maleSilhouette;
       return {
         id: u.id,
+        user_id: u.user_id, // Keep user_id for navigation
         name: u.name,
         age: u.age,
         image: u.image,
@@ -1403,11 +1409,10 @@ const HomeScreen = () => {
         country: u.country,
         city: u.city,
         locked: !u.unlocked && !isSilhouette,
-        onPress: () => navigation.navigate('matchdetails', { userId: u.user_id }),
         index
       };
     });
-  }, [users, navigation]);
+  }, [users]);
 
   const getItemLayout = React.useCallback((_: any, index: number) => {
     const itemHeight = isGalleryView ? galleryCardHeight : gridCardHeight;
@@ -1424,7 +1429,7 @@ const HomeScreen = () => {
       <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}> 
         <View style={[styles.container, { backgroundColor: COLORS.white }]}> 
           {renderHeader()} 
-          <HomeListSkeleton isGalleryView={isGalleryView} />
+          <HomeListSkeleton isGalleryView={isGalleryView} numItems={8} />
         </View> 
       </SafeAreaView> 
     );
@@ -1874,7 +1879,10 @@ const HomeScreen = () => {
         <View style={{ flex: 1 }}>
         {isGalleryView && !isDesktop ? (
           <GalleryView
-            data={mappedData}
+            data={mappedData.map(item => ({
+              ...item,
+              onPress: () => handleCardPress(item.user_id)
+            }))}
             cardWidth={galleryCardWidth}
             cardHeight={galleryCardHeight}
             initialNumToRender={4}
@@ -1895,7 +1903,10 @@ const HomeScreen = () => {
           />
         ) : (
           <GridView
-            data={mappedData}
+            data={mappedData.map(item => ({
+              ...item,
+              onPress: () => handleCardPress(item.user_id)
+            }))}
             cardWidth={gridCardWidth}
             cardHeight={gridCardHeight}
             spacing={gridSpacing}

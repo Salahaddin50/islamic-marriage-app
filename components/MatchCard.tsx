@@ -47,6 +47,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   
   // Optimize image URI for caching
   const optimizedImageUri = React.useMemo(() => {
@@ -74,16 +75,30 @@ const MatchCard: React.FC<MatchCardProps> = ({
         source={optimizedImage}
         contentFit="cover"
         contentPosition="top"
-        style={[styles.image, imageStyle]}
+        style={[
+          styles.image, 
+          imageStyle,
+          { 
+            opacity: imageLoaded ? 1 : 0.8,
+            transform: [{ scale: imageLoaded ? 1 : 1.05 }]
+          }
+        ]}
         blurRadius={locked ? 15 : 0}
         cachePolicy="memory-disk"
-        transition={200}
+        transition={300}
         priority="high"
-        onLoadStart={() => setIsLoading(true)}
-        onLoad={() => setIsLoading(false)}
+        onLoadStart={() => {
+          setIsLoading(true);
+          setImageLoaded(false);
+        }}
+        onLoad={() => {
+          setIsLoading(false);
+          setImageLoaded(true);
+        }}
         onError={() => {
           setIsLoading(false);
           setHasError(true);
+          setImageLoaded(false);
         }}
       />
       <LinearGradient

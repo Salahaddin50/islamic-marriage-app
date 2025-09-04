@@ -40,6 +40,7 @@ const OptimizedMatchCard: React.FC<OptimizedMatchCardProps> = memo(({
 }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [showPlaceholder, setShowPlaceholder] = useState(true);
 
   // Memoized image source
   const imageSource = React.useMemo(() => {
@@ -73,11 +74,19 @@ const OptimizedMatchCard: React.FC<OptimizedMatchCardProps> = memo(({
 
   const handleImageLoad = useCallback(() => {
     setImageLoaded(true);
+    setShowPlaceholder(false);
   }, []);
 
   const handleImageError = useCallback(() => {
     setImageError(true);
     setImageLoaded(true);
+    setShowPlaceholder(false);
+  }, []);
+
+  const handleImageLoadStart = useCallback(() => {
+    setShowPlaceholder(true);
+    setImageLoaded(false);
+    setImageError(false);
   }, []);
 
   return (
@@ -86,22 +95,49 @@ const OptimizedMatchCard: React.FC<OptimizedMatchCardProps> = memo(({
       style={[styles.container, containerStyle]}
       activeOpacity={0.85}
     >
-      {/* Optimized Image with lazy loading */}
-      <Image
-        source={imageSource}
-        contentFit="cover"
-        contentPosition="top"
-        style={styles.image}
-        blurRadius={locked ? 15 : 0}
-        cachePolicy="memory-disk"
-        transition={imageLoaded ? 200 : 0}
-        priority={index < 6 ? "high" : "normal"}
-        onLoad={handleImageLoad}
-        onError={handleImageError}
-        placeholder={{
-          uri: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k='
-        }}
-      />
+      {/* Progressive Image Loading */}
+      <View style={styles.imageContainer}>
+        {/* Blur placeholder - shows while loading */}
+        {showPlaceholder && (
+          <Image
+            source={{
+              uri: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k='
+            }}
+            style={[styles.image, styles.placeholder]}
+            contentFit="cover"
+            blurRadius={20}
+            cachePolicy="none"
+          />
+        )}
+        
+        {/* Main image */}
+        <Image
+          source={imageSource}
+          contentFit="cover"
+          contentPosition="top"
+          style={[
+            styles.image,
+            {
+              opacity: imageLoaded ? 1 : 0,
+              transform: [{ scale: imageLoaded ? 1 : 1.1 }]
+            }
+          ]}
+          blurRadius={locked ? 15 : 0}
+          cachePolicy="memory-disk"
+          transition={300}
+          priority={index < 4 ? "high" : "normal"}
+          onLoadStart={handleImageLoadStart}
+          onLoad={handleImageLoad}
+          onError={handleImageError}
+        />
+        
+        {/* Loading indicator for better UX */}
+        {showPlaceholder && !imageError && (
+          <View style={styles.loadingOverlay}>
+            <View style={styles.loadingDot} />
+          </View>
+        )}
+      </View>
 
       {/* Gradient overlay */}
       <LinearGradient
@@ -136,18 +172,34 @@ const OptimizedMatchCard: React.FC<OptimizedMatchCardProps> = memo(({
     </TouchableOpacity>
   );
 }, (prevProps, nextProps) => {
-  // Optimized shallow comparison
-  return (
-    prevProps.id === nextProps.id &&
-    prevProps.name === nextProps.name &&
-    prevProps.age === nextProps.age &&
-    prevProps.locked === nextProps.locked &&
-    prevProps.height === nextProps.height &&
-    prevProps.weight === nextProps.weight &&
-    prevProps.country === nextProps.country &&
-    prevProps.city === nextProps.city &&
-    JSON.stringify(prevProps.image) === JSON.stringify(nextProps.image)
-  );
+  // Fast equality check - avoid JSON.stringify for better performance
+  if (
+    prevProps.id !== nextProps.id ||
+    prevProps.name !== nextProps.name ||
+    prevProps.age !== nextProps.age ||
+    prevProps.locked !== nextProps.locked ||
+    prevProps.height !== nextProps.height ||
+    prevProps.weight !== nextProps.weight ||
+    prevProps.country !== nextProps.country ||
+    prevProps.city !== nextProps.city ||
+    prevProps.index !== nextProps.index
+  ) {
+    return false;
+  }
+
+  // Optimized image comparison
+  const prevImage = prevProps.image;
+  const nextImage = nextProps.image;
+  
+  if (prevImage === nextImage) return true;
+  if (!prevImage || !nextImage) return false;
+  
+  // For image objects, compare URI only
+  if (typeof prevImage === 'object' && typeof nextImage === 'object') {
+    return prevImage.uri === nextImage.uri;
+  }
+  
+  return prevImage === nextImage;
 });
 
 const styles = StyleSheet.create({
@@ -161,9 +213,34 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
+  imageContainer: {
+    width: '100%',
+    height: '100%',
+    position: 'relative',
+  },
   image: {
     width: '100%',
     height: '100%',
+  },
+  placeholder: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    zIndex: 1,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -8 }, { translateY: -8 }],
+    zIndex: 2,
+  },
+  loadingDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    opacity: 0.7,
   },
   gradient: {
     position: 'absolute',

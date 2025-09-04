@@ -29,7 +29,7 @@ interface UseVirtualizedProfilesOptions {
 }
 
 export const useVirtualizedProfiles = (options: UseVirtualizedProfilesOptions = {}) => {
-  const { pageSize = 24, enablePrefetch = true, cacheKey = 'profiles_cache' } = options;
+  const { pageSize = 12, enablePrefetch = true, cacheKey = 'profiles_cache' } = options; // Reduced for faster initial load
   
   const [profiles, setProfiles] = useState<ProfileItem[]>([]);
   const [loading, setLoading] = useState(true);

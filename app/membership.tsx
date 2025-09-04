@@ -8,7 +8,7 @@ import Header from '../components/Header';
 import Button from '../components/Button';
 import { Octicons } from "@expo/vector-icons";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useNavigation, useFocusEffect } from 'expo-router';
+import { useNavigation, useFocusEffect, useLocalSearchParams, router } from 'expo-router';
 import { NavigationProp } from '@react-navigation/native';
 import { supabase } from '@/src/config/supabase';
 import { getResponsiveSpacing } from '../utils/responsive';
@@ -76,6 +76,7 @@ const packages: Package[] = [
 
 const Membership = () => {
     const navigation = useNavigation<NavigationProp<any>>();
+    const params = useLocalSearchParams();
     const layout = useWindowDimensions();
     
     const [index, setIndex] = useState(0);
@@ -209,6 +210,16 @@ const Membership = () => {
         loadUserMembership();
         loadPaymentRecords();
     }, []);
+
+    // If navigated with ?tab=payments, switch to payments tab
+    useEffect(() => {
+        try {
+            if (typeof params?.tab === 'string' && params.tab.toLowerCase() === 'payments') {
+                setIndex(1);
+            }
+        } catch {}
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [params?.tab]);
 
     useEffect(() => {
         let channel: any;
@@ -348,9 +359,6 @@ const Membership = () => {
 
     const processPackagePurchase = async (pkg: Package, amount: number) => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-
             const baselinePrice = getBaselinePrice();
             const baselinePackageId = currentUserPackage || (
                 paymentRecords
@@ -358,37 +366,16 @@ const Membership = () => {
                   .sort((a,b) => (priceById[b.packageType!]||0) - (priceById[a.packageType!]||0))[0]?.packageType || null
             );
 
-            const paymentDetails = {
-                type: baselinePrice > 0 && pkg.price > baselinePrice ? 'upgrade' : 'purchase',
-                previous_package: baselinePackageId,
-                target_package: pkg.id,
-                baseline_price: baselinePrice,
-                target_price: pkg.price,
-                difference_paid: amount,
-                timestamp: new Date().toISOString(),
-            };
-
-            // Create a single payment record with JSON details
-            const { error } = await supabase
-                .from('payment_records')
-                .insert({
-                    user_id: user.id,
-                    package_name: pkg.name,
-                    package_type: pkg.id,
-                    amount: amount,
-                    status: 'pending',
-                    payment_method: 'manual',
-                    payment_details: paymentDetails,
-                });
-
-            if (!error) {
-                Alert.alert('Success', 'Package purchase request submitted! We will contact you for payment.');
-                await loadPaymentRecords();
-                await loadUserMembership();
-                setIndex(1);
-            }
+            const query = new URLSearchParams({
+                pkg: pkg.id,
+                name: pkg.name,
+                amount: String(amount),
+                baseline_price: String(baselinePrice || 0),
+                previous_package: baselinePackageId || ''
+            }).toString();
+            router.push(`/checkout/paypal?${query}`);
         } catch (error) {
-            Alert.alert('Error', 'Failed to process package selection.');
+            Alert.alert('Error', 'Failed to start checkout.');
         }
     };
 

@@ -32,7 +32,7 @@ export const getCurrentEnvironment = (): Environment => {
 const OAUTH_REDIRECT_URLS = {
   [ENV.DEVELOPMENT]: 'http://localhost:8081/auth/callback',
   [ENV.STAGING]: 'https://staging-hume-dating.vercel.app/auth/callback',
-  [ENV.PRODUCTION]: 'https://islamic-marriage-app.vercel.app/auth/callback',
+  [ENV.PRODUCTION]: 'https://zawajplus.app/auth/callback',
 };
 
 // Helper function to get the correct OAuth redirect URL
@@ -43,9 +43,9 @@ export const getOAuthRedirectUrl = (): string => {
   if (typeof window !== 'undefined') {
     const { protocol, host } = window.location;
     
-    // FORCE production URL if we're on Vercel
-    if (host.includes('vercel.app') || host.includes('islamic-marriage-app')) {
-      return 'https://islamic-marriage-app.vercel.app/auth/callback';
+    // FORCE production URL if we're on known prod hosts
+    if (host.includes('zawajplus.app')) {
+      return 'https://zawajplus.app/auth/callback';
     }
     
     // In production, override with environment-specific URL if available
@@ -78,9 +78,9 @@ const API_ENDPOINTS = {
     UPLOAD_URL: 'https://api-staging.hume-dating.com/api/v1/upload',
   },
   [ENV.PRODUCTION]: {
-    BASE_URL: 'https://api.hume-dating.com/api/v1',
-    WS_URL: 'wss://api.hume-dating.com',
-    UPLOAD_URL: 'https://api.hume-dating.com/api/v1/upload',
+    BASE_URL: 'https://api.zawajplus.app/api/v1',
+    WS_URL: 'wss://api.zawajplus.app',
+    UPLOAD_URL: 'https://api.zawajplus.app/api/v1/upload',
   },
 };
 
@@ -218,6 +218,20 @@ export const PAYMENT_CONFIG = {
     [ENV.PRODUCTION]: 'pk_live_production_key',
   },
   
+  // Hosted Checkout Links (set your own links/tokens)
+  CHECKOUT_URLS: {
+    PAYPAL: {
+      [ENV.DEVELOPMENT]: 'https://www.paypal.com/checkoutnow?token=DEV_PAYPAL_TOKEN',
+      [ENV.STAGING]: 'https://www.paypal.com/checkoutnow?token=STAGING_PAYPAL_TOKEN',
+      [ENV.PRODUCTION]: 'https://www.paypal.com/checkoutnow?token=PROD_PAYPAL_TOKEN',
+    },
+    STRIPE_PAYMENT_LINK: {
+      [ENV.DEVELOPMENT]: 'https://buy.stripe.com/test_XXXXXXXXXXXXXXXXXX',
+      [ENV.STAGING]: 'https://buy.stripe.com/test_YYYYYYYYYYYYYYYYYY',
+      [ENV.PRODUCTION]: 'https://buy.stripe.com/ZZZZZZZZZZZZZZZZZZ',
+    },
+  },
+  
   // Subscription Plans
   PLANS: {
     PREMIUM: {
@@ -257,7 +271,7 @@ export const MEDIA_CONFIG = {
   CDN_BASE_URL: {
     [ENV.DEVELOPMENT]: 'http://localhost:3000/uploads',
     [ENV.STAGING]: 'https://cdn-staging.hume-dating.com',
-    [ENV.PRODUCTION]: 'https://cdn.hume-dating.com',
+    [ENV.PRODUCTION]: 'https://cdn.zawajplus.app',
   },
   
   // Image Processing

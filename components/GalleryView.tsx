@@ -41,10 +41,33 @@ const GalleryView: React.FC<GalleryViewProps> = ({
   windowSize,
   removeClippedSubviews
 }) => {
+  // Memoized render function for better performance
+  const renderItem = React.useCallback(({ item, index }: { item: GalleryItem; index: number }) => (
+    <View style={[styles.cardWrapper, { width: cardWidth, height: cardHeight }]}> 
+      <OptimizedMatchCard
+        id={item.id}
+        name={item.name}
+        age={item.age}
+        image={item.image}
+        height={item.height}
+        weight={item.weight}
+        country={item.country}
+        city={item.city}
+        locked={item.locked}
+        index={index}
+        onPress={item.onPress}
+        containerStyle={{ width: '100%', height: '100%' }}
+      />
+    </View>
+  ), [cardWidth, cardHeight]);
+
+  // Memoized key extractor
+  const keyExtractor = React.useCallback((item: GalleryItem) => item.id, []);
+
   return (
     <FlatList
       data={data}
-      keyExtractor={(item) => item.id}
+      keyExtractor={keyExtractor}
       contentContainerStyle={styles.container}
       initialNumToRender={initialNumToRender}
       maxToRenderPerBatch={maxToRenderPerBatch}
@@ -53,24 +76,7 @@ const GalleryView: React.FC<GalleryViewProps> = ({
       onEndReachedThreshold={onEndReachedThreshold}
       onEndReached={onEndReached}
       ListFooterComponent={footer || null}
-      renderItem={({ item, index }) => (
-        <View style={[styles.cardWrapper, { width: cardWidth, height: cardHeight }]}> 
-          <OptimizedMatchCard
-            id={item.id}
-            name={item.name}
-            age={item.age}
-            image={item.image}
-            height={item.height}
-            weight={item.weight}
-            country={item.country}
-            city={item.city}
-            locked={item.locked}
-            index={index}
-            onPress={item.onPress}
-            containerStyle={{ width: '100%', height: '100%' }}
-          />
-        </View>
-      )}
+      renderItem={renderItem}
       showsVerticalScrollIndicator={false}
     />
   );

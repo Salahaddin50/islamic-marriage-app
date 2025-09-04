@@ -13,7 +13,7 @@ const EMAIL_CONFIG = {
   NOREPLY_EMAIL: 'noreply@zawajplus.com',
   GREETING: 'Assalamu Alaikum',
   SIGNATURE: 'Barakallahu feeki,\nThe Zawajplus Islamic Marriage Team',
-  WEBSITE_URL: typeof window !== 'undefined' ? window.location.origin : 'https://zawajplus.com'
+  WEBSITE_URL: typeof window !== 'undefined' ? window.location.origin : 'https://zawajplus.app'
 };
 
 export class EmailService {
