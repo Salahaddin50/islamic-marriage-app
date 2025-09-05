@@ -84,14 +84,14 @@ const GridView: React.FC<GridViewProps> = ({
       initialNumToRender={initialNumToRender}
       maxToRenderPerBatch={maxToRenderPerBatch}
       windowSize={windowSize}
-      removeClippedSubviews={removeClippedSubviews}
+      removeClippedSubviews={false}
       onEndReachedThreshold={onEndReachedThreshold}
       onEndReached={onEndReached}
       ListFooterComponent={footer || null}
       columnWrapperStyle={columnWrapperStyle}
       contentContainerStyle={[styles.container, { paddingBottom: 140 }]}
       renderItem={renderItem}
-      getItemLayout={getItemLayout}
+      // getItemLayout intentionally omitted to avoid hidden rows when list recalculates after navigation
       refreshControl={refreshControl}
       showsVerticalScrollIndicator={false}
     />

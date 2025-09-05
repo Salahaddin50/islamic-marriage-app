@@ -276,7 +276,6 @@ const HomeScreen = () => {
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 12; // Reduced for faster initial load
   const [filterLoading, setFilterLoading] = useState(false);
-  const [totalMatching, setTotalMatching] = useState<number | null>(null);
   const refRBSheet = useRef<any>(null);
   const imagePreloadRef = useRef(new Set<string>());
   const [showIncompleteProfileModal, setShowIncompleteProfileModal] = useState(false);
@@ -717,10 +716,7 @@ const HomeScreen = () => {
       setLoading(true);
       }
       
-      // Clear cache when gender filtering issues occur - temporary debug
-      console.log('🔧 Clearing user cache for gender debug');
-      cachedUsers = [];
-      cachedAt = 0;
+      // Do not clear cached users here; preserve list across navigations to avoid empty states
       
       // Get current user to exclude them from results and determine their gender
       const { data: { user: currentUser } } = await supabase.auth.getUser();
@@ -883,7 +879,7 @@ const HomeScreen = () => {
         query = query.contains('languages_spoken', selectedLanguages);
       }
 
-      const { data: profilesData, error, count } = await query as any;
+      const { data: profilesData, error } = await query;
 
       if (error) {
         console.error('❌ Query Error:', error);
@@ -912,195 +908,14 @@ const HomeScreen = () => {
         }
       });
 
-      // Set total matching from query count (full matching rows, independent of pagination)
-      if (typeof count === 'number') {
-        setTotalMatching(count);
-      }
-
-      // Fetch total matching count with same filters for display
-      try {
-        let countQuery = supabase
-          .from('optimized_home_profiles')
-          .select('id', { count: 'exact', head: true });
-
-        if (currentUser?.id) {
-          countQuery = countQuery.neq('user_id', currentUser.id);
-        }
-        if (currentUserGender) {
-          const og = currentUserGender.toLowerCase() === 'male' ? 'female' : 'male';
-          countQuery = countQuery.eq('gender', og);
-        }
-        if (selectedCountry) countQuery = countQuery.eq('country', selectedCountry);
-        if (selectedCity) countQuery = countQuery.eq('city', selectedCity);
-
-        const isDefaultHeight = Array.isArray(heightRange) && heightRange[0] === 150 && heightRange[1] === 200;
-        const isDefaultWeight = Array.isArray(weightRange) && weightRange[0] === 40 && weightRange[1] === 120;
-        const isDefaultAge = Array.isArray(ageRange) && ageRange[0] === 20 && ageRange[1] === 50;
-
-        if (heightRange && !isDefaultHeight) {
-          countQuery = countQuery.gte('height_cm', heightRange[0]).lte('height_cm', heightRange[1]);
-        }
-        if (weightRange && !isDefaultWeight) {
-          countQuery = countQuery.gte('weight_kg', weightRange[0]).lte('weight_kg', weightRange[1]);
-        }
-        if (selectedEyeColor.length) countQuery = countQuery.in('eye_color', selectedEyeColor);
-        if (selectedHairColor.length) countQuery = countQuery.in('hair_color', selectedHairColor);
-        if (selectedSkinTone.length) countQuery = countQuery.in('skin_tone', selectedSkinTone);
-        if (selectedBodyType.length) countQuery = countQuery.in('body_type', selectedBodyType);
-        if (selectedEducation.length) countQuery = countQuery.in('education_level', selectedEducation);
-        if (selectedHousingType.length) countQuery = countQuery.in('housing_type', selectedHousingType);
-        if (selectedLivingCondition.length) countQuery = countQuery.in('living_condition', selectedLivingCondition);
-        if (selectedSocialCondition.length) countQuery = countQuery.in('social_condition', selectedSocialCondition);
-        if (selectedWorkStatus.length) countQuery = countQuery.in('work_status', selectedWorkStatus);
-        if (selectedLanguages.length) countQuery = countQuery.contains('languages_spoken', selectedLanguages);
-
-        if (selectedReligiousLevel.length) {
-          countQuery = countQuery.filter('islamic_questionnaire->>religious_level', 'in', `(${selectedReligiousLevel.join(',')})`);
-        }
-        if (selectedPrayerFrequency.length) {
-          countQuery = countQuery.filter('islamic_questionnaire->>prayer_frequency', 'in', `(${selectedPrayerFrequency.join(',')})`);
-        }
-        if (selectedQuranReading.length) {
-          countQuery = countQuery.filter('islamic_questionnaire->>quran_reading_level', 'in', `(${selectedQuranReading.join(',')})`);
-        }
-        if (oppositeGender === 'female' && selectedCoveringLevel.length) {
-          countQuery = countQuery.filter('islamic_questionnaire->>covering_level', 'in', `(${selectedCoveringLevel.join(',')})`);
-        }
-        if (oppositeGender === 'female' && selectedAcceptedWifePositions.length) {
-          selectedAcceptedWifePositions.forEach(position => {
-            countQuery = countQuery.filter('islamic_questionnaire->accepted_wife_positions', 'cs', `["${position}"]`);
-          });
-        }
-        if (oppositeGender === 'male' && selectedBeardPractice.length) {
-          countQuery = countQuery.filter('islamic_questionnaire->>beard_practice', 'in', `(${selectedBeardPractice.join(',')})`);
-        }
-        if (oppositeGender === 'male' && selectedSeekingWifeNumber.length) {
-          countQuery = countQuery.filter('islamic_questionnaire->>seeking_wife_number', 'in', `(${selectedSeekingWifeNumber.join(',')})`);
-        }
-
-        // Age filter using precomputed age in optimized view
-        if (!isDefaultAge) {
-          countQuery = countQuery.gte('age', ageRange[0]).lte('age', ageRange[1]);
-        }
-
-        const { count: matchingCount } = await countQuery;
-        if (typeof matchingCount === 'number') {
-          setTotalMatching(matchingCount);
-        } else {
-          // Fallback to base table if optimized view is unavailable
-          try {
-            let fallbackCount = supabase
-              .from('user_profiles')
-              .select('id', { count: 'exact', head: true })
-              .eq('is_public', true);
-
-            if (currentUser?.id) fallbackCount = fallbackCount.neq('user_id', currentUser.id);
-            if (currentUserGender) {
-              const og2 = currentUserGender.toLowerCase() === 'male' ? 'female' : 'male';
-              fallbackCount = fallbackCount.eq('gender', og2);
-            }
-
-            // Only apply additional filters when not ignoring filters
-            const applyExtra = !ignoreFilters;
-            if (applyExtra) {
-              if (selectedCountry) fallbackCount = fallbackCount.eq('country', selectedCountry);
-              if (selectedCity) fallbackCount = fallbackCount.eq('city', selectedCity);
-
-              const isDefaultHeight2 = Array.isArray(heightRange) && heightRange[0] === 150 && heightRange[1] === 200;
-              const isDefaultWeight2 = Array.isArray(weightRange) && weightRange[0] === 40 && weightRange[1] === 120;
-              const isDefaultAge2 = Array.isArray(ageRange) && ageRange[0] === 20 && ageRange[1] === 50;
-
-              if (heightRange && !isDefaultHeight2) fallbackCount = fallbackCount.gte('height_cm', heightRange[0]).lte('height_cm', heightRange[1]);
-              if (weightRange && !isDefaultWeight2) fallbackCount = fallbackCount.gte('weight_kg', weightRange[0]).lte('weight_kg', weightRange[1]);
-              if (selectedEyeColor.length) fallbackCount = fallbackCount.in('eye_color', selectedEyeColor);
-              if (selectedHairColor.length) fallbackCount = fallbackCount.in('hair_color', selectedHairColor);
-              if (selectedSkinTone.length) fallbackCount = fallbackCount.in('skin_tone', selectedSkinTone);
-              if (selectedBodyType.length) fallbackCount = fallbackCount.in('body_type', selectedBodyType);
-              if (selectedEducation.length) fallbackCount = fallbackCount.in('education_level', selectedEducation);
-              if (selectedHousingType.length) fallbackCount = fallbackCount.in('housing_type', selectedHousingType);
-              if (selectedLivingCondition.length) fallbackCount = fallbackCount.in('living_condition', selectedLivingCondition);
-              if (selectedSocialCondition.length) fallbackCount = fallbackCount.in('social_condition', selectedSocialCondition);
-              if (selectedWorkStatus.length) fallbackCount = fallbackCount.in('work_status', selectedWorkStatus);
-              if (selectedLanguages.length) fallbackCount = fallbackCount.contains('languages_spoken', selectedLanguages);
-
-              // Approximate age range using date_of_birth bounds
-              if (!isDefaultAge2) {
-                const now = new Date();
-                const minAge = ageRange[0];
-                const maxAge = ageRange[1];
-                const maxDob = new Date(now.getFullYear() - minAge, now.getMonth(), now.getDate());
-                const minDob = new Date(now.getFullYear() - maxAge, now.getMonth(), now.getDate());
-                const minDobIso = minDob.toISOString().split('T')[0];
-                const maxDobIso = maxDob.toISOString().split('T')[0];
-                fallbackCount = fallbackCount.gte('date_of_birth', minDobIso).lte('date_of_birth', maxDobIso);
-              }
-            }
-
-            const { count: fallback } = await fallbackCount;
-            if (typeof fallback === 'number') setTotalMatching(fallback);
-          } catch {}
-        }
-      } catch {
-        // Fallback to base table if optimized view is unavailable
-        try {
-          let fallbackCount = supabase
-            .from('user_profiles')
-            .select('id', { count: 'exact', head: true })
-            .eq('is_public', true);
-
-          if (currentUser?.id) fallbackCount = fallbackCount.neq('user_id', currentUser.id);
-          if (currentUserGender) {
-            const og2 = currentUserGender.toLowerCase() === 'male' ? 'female' : 'male';
-            fallbackCount = fallbackCount.eq('gender', og2);
-          }
-
-          const applyExtra = !ignoreFilters;
-          if (applyExtra) {
-            if (selectedCountry) fallbackCount = fallbackCount.eq('country', selectedCountry);
-            if (selectedCity) fallbackCount = fallbackCount.eq('city', selectedCity);
-
-            const isDefaultHeight2 = Array.isArray(heightRange) && heightRange[0] === 150 && heightRange[1] === 200;
-            const isDefaultWeight2 = Array.isArray(weightRange) && weightRange[0] === 40 && weightRange[1] === 120;
-            const isDefaultAge2 = Array.isArray(ageRange) && ageRange[0] === 20 && ageRange[1] === 50;
-
-            if (heightRange && !isDefaultHeight2) fallbackCount = fallbackCount.gte('height_cm', heightRange[0]).lte('height_cm', heightRange[1]);
-            if (weightRange && !isDefaultWeight2) fallbackCount = fallbackCount.gte('weight_kg', weightRange[0]).lte('weight_kg', weightRange[1]);
-            if (selectedEyeColor.length) fallbackCount = fallbackCount.in('eye_color', selectedEyeColor);
-            if (selectedHairColor.length) fallbackCount = fallbackCount.in('hair_color', selectedHairColor);
-            if (selectedSkinTone.length) fallbackCount = fallbackCount.in('skin_tone', selectedSkinTone);
-            if (selectedBodyType.length) fallbackCount = fallbackCount.in('body_type', selectedBodyType);
-            if (selectedEducation.length) fallbackCount = fallbackCount.in('education_level', selectedEducation);
-            if (selectedHousingType.length) fallbackCount = fallbackCount.in('housing_type', selectedHousingType);
-            if (selectedLivingCondition.length) fallbackCount = fallbackCount.in('living_condition', selectedLivingCondition);
-            if (selectedSocialCondition.length) fallbackCount = fallbackCount.in('social_condition', selectedSocialCondition);
-            if (selectedWorkStatus.length) fallbackCount = fallbackCount.in('work_status', selectedWorkStatus);
-            if (selectedLanguages.length) fallbackCount = fallbackCount.contains('languages_spoken', selectedLanguages);
-
-            if (!isDefaultAge2) {
-              const now = new Date();
-              const minAge = ageRange[0];
-              const maxAge = ageRange[1];
-              const maxDob = new Date(now.getFullYear() - minAge, now.getMonth(), now.getDate());
-              const minDob = new Date(now.getFullYear() - maxAge, now.getMonth(), now.getDate());
-              const minDobIso = minDob.toISOString().split('T')[0];
-              const maxDobIso = maxDob.toISOString().split('T')[0];
-              fallbackCount = fallbackCount.gte('date_of_birth', minDobIso).lte('date_of_birth', maxDobIso);
-            }
-          }
-
-          const { count: fallback } = await fallbackCount;
-          if (typeof fallback === 'number') setTotalMatching(fallback);
-        } catch {}
-      }
-
       // Optimized fallback for profile pictures - only query if needed
       let userIdToProfilePic: Record<string, string> = {};
       if (profilesData && profilesData.length > 0) {
-          const missingUserIds = profilesData
-            .filter((p: any) => !p.profile_picture_url)
-            .map((p: any) => p.user_id);
+        const missingUserIds = profilesData
+          .filter((p: any) => !p.profile_picture_url)
+          .map((p: any) => p.user_id);
 
-          if (missingUserIds.length > 0) {
+        if (missingUserIds.length > 0) {
           try {
             // More efficient query with only essential fields
             const { data: mediaRows } = await supabase
@@ -1112,13 +927,13 @@ const HomeScreen = () => {
               .limit(missingUserIds.length); // Limit to exact number needed
 
             mediaRows?.forEach((row: any) => {
-                const url = row.do_spaces_cdn_url || row.do_spaces_url || row.external_url;
-                if (url) {
-                  userIdToProfilePic[row.user_id] = url;
-                }
-              });
-        } catch (e) {
-          // Silent error handling for media references
+              const url = row.do_spaces_cdn_url || row.do_spaces_url || row.external_url;
+              if (url) {
+                userIdToProfilePic[row.user_id] = url;
+              }
+            });
+          } catch (e) {
+            // Silent error handling for media references
           }
         }
       }
@@ -1646,7 +1461,7 @@ const HomeScreen = () => {
           >
             <Text style={[styles.bottomTitle, {
               color: COLORS.greyscale900
-            }]}>Filter</Text>
+            }]}>Filter ({users.length})</Text>
             <View style={styles.separateLine} />
             <ScrollView style={{ flex: 1, maxHeight: windowHeight * 0.9 - 150 }} showsVerticalScrollIndicator={false}>
             <View style={{ marginHorizontal: 16 }}>
@@ -2065,14 +1880,15 @@ const HomeScreen = () => {
             cardHeight={galleryCardHeight}
             initialNumToRender={4}
             maxToRenderPerBatch={4}
-            windowSize={3}
-            removeClippedSubviews={true}
+            windowSize={5}
+            removeClippedSubviews={false}
             onEndReachedThreshold={0.2}
             onEndReached={() => {
               if (!isFetchingMore && hasMore && users.length >= PAGE_SIZE) {
                 fetchUserProfiles(false, false, true);
               }
             }}
+            // getItemLayout disabled to avoid edge-case virtualization glitches when returning from details
             footer={isFetchingMore ? (
               <View style={{ paddingVertical: 16, alignItems: 'center' }}>
                 <ActivityIndicator size="small" color={COLORS.primary} />
@@ -2091,14 +1907,15 @@ const HomeScreen = () => {
             numColumns={desktopColumns}
             initialNumToRender={4}
             maxToRenderPerBatch={4}
-            windowSize={3}
-            removeClippedSubviews={true}
+            windowSize={5}
+            removeClippedSubviews={false}
             onEndReachedThreshold={0.2}
             onEndReached={() => {
               if (!isFetchingMore && hasMore && users.length >= PAGE_SIZE) {
                 fetchUserProfiles(false, false, true);
               }
             }}
+            // getItemLayout disabled to avoid edge-case virtualization glitches when returning from details
             footer={isFetchingMore ? (
               <View style={{ paddingVertical: 16, alignItems: 'center' }}>
                 <ActivityIndicator size="small" color={COLORS.primary} />
@@ -2106,8 +1923,6 @@ const HomeScreen = () => {
             ) : null}
           />
         )}
-
-        {/* Floating count removed from home page; kept in filter UI header */}
           {filterLoading && (
             <View style={styles.filterLoadingOverlay}>
               <ActivityIndicator size="large" color={COLORS.primary} />
@@ -2157,14 +1972,9 @@ const HomeScreen = () => {
             }
           }}
         >
-          <View style={styles.filterHeaderRow}>
-            <Text style={[styles.bottomTitle, { color: COLORS.greyscale900 }]}>Filter</Text>
-            {typeof totalMatching === 'number' && totalMatching >= 0 && (
-              <View style={styles.inlineCountPill}>
-                <Text style={styles.inlineCountText}>{`${totalMatching} profiles`}</Text>
-              </View>
-            )}
-          </View>
+          <Text style={[styles.bottomTitle, {
+            color: COLORS.greyscale900
+          }]}>Filter ({users.length})</Text>
           <View style={styles.separateLine} />
           <ScrollView style={{ flex: 1, maxHeight: windowHeight * 0.9 - 150 }} showsVerticalScrollIndicator={false}>
           <View style={{ marginHorizontal: 16 }}>
@@ -2743,28 +2553,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
     textAlign: 'center',
   },
-  floatingCount: {
-    position: 'absolute',
-    alignSelf: 'center',
-    bottom: isMobileWeb() ? 96 : 80,
-    backgroundColor: COLORS.primary,
-    borderRadius: 16,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 3,
-    opacity: 0.95,
-  },
-  floatingCountText: {
-    color: COLORS.white,
-    fontSize: 13,
-    fontFamily: 'semibold'
-  },
   bottomTitle: {
     fontSize: 24,
     fontFamily: "semiBold",
@@ -2777,27 +2565,6 @@ const styles = StyleSheet.create({
     width: SIZES.width - 32,
     backgroundColor: COLORS.greyscale300,
     marginVertical: 12
-  },
-  filterHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  inlineCountPill: {
-    marginLeft: 8,
-    backgroundColor: COLORS.primary,
-    borderRadius: 14,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 10,
-  },
-  inlineCountText: {
-    color: COLORS.white,
-    fontSize: 12,
-    fontFamily: 'semibold',
   },
   sheetTitle: {
     fontSize: 18,
