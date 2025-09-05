@@ -19,6 +19,7 @@
     "@hookform/resolvers": "^5.2.1",
     "@kichiyaki/react-native-barcode-generator": "^0.6.7",
     "@ptomasroos/react-native-multi-slider": "^2.2.2",
+    "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-picker/picker": "2.9.0",
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
