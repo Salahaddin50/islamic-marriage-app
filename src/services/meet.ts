@@ -111,7 +111,7 @@ export const MeetService = {
 
     // Generate a Jitsi room link instantly (no external API)
     const randomPart = `${Math.random().toString(36).slice(2, 10)}-${Date.now().toString(36)}`;
-    const generatedLink = `https://meet.jit.si/hume-${randomPart}`;
+    const generatedLink = `https://meet.jit.si/zawajplus-${randomPart}`;
 
     const { error } = await supabase
       .from('meet_requests')

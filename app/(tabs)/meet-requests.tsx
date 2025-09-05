@@ -479,7 +479,7 @@ const MeetRequestsScreen = () => {
       return `https://meet.jit.si/${room}`;
     } catch {
       const seg = (link.split('/').pop() || '').trim();
-      if (!seg) return `https://meet.jit.si/hume-${Date.now().toString(36)}`;
+      if (!seg) return `https://meet.jit.si/zawajplus-${Date.now().toString(36)}`;
       return `https://meet.jit.si/${seg}`;
     }
   };
