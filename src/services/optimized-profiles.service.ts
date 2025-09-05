@@ -284,4 +284,131 @@ export class OptimizedProfilesService {
       return { exists: false };
     }
   }
+
+  /**
+   * Get filtered count matching current filters (full fidelity)
+   */
+  static async getFilteredCount(
+    filters: OptimizedProfileFilters = {},
+    currentUserGender?: string | null
+  ): Promise<number> {
+    try {
+      // Build count query mirroring fetchOptimizedProfiles filters
+      let query = supabase
+        .from('optimized_home_profiles')
+        .select('*', { count: 'exact', head: true });
+
+      // Gender filter (opposite gender)
+      if (currentUserGender) {
+        const oppositeGender = currentUserGender.toLowerCase() === 'male' ? 'female' : 'male';
+        query = query.eq('gender', oppositeGender);
+      }
+
+      // Location filters
+      if (filters.selectedCountry) {
+        query = query.eq('country', filters.selectedCountry);
+      }
+      if (filters.selectedCity) {
+        query = query.eq('city', filters.selectedCity);
+      }
+
+      // Age filters (pre-computed age in view)
+      if (filters.ageRange && filters.ageRange[0] > 0 && filters.ageRange[1] > 0) {
+        const [minAge, maxAge] = filters.ageRange;
+        if (!(minAge === 20 && maxAge === 50)) {
+          query = query.gte('age', minAge).lte('age', maxAge);
+        }
+      }
+
+      // Physical filters
+      if (filters.heightRange && !(filters.heightRange[0] === 150 && filters.heightRange[1] === 200)) {
+        query = query.gte('height_cm', filters.heightRange[0]).lte('height_cm', filters.heightRange[1]);
+      }
+      if (filters.weightRange && !(filters.weightRange[0] === 40 && filters.weightRange[1] === 120)) {
+        query = query.gte('weight_kg', filters.weightRange[0]).lte('weight_kg', filters.weightRange[1]);
+      }
+      if (filters.selectedEyeColor?.length) {
+        query = query.in('eye_color', filters.selectedEyeColor);
+      }
+      if (filters.selectedHairColor?.length) {
+        query = query.in('hair_color', filters.selectedHairColor);
+      }
+      if (filters.selectedSkinTone?.length) {
+        query = query.in('skin_tone', filters.selectedSkinTone);
+      }
+      if (filters.selectedBodyType?.length) {
+        query = query.in('body_type', filters.selectedBodyType);
+      }
+
+      // Lifestyle filters
+      if (filters.selectedEducation?.length) {
+        query = query.in('education_level', filters.selectedEducation);
+      }
+      if (filters.selectedHousingType?.length) {
+        query = query.in('housing_type', filters.selectedHousingType);
+      }
+      if (filters.selectedLivingCondition?.length) {
+        query = query.in('living_condition', filters.selectedLivingCondition);
+      }
+      if (filters.selectedSocialCondition?.length) {
+        query = query.in('social_condition', filters.selectedSocialCondition);
+      }
+      if (filters.selectedWorkStatus?.length) {
+        query = query.in('work_status', filters.selectedWorkStatus);
+      }
+
+      // Languages
+      if (filters.selectedLanguages?.length) {
+        query = query.contains('languages_spoken', filters.selectedLanguages);
+      }
+
+      // Religious filters (JSON in view)
+      if (filters.selectedReligiousLevel?.length) {
+        query = query.filter('islamic_questionnaire->>religious_level', 'in', `(${filters.selectedReligiousLevel.join(',')})`);
+      }
+      if (filters.selectedPrayerFrequency?.length) {
+        query = query.filter('islamic_questionnaire->>prayer_frequency', 'in', `(${filters.selectedPrayerFrequency.join(',')})`);
+      }
+      if (filters.selectedQuranReading?.length) {
+        query = query.filter('islamic_questionnaire->>quran_reading_level', 'in', `(${filters.selectedQuranReading.join(',')})`);
+      }
+
+      // Gender-specific religious filters
+      const oppositeGender = currentUserGender?.toLowerCase() === 'male' ? 'female' : 'male';
+      if (oppositeGender === 'female') {
+        if (filters.selectedCoveringLevel?.length) {
+          query = query.filter('islamic_questionnaire->>covering_level', 'in', `(${filters.selectedCoveringLevel.join(',')})`);
+        }
+        if (filters.selectedAcceptedWifePositions?.length) {
+          filters.selectedAcceptedWifePositions.forEach(position => {
+            query = query.filter('islamic_questionnaire->accepted_wife_positions', 'cs', `["${position}"]`);
+          });
+        }
+      }
+      if (oppositeGender === 'male') {
+        if (filters.selectedBeardPractice?.length) {
+          query = query.filter('islamic_questionnaire->>beard_practice', 'in', `(${filters.selectedBeardPractice.join(',')})`);
+        }
+        if (filters.selectedSeekingWifeNumber?.length) {
+          query = query.filter('islamic_questionnaire->>seeking_wife_number', 'in', `(${filters.selectedSeekingWifeNumber.join(',')})`);
+        }
+      }
+
+      // Search
+      if (filters.searchQuery && filters.searchQuery.trim().length > 0) {
+        const searchTerm = filters.searchQuery.trim().replace(/\s+/g, ' & ');
+        query = query.textSearch('search_vector', searchTerm);
+      }
+
+      const { count, error } = await query;
+      if (error) {
+        console.error('Filtered count error:', error);
+        return 0;
+      }
+      return count || 0;
+    } catch (error: any) {
+      console.error('Failed to get filtered count:', error);
+      return 0;
+    }
+  }
 }

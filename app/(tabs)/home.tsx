@@ -21,6 +21,7 @@ import { FlatGrid } from 'react-native-super-grid';
 import { imageCache } from '@/utils/imageCache';
 import { useNotifications } from '@/src/contexts/NotificationContext';
 import DesktopMobileNotice from '@/components/DesktopMobileNotice';
+import { OptimizedProfilesService } from '@/src/services/optimized-profiles.service';
 
 // Cached profile image to prevent reloading
 let cachedProfileImageUrl: string | null = null;
@@ -315,6 +316,83 @@ const HomeScreen = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [oppositeGender, setOppositeGender] = useState<string | null>(null);
   const [isGalleryView, setIsGalleryView] = useState(true);
+  // Total public profiles count (respects filters)
+  const [totalPublicCount, setTotalPublicCount] = useState<number | null>(null);
+
+  const loadTotalCount = React.useCallback(async () => {
+    try {
+      // Build minimal filters object matching current UI state
+      const filters: any = {
+        selectedCountry,
+        selectedCity,
+        ageRange,
+        heightRange,
+        weightRange,
+        selectedEyeColor,
+        selectedHairColor,
+        selectedSkinTone,
+        selectedBodyType,
+        selectedEducation,
+        selectedLanguages,
+        selectedHousingType,
+        selectedLivingCondition,
+        selectedSocialCondition,
+        selectedWorkStatus,
+        selectedReligiousLevel,
+        selectedPrayerFrequency,
+        selectedQuranReading,
+        selectedCoveringLevel,
+        selectedBeardPractice,
+        selectedAcceptedWifePositions,
+        selectedSeekingWifeNumber,
+      };
+
+      const { data: { user } } = await supabase.auth.getUser();
+      let currentUserGender: string | null = null;
+      if (user?.id) {
+        const { data: me } = await supabase
+          .from('user_profiles')
+          .select('gender')
+          .eq('user_id', user.id)
+          .single();
+        currentUserGender = me?.gender || null;
+      }
+
+      // Use fast filtered count for exact total
+      const total = await OptimizedProfilesService.getFilteredCount(filters, currentUserGender);
+      setTotalPublicCount(total);
+    } catch {
+      setTotalPublicCount(null);
+    }
+  }, [
+    selectedCountry,
+    selectedCity,
+    ageRange,
+    heightRange,
+    weightRange,
+    selectedEyeColor,
+    selectedHairColor,
+    selectedSkinTone,
+    selectedBodyType,
+    selectedEducation,
+    selectedLanguages,
+    selectedHousingType,
+    selectedLivingCondition,
+    selectedSocialCondition,
+    selectedWorkStatus,
+    selectedReligiousLevel,
+    selectedPrayerFrequency,
+    selectedQuranReading,
+    selectedCoveringLevel,
+    selectedBeardPractice,
+    selectedAcceptedWifePositions,
+    selectedSeekingWifeNumber,
+  ]);
+
+  // Load count on mount and whenever filters change
+  React.useEffect(() => {
+    loadTotalCount();
+  }, [loadTotalCount]);
   const [crownColor, setCrownColor] = useState<string>('#666666');
   const [currentPackage, setCurrentPackage] = useState<string | null>(null);
   const [isMale, setIsMale] = useState<boolean | null>(null);
@@ -1459,9 +1537,16 @@ const HomeScreen = () => {
               }
             }}
           >
-            <Text style={[styles.bottomTitle, {
-              color: COLORS.greyscale900
-            }]}>Filter ({users.length})</Text>
+            <View style={styles.filterHeaderRow}>
+              <Text style={[styles.bottomTitle, {
+                color: COLORS.greyscale900
+              }]}>Filter</Text>
+              {typeof totalPublicCount === 'number' && (
+                <View style={[styles.totalBadge, { marginLeft: 8 }]}>
+                  <Text style={styles.totalBadgeText}>{totalPublicCount} profiles</Text>
+                </View>
+              )}
+            </View>
             <View style={styles.separateLine} />
             <ScrollView style={{ flex: 1, maxHeight: windowHeight * 0.9 - 150 }} showsVerticalScrollIndicator={false}>
             <View style={{ marginHorizontal: 16 }}>
@@ -1923,6 +2008,13 @@ const HomeScreen = () => {
             ) : null}
           />
         )}
+          {typeof totalPublicCount === 'number' && (
+            <View style={styles.totalBadgeContainer} pointerEvents="none">
+              <View style={styles.totalBadge}>
+                <Text style={styles.totalBadgeText}>{totalPublicCount} profiles</Text>
+              </View>
+            </View>
+          )}
           {filterLoading && (
             <View style={styles.filterLoadingOverlay}>
               <ActivityIndicator size="large" color={COLORS.primary} />
@@ -1972,9 +2064,16 @@ const HomeScreen = () => {
             }
           }}
         >
-          <Text style={[styles.bottomTitle, {
-            color: COLORS.greyscale900
-          }]}>Filter ({users.length})</Text>
+          <View style={styles.filterHeaderRow}>
+            <Text style={[styles.bottomTitle, {
+              color: COLORS.greyscale900
+            }]}>Filter</Text>
+            {typeof totalPublicCount === 'number' && (
+              <View style={[styles.totalBadge, { marginLeft: 8, alignSelf: 'flex-end' }]}>
+                <Text style={styles.totalBadgeText}>{totalPublicCount} profiles</Text>
+              </View>
+            )}
+          </View>
           <View style={styles.separateLine} />
           <ScrollView style={{ flex: 1, maxHeight: windowHeight * 0.9 - 150 }} showsVerticalScrollIndicator={false}>
           <View style={{ marginHorizontal: 16 }}>
@@ -2444,10 +2543,39 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     paddingVertical: 16
   },
+  totalBadgeContainer: {
+    position: 'absolute',
+    bottom: 64,
+    width: '100%',
+    alignItems: 'center'
+  },
+  totalBadge: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2
+  },
+  totalBadgeText: {
+    color: '#FFFFFF',
+    fontFamily: 'semibold',
+    fontSize: 12,
+    letterSpacing: 0.2
+  },
   headerContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    paddingHorizontal: 16
+  },
+  filterHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: 16
   },
   userIcon: {
