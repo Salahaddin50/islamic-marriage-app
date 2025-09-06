@@ -41,7 +41,7 @@ const packages: Package[] = [
     {
         id: "premium",
         name: "Premium",
-        price: 100,
+        price: 0.5,
         crownColor: "#6A1B9A", // Purple
         features: [
             'Lifetime subscription till marriage',
@@ -193,7 +193,7 @@ const Membership = () => {
     };
 
     const priceById: Record<string, number> = {
-        premium: 100,
+        premium: 0.5,
         vip_premium: 200,
         golden_premium: 500,
     };
