@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, Alert, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, Alert, ActivityIndicator, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { supabase } from '@/src/config/supabase';
@@ -125,27 +125,29 @@ export default function PaypalCheckout() {
     <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white }}>
       <View style={{ flex: 1, padding: 16, backgroundColor: COLORS.white }}>
         <Header title="Checkout" fallbackRoute="/membership" />
-        <Text style={{ fontFamily: 'medium', fontSize: 14, color: COLORS.grayscale700, marginBottom: 16 }}>
-          Package: {pkgName} • Amount: ${amount}
-        </Text>
-        {Platform.OS === 'web' ? (
-          <>
-            {loading && (
-              <View style={{ alignItems: 'center', marginTop: 20 }}>
-                <ActivityIndicator color={COLORS.primary} />
-                <Text style={{ marginTop: 8, color: COLORS.grayscale700 }}>Loading PayPal…</Text>
-              </View>
-            )}
-            {error && (
-              <Text style={{ color: 'red', marginBottom: 12 }}>{error}</Text>
-            )}
-            <div ref={containerRef} />
-          </>
-        ) : (
-          <Text style={{ color: COLORS.grayscale700 }}>
-            PayPal checkout is not implemented on native in this build.
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
+          <Text style={{ fontFamily: 'medium', fontSize: 14, color: COLORS.grayscale700, marginBottom: 16 }}>
+            Package: {pkgName} • Amount: ${amount}
           </Text>
-        )}
+          {Platform.OS === 'web' ? (
+            <>
+              {loading && (
+                <View style={{ alignItems: 'center', marginTop: 20 }}>
+                  <ActivityIndicator color={COLORS.primary} />
+                  <Text style={{ marginTop: 8, color: COLORS.grayscale700 }}>Loading PayPal…</Text>
+                </View>
+              )}
+              {error && (
+                <Text style={{ color: 'red', marginBottom: 12 }}>{error}</Text>
+              )}
+              <div ref={containerRef} />
+            </>
+          ) : (
+            <Text style={{ color: COLORS.grayscale700 }}>
+              PayPal checkout is not implemented on native in this build.
+            </Text>
+          )}
+        </ScrollView>
       </View>
     </SafeAreaView>
   );
