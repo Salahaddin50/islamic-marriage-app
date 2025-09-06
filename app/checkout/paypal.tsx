@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { supabase } from '@/src/config/supabase';
 import { COLORS } from '@/constants';
+import Header from '../../components/Header';
 
 // Minimal PayPal JS SDK loader for web
 function loadPayPal(clientId: string): Promise<any> {
@@ -12,7 +13,7 @@ function loadPayPal(clientId: string): Promise<any> {
     // @ts-ignore
     if (window.paypal) return resolve((window as any).paypal);
     const script = document.createElement('script');
-    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=USD&intent=capture`;
+    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=USD&intent=capture&locale=en_SA`;
     script.async = true;
     script.onload = () => {
       // @ts-ignore
@@ -29,13 +30,17 @@ export default function PaypalCheckout() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const orderIdRef = useRef<string | null>(null);
+  const [serverAmount, setServerAmount] = useState<string | null>(null);
 
   const clientId = process.env.EXPO_PUBLIC_PAYPAL_CLIENT_ID || '';
+  const apiBase = (process.env.EXPO_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
 
   const amount = useMemo(() => {
+    if (serverAmount) return serverAmount;
     const a = Number(params?.amount || 0);
     return Number.isFinite(a) && a > 0 ? a.toFixed(2) : '0.00';
-  }, [params?.amount]);
+  }, [params?.amount, serverAmount]);
 
   const pkgId = String(params?.pkg || '');
   const pkgName = String(params?.name || '');
@@ -57,6 +62,24 @@ export default function PaypalCheckout() {
       try {
         const paypal = await loadPayPal(clientId);
         if (!containerRef.current) throw new Error('Container missing');
+
+        // Create order on server to prevent client tampering
+        const createRes = await fetch(`${apiBase || ''}/api/paypal/create-order`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pkg: pkgId,
+            previous_package: previousPackage || undefined,
+          }),
+        });
+        if (!createRes.ok) {
+          const t = await createRes.text();
+          throw new Error(`Failed to create order: ${t}`);
+        }
+        const createJson = await createRes.json();
+        orderIdRef.current = String(createJson.orderID);
+        if (createJson.amount) setServerAmount(String(createJson.amount));
+
         const details = {
           type: baselinePrice > 0 && Number(amount) > baselinePrice ? 'upgrade' : 'purchase',
           previous_package: previousPackage,
@@ -69,16 +92,30 @@ export default function PaypalCheckout() {
 
         paypal.Buttons({
           style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' },
-          createOrder: (_data: any, actions: any) => {
-            return actions.order.create({
-              purchase_units: [{ amount: { currency_code: 'USD', value: amount } }],
-              application_context: { shipping_preference: 'NO_SHIPPING' },
-            });
+          createOrder: () => {
+            if (!orderIdRef.current) throw new Error('Order ID not ready');
+            return orderIdRef.current;
           },
           onApprove: async (_data: any, actions: any) => {
             try {
-              const capture = await actions.order.capture();
-              // Insert completed payment record only after approval
+              // Capture on server for security
+              const oid = orderIdRef.current;
+              if (!oid) throw new Error('Missing order ID');
+              const capRes = await fetch(`${apiBase || ''}/api/paypal/capture-order`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderID: oid }),
+              });
+              if (!capRes.ok) {
+                const tj = await capRes.json().catch(() => ({}));
+                throw new Error(tj?.error || 'Capture failed');
+              }
+              const capJson = await capRes.json();
+              if (!capJson || (capJson.status !== 'COMPLETED' && capJson.status !== 'CAPTURED')) {
+                throw new Error('Payment not completed');
+              }
+
+              // Insert completed payment record after secure capture
               const { data: { user } } = await supabase.auth.getUser();
               if (!user) throw new Error('Not authenticated');
               await supabase
@@ -90,8 +127,8 @@ export default function PaypalCheckout() {
                   amount: Number(amount),
                   status: 'completed',
                   payment_method: 'paypal',
-                  transaction_id: String(capture?.id || ''),
-                  gateway_response: capture,
+                  transaction_id: String(capJson?.id || ''),
+                  gateway_response: capJson,
                   payment_details: details,
                 });
               // Optionally activate package via RPC (kept simple; UI depends on records)
@@ -123,7 +160,7 @@ export default function PaypalCheckout() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white }}>
       <View style={{ flex: 1, padding: 16, backgroundColor: COLORS.white }}>
-        <Text style={{ fontFamily: 'bold', fontSize: 18, color: COLORS.greyscale900, marginBottom: 8 }}>Checkout</Text>
+        <Header title="Checkout" fallbackRoute="/membership" />
         <Text style={{ fontFamily: 'medium', fontSize: 14, color: COLORS.grayscale700, marginBottom: 16 }}>
           Package: {pkgName} • Amount: ${amount}
         </Text>
