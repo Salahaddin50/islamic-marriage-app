@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, Alert, ActivityIndicator, Platform, TouchableOpacity } from 'react-native';
+import { View, Text, Alert, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { supabase } from '@/src/config/supabase';
@@ -13,7 +13,7 @@ function loadPayPal(clientId: string): Promise<any> {
     // @ts-ignore
     if (window.paypal) return resolve((window as any).paypal);
     const script = document.createElement('script');
-    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=USD&intent=capture&locale=en_SA`;
+    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=USD&intent=capture`;
     script.async = true;
     script.onload = () => {
       // @ts-ignore
@@ -73,7 +73,6 @@ export default function PaypalCheckout() {
           createOrder: (_data: any, actions: any) => {
             return actions.order.create({
               purchase_units: [{ amount: { currency_code: 'USD', value: amount } }],
-              payer: { address: { country_code: 'SA' } },
               application_context: { shipping_preference: 'NO_SHIPPING' },
             });
           },

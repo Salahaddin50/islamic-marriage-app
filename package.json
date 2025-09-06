@@ -30,6 +30,8 @@
     "aws-sdk": "^2.1692.0",
     "axios": "^1.7.9",
     "axios-auth-refresh": "^3.3.6",
+    "braintree": "^3.33.1",
+    "braintree-web-drop-in": "^1.45.1",
     "buffer": "^6.0.3",
     "dotenv": "^17.2.1",
     "es-object-atoms": "^1.1.1",
