@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, Alert, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, Alert, ActivityIndicator, Platform, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { supabase } from '@/src/config/supabase';
@@ -30,16 +30,13 @@ export default function PaypalCheckout() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const orderIdRef = useRef<string | null>(null);
-  const [serverAmount, setServerAmount] = useState<string | null>(null);
 
   const clientId = process.env.EXPO_PUBLIC_PAYPAL_CLIENT_ID || '';
 
   const amount = useMemo(() => {
-    if (serverAmount) return serverAmount;
     const a = Number(params?.amount || 0);
     return Number.isFinite(a) && a > 0 ? a.toFixed(2) : '0.00';
-  }, [params?.amount, serverAmount]);
+  }, [params?.amount]);
 
   const pkgId = String(params?.pkg || '');
   const pkgName = String(params?.name || '');
@@ -61,46 +58,57 @@ export default function PaypalCheckout() {
       try {
         const paypal = await loadPayPal(clientId);
         if (!containerRef.current) throw new Error('Container missing');
-
-        // Create order on server for security
-        const { data: session } = await supabase.auth.getSession();
-        const accessToken = session?.session?.access_token || '';
-        if (!accessToken) throw new Error('Missing auth');
-        const createRes = await fetch(`/api/paypal/create-order`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
-          body: JSON.stringify({ pkg: pkgId }),
-        });
-        if (!createRes.ok) throw new Error(await createRes.text());
-        const createJson = await createRes.json();
-        orderIdRef.current = String(createJson.orderID);
-        if (createJson.amount) setServerAmount(String(createJson.amount));
+        const details = {
+          type: baselinePrice > 0 && Number(amount) > baselinePrice ? 'upgrade' : 'purchase',
+          previous_package: previousPackage,
+          target_package: pkgId,
+          baseline_price: baselinePrice,
+          target_price: Number(params?.amount || 0),
+          difference_paid: Number(params?.amount || 0),
+          timestamp: new Date().toISOString(),
+        };
 
         paypal.Buttons({
           style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' },
-          createOrder: () => {
-            if (!orderIdRef.current) throw new Error('Order ID not ready');
-            return orderIdRef.current;
+          createOrder: (_data: any, actions: any) => {
+            return actions.order.create({
+              purchase_units: [{ amount: { currency_code: 'USD', value: amount } }],
+              payer: { address: { country_code: 'SA' } },
+              application_context: { shipping_preference: 'NO_SHIPPING' },
+            });
           },
-          onApprove: async (data: any) => {
+          onApprove: async (_data: any, actions: any) => {
             try {
-              const { orderID } = data || {};
-              const capRes = await fetch(`/api/paypal/capture-order`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
-                body: JSON.stringify({ orderID, pkg: pkgId }),
-              });
-              if (!capRes.ok) throw new Error(await capRes.text());
-            } catch {
-              // ignore; UI will navigate back to payments
+              const capture = await actions.order.capture();
+              // Insert completed payment record only after approval
+              const { data: { user } } = await supabase.auth.getUser();
+              if (!user) throw new Error('Not authenticated');
+              await supabase
+                .from('payment_records')
+                .insert({
+                  user_id: user.id,
+                  package_name: pkgName,
+                  package_type: pkgId,
+                  amount: Number(amount),
+                  status: 'completed',
+                  payment_method: 'paypal',
+                  transaction_id: String(capture?.id || ''),
+                  gateway_response: capture,
+                  payment_details: details,
+                });
+              // Optionally activate package via RPC (kept simple; UI depends on records)
+            } catch (e) {
+              // No DB changes on failure; user will see nothing pending
             } finally {
               router.replace('/membership?tab=payments');
             }
           },
           onCancel: async () => {
+            // Do nothing in DB; user cancelled before submitting
             router.replace('/membership?tab=payments');
           },
-          onError: async () => {
+          onError: async (err: any) => {
+            // Do nothing in DB on error; avoid leaving a pending record
             router.replace('/membership?tab=payments');
           },
         }).render(containerRef.current);
