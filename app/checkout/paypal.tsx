@@ -30,17 +30,13 @@ export default function PaypalCheckout() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const orderIdRef = useRef<string | null>(null);
-  const [serverAmount, setServerAmount] = useState<string | null>(null);
 
   const clientId = process.env.EXPO_PUBLIC_PAYPAL_CLIENT_ID || '';
-  const apiBase = (process.env.EXPO_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
 
   const amount = useMemo(() => {
-    if (serverAmount) return serverAmount;
     const a = Number(params?.amount || 0);
     return Number.isFinite(a) && a > 0 ? a.toFixed(2) : '0.00';
-  }, [params?.amount, serverAmount]);
+  }, [params?.amount]);
 
   const pkgId = String(params?.pkg || '');
   const pkgName = String(params?.name || '');
@@ -62,24 +58,6 @@ export default function PaypalCheckout() {
       try {
         const paypal = await loadPayPal(clientId);
         if (!containerRef.current) throw new Error('Container missing');
-
-        // Create order on server to prevent client tampering
-        const createRes = await fetch(`${apiBase || ''}/api/paypal/create-order`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            pkg: pkgId,
-            previous_package: previousPackage || undefined,
-          }),
-        });
-        if (!createRes.ok) {
-          const t = await createRes.text();
-          throw new Error(`Failed to create order: ${t}`);
-        }
-        const createJson = await createRes.json();
-        orderIdRef.current = String(createJson.orderID);
-        if (createJson.amount) setServerAmount(String(createJson.amount));
-
         const details = {
           type: baselinePrice > 0 && Number(amount) > baselinePrice ? 'upgrade' : 'purchase',
           previous_package: previousPackage,
@@ -92,30 +70,17 @@ export default function PaypalCheckout() {
 
         paypal.Buttons({
           style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' },
-          createOrder: () => {
-            if (!orderIdRef.current) throw new Error('Order ID not ready');
-            return orderIdRef.current;
+          createOrder: (_data: any, actions: any) => {
+            return actions.order.create({
+              purchase_units: [{ amount: { currency_code: 'USD', value: amount } }],
+              payer: { address: { country_code: 'SA' } },
+              application_context: { shipping_preference: 'NO_SHIPPING' },
+            });
           },
           onApprove: async (_data: any, actions: any) => {
             try {
-              // Capture on server for security
-              const oid = orderIdRef.current;
-              if (!oid) throw new Error('Missing order ID');
-              const capRes = await fetch(`${apiBase || ''}/api/paypal/capture-order`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ orderID: oid }),
-              });
-              if (!capRes.ok) {
-                const tj = await capRes.json().catch(() => ({}));
-                throw new Error(tj?.error || 'Capture failed');
-              }
-              const capJson = await capRes.json();
-              if (!capJson || (capJson.status !== 'COMPLETED' && capJson.status !== 'CAPTURED')) {
-                throw new Error('Payment not completed');
-              }
-
-              // Insert completed payment record after secure capture
+              const capture = await actions.order.capture();
+              // Insert completed payment record only after approval
               const { data: { user } } = await supabase.auth.getUser();
               if (!user) throw new Error('Not authenticated');
               await supabase
@@ -127,8 +92,8 @@ export default function PaypalCheckout() {
                   amount: Number(amount),
                   status: 'completed',
                   payment_method: 'paypal',
-                  transaction_id: String(capJson?.id || ''),
-                  gateway_response: capJson,
+                  transaction_id: String(capture?.id || ''),
+                  gateway_response: capture,
                   payment_details: details,
                 });
               // Optionally activate package via RPC (kept simple; UI depends on records)
