@@ -57,7 +57,38 @@ export default function PaypalCheckout() {
       try {
         const paypal = await loadPayPal(clientId);
         if (!containerRef.current) throw new Error('Container missing');
-        let pendingRecordId: string | null = null;
+
+        // Ensure a pending payment_records row exists (or create one now)
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        const details = {
+          type: baselinePrice > 0 && Number(amount) > baselinePrice ? 'upgrade' : 'purchase',
+          previous_package: previousPackage,
+          target_package: pkgId,
+          baseline_price: baselinePrice,
+          target_price: Number(params?.amount || 0),
+          difference_paid: Number(params?.amount || 0),
+          timestamp: new Date().toISOString(),
+        };
+
+        // Insert a pending record now
+        const { data: inserted, error: insErr } = await supabase
+          .from('payment_records')
+          .insert({
+            user_id: user.id,
+            package_name: pkgName,
+            package_type: pkgId,
+            amount: Number(amount),
+            status: 'pending',
+            payment_method: 'paypal',
+            payment_details: details,
+          })
+          .select('id')
+          .limit(1)
+          .maybeSingle();
+        if (insErr) throw insErr;
+        const pendingRecordId = inserted?.id;
 
         paypal.Buttons({
           style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' },
@@ -69,81 +100,42 @@ export default function PaypalCheckout() {
           },
           onApprove: async (_data: any, actions: any) => {
             try {
-              // Mark as pending only after user approves and just before capture
-              const { data: { user } } = await supabase.auth.getUser();
-              if (!user) throw new Error('Not authenticated');
-
-              const details = {
-                type: baselinePrice > 0 && Number(amount) > baselinePrice ? 'upgrade' : 'purchase',
-                previous_package: previousPackage,
-                target_package: pkgId,
-                baseline_price: baselinePrice,
-                target_price: Number(params?.amount || 0),
-                difference_paid: Number(params?.amount || 0),
-                timestamp: new Date().toISOString(),
-              };
-
-              const { data: inserted, error: insErr } = await supabase
-                .from('payment_records')
-                .insert({
-                  user_id: user.id,
-                  package_name: pkgName,
-                  package_type: pkgId,
-                  amount: Number(amount),
-                  status: 'pending',
-                  payment_method: 'paypal',
-                  payment_details: details,
-                })
-                .select('id')
-                .limit(1)
-                .maybeSingle();
-              if (insErr) throw insErr;
-              pendingRecordId = inserted?.id || null;
-
               const capture = await actions.order.capture();
               // Update payment record → completed
-              if (pendingRecordId) {
-                await supabase
-                  .from('payment_records')
-                  .update({
-                    status: 'completed',
-                    transaction_id: String(capture?.id || ''),
-                    gateway_response: capture,
-                  })
-                  .eq('id', pendingRecordId);
-              }
+              await supabase
+                .from('payment_records')
+                .update({
+                  status: 'completed',
+                  transaction_id: String(capture?.id || ''),
+                  gateway_response: capture,
+                })
+                .eq('id', pendingRecordId);
               // Optionally activate package via RPC (kept simple; UI depends on records)
             } catch (e) {
               // Mark as failed if capture fails
-              if (pendingRecordId) {
-                await supabase
-                  .from('payment_records')
-                  .update({ status: 'failed' })
-                  .eq('id', pendingRecordId);
-              }
+              await supabase
+                .from('payment_records')
+                .update({ status: 'failed' })
+                .eq('id', pendingRecordId);
             } finally {
               router.replace('/membership?tab=payments');
             }
           },
           onCancel: async () => {
             try {
-              if (pendingRecordId) {
-                await supabase
-                  .from('payment_records')
-                  .update({ status: 'failed', notes: 'User cancelled' })
-                  .eq('id', pendingRecordId);
-              }
+              await supabase
+                .from('payment_records')
+                .update({ status: 'failed', notes: 'User cancelled' })
+                .eq('id', pendingRecordId);
             } catch {}
             router.replace('/membership?tab=payments');
           },
           onError: async (err: any) => {
             try {
-              if (pendingRecordId) {
-                await supabase
-                  .from('payment_records')
-                  .update({ status: 'failed', notes: String(err) })
-                  .eq('id', pendingRecordId);
-              }
+              await supabase
+                .from('payment_records')
+                .update({ status: 'failed', notes: String(err) })
+                .eq('id', pendingRecordId);
             } catch {}
             router.replace('/membership?tab=payments');
           },
