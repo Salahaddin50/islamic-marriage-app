@@ -21,3 +21,4 @@ ORDER BY created_at DESC;
 -- Alternative: Update pending records to 'failed' if you want to keep the history
 -- UPDATE payment_records SET status = 'failed', notes = 'Cleaned up old pending record' WHERE status = 'pending';
 
+

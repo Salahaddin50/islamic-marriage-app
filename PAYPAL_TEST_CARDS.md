@@ -55,3 +55,4 @@
 3. Test with decline cards to verify error handling
 4. Never mix Live cards with Sandbox environment
 
+
