@@ -98,10 +98,26 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url)
-    const { channel, uid } = url.searchParams as any
+
+    // Allow both GET (query params) and POST (JSON body)
+    let channel = url.searchParams.get('channel') || ''
+    let uidParam = url.searchParams.get('uid') || ''
+    let ttlParam = url.searchParams.get('ttl') || ''
+
+    if ((!channel || !uidParam || !ttlParam) && (req.method === 'POST' || req.method === 'PUT')) {
+      try {
+        const body = await req.json()
+        channel = channel || body?.channel || ''
+        uidParam = uidParam || String(body?.uid ?? '')
+        ttlParam = ttlParam || String(body?.ttl ?? '')
+      } catch (_) {
+        // ignore JSON parse, fallback to query only
+      }
+    }
+
     const appId = Deno.env.get('AGORA_APP_ID') ?? ''
     const appCert = Deno.env.get('AGORA_APP_CERTIFICATE') ?? ''
-    const ttl = Number(url.searchParams.get('ttl') || '3600')
+    const ttl = Number(ttlParam || '3600')
 
     if (!channel) {
       return new Response(JSON.stringify({ error: 'channel is required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
@@ -110,7 +126,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Server not configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    const numericUid = uid ? Number(uid) : 0
+    const numericUid = uidParam ? Number(uidParam) : 0
     const token = await buildRtcToken(appId, appCert, channel, isFinite(numericUid) ? numericUid : 0, ttl)
 
     return new Response(JSON.stringify({ token }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
