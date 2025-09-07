@@ -205,6 +205,16 @@ const InterestsScreen = () => {
     }
   };
 
+  const refreshPage = async () => {
+    try {
+      setLoading(true);
+      setPage(0);
+      await loadAll(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAcceptClick = (interest: InterestRecord) => {
     setSelectedInterest(interest);
     setShowAcceptModal(true);
@@ -313,7 +323,11 @@ const InterestsScreen = () => {
         <Image source={images.logo} contentFit='contain' style={styles.headerLogo} />
         <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>Photo Requests</Text>
       </View>
-      <View style={styles.headerRight} />
+      <View style={styles.headerRight}>
+        <TouchableOpacity onPress={refreshPage} style={{ padding: 8, borderRadius: 20, marginLeft: 8 }}>
+          <Image source={icons.refresh} contentFit='contain' style={{ width: 24, height: 24, tintColor: COLORS.greyscale900 }} />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 

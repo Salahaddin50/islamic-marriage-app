@@ -12,6 +12,7 @@ import { useNavigation, useFocusEffect, useLocalSearchParams, router } from 'exp
 import { NavigationProp } from '@react-navigation/native';
 import { supabase } from '@/src/config/supabase';
 import { getResponsiveSpacing } from '../utils/responsive';
+import { SupportTeamService } from '../src/services/support-team.service';
 
 interface Package {
     id: string;
@@ -44,6 +45,7 @@ const Membership = () => {
     const [routes] = useState([
         { key: 'packages', title: 'Packages' },
         { key: 'payments', title: 'Payment Record' },
+        { key: 'contact', title: 'Contact us' },
     ]);
     
     const [packages, setPackages] = useState<Package[]>([]);
@@ -59,6 +61,8 @@ const Membership = () => {
     const [complaintText, setComplaintText] = useState('');
     const [complaintForPackage, setComplaintForPackage] = useState<string | null>(null);
     const [showSuccessToast, setShowSuccessToast] = useState(false);
+    const [profileSupportMalePhone, setProfileSupportMalePhone] = useState<string | null>(null);
+    const [paymentSupportPhone, setPaymentSupportPhone] = useState<string | null>(null);
 
     const openComplaint = (pkgId: string) => {
         setComplaintForPackage(pkgId);
@@ -138,8 +142,28 @@ const Membership = () => {
 
     const openSupport = async () => {
         try {
-            const phone = '966503531437';
+            // Use Profile Support (m) phone from database, fallback to hardcoded
+            const phone = profileSupportMalePhone || '966503531437';
             const text = encodeURIComponent('Assalamu Alaikum, I need full support.');
+            const whatsappUrl = `whatsapp://send?phone=${phone}&text=${text}`;
+            const webUrl = `https://wa.me/${phone}?text=${text}`;
+            // Try native scheme first
+            const canOpen = await Linking.canOpenURL(whatsappUrl);
+            if (canOpen) {
+                await Linking.openURL(whatsappUrl);
+            } else {
+                await Linking.openURL(webUrl);
+            }
+        } catch (e) {
+            Alert.alert('Error', 'Unable to open WhatsApp.');
+        }
+    };
+
+    const openPaymentSupport = async () => {
+        try {
+            // Use Payment Support phone from database, fallback to hardcoded
+            const phone = paymentSupportPhone || '966503531437';
+            const text = encodeURIComponent('Assalamu Alaikum, I cannot proceed with payment. Please help me.');
             const whatsappUrl = `whatsapp://send?phone=${phone}&text=${text}`;
             const webUrl = `https://wa.me/${phone}?text=${text}`;
             // Try native scheme first
@@ -167,7 +191,16 @@ const Membership = () => {
         loadPackages();
         loadUserMembership();
         loadPaymentRecords();
+        loadSupportPhones();
     }, []);
+
+    const loadSupportPhones = async () => {
+        const profilePhone = await SupportTeamService.getProfileSupportMaleWhatsApp();
+        setProfileSupportMalePhone(profilePhone);
+        
+        const paymentPhone = await SupportTeamService.getPaymentSupportWhatsApp();
+        setPaymentSupportPhone(paymentPhone);
+    };
 
     const loadPackages = async () => {
         try {
@@ -501,9 +534,65 @@ const Membership = () => {
         </ScrollView>
     );
 
+    const ContactUsTab = () => (
+        <ScrollView style={styles.tabContent} contentContainerStyle={styles.tabContentContainer} showsVerticalScrollIndicator={false}>
+            <View style={styles.contactContainer}>
+                <View style={styles.contactIconContainer}>
+                    <Image 
+                        source={icons.whatsapp2} 
+                        contentFit="contain" 
+                        style={styles.contactIcon}
+                    />
+                </View>
+                
+                <Text style={[styles.contactTitle, { color: COLORS.greyscale900 }]}>
+                    Need Payment Help?
+                </Text>
+                
+                <Text style={[styles.contactMessage, { color: COLORS.grayscale700 }]}>
+                    You cannot proceed with payment? Please contact us to get our full support. Our payment support team is ready to assist you.
+                </Text>
+                
+                <View style={styles.contactFeatures}>
+                    <View style={styles.contactFeature}>
+                        <Image source={icons.checkCircle} contentFit="contain" style={styles.featureIcon} />
+                        <Text style={[styles.featureText, { color: COLORS.grayscale700 }]}>
+                            Instant WhatsApp Support
+                        </Text>
+                    </View>
+                    <View style={styles.contactFeature}>
+                        <Image source={icons.checkCircle} contentFit="contain" style={styles.featureIcon} />
+                        <Text style={[styles.featureText, { color: COLORS.grayscale700 }]}>
+                            Payment Issue Resolution
+                        </Text>
+                    </View>
+                    <View style={styles.contactFeature}>
+                        <Image source={icons.checkCircle} contentFit="contain" style={styles.featureIcon} />
+                        <Text style={[styles.featureText, { color: COLORS.grayscale700 }]}>
+                            Professional Assistance
+                        </Text>
+                    </View>
+                </View>
+
+                <Button 
+                    title="Contact Payment Support" 
+                    filled 
+                    onPress={openPaymentSupport}
+                    style={styles.contactButton}
+                    icon={icons.whatsapp}
+                />
+                
+                <Text style={[styles.contactNote, { color: COLORS.grayscale600 }]}>
+                    Available 24/7 • Response within minutes
+                </Text>
+            </View>
+        </ScrollView>
+    );
+
     const renderScene = SceneMap({
         packages: PackagesTab,
         payments: PaymentRecordTab,
+        contact: ContactUsTab,
     });
 
     const renderTabBar = (props: any) => (
@@ -521,7 +610,27 @@ const Membership = () => {
     return (
         <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
             <View style={[styles.container, { backgroundColor: COLORS.white }]}>
-                <Header title="My Membership" fallbackRoute="/(tabs)/profile" />
+                <Header 
+                    title="My Membership" 
+                    fallbackRoute="/(tabs)/profile" 
+                    rightIcon={icons.refresh}
+                    onRightPress={async () => {
+                        try {
+                            setLoading(true);
+                            setSelectedPackage(null);
+                            setPendingPackageTypes(new Set());
+                            setCurrentFromPayments(null);
+                            await Promise.all([
+                                loadPackages(),
+                                loadUserMembership(),
+                                loadPaymentRecords(),
+                                loadSupportPhones(),
+                            ]);
+                        } finally {
+                            setLoading(false);
+                        }
+                    }}
+                />
                 <TabView
                     navigationState={{ index, routes }}
                     renderScene={renderScene}
@@ -881,6 +990,72 @@ const styles = StyleSheet.create({
         color: COLORS.white,
         fontSize: 16,
         fontFamily: 'bold',
+    },
+    // Contact Us Tab Styles
+    contactContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: getResponsiveSpacing(24),
+        paddingVertical: getResponsiveSpacing(40),
+    },
+    contactIconContainer: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: COLORS.primary + '15',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: getResponsiveSpacing(24),
+    },
+    contactIcon: {
+        width: 40,
+        height: 40,
+        tintColor: COLORS.primary,
+    },
+    contactTitle: {
+        fontSize: 24,
+        fontFamily: 'bold',
+        textAlign: 'center',
+        marginBottom: getResponsiveSpacing(16),
+    },
+    contactMessage: {
+        fontSize: 16,
+        fontFamily: 'regular',
+        textAlign: 'center',
+        lineHeight: 24,
+        marginBottom: getResponsiveSpacing(32),
+    },
+    contactFeatures: {
+        width: '100%',
+        marginBottom: getResponsiveSpacing(32),
+    },
+    contactFeature: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: getResponsiveSpacing(12),
+    },
+    featureIcon: {
+        width: 20,
+        height: 20,
+        tintColor: COLORS.primary,
+        marginRight: getResponsiveSpacing(12),
+    },
+    featureText: {
+        fontSize: 14,
+        fontFamily: 'medium',
+        flex: 1,
+    },
+    contactButton: {
+        width: '100%',
+        marginBottom: getResponsiveSpacing(16),
+        backgroundColor: COLORS.primary,
+    },
+    contactNote: {
+        fontSize: 12,
+        fontFamily: 'regular',
+        textAlign: 'center',
+        fontStyle: 'italic',
     },
 });
 

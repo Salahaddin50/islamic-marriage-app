@@ -62,6 +62,18 @@ const Notifications = () => {
                 </View>
                 <View style={styles.headerRight}>
                     <TouchableOpacity
+                        onPress={refreshNotifications}
+                        style={styles.soundButton}
+                    >
+                        <Image
+                            source={icons.refresh || icons.clock}
+                            contentFit='contain'
+                            style={[styles.soundIcon, {
+                                tintColor: COLORS.greyscale900
+                            }]}
+                        />
+                    </TouchableOpacity>
+                    <TouchableOpacity
                         onPress={() => setSoundEnabled(!soundEnabled)}
                         style={styles.soundButton}
                     >

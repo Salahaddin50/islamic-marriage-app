@@ -60,6 +60,13 @@ const Messages = () => {
         return await SecureStore.getItemAsync(key);
       }
     },
+    async removeItem(key: string) {
+      if (Platform.OS === 'web') {
+        localStorage.removeItem(key);
+      } else {
+        try { await SecureStore.deleteItemAsync(key); } catch {}
+      }
+    }
   };
   const [loading, setLoading] = useState(true);
   const [myUserId, setMyUserId] = useState<string | null>(null);
@@ -197,6 +204,22 @@ const Messages = () => {
       } else {
         setLoading(false);
       }
+    }
+  };
+
+  const refreshPage = async () => {
+    try {
+      setLoading(true);
+      setIncoming([]);
+      setOutgoing([]);
+      setApproved([]);
+      setProfilesById({});
+      setPage(0);
+      setHasMore(true);
+      try { await Storage.removeItem(CACHE_KEY); } catch {}
+      await loadAll(false);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -385,7 +408,11 @@ const Messages = () => {
           <Image source={icons.chat} contentFit='contain' style={[styles.headerLogo, {tintColor: COLORS.primary}]} />
           <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>Messages</Text>
         </View>
-        <View style={styles.headerRight} />
+        <View style={styles.headerRight}>
+          <TouchableOpacity onPress={refreshPage} style={{ padding: 8, borderRadius: 20, marginLeft: 8 }}>
+            <Image source={icons.refresh} contentFit='contain' style={{ width: 24, height: 24, tintColor: COLORS.greyscale900 }} />
+          </TouchableOpacity>
+        </View>
       </View>
     )
   }

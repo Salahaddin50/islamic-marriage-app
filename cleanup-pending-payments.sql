@@ -22,3 +22,4 @@ ORDER BY created_at DESC;
 -- UPDATE payment_records SET status = 'failed', notes = 'Cleaned up old pending record' WHERE status = 'pending';
 
 
+

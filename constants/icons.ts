@@ -134,6 +134,7 @@ export default {
     stopwatch: require("../assets/icons/stopwatch.png"),
     cast: require("../assets/icons/cast.png"),
     history: require("../assets/icons/history.png"),
+    refresh: require("../assets/icons/history.png"),
     userDefault: require("../assets/icons/user-default.png"),
     userDefault2: require("../assets/icons/user-default2.png"),
     userDefault3: require("../assets/icons/user-default3.png"),

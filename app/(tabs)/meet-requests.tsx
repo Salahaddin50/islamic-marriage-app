@@ -381,6 +381,16 @@ const MeetRequestsScreen = () => {
     }
   };
 
+  const refreshPage = async () => {
+    try {
+      setLoading(true);
+      setPage(0);
+      await loadAll(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAcceptClick = (meetRequest: MeetRecord) => {
     setSelectedMeetRequest(meetRequest);
     setShowAcceptModal(true);
@@ -785,6 +795,9 @@ const MeetRequestsScreen = () => {
         <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>Meet Requests</Text>
       </View>
       <View style={styles.headerRight}>
+        <TouchableOpacity onPress={refreshPage} style={{ padding: 8, borderRadius: 20, marginLeft: 8 }}>
+          <Image source={icons.refresh} contentFit='contain' style={{ width: 24, height: 24, tintColor: COLORS.greyscale900 }} />
+        </TouchableOpacity>
         <TouchableOpacity
           onPress={() => {
             try {

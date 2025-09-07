@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity, useWindowDimensions, FlatList, TextInput, LayoutAnimation } from 'react-native';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { COLORS, SIZES, icons } from '../constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
@@ -10,6 +10,7 @@ import { router } from 'expo-router';
 import { Image } from 'expo-image';
 import HelpCenterItem from '@/components/HelpCenterItem';
 import { safeGoBack } from '../utils/responsive';
+import { SupportTeamService } from '../src/services/support-team.service';
 
 interface KeywordItemProps {
     item: {
@@ -172,6 +173,17 @@ const faqsRoute = () => {
 
 const contactUsRoute = () => {
     const navigation = useNavigation<NavigationProp<any>>();
+    const [customerSupportPhone, setCustomerSupportPhone] = useState<string | null>(null);
+
+    useEffect(() => {
+        // Load customer support WhatsApp number from database
+        const loadCustomerSupport = async () => {
+            const phone = await SupportTeamService.getCustomerSupportWhatsApp();
+            setCustomerSupportPhone(phone);
+        };
+        loadCustomerSupport();
+    }, []);
+
     const handleEmail = () => {
         const email = 'asim.mammadov82@outlook.com';
         const subject = encodeURIComponent('Support request');
@@ -181,10 +193,21 @@ const contactUsRoute = () => {
             require('react-native').Linking.openURL(mailto);
         } catch (e) {}
     };
+    
     const handleWhatsApp = () => {
+        if (!customerSupportPhone) {
+            // Fallback to hardcoded number if DB is not available
+            const phone = '966503531437';
+            const url = `https://wa.me/${phone}`;
+            try {
+                // @ts-ignore
+                require('react-native').Linking.openURL(url);
+            } catch (e) {}
+            return;
+        }
+        
         // Using wa.me works across platforms
-        const phone = '966503531437';
-        const url = `https://wa.me/${phone}`;
+        const url = `https://wa.me/${customerSupportPhone}`;
         try {
             // @ts-ignore
             require('react-native').Linking.openURL(url);

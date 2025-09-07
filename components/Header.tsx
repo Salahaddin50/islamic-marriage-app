@@ -11,13 +11,17 @@ interface HeaderProps {
     showBackButton?: boolean;
     onBackPress?: () => void;
     fallbackRoute?: string;
+    rightIcon?: ImageSourcePropType;
+    onRightPress?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
     title = "", 
     showBackButton = true, 
     onBackPress,
-    fallbackRoute = '/(tabs)'
+    fallbackRoute = '/(tabs)',
+    rightIcon,
+    onRightPress,
 }) => {
     const navigation = useNavigation<NavigationProp<any>>();
     const router = useRouter();
@@ -49,6 +53,15 @@ const Header: React.FC<HeaderProps> = ({
                 {title && (
                     <Text style={[styles.title, { color: COLORS.greyscale900 }]}>{title}</Text>
                 )}
+                {!!rightIcon && (
+                    <TouchableOpacity onPress={onRightPress} style={styles.rightButton}>
+                        <Image
+                            source={rightIcon}
+                            contentFit='contain'
+                            style={[styles.rightIcon, { tintColor: COLORS.greyscale900 }]}
+                        />
+                    </TouchableOpacity>
+                )}
             </View>
         </View>
     );
@@ -79,6 +92,14 @@ const styles = StyleSheet.create({
         fontFamily: "bold",
         color: COLORS.black,
     } as TextStyle,
+    rightButton: {
+        padding: getResponsiveSpacing(4),
+        marginLeft: 'auto',
+    } as ViewStyle,
+    rightIcon: {
+        width: isMobileWeb() ? 20 : 24,
+        height: isMobileWeb() ? 20 : 24,
+    } as ImageStyle,
 });
 
 export default Header;
