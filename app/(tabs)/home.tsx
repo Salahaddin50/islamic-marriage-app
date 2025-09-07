@@ -2537,11 +2537,14 @@ const HomeScreen = () => {
                 }
               }}
               disabled={currentPackage === 'golden_premium'}
-              style={styles.upgradeTextButton}
+              style={[
+                styles.upgradeButton,
+                currentPackage === 'golden_premium' && styles.upgradeButtonDisabled
+              ]}
             >
               <Text style={[
-                styles.upgradeText,
-                currentPackage === 'golden_premium' && styles.upgradeTextDisabled
+                styles.upgradeButtonText,
+                currentPackage === 'golden_premium' && styles.upgradeButtonTextDisabled
               ]}>
                 {currentPackage === 'golden_premium' ? 'Max Level' : 'Upgrade'}
               </Text>
@@ -3032,18 +3035,26 @@ const styles = StyleSheet.create({
     fontFamily: 'semiBold',
     color: COLORS.greyscale900,
   },
-  upgradeTextButton: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+  upgradeButton: {
+    backgroundColor: COLORS.primary,
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: 20,
+    minWidth: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  upgradeText: {
+  upgradeButtonDisabled: {
+    backgroundColor: COLORS.grayscale400,
+  },
+  upgradeButtonText: {
     fontSize: 16,
     fontFamily: 'semiBold',
-    color: COLORS.primary,
+    color: COLORS.white,
     textAlign: 'center',
   },
-  upgradeTextDisabled: {
-    color: COLORS.grayscale400,
+  upgradeButtonTextDisabled: {
+    color: COLORS.white,
   },
 })
 
