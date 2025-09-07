@@ -21,6 +21,26 @@ type Nav = {
 import SimpleAvatar from '@/components/SimpleAvatar';
 
 const Profile = () => {
+  // Temporarily silence console noise on this screen
+  useEffect(() => {
+    const originalLog = console.log;
+    const originalWarn = console.warn;
+    const originalInfo = console.info;
+    const originalDebug = console.debug;
+    const originalError = console.error;
+    console.log = () => {};
+    console.warn = () => {};
+    console.info = () => {};
+    console.debug = () => {};
+    console.error = () => {};
+    return () => {
+      console.log = originalLog;
+      console.warn = originalWarn;
+      console.info = originalInfo;
+      console.debug = originalDebug;
+      console.error = originalError;
+    };
+  }, []);
   const refRBSheet = useRef<any>(null);
   const { navigate } = useNavigation<Nav>();
 

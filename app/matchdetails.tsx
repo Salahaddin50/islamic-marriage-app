@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Alert, Modal, Dimensions, Platform, Linking, TextInput } from 'react-native';
+   import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Alert, Modal, Dimensions, Platform, Linking, TextInput } from 'react-native';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { COLORS, icons, images, SIZES } from '@/constants';
@@ -71,12 +71,26 @@ const MatchDetails = () => {
   const navigation = useNavigation<NavigationProp<any>>();
   const router = useRouter();
 
-  console.log('🆔 MatchDetails component initialized with:', {
-    allParams: params,
-    userId: userId,
-    userIdType: typeof userId,
-    userIdLength: userId?.length
-  });
+  // Silence console noise while on this screen
+  useEffect(() => {
+    const originalLog = console.log;
+    const originalWarn = console.warn;
+    const originalInfo = console.info;
+    const originalDebug = console.debug;
+    const originalError = console.error;
+    console.log = () => {};
+    console.warn = () => {};
+    console.info = () => {};
+    console.debug = () => {};
+    console.error = () => {};
+    return () => {
+      console.log = originalLog;
+      console.warn = originalWarn;
+      console.info = originalInfo;
+      console.debug = originalDebug;
+      console.error = originalError;
+    };
+  }, []);
 
 
 

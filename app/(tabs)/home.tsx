@@ -267,6 +267,26 @@ const Storage = {
 };
 
 const HomeScreen = () => {
+  // Temporarily silence console noise on this screen
+  useEffect(() => {
+    const originalLog = console.log;
+    const originalWarn = console.warn;
+    const originalInfo = console.info;
+    const originalDebug = console.debug;
+    const originalError = console.error;
+    console.log = () => {};
+    console.warn = () => {};
+    console.info = () => {};
+    console.debug = () => {};
+    console.error = () => {};
+    return () => {
+      console.log = originalLog;
+      console.warn = originalWarn;
+      console.info = originalInfo;
+      console.debug = originalDebug;
+      console.error = originalError;
+    };
+  }, []);
   const navigation = useNavigation<NavigationProp<any>>();
   const { unreadCount } = useNotifications();
   const router = useRouter();
