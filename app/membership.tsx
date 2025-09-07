@@ -194,6 +194,19 @@ const Membership = () => {
         loadSupportPhones();
     }, []);
 
+    const refreshMembershipPage = async () => {
+        try {
+            setLoading(true);
+            setSelectedPackage(null);
+            await loadPackages();
+            await loadUserMembership();
+            await loadPaymentRecords();
+            await loadSupportPhones();
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const loadSupportPhones = async () => {
         const profilePhone = await SupportTeamService.getProfileSupportMaleWhatsApp();
         setProfileSupportMalePhone(profilePhone);
@@ -614,22 +627,7 @@ const Membership = () => {
                     title="My Membership" 
                     fallbackRoute="/(tabs)/profile" 
                     rightIcon={icons.refresh}
-                    onRightPress={async () => {
-                        try {
-                            setLoading(true);
-                            setSelectedPackage(null);
-                            setPendingPackageTypes(new Set());
-                            setCurrentFromPayments(null);
-                            await Promise.all([
-                                loadPackages(),
-                                loadUserMembership(),
-                                loadPaymentRecords(),
-                                loadSupportPhones(),
-                            ]);
-                        } finally {
-                            setLoading(false);
-                        }
-                    }}
+                    onRightPress={refreshMembershipPage}
                 />
                 <TabView
                     navigationState={{ index, routes }}

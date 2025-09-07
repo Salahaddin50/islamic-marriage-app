@@ -60,13 +60,6 @@ const Messages = () => {
         return await SecureStore.getItemAsync(key);
       }
     },
-    async removeItem(key: string) {
-      if (Platform.OS === 'web') {
-        localStorage.removeItem(key);
-      } else {
-        try { await SecureStore.deleteItemAsync(key); } catch {}
-      }
-    }
   };
   const [loading, setLoading] = useState(true);
   const [myUserId, setMyUserId] = useState<string | null>(null);
@@ -210,13 +203,14 @@ const Messages = () => {
   const refreshPage = async () => {
     try {
       setLoading(true);
+      // Hard reset lists and cache before reloading
       setIncoming([]);
       setOutgoing([]);
       setApproved([]);
       setProfilesById({});
       setPage(0);
       setHasMore(true);
-      try { await Storage.removeItem(CACHE_KEY); } catch {}
+      try { await Storage.setItem(CACHE_KEY, JSON.stringify({})); } catch {}
       await loadAll(false);
     } finally {
       setLoading(false);
