@@ -288,7 +288,7 @@ const HomeScreen = () => {
     };
   }, []);
   const navigation = useNavigation<NavigationProp<any>>();
-  const { unreadCount } = useNotifications();
+  const { unreadCount, refreshNotifications } = useNotifications();
   const router = useRouter();
   const [users, setUsers] = useState<UserProfileWithMedia[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1177,6 +1177,13 @@ const HomeScreen = () => {
   useFocusEffect(
     React.useCallback(() => {
       const initializeScreen = async () => {
+        // Refresh notifications when screen becomes active
+        try {
+          await refreshNotifications();
+        } catch (error) {
+          console.log('Failed to refresh notifications on focus:', error);
+        }
+
         // Render from persistent cache immediately if present
         try {
           const stored = await Storage.getItem(HOME_CACHE_KEY);
@@ -1228,7 +1235,7 @@ const HomeScreen = () => {
       };
       
       initializeScreen();
-  }, [])
+  }, [refreshNotifications])
   );
 
   // Add a manual refresh function for testing
