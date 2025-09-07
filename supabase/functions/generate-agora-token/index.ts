@@ -97,6 +97,8 @@ serve(async (req) => {
   }
 
   try {
+    // Note: This is a public endpoint for token generation
+    // No auth required since tokens are short-lived and channel-specific
     const url = new URL(req.url)
 
     // Allow both GET (query params) and POST (JSON body)
