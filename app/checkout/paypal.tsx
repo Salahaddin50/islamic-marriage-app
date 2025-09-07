@@ -29,19 +29,11 @@ export default function PaypalCheckout() {
   const params = useLocalSearchParams();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [paymentData, setPaymentData] = useState<any>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const clientId = process.env.EXPO_PUBLIC_PAYPAL_CLIENT_ID || '';
-
-  const amount = useMemo(() => {
-    const a = Number(params?.amount || 0);
-    return Number.isFinite(a) && a > 0 ? a.toFixed(2) : '0.00';
-  }, [params?.amount]);
-
-  const pkgId = String(params?.pkg || '');
-  const pkgName = String(params?.name || '');
-  const baselinePrice = Number(params?.baseline_price || 0) || 0;
-  const previousPackage = String(params?.previous_package || '') || null;
+  const packageId = String(params?.package_id || '');
 
   useEffect(() => {
     (async () => {
@@ -55,60 +47,94 @@ export default function PaypalCheckout() {
         setLoading(false);
         return;
       }
+      if (!packageId) {
+        setError('Package ID is required.');
+        setLoading(false);
+        return;
+      }
+
       try {
+        // Create secure payment via Edge Function
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          setError('Please log in to continue.');
+          setLoading(false);
+          return;
+        }
+
+        const response = await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/secure-paypal-checkout`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ package_id: packageId })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Edge Function Error:', errorData);
+          console.error('Response Status:', response.status);
+          console.error('Package ID:', packageId);
+          throw new Error(errorData.error || 'Failed to create secure checkout');
+        }
+
+        const securePayment = await response.json();
+        setPaymentData(securePayment);
+
+        // Load PayPal SDK and render buttons
         const paypal = await loadPayPal(clientId);
         if (!containerRef.current) throw new Error('Container missing');
-        const details = {
-          type: baselinePrice > 0 && Number(amount) > baselinePrice ? 'upgrade' : 'purchase',
-          previous_package: previousPackage,
-          target_package: pkgId,
-          baseline_price: baselinePrice,
-          target_price: Number(params?.amount || 0),
-          difference_paid: Number(params?.amount || 0),
-          timestamp: new Date().toISOString(),
-        };
 
         paypal.Buttons({
           style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' },
-          createOrder: (_data: any, actions: any) => {
-            return actions.order.create({
-              purchase_units: [{ amount: { currency_code: 'USD', value: amount } }],
-              application_context: { shipping_preference: 'NO_SHIPPING' },
-            });
+          createOrder: () => {
+            return securePayment.order_id;
           },
-          onApprove: async (_data: any, actions: any) => {
+          onApprove: async (data: any) => {
             try {
-              const capture = await actions.order.capture();
-              // Insert completed payment record only after approval
-              const { data: { user } } = await supabase.auth.getUser();
-              if (!user) throw new Error('Not authenticated');
-              await supabase
-                .from('payment_records')
-                .insert({
-                  user_id: user.id,
-                  package_name: pkgName,
-                  package_type: pkgId,
-                  amount: Number(amount),
-                  status: 'completed',
-                  payment_method: 'paypal',
-                  transaction_id: String(capture?.id || ''),
-                  gateway_response: capture,
-                  payment_details: details,
-                });
-              // Optionally activate package via RPC (kept simple; UI depends on records)
-            } catch (e) {
-              // No DB changes on failure; user will see nothing pending
-            } finally {
-              router.replace('/membership?tab=payments');
+              console.log('PayPal onApprove data:', data);
+              console.log('Secure payment data:', securePayment);
+              console.log('Sending to capture:', { 
+                order_id: data.orderID, 
+                payment_id: securePayment.payment_id 
+              });
+              
+              // Capture payment via secure endpoint
+              const captureResponse = await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/capture-paypal-payment`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${session.access_token}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                  order_id: data.orderID, 
+                  payment_id: securePayment.payment_id 
+                })
+              });
+
+              if (!captureResponse.ok) {
+                const errorData = await captureResponse.json();
+                console.error('Capture failed:', errorData);
+                throw new Error(errorData.error || 'Payment capture failed');
+              }
+
+              const captureResult = await captureResponse.json();
+              console.log('Capture success:', captureResult);
+
+              // Success - redirect to membership page with timestamp to force refresh
+              router.replace(`/membership?tab=payments&t=${Date.now()}`);
+            } catch (e: any) {
+              setError(e.message || 'Payment processing failed');
             }
           },
-          onCancel: async () => {
-            // Do nothing in DB; user cancelled before submitting
+          onCancel: () => {
             router.replace('/membership?tab=payments');
           },
-          onError: async (err: any) => {
-            // Do nothing in DB on error; avoid leaving a pending record
-            router.replace('/membership?tab=payments');
+          onError: (err: any) => {
+            console.error('PayPal error:', err);
+            setError('Payment failed. Please try again.');
+            setTimeout(() => router.replace('/membership?tab=payments'), 2000);
           },
         }).render(containerRef.current);
 
@@ -119,16 +145,18 @@ export default function PaypalCheckout() {
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientId, amount, pkgId, pkgName]);
+  }, [clientId, packageId]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white }}>
       <View style={{ flex: 1, padding: 16, backgroundColor: COLORS.white }}>
         <Header title="Checkout" fallbackRoute="/membership" />
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
-          <Text style={{ fontFamily: 'medium', fontSize: 14, color: COLORS.grayscale700, marginBottom: 16 }}>
-            Package: {pkgName} • Amount: ${amount}
-          </Text>
+          {paymentData && (
+            <Text style={{ fontFamily: 'medium', fontSize: 14, color: COLORS.grayscale700, marginBottom: 16 }}>
+              Package: {paymentData.package_name} • Amount: ${paymentData.amount.toFixed(2)}
+            </Text>
+          )}
           {Platform.OS === 'web' ? (
             <>
               {loading && (

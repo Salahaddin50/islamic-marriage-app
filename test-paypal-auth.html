@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test PayPal Auth</title>
+</head>
+<body>
+    <h1>PayPal Authentication Test</h1>
+    <button onclick="testPayPalAuth()">Test PayPal Credentials</button>
+    <div id="result"></div>
+
+    <script>
+        async function testPayPalAuth() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing PayPal authentication...';
+
+            try {
+                // Test the PayPal auth directly
+                const clientId = '31f7d5f3439d059dd9299d8594d1555a43234dd9a9ec93880db18cca8fd953cf'; // Your actual client ID
+                const clientSecret = 'd118dbfb5f88db81315234d421271af7d86c0c774f9c6ee6eb38194626217cf5'; // Your actual client secret
+                const baseUrl = 'https://api-m.paypal.com'; // Live PayPal
+
+                const authResponse = await fetch(`${baseUrl}/v1/oauth2/token`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Accept-Language': 'en_US',
+                        'Authorization': `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'grant_type=client_credentials'
+                });
+
+                const authData = await authResponse.json();
+                
+                if (authResponse.ok) {
+                    resultDiv.innerHTML = `
+                        <p style="color: green;">✅ PayPal Auth Success!</p>
+                        <p>Access Token: ${authData.access_token.substring(0, 20)}...</p>
+                        <p>Token Type: ${authData.token_type}</p>
+                        <p>Expires In: ${authData.expires_in} seconds</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <p style="color: red;">❌ PayPal Auth Failed</p>
+                        <p>Status: ${authResponse.status}</p>
+                        <p>Error: ${JSON.stringify(authData, null, 2)}</p>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">❌ Network Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

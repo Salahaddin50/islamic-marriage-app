@@ -35,45 +35,6 @@ interface PaymentRecord {
     updatedAt?: string;
 }
 
-
-
-const packages: Package[] = [
-    {
-        id: "premium",
-        name: "Premium",
-        price: 0.5,
-        crownColor: "#6A1B9A", // Purple
-        features: [
-            'Lifetime subscription till marriage',
-            'Arrange video call',
-            'Request whatsapp number'
-        ],
-        isLifetime: true
-    },
-    {
-        id: "vip_premium", 
-        name: "VIP Premium",
-        price: 200,
-        crownColor: "#34A853", // Green
-        features: [
-            'All Premium Features',
-            '24/7 facilitation and convincing support'
-        ],
-        isLifetime: true
-    },
-    {
-        id: "golden_premium",
-        name: "Golden Premium", 
-        price: 500,
-        crownColor: "#B8860B", // Dark Golden
-        features: [
-            'All VIP Premium features',
-            'Just Relax, we will reach you in your whatsapp and marry you'
-        ],
-        isLifetime: true
-    }
-];
-
 const Membership = () => {
     const navigation = useNavigation<NavigationProp<any>>();
     const params = useLocalSearchParams();
@@ -85,6 +46,7 @@ const Membership = () => {
         { key: 'payments', title: 'Payment Record' },
     ]);
     
+    const [packages, setPackages] = useState<Package[]>([]);
     const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
     const [currentUserPackage, setCurrentUserPackage] = useState<string | null>(null);
     const [paymentRecords, setPaymentRecords] = useState<PaymentRecord[]>([]);
@@ -192,24 +154,48 @@ const Membership = () => {
         }
     };
 
-    const priceById: Record<string, number> = {
-        premium: 0.5,
-        vip_premium: 200,
-        golden_premium: 500,
-    };
-
     // Helper: derive baseline price strictly from completed payments only (latest target)
     const getBaselinePrice = (): number => {
         if (currentFromPayments) {
-            return priceById[currentFromPayments] || 0;
+            const pkg = packages.find(p => p.id === currentFromPayments);
+            return pkg?.price || 0;
         }
         return 0;
     };
 
     useEffect(() => {
+        loadPackages();
         loadUserMembership();
         loadPaymentRecords();
     }, []);
+
+    const loadPackages = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('packages')
+                .select('*')
+                .eq('is_active', true)
+                .order('sort_order');
+
+            if (error) throw error;
+
+            if (data) {
+                const formattedPackages: Package[] = data.map(pkg => ({
+                    id: pkg.package_id,
+                    name: pkg.name,
+                    price: Number(pkg.price),
+                    crownColor: pkg.crown_color,
+                    features: Array.isArray(pkg.features) ? pkg.features : [],
+                    isLifetime: pkg.is_lifetime || true
+                }));
+                setPackages(formattedPackages);
+            }
+        } catch (error) {
+            console.log('Error loading packages:', error);
+            // Fallback to empty array - will show error state
+            setPackages([]);
+        }
+    };
 
     // If navigated with ?tab=payments, switch to payments tab
     useEffect(() => {
@@ -357,23 +343,10 @@ const Membership = () => {
         setSelectedPackage(pkg);
     };
 
-    const processPackagePurchase = async (pkg: Package, amount: number) => {
+    const processPackagePurchase = async (pkg: Package) => {
         try {
-            const baselinePrice = getBaselinePrice();
-            const baselinePackageId = currentUserPackage || (
-                paymentRecords
-                  .filter(r => r.status === 'completed' && !!r.packageType)
-                  .sort((a,b) => (priceById[b.packageType!]||0) - (priceById[a.packageType!]||0))[0]?.packageType || null
-            );
-
-            const query = new URLSearchParams({
-                pkg: pkg.id,
-                name: pkg.name,
-                amount: String(amount),
-                baseline_price: String(baselinePrice || 0),
-                previous_package: baselinePackageId || ''
-            }).toString();
-            router.push(`/checkout/paypal?${query}`);
+            // Use secure server-side validation - only pass package ID
+            router.push(`/checkout/paypal?package_id=${encodeURIComponent(pkg.id)}`);
         } catch (error) {
             Alert.alert('Error', 'Failed to start checkout.');
         }
@@ -574,7 +547,7 @@ const Membership = () => {
                     const label = isUpgrade ? `Pay the difference $${amount}` : `Proceed for Payment $${amount}`;
                     return (
                         <View style={styles.fabButtonWrapper}>
-                            <Button title={label} filled onPress={() => processPackagePurchase(selectedPackage, amount)} style={styles.bigButton} />
+                            <Button title={label} filled onPress={() => processPackagePurchase(selectedPackage)} style={styles.bigButton} />
                         </View>
                     );
                 })()}
