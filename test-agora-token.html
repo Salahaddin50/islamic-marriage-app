@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Agora Token Generation</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        button { padding: 10px 20px; margin: 10px 0; }
+        #result { margin-top: 20px; padding: 10px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; }
+        .error { background-color: #f8d7da; }
+    </style>
+</head>
+<body>
+    <h1>Agora Token Generation Test</h1>
+    <button onclick="testTokenGeneration()">Test Token Generation</button>
+    <div id="result"></div>
+
+    <script>
+        async function testTokenGeneration() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing...';
+            resultDiv.className = '';
+
+            try {
+                const supabaseUrl = 'https://rpzkugodaacelruquhtc.supabase.co';
+                const testChannel = 'test-channel-' + Date.now();
+                const testUid = Math.floor(Math.random() * 100000);
+                
+                const url = `${supabaseUrl}/functions/v1/generate-agora-token?channel=${encodeURIComponent(testChannel)}&uid=${testUid}`;
+                
+                console.log('Testing URL:', url);
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                console.log('Response status:', response.status);
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+
+                if (response.ok && data.token) {
+                    resultDiv.innerHTML = `
+                        <h3>✅ Success!</h3>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Channel:</strong> ${testChannel}</p>
+                        <p><strong>UID:</strong> ${testUid}</p>
+                        <p><strong>Token:</strong> ${data.token.substring(0, 50)}...</p>
+                    `;
+                    resultDiv.className = 'success';
+                } else {
+                    throw new Error(data.error || 'Unknown error');
+                }
+
+            } catch (error) {
+                console.error('Test failed:', error);
+                resultDiv.innerHTML = `
+                    <h3>❌ Failed</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p>Check the browser console for more details.</p>
+                `;
+                resultDiv.className = 'error';
+            }
+        }
+    </script>
+</body>
+</html>

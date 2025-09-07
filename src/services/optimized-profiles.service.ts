@@ -294,9 +294,11 @@ export class OptimizedProfilesService {
   ): Promise<number> {
     try {
       // Build count query mirroring fetchOptimizedProfiles filters
+      // Use raw user_profiles to match the home list source and avoid stale MV
       let query = supabase
-        .from('optimized_home_profiles')
-        .select('*', { count: 'exact', head: true });
+        .from('user_profiles')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_public', true);
 
       // Gender filter (opposite gender)
       if (currentUserGender) {
@@ -312,11 +314,17 @@ export class OptimizedProfilesService {
         query = query.eq('city', filters.selectedCity);
       }
 
-      // Age filters (pre-computed age in view)
+      // Age filters (convert to date_of_birth bounds on base table)
       if (filters.ageRange && filters.ageRange[0] > 0 && filters.ageRange[1] > 0) {
         const [minAge, maxAge] = filters.ageRange;
         if (!(minAge === 20 && maxAge === 50)) {
-          query = query.gte('age', minAge).lte('age', maxAge);
+          const now = new Date();
+          const lowerDob = new Date(now); // now - maxAge years
+          lowerDob.setFullYear(lowerDob.getFullYear() - maxAge);
+          const upperDob = new Date(now); // now - minAge years
+          upperDob.setFullYear(upperDob.getFullYear() - minAge);
+          const toIsoDate = (d: Date) => d.toISOString().split('T')[0];
+          query = query.gte('date_of_birth', toIsoDate(lowerDob)).lte('date_of_birth', toIsoDate(upperDob));
         }
       }
 
@@ -394,10 +402,11 @@ export class OptimizedProfilesService {
         }
       }
 
-      // Search
+      // Search (basic fallback on base table fields)
       if (filters.searchQuery && filters.searchQuery.trim().length > 0) {
-        const searchTerm = filters.searchQuery.trim().replace(/\s+/g, ' & ');
-        query = query.textSearch('search_vector', searchTerm);
+        const term = filters.searchQuery.trim().replace(/%/g, '').replace(/\s+/g, ' ');
+        const like = `%${term}%`;
+        query = query.or(`first_name.ilike.${like},city.ilike.${like},country.ilike.${like}`);
       }
 
       const { count, error } = await query;
