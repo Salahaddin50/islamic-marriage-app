@@ -15,7 +15,7 @@
     "preset": "jest-expo"
   },
   "dependencies": {
-    "@expo/vector-icons": "^14.0.2",
+    "@expo/vector-icons": "~14.0.4",
     "@hookform/resolvers": "^5.2.1",
     "@kichiyaki/react-native-barcode-generator": "^0.6.7",
     "@ptomasroos/react-native-multi-slider": "^2.2.2",

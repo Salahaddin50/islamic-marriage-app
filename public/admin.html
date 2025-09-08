@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hume Admin Panel - Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/admin-common.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            max-width: 450px;
+            width: 90%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .logo-icon i {
+            font-size: 40px;
+            color: white;
+        }
+
+        .app-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .app-subtitle {
+            font-size: 16px;
+            color: #6b7280;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: 16px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px 15px 15px 50px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f9fafb;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 5px;
+        }
+
+        .password-toggle:hover {
+            color: #667eea;
+        }
+
+        .login-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .message.error {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        .message.success {
+            background: #f0fdf4;
+            color: #16a34a;
+            border: 1px solid #bbf7d0;
+        }
+
+        .security-notice {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .security-notice i {
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .security-text {
+            font-size: 13px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 20px;
+                margin: 20px;
+            }
+            
+            .app-title {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo-section">
+            <div class="logo-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h1 class="app-title">Hume Admin</h1>
+            <p class="app-subtitle">Administrative Dashboard</p>
+        </div>
+
+        <div id="messageContainer"></div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-envelope"></i>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        class="form-input" 
+                        placeholder="Enter your email address"
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock"></i>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        class="form-input" 
+                        placeholder="Enter your password"
+                        required
+                    >
+                    <button type="button" class="password-toggle" onclick="togglePassword()">
+                        <i class="fas fa-eye" id="passwordToggleIcon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="login-btn" id="loginButton">
+                <span id="loginButtonText">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Sign In to Admin Panel
+                </span>
+                <div class="loading-spinner hidden" id="loadingSpinner"></div>
+            </button>
+        </form>
+
+        <div class="auth-switch" style="margin-top:14px; text-align:center; font-size:14px; color:#6b7280;">
+            <span>Don't have an admin account?</span>
+            <a href="#" onclick="showRegister(); return false;" style="color:#667eea; font-weight:600; margin-left:6px;">Create one</a>
+        </div>
+
+        <form id="registerForm" class="hidden" style="margin-top:22px;">
+            <div class="form-group">
+                <label for="regFirstName">First name</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-user"></i>
+                    <input 
+                        type="text" 
+                        id="regFirstName" 
+                        class="form-input" 
+                        placeholder="Enter your first name"
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="regLastName">Last name</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-user"></i>
+                    <input 
+                        type="text" 
+                        id="regLastName" 
+                        class="form-input" 
+                        placeholder="Enter your last name"
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="regEmail">Email Address</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-envelope"></i>
+                    <input 
+                        type="email" 
+                        id="regEmail" 
+                        class="form-input" 
+                        placeholder="Enter your email address"
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="regPassword">Password</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock"></i>
+                    <input 
+                        type="password" 
+                        id="regPassword" 
+                        class="form-input" 
+                        placeholder="Create a password"
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="regPasswordConfirm">Confirm Password</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock"></i>
+                    <input 
+                        type="password" 
+                        id="regPasswordConfirm" 
+                        class="form-input" 
+                        placeholder="Confirm your password"
+                        required
+                    >
+                </div>
+            </div>
+
+            <button type="submit" class="login-btn" id="registerButton">
+                <span id="registerButtonText">
+                    <i class="fas fa-user-plus"></i>
+                    Create Admin Account
+                </span>
+                <div class="loading-spinner hidden" id="registerLoadingSpinner"></div>
+            </button>
+        </form>
+
+        <div class="auth-switch hidden" id="registerSwitch" style="margin-top:14px; text-align:center; font-size:14px; color:#6b7280;">
+            <span>Already have an account?</span>
+            <a href="#" onclick="showLogin(); return false;" style="color:#667eea; font-weight:600; margin-left:6px;">Sign in</a>
+        </div>
+
+        <div class="security-notice">
+            <i class="fas fa-shield-check"></i>
+            <div class="security-text">
+                Admin access requires approval from a super administrator. 
+                Contact your system administrator if you need access.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // supabase client is available from admin-common.js as window.supabaseClient
+        let isLoading = false;
+
+        // Check if user is already logged in after page loads
+        window.addEventListener('load', function() {
+            checkAuthState();
+        });
+
+        async function checkAuthState() {
+            const adminAuth = localStorage.getItem('adminAuth');
+            const adminUser = localStorage.getItem('adminUser');
+            
+            if (adminAuth === 'true' && adminUser) {
+                window.location.href = '/admin-dashboard.html';
+            }
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', handleLogin);
+        document.getElementById('registerForm').addEventListener('submit', handleRegister);
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            if (isLoading) return;
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showMessage('Please fill in all fields', 'error');
+                return;
+            }
+
+            setLoading(true);
+            clearMessages();
+
+            try {
+                // REAL AUTHENTICATION
+                
+                // Step 1: Authenticate with Supabase Auth
+                const { data: authData, error: authError } = await window.supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (authError) {
+                    if (authError.message.includes('Invalid login credentials')) {
+                        showMessage('Invalid email or password', 'error');
+                    } else {
+                        showMessage('Authentication failed: ' + authError.message, 'error');
+                    }
+                    return;
+                }
+
+                // Step 2: Check if user exists in admin_users table
+                const { data: adminUser, error: adminError } = await window.supabaseClient
+                    .from('admin_users')
+                    .select('*')
+                    .eq('email', email.toLowerCase())
+                    .maybeSingle();
+
+                if (adminError) {
+                    console.error('Admin check error:', adminError);
+                    showMessage('Error checking admin status. Please contact support.', 'error');
+                    await window.supabaseClient.auth.signOut();
+                    return;
+                }
+
+                if (!adminUser) {
+                    showMessage('This account is not registered as an admin', 'error');
+                    await window.supabaseClient.auth.signOut();
+                    return;
+                }
+
+                if (!adminUser.is_approved) {
+                    showMessage('Your admin account is pending approval. Please contact a super administrator.', 'error');
+                    await window.supabaseClient.auth.signOut();
+                    return;
+                }
+
+                // Step 3: Update last login
+                await window.supabaseClient
+                    .from('admin_users')
+                    .update({ last_login: new Date().toISOString() })
+                    .eq('id', adminUser.id);
+
+                // Step 4: Store session data
+                localStorage.setItem('adminAuth', 'true');
+                localStorage.setItem('adminUser', JSON.stringify(adminUser));
+                localStorage.setItem('supabaseSession', JSON.stringify(authData.session));
+
+                showMessage('Login successful! Redirecting...', 'success');
+
+                // Redirect to dashboard
+                setTimeout(() => {
+                    window.location.href = '/admin-dashboard.html';
+                }, 1500);
+
+            } catch (error) {
+                console.error('Login error:', error);
+                showMessage('An unexpected error occurred. Please try again.', 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function showRegister() {
+            clearMessages();
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('registerForm').classList.remove('hidden');
+            document.getElementById('registerSwitch').classList.remove('hidden');
+        }
+
+        function showLogin() {
+            clearMessages();
+            document.getElementById('registerForm').classList.add('hidden');
+            document.getElementById('registerSwitch').classList.add('hidden');
+            document.getElementById('loginForm').classList.remove('hidden');
+        }
+
+        function setRegisterLoading(loading) {
+            const button = document.getElementById('registerButton');
+            const buttonText = document.getElementById('registerButtonText');
+            const spinner = document.getElementById('registerLoadingSpinner');
+            if (loading) {
+                button.disabled = true;
+                buttonText.classList.add('hidden');
+                spinner.classList.remove('hidden');
+            } else {
+                button.disabled = false;
+                buttonText.classList.remove('hidden');
+                spinner.classList.add('hidden');
+            }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            if (isLoading) return;
+
+            const firstName = document.getElementById('regFirstName').value.trim();
+            const lastName = document.getElementById('regLastName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const passwordConfirm = document.getElementById('regPasswordConfirm').value;
+
+            if (!firstName || !lastName || !email || !password || !passwordConfirm) {
+                showMessage('Please fill in all fields', 'error');
+                return;
+            }
+            if (password !== passwordConfirm) {
+                showMessage('Passwords do not match', 'error');
+                return;
+            }
+
+            setRegisterLoading(true);
+            clearMessages();
+            try {
+                // Create Auth user
+                const { data: signUpData, error: signUpError } = await window.supabaseClient.auth.signUp({
+                    email: email,
+                    password: password
+                });
+                if (signUpError) {
+                    showMessage('Sign up failed: ' + signUpError.message, 'error');
+                    return;
+                }
+
+                // Create/Upsert admin record (pending approval by default)
+                const { error: upsertError } = await window.supabaseClient
+                    .from('admin_users')
+                    .upsert({
+                        email: email.toLowerCase(),
+                        first_name: firstName,
+                        last_name: lastName,
+                        is_super_admin: false,
+                        is_approved: false
+                    }, { onConflict: 'email' });
+                if (upsertError) {
+                    console.error('Admin upsert error:', upsertError);
+                }
+
+                // Ensure user is signed out; approval required before access
+                await window.supabaseClient.auth.signOut();
+                showMessage('Account created. A super admin must approve your access before you can sign in.', 'success');
+                setTimeout(() => {
+                    showLogin();
+                }, 800);
+            } catch (err) {
+                console.error('Register error:', err);
+                showMessage('An unexpected error occurred. Please try again.', 'error');
+            } finally {
+                setRegisterLoading(false);
+            }
+        }
+
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('passwordToggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.className = 'fas fa-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.className = 'fas fa-eye';
+            }
+        }
+
+        // Expose UI helpers for inline onclick handlers (must be in global scope)
+        window.showRegister = function() {
+            clearMessages();
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('registerForm').classList.remove('hidden');
+            document.getElementById('registerSwitch').classList.remove('hidden');
+        };
+
+        window.showLogin = function() {
+            clearMessages();
+            document.getElementById('registerForm').classList.add('hidden');
+            document.getElementById('registerSwitch').classList.add('hidden');
+            document.getElementById('loginForm').classList.remove('hidden');
+        };
+
+        window.togglePassword = function() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('passwordToggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.className = 'fas fa-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.className = 'fas fa-eye';
+            }
+        };
+
+        function setLoading(loading) {
+            isLoading = loading;
+            const button = document.getElementById('loginButton');
+            const buttonText = document.getElementById('loginButtonText');
+            const spinner = document.getElementById('loadingSpinner');
+            
+            if (loading) {
+                button.disabled = true;
+                buttonText.classList.add('hidden');
+                spinner.classList.remove('hidden');
+            } else {
+                button.disabled = false;
+                buttonText.classList.remove('hidden');
+                spinner.classList.add('hidden');
+            }
+        }
+
+        function showMessage(message, type) {
+            const container = document.getElementById('messageContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const icon = type === 'error' ? 'fas fa-exclamation-circle' : 'fas fa-check-circle';
+            messageDiv.innerHTML = `<i class="${icon}"></i> ${message}`;
+            
+            container.appendChild(messageDiv);
+            
+            // Auto-remove success messages
+            if (type === 'success') {
+                setTimeout(() => {
+                    if (messageDiv.parentNode) {
+                        messageDiv.parentNode.removeChild(messageDiv);
+                    }
+                }, 3000);
+            }
+        }
+
+        function clearMessages() {
+            document.getElementById('messageContainer').innerHTML = '';
+        }
+
+        // Handle Enter key in visible form
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !isLoading) {
+                const loginVisible = !document.getElementById('loginForm').classList.contains('hidden');
+                if (loginVisible) {
+                    const form = document.getElementById('loginForm');
+                    if (form.checkValidity()) {
+                        handleLogin(e);
+                    }
+                } else {
+                    const rform = document.getElementById('registerForm');
+                    if (rform.checkValidity()) {
+                        handleRegister(e);
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
