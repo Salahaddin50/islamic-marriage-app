@@ -720,6 +720,41 @@ body {
     justify-content: flex-end;
 }
 
+/* Pagination */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+}
+.pagination {
+    display: inline-flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.pagination-btn {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    background: white;
+    color: #374151;
+    cursor: pointer;
+}
+.pagination-btn.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+.pagination-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.pagination-ellipsis {
+    align-self: center;
+    color: #9ca3af;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
     .charts-grid {

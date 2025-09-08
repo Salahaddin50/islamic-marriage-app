@@ -182,6 +182,25 @@
             background: rgba(255, 255, 255, 0.3);
         }
 
+        /* Fullscreen image modal */
+        .image-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+        .image-modal-content img {
+            height: 90vh;
+            width: auto;
+            max-width: 90vw;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -222,6 +241,57 @@
             display: flex;
             gap: 12px;
             justify-content: flex-end;
+        }
+
+        /* Media modal tabs */
+        .tabs {
+            display: flex;
+            gap: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 16px;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 10px 14px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: #6b7280;
+            font-weight: 600;
+        }
+        .tab-btn.active {
+            color: #1f2937;
+            border-bottom-color: #667eea;
+        }
+        .media-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+        }
+        .media-card {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f3f4f6;
+        }
+        .media-card img,
+        .media-card video {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            display: block;
+        }
+        .media-delete {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(239,68,68,0.9);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 8px;
+            cursor: pointer;
+            font-size: 12px;
         }
 
         .close-btn {
@@ -565,6 +635,8 @@
                         <div class="profile-avatar">
                             ${profile.profile_picture_url ? 
                                 `<img src="${profile.profile_picture_url}" alt="${profile.first_name}"
+                                      style="cursor:pointer;"
+                                      onclick="openAvatarFullscreen('${profile.profile_picture_url}', '${profile.first_name} ${profile.last_name}')"
                                       onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                  <div class="avatar-fallback" style="display:none;">${getInitials(profile.first_name, profile.last_name)}</div>`
                                 : getInitials(profile.first_name, profile.last_name)
@@ -689,6 +761,20 @@
                 age--;
             }
             return age;
+        }
+
+        function openAvatarFullscreen(url, alt) {
+            const overlay = document.createElement('div');
+            overlay.className = 'image-modal-overlay';
+            overlay.innerHTML = `
+                <div class="image-modal-content" onclick="this.parentNode.remove()">
+                    <img src="${url}" alt="${alt}">
+                </div>
+            `;
+            overlay.onclick = function(e) {
+                if (e.target === overlay) overlay.remove();
+            };
+            document.body.appendChild(overlay);
         }
 
         async function approveProfile(profileId) {
@@ -825,9 +911,98 @@
             document.body.appendChild(modal);
         }
 
-        function viewMedia(profileId) {
-            // This would load and display media for the profile
-            showNotification('Media viewer coming soon', 'info');
+        async function viewMedia(profileId) {
+            try {
+                const profile = profiles.find(p => p.id === profileId);
+                if (!profile || !profile.user_id) {
+                    showNotification('User not found for this profile', 'error');
+                    return;
+                }
+                let photos = [];
+                let videos = [];
+                const { data: mediaRows, error } = await window.supabaseClient
+                    .from('media_references')
+                    .select('id, media_type, external_url, thumbnail_url, upload_date, created_at')
+                    .eq('user_id', profile.user_id)
+                    .order('upload_date', { ascending: false })
+                    .order('created_at', { ascending: false });
+                if (!error && mediaRows) {
+                    photos = mediaRows.filter(m => m.media_type === 'photo');
+                    videos = mediaRows.filter(m => m.media_type === 'video');
+                }
+
+                // Build modal
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>Media Library</h3>
+                                <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="tabs">
+                                    <button class="tab-btn active" data-tab="photos" onclick="switchMediaTab(this, 'photos')"><i class="fas fa-image"></i> Photos (${photos.length})</button>
+                                    <button class="tab-btn" data-tab="videos" onclick="switchMediaTab(this, 'videos')"><i class="fas fa-video"></i> Videos (${videos.length})</button>
+                                </div>
+                                <div id=\"media-photos\" class=\"media-grid\">
+                                    ${photos.map(p => `
+                                        <div class=\\"media-card\\">
+                                            <img src=\\"${p.external_url}\\" alt=\\"photo\\" />
+                                            <button class=\\"media-delete\\" onclick=\\"deleteMedia('${p.id}', '${profileId}')\\"><i class=\\"fas fa-trash\\"></i></button>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                <div id=\"media-videos\" class=\"media-grid\" style=\"display:none;\">
+                                    ${videos.map(v => `
+                                        <div class=\\"media-card\\">
+                                            <video src=\\"${v.external_url}\\" controls poster=\\"${v.thumbnail_url || ''}\\"></video>
+                                            <button class=\\"media-delete\\" onclick=\\"deleteMedia('${v.id}', '${profileId}')\\"><i class=\\"fas fa-trash\\"></i></button>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            } catch (e) {
+                console.error('Media modal error:', e);
+                showNotification('Failed to load media', 'error');
+            }
+        }
+
+        function switchMediaTab(buttonEl, tab) {
+            const container = buttonEl.closest('.modal-content');
+            container.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            buttonEl.classList.add('active');
+            container.querySelector('#media-photos').style.display = tab === 'photos' ? 'grid' : 'none';
+            container.querySelector('#media-videos').style.display = tab === 'videos' ? 'grid' : 'none';
+        }
+
+        async function deleteMedia(mediaId, profileId) {
+            confirmAction('Delete this media?', async () => {
+                try {
+                    const { error } = await window.supabaseClient
+                        .from('media_references')
+                        .delete()
+                        .eq('id', mediaId);
+                    if (error) throw error;
+                    showNotification('Media deleted', 'success');
+                    // Refresh modal
+                    document.querySelector('.modal-overlay').remove();
+                    viewMedia(profileId);
+                } catch (e) {
+                    console.error('Delete media error:', e);
+                    showNotification('Failed to delete media', 'error');
+                }
+            });
         }
 
         // Removed grid/list toggle; list view enforced

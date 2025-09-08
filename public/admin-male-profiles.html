@@ -17,6 +17,56 @@
             margin-bottom: 16px;
         }
 
+        /* Package-based accents */
+        .profile-card.package-free { border-left: 4px solid #9ca3af; }
+        .profile-card.package-premium { border-left: 4px solid #60a5fa; background: linear-gradient(0deg, rgba(96,165,250,0.06), rgba(96,165,250,0.06)), #ffffff; }
+        .profile-card.package-vip { border-left: 4px solid #a78bfa; background: linear-gradient(0deg, rgba(167,139,250,0.06), rgba(167,139,250,0.06)), #ffffff; }
+        .profile-card.package-golden { border-left: 4px solid #f59e0b; background: linear-gradient(0deg, rgba(245,158,11,0.06), rgba(245,158,11,0.06)), #ffffff; }
+
+        .package-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 999px;
+            margin-left: 8px;
+        }
+        .package-premium .package-badge { color:#1d4ed8; background:#dbeafe; }
+        .package-vip .package-badge { color:#6d28d9; background:#ede9fe; }
+        .package-golden .package-badge { color:#b45309; background:#fef3c7; }
+
+        /* Package-based accents */
+        .profile-card.package-free {
+            border-left: 4px solid #9ca3af;
+        }
+        .profile-card.package-premium {
+            border-left: 4px solid #60a5fa;
+            background: linear-gradient(0deg, rgba(96,165,250,0.06), rgba(96,165,250,0.06)), #ffffff;
+        }
+        .profile-card.package-vip {
+            border-left: 4px solid #a78bfa;
+            background: linear-gradient(0deg, rgba(167,139,250,0.06), rgba(167,139,250,0.06)), #ffffff;
+        }
+        .profile-card.package-golden {
+            border-left: 4px solid #f59e0b;
+            background: linear-gradient(0deg, rgba(245,158,11,0.06), rgba(245,158,11,0.06)), #ffffff;
+        }
+
+        .package-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 999px;
+        }
+        .package-premium .package-badge { color:#1d4ed8; background:#dbeafe; }
+        .package-vip .package-badge { color:#6d28d9; background:#ede9fe; }
+        .package-golden .package-badge { color:#b45309; background:#fef3c7; }
+
         .profile-header {
             display: flex;
             align-items: center;
@@ -380,37 +430,46 @@
                                 type="text" 
                                 id="searchInput" 
                                 class="filter-input" 
-                                placeholder="Search by name or email..."
+                                placeholder="Search by name, location, occupation..."
                                 oninput="handleSearch()"
                             >
                         </div>
                         <div class="filter-group">
-                            <label class="filter-label">Approval Status</label>
+                            <label class="filter-label">Status</label>
                             <select id="approvalFilter" class="filter-select" onchange="handleFilter()">
-                                <option value="">All Statuses</option>
+                                <option value="">All</option>
                                 <option value="approved">Approved</option>
-                                <option value="rejected">Rejected</option>
-                                <option value="pending">Pending Review</option>
+                                <option value="rejected">Denied</option>
+                                <option value="pending">Pending</option>
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label class="filter-label">Age Range</label>
-                            <select id="ageFilter" class="filter-select" onchange="handleFilter()">
-                                <option value="">All Ages</option>
-                                <option value="18-25">18-25</option>
-                                <option value="26-35">26-35</option>
-                                <option value="36-45">36-45</option>
-                                <option value="46+">46+</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label class="filter-label">Date Joined</label>
+                            <label class="filter-label">Joining Date</label>
                             <select id="dateFilter" class="filter-select" onchange="handleFilter()">
-                                <option value="">All Time</option>
+                                <option value="">All</option>
                                 <option value="today">Today</option>
-                                <option value="week">This Week</option>
-                                <option value="month">This Month</option>
-                                <option value="year">This Year</option>
+                                <option value="week">Last Week</option>
+                                <option value="month">Last Month</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Package</label>
+                            <select id="packageFilter" class="filter-select" onchange="handleFilter()">
+                                <option value="">All</option>
+                                <option value="free">Free</option>
+                                <option value="premium">Premium</option>
+                                <option value="vip">VIP Premium</option>
+                                <option value="golden">Golden Premium</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Payment Status</label>
+                            <select id="paymentFilter" class="filter-select" onchange="handleFilter()">
+                                <option value="">All</option>
+                                <option value="completed">Paid</option>
+                                <option value="pending">Payment Pending</option>
+                                <option value="failed">Payment Failed</option>
+                                <option value="free">Free Account</option>
                             </select>
                         </div>
                     </div>
@@ -497,7 +556,30 @@
 
                 if (error) throw error;
 
-                profiles = data || [];
+                // Fetch latest payment record per user to derive package/status
+                const userIds = (data || []).map(p => p.user_id).filter(Boolean);
+                let paymentsByUser = {};
+                if (userIds.length) {
+                    const { data: paymentRows, error: paymentsError } = await window.supabaseClient
+                        .from('payment_records')
+                        .select('user_id, package_type, status, created_at')
+                        .in('user_id', userIds)
+                        .order('created_at', { ascending: false });
+                    if (paymentsError) throw paymentsError;
+                    for (const row of (paymentRows || [])) {
+                        if (!paymentsByUser[row.user_id]) {
+                            paymentsByUser[row.user_id] = row; // first row is latest due to sort desc
+                        }
+                    }
+                }
+
+                const merged = (data || []).map(p => ({
+                    ...p,
+                    package_type: paymentsByUser[p.user_id]?.package_type || 'free',
+                    payment_status: paymentsByUser[p.user_id]?.status || 'free'
+                }));
+
+                profiles = merged;
                 filteredProfiles = [...profiles];
                 renderProfiles();
 
@@ -560,11 +642,13 @@
 
             // Render profiles
             container.innerHTML = currentProfiles.map(profile => `
-                <div class="profile-card">
+                <div class="profile-card ${getPackageClass(profile.package_type)}">
                     <div class="profile-header">
                         <div class="profile-avatar">
                             ${profile.profile_picture_url ? 
                                 `<img src="${profile.profile_picture_url}" alt="${profile.first_name}"
+                                      style="cursor:pointer;"
+                                      onclick="openAvatarFullscreen('${profile.profile_picture_url}', '${profile.first_name} ${profile.last_name}')"
                                       onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                  <div class="avatar-fallback" style="display:none;">${getInitials(profile.first_name, profile.last_name)}</div>`
                                 : getInitials(profile.first_name, profile.last_name)
@@ -572,7 +656,7 @@
                         </div>
                         <div class="profile-info">
                             <div class="profile-name">
-                                ${profile.first_name} ${profile.last_name}
+                                ${profile.first_name} ${profile.last_name} ${getPackageCrown(profile.package_type)}
                             </div>
                             <div class="profile-email">${profile.phone_code || ''}${profile.mobile_number || 'No phone'}</div>
                             <div class="profile-meta">
@@ -674,6 +758,32 @@
             }
         }
 
+        function normalizePackageType(value) {
+            if (!value) return 'free';
+            const v = String(value).toLowerCase();
+            if (v.includes('gold')) return 'golden';
+            if (v.includes('vip')) return 'vip';
+            if (v.includes('prem')) return 'premium';
+            return 'free';
+        }
+
+        function getPackageClass(pkg) {
+            switch (normalizePackageType(pkg)) {
+                case 'premium': return 'package-premium';
+                case 'vip': return 'package-vip';
+                case 'golden': return 'package-golden';
+                default: return 'package-free';
+            }
+        }
+
+        function getPackageCrown(pkg) {
+            const type = normalizePackageType(pkg);
+            if (type === 'premium') return '<span class="package-badge"><i class="fas fa-crown"></i> Premium</span>';
+            if (type === 'vip') return '<span class="package-badge"><i class="fas fa-crown"></i> VIP Premium</span>';
+            if (type === 'golden') return '<span class="package-badge"><i class="fas fa-crown"></i> Golden Premium</span>';
+            return '';
+        }
+
         function truncateText(text, maxLength) {
             if (!text || text.length <= maxLength) return text;
             return text.substring(0, maxLength) + '...';
@@ -689,6 +799,20 @@
                 age--;
             }
             return age;
+        }
+
+        function openAvatarFullscreen(url, alt) {
+            const overlay = document.createElement('div');
+            overlay.className = 'image-modal-overlay';
+            overlay.innerHTML = `
+                <div class="image-modal-content" onclick="this.parentNode.remove()">
+                    <img src="${url}" alt="${alt}">
+                </div>
+            `;
+            overlay.onclick = function(e) {
+                if (e.target === overlay) overlay.remove();
+            };
+            document.body.appendChild(overlay);
         }
 
         async function approveProfile(profileId) {
@@ -825,9 +949,96 @@
             document.body.appendChild(modal);
         }
 
-        function viewMedia(profileId) {
-            // This would load and display media for the profile
-            showNotification('Media viewer coming soon', 'info');
+        async function viewMedia(profileId) {
+            try {
+                const profile = profiles.find(p => p.id === profileId);
+                if (!profile || !profile.user_id) {
+                    showNotification('User not found for this profile', 'error');
+                    return;
+                }
+                let photos = [];
+                let videos = [];
+                const { data: mediaRows, error } = await window.supabaseClient
+                    .from('media_references')
+                    .select('id, media_type, external_url, thumbnail_url, upload_date, created_at')
+                    .eq('user_id', profile.user_id)
+                    .order('upload_date', { ascending: false })
+                    .order('created_at', { ascending: false });
+                if (!error && mediaRows) {
+                    photos = mediaRows.filter(m => m.media_type === 'photo');
+                    videos = mediaRows.filter(m => m.media_type === 'video');
+                }
+
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>Media Library</h3>
+                                <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="tabs">
+                                    <button class="tab-btn active" data-tab="photos" onclick="switchMediaTab(this, 'photos')"><i class="fas fa-image"></i> Photos (${photos.length})</button>
+                                    <button class="tab-btn" data-tab="videos" onclick="switchMediaTab(this, 'videos')"><i class="fas fa-video"></i> Videos (${videos.length})</button>
+                                </div>
+                                <div id="media-photos" class="media-grid">
+                                    ${photos.map(p => `
+                                        <div class="media-card">
+                                            <img src="${p.external_url}" alt="photo" />
+                                            <button class="media-delete" onclick="deleteMedia('${p.id}', '${profileId}')"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                <div id="media-videos" class="media-grid" style="display:none;">
+                                    ${videos.map(v => `
+                                        <div class="media-card">
+                                            <video src="${v.external_url}" controls poster="${v.thumbnail_url || ''}"></video>
+                                            <button class="media-delete" onclick="deleteMedia('${v.id}', '${profileId}')"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            } catch (e) {
+                console.error('Media modal error:', e);
+                showNotification('Failed to load media', 'error');
+            }
+        }
+
+        function switchMediaTab(buttonEl, tab) {
+            const container = buttonEl.closest('.modal-content');
+            container.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            buttonEl.classList.add('active');
+            container.querySelector('#media-photos').style.display = tab === 'photos' ? 'grid' : 'none';
+            container.querySelector('#media-videos').style.display = tab === 'videos' ? 'grid' : 'none';
+        }
+
+        async function deleteMedia(mediaId, profileId) {
+            confirmAction('Delete this media?', async () => {
+                try {
+                    const { error } = await window.supabaseClient
+                        .from('user_media')
+                        .delete()
+                        .eq('id', mediaId);
+                    if (error) throw error;
+                    showNotification('Media deleted', 'success');
+                    document.querySelector('.modal-overlay').remove();
+                    viewMedia(profileId);
+                } catch (e) {
+                    console.error('Delete media error:', e);
+                    showNotification('Failed to delete media', 'error');
+                }
+            });
         }
 
         // Removed grid/list toggle; list view enforced
@@ -842,89 +1053,87 @@
         }
 
         function applyFilters() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const approvalFilter = document.getElementById('approvalFilter').value;
-            const ageFilter = document.getElementById('ageFilter').value;
-            const dateFilter = document.getElementById('dateFilter').value;
+            const getVal = (id) => { const el = document.getElementById(id); return el ? el.value : ''; };
+            const searchTerm = (getVal('searchInput') || '').toLowerCase().trim();
+            const approvalFilter = getVal('approvalFilter');
+            const ageFilter = getVal('ageFilter');
+            const dateFilter = getVal('dateFilter');
+            const packageFilter = getVal('packageFilter');
+            const paymentFilter = getVal('paymentFilter');
+
+            const includes = (v) => (typeof v === 'string') && v.toLowerCase().includes(searchTerm);
 
             filteredProfiles = profiles.filter(profile => {
-                // Search filter
-                const matchesSearch = !searchTerm || 
-                    profile.first_name.toLowerCase().includes(searchTerm) ||
-                    profile.last_name.toLowerCase().includes(searchTerm) ||
-                    profile.email.toLowerCase().includes(searchTerm);
+                // search across fields
+                const matchesSearch = !searchTerm ||
+                    includes(profile.first_name) || includes(profile.last_name) ||
+                    includes(profile.city) || includes(profile.country) ||
+                    includes(profile.occupation) || includes(profile.about_me) ||
+                    String(profile.mobile_number || '').includes(searchTerm);
 
-                // Approval filter
+                // approval
                 let matchesApproval = true;
-                if (approvalFilter === 'approved') {
-                    matchesApproval = profile.admin_approved === true;
-                } else if (approvalFilter === 'rejected') {
-                    matchesApproval = profile.admin_approved === false;
-                } else if (approvalFilter === 'pending') {
-                    matchesApproval = profile.admin_approved === null;
-                }
+                if (approvalFilter === 'approved') matchesApproval = profile.admin_approved === true;
+                else if (approvalFilter === 'rejected' || approvalFilter === 'denied') matchesApproval = profile.admin_approved === false;
+                else if (approvalFilter === 'pending') matchesApproval = profile.admin_approved === null;
 
-                // Age filter
+                // age from date_of_birth
                 let matchesAge = true;
-                if (ageFilter && profile.age) {
-                    const age = parseInt(profile.age);
-                    switch (ageFilter) {
-                        case '18-25':
-                            matchesAge = age >= 18 && age <= 25;
-                            break;
-                        case '26-35':
-                            matchesAge = age >= 26 && age <= 35;
-                            break;
-                        case '36-45':
-                            matchesAge = age >= 36 && age <= 45;
-                            break;
-                        case '46+':
-                            matchesAge = age >= 46;
-                            break;
+                if (ageFilter) {
+                    const age = calculateAge(profile.date_of_birth);
+                    if (typeof age === 'number') {
+                        if (ageFilter === '18-25') matchesAge = age >= 18 && age <= 25;
+                        else if (ageFilter === '26-35') matchesAge = age >= 26 && age <= 35;
+                        else if (ageFilter === '36-45') matchesAge = age >= 36 && age <= 45;
+                        else if (ageFilter === '46+') matchesAge = age >= 46;
                     }
                 }
 
-                // Date filter
+                // joined date
                 let matchesDate = true;
                 if (dateFilter) {
-                    const profileDate = new Date(profile.created_at);
+                    const d = new Date(profile.created_at);
                     const now = new Date();
-                    
-                    switch (dateFilter) {
-                        case 'today':
-                            matchesDate = profileDate.toDateString() === now.toDateString();
-                            break;
-                        case 'week':
-                            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-                            matchesDate = profileDate >= weekAgo;
-                            break;
-                        case 'month':
-                            const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-                            matchesDate = profileDate >= monthAgo;
-                            break;
-                        case 'year':
-                            const yearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
-                            matchesDate = profileDate >= yearAgo;
-                            break;
+                    if (dateFilter === 'today') {
+                        const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                        matchesDate = d >= start;
+                    } else if (dateFilter === 'week') {
+                        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                        matchesDate = d >= weekAgo;
+                    } else if (dateFilter === 'month') {
+                        const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+                        matchesDate = d >= monthAgo;
                     }
                 }
 
-                return matchesSearch && matchesApproval && matchesAge && matchesDate;
+                // package
+                let matchesPackage = true;
+                if (packageFilter) {
+                    matchesPackage = normalizePackageType(profile.package_type) === packageFilter;
+                }
+
+                // payment status
+                let matchesPayment = true;
+                if (paymentFilter) {
+                    const s = (profile.payment_status || '').toLowerCase();
+                    matchesPayment = s === paymentFilter;
+                }
+
+                return matchesSearch && matchesApproval && matchesAge && matchesDate && matchesPackage && matchesPayment;
             });
 
             currentPage = 1;
+            const countEl = document.getElementById('profilesCount');
+            if (countEl) countEl.textContent = `(${filteredProfiles.length})`;
             renderProfiles();
         }
 
         function clearFilters() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('approvalFilter').value = '';
-            document.getElementById('ageFilter').value = '';
-            document.getElementById('dateFilter').value = '';
-            
-            filteredProfiles = [...profiles];
-            currentPage = 1;
-            renderProfiles();
+            ['searchInput','approvalFilter','ageFilter','dateFilter','packageFilter','paymentFilter'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            applyFilters();
         }
 
         function exportProfiles() {
@@ -951,3 +1160,4 @@
     </script>
 </body>
 </html>
+
