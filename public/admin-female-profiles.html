@@ -575,7 +575,12 @@
                     .eq('gender', 'female')
                     .order('created_at', { ascending: false });
 
-                if (error) throw error;
+                if (error) {
+                    if (error.code === 'PGRST301' || error.message?.toLowerCase().includes('jwt') || error.message?.toLowerCase().includes('auth')) {
+                        if (window.handleAuthIssue) return window.handleAuthIssue();
+                    }
+                    throw error;
+                }
 
                 profiles = data || [];
                 filteredProfiles = [...profiles];
@@ -675,16 +680,14 @@
                     
 
                     <div class="profile-actions" style="margin-top: 16px; gap: 8px;">
-                        ${profile.admin_approved === null ? `
-                            <button class="btn btn-primary btn-sm" onclick="approveProfile('${profile.id}')">
-                                <i class="fas fa-check"></i>
-                                Approve
-                            </button>
-                            <button class="btn btn-danger btn-sm" onclick="rejectProfile('${profile.id}')">
-                                <i class="fas fa-times"></i>
-                                Reject
-                            </button>
-                        ` : ''}
+                        <button class="btn btn-primary btn-sm" onclick="approveProfile('${profile.id}')">
+                            <i class="fas fa-check"></i>
+                            Approve
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="rejectProfile('${profile.id}')">
+                            <i class="fas fa-times"></i>
+                            Reject
+                        </button>
                         <button class="btn btn-secondary btn-sm" onclick="viewMedia('${profile.id}')">
                             <i class="fas fa-images"></i>
                             Media
@@ -772,12 +775,22 @@
                 // Always use real data
                 
                 // Real mode
-                const { error } = await window.supabaseClient
+                const { data, error } = await window.supabaseClient
                     .from('user_profiles')
                     .update({ admin_approved: true })
-                    .eq('id', profileId);
+                    .eq('id', profileId)
+                    .select('id, admin_approved');
 
-                if (error) throw error;
+                if (error) {
+                    if (error.code === 'PGRST301' || error.message?.toLowerCase().includes('jwt') || error.message?.toLowerCase().includes('auth')) {
+                        if (window.handleAuthIssue) return window.handleAuthIssue();
+                    }
+                    throw error;
+                }
+                if (!data || data.length === 0 || data[0].admin_approved !== true) {
+                    showNotification('No rows updated. Check RLS or session.', 'error');
+                    return;
+                }
 
                 showNotification('Profile approved successfully', 'success');
                 loadProfiles();
@@ -792,12 +805,17 @@
                 // Always use real data
                 
                 // Real mode
-                const { error } = await window.supabaseClient
+                const { data, error } = await window.supabaseClient
                     .from('user_profiles')
                     .update({ admin_approved: false })
-                    .eq('id', profileId);
+                    .eq('id', profileId)
+                    .select('id, admin_approved');
 
                 if (error) throw error;
+                if (!data || data.length === 0 || data[0].admin_approved !== false) {
+                    showNotification('No rows updated. Check RLS or session.', 'error');
+                    return;
+                }
 
                 showNotification('Profile rejected', 'success');
                 loadProfiles();

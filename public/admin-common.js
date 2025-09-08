@@ -33,14 +33,26 @@ async function checkAuth() {
         
         // Always verify with real database
         
-        // Real auth mode
-        const sessionData = localStorage.getItem('supabaseSession');
-        if (sessionData) {
-            supabaseSession = JSON.parse(sessionData);
-            
-            // Set the session in Supabase client
-            await supabase.auth.setSession(supabaseSession);
+        // Real auth mode: rehydrate or fetch fresh session
+        const stored = localStorage.getItem('supabaseSession');
+        if (stored) {
+            supabaseSession = JSON.parse(stored);
+            if (supabaseSession && supabaseSession.access_token && supabaseSession.refresh_token) {
+                await supabase.auth.setSession({
+                    access_token: supabaseSession.access_token,
+                    refresh_token: supabaseSession.refresh_token
+                });
+            }
         }
+
+        // Ensure we actually have a valid session
+        const { data: sessionResult } = await supabase.auth.getSession();
+        if (!sessionResult || !sessionResult.session) {
+            logout();
+            return;
+        }
+        supabaseSession = sessionResult.session;
+        localStorage.setItem('supabaseSession', JSON.stringify(supabaseSession));
         
         // Verify admin is still approved
         const { data: adminCheck, error } = await supabase
@@ -103,6 +115,32 @@ async function logout() {
     // Redirect to login
     window.location.href = '/admin.html';
 }
+
+// Keep session in sync and handle refresh failures
+supabase.auth.onAuthStateChange((event, session) => {
+    try {
+        if (session) {
+            supabaseSession = session;
+            localStorage.setItem('supabaseSession', JSON.stringify(session));
+        } else {
+            localStorage.removeItem('supabaseSession');
+        }
+
+        if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+            redirectToLogin();
+        }
+    } catch (err) {
+        console.error('Auth state handler error:', err);
+    }
+});
+
+// Global helper for handling auth issues from API calls
+window.handleAuthIssue = async function(message = 'Session expired. Please sign in again.') {
+    try {
+        showNotification(message, 'warning');
+    } catch (_) {}
+    await logout();
+};
 
 // Sidebar toggle for mobile
 function toggleSidebar() {
