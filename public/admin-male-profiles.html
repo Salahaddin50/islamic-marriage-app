@@ -1,18 +1,3 @@
-        function openMediaViewer(url, mediaType) {
-            const overlay = document.createElement('div');
-            overlay.className = 'image-modal-overlay';
-            const content = document.createElement('div');
-            content.className = 'image-modal-content';
-            content.onclick = () => overlay.remove();
-            if ((mediaType || '').toLowerCase() === 'video') {
-                content.innerHTML = `<video src="${url}" style="height:90vh;max-width:90vw;object-fit:contain;border-radius:8px;" controls playsinline></video>`;
-            } else {
-                content.innerHTML = `<img src="${url}" alt="media" />`;
-            }
-            overlay.appendChild(content);
-            overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
-            document.body.appendChild(overlay);
-        }
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1011,7 +996,7 @@
                                 <div id="media-photos" class="media-grid">
                                     ${photos.map(p => `
                                         <div class="media-card">
-                                            <img src="${p.external_url}" alt="photo" onclick="openMediaViewer('${p.external_url}','photo')" />
+                                            <img src="${p.external_url}" alt="photo" onclick="openAvatarFullscreen('${p.external_url}','Photo')" />
                                             <button class="media-delete" onclick="deleteMedia('${p.id}', '${profileId}')"><i class="fas fa-trash"></i></button>
                                         </div>
                                     `).join('')}
@@ -1019,7 +1004,7 @@
                                 <div id="media-videos" class="media-grid" style="display:none;">
                                     ${videos.map(v => `
                                         <div class="media-card">
-                                            <img src="${v.thumbnail_url || ''}" alt="video" onerror="this.src='';" onclick="openMediaViewer('${v.external_url}','video')" />
+                                            <img src="${v.thumbnail_url || ''}" alt="video" onerror="this.src='';" onclick="openAvatarFullscreen('${v.external_url}','Video')" />
                                             <div class="play-badge">Video</div>
                                             <button class="media-delete" onclick="deleteMedia('${v.id}', '${profileId}')"><i class="fas fa-trash"></i></button>
                                         </div>
