@@ -1,3 +1,18 @@
+        function openMediaViewer(url, mediaType) {
+            const overlay = document.createElement('div');
+            overlay.className = 'image-modal-overlay';
+            const content = document.createElement('div');
+            content.className = 'image-modal-content';
+            content.onclick = () => overlay.remove();
+            if ((mediaType || '').toLowerCase() === 'video') {
+                content.innerHTML = `<video src="${url}" style="height:90vh;max-width:90vw;object-fit:contain;border-radius:8px;" controls playsinline></video>`;
+            } else {
+                content.innerHTML = `<img src="${url}" alt="media" />`;
+            }
+            overlay.appendChild(content);
+            overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+            document.body.appendChild(overlay);
+        }
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -180,52 +195,60 @@
             gap: 12px;
             margin-top: 12px;
         }
-
-        .media-item {
+        /* Symmetric media card styles with females */
+        .media-card {
             position: relative;
-            aspect-ratio: 1;
             border-radius: 8px;
             overflow: hidden;
             background: #f3f4f6;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
-
-        .media-item img,
-        .media-item video {
+        .media-card img,
+        .media-card video {
             width: 100%;
-            height: 100%;
+            height: 120px;
             object-fit: cover;
+            display: block;
         }
-
-        .media-overlay {
+        .media-delete {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-        }
-
-        .media-item:hover .media-overlay {
-            opacity: 1;
-        }
-
-        .media-action {
-            background: rgba(255, 255, 255, 0.2);
+            top: 8px;
+            right: 8px;
+            background: rgba(239,68,68,0.9);
             color: white;
             border: none;
-            padding: 6px;
-            border-radius: 4px;
+            border-radius: 6px;
+            padding: 6px 8px;
             cursor: pointer;
             font-size: 12px;
+        }
+        .tabs {
+            display: flex;
+            gap: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 16px;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 10px 14px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: #6b7280;
+            font-weight: 600;
+        }
+        .tab-btn.active {
+            color: #1f2937;
+            border-bottom-color: #667eea;
+        }
+        .play-badge {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            font-size: 10px;
+            padding: 4px 6px;
+            border-radius: 6px;
         }
 
         .media-action:hover {
@@ -988,7 +1011,7 @@
                                 <div id="media-photos" class="media-grid">
                                     ${photos.map(p => `
                                         <div class="media-card">
-                                            <img src="${p.external_url}" alt="photo" />
+                                            <img src="${p.external_url}" alt="photo" onclick="openMediaViewer('${p.external_url}','photo')" />
                                             <button class="media-delete" onclick="deleteMedia('${p.id}', '${profileId}')"><i class="fas fa-trash"></i></button>
                                         </div>
                                     `).join('')}
@@ -996,7 +1019,8 @@
                                 <div id="media-videos" class="media-grid" style="display:none;">
                                     ${videos.map(v => `
                                         <div class="media-card">
-                                            <video src="${v.external_url}" controls poster="${v.thumbnail_url || ''}"></video>
+                                            <img src="${v.thumbnail_url || ''}" alt="video" onerror="this.src='';" onclick="openMediaViewer('${v.external_url}','video')" />
+                                            <div class="play-badge">Video</div>
                                             <button class="media-delete" onclick="deleteMedia('${v.id}', '${profileId}')"><i class="fas fa-trash"></i></button>
                                         </div>
                                     `).join('')}
