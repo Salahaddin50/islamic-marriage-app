@@ -636,6 +636,23 @@ body {
     background: #fecaca;
 }
 
+/* Small button sizing */
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 6px;
+}
+
+@media (max-width: 480px) {
+    .btn-sm {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+    .profile-card {
+        padding: 12px;
+    }
+}
+
 /* Table */
 .table {
     width: 100%;

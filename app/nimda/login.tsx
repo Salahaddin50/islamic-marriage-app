@@ -9,7 +9,7 @@ const AdminLogin: React.FC = () => {
     if (Platform.OS === 'web') {
       // On web, redirect to the HTML admin panel
       window.location.href = '/admin.html';
-    } else {
+      } else {
       // On mobile, open in browser
       Linking.openURL('http://localhost:8081/admin.html');
     }
@@ -28,12 +28,12 @@ const AdminLogin: React.FC = () => {
         colors={['#667eea', '#764ba2']}
         style={styles.gradient}
       >
-        <View style={styles.content}>
-          <View style={styles.logoContainer}>
+            <View style={styles.content}>
+              <View style={styles.logoContainer}>
             <Text style={styles.logoIcon}>🛡️</Text>
-            <Text style={styles.appName}>Hume Admin</Text>
-            <Text style={styles.subtitle}>Administrative Dashboard</Text>
-          </View>
+                <Text style={styles.appName}>Hume Admin</Text>
+                <Text style={styles.subtitle}>Administrative Dashboard</Text>
+              </View>
 
           <TouchableOpacity style={styles.adminButton} onPress={openAdminPanel}>
             <Text style={styles.adminButtonText}>🚀 Open Admin Panel</Text>
@@ -49,9 +49,9 @@ const AdminLogin: React.FC = () => {
             </Text>
             <Text style={styles.infoText}>
               🔒 Secure authentication and full admin controls
-            </Text>
-          </View>
-        </View>
+                </Text>
+              </View>
+            </View>
       </LinearGradient>
     </SafeAreaView>
   );
