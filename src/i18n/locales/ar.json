@@ -102,7 +102,8 @@
         "green": "أخضر",
         "blue": "أزرق",
         "gray": "رمادي",
-        "amber": "كهرماني"
+        "amber": "كهرماني",
+        "other": "أخرى"
       },
       "hair_color": {
         "black": "أسود",
@@ -112,7 +113,8 @@
         "blonde": "أشقر",
         "red": "أحمر",
         "gray": "رمادي",
-        "white": "أبيض"
+        "white": "أبيض",
+        "other": "أخرى"
       },
       "skin_color": {
         "very_fair": "فاتح جدًا",
@@ -121,7 +123,8 @@
         "olive": "قمحي",
         "brown": "بني",
         "dark_brown": "بني داكن",
-        "very_dark": "داكن جدًا"
+        "very_dark": "داكن جدًا",
+        "dark": "داكن"
       },
       "body_type": {
         "slim": "نحيف",
@@ -129,7 +132,8 @@
         "athletic": "رياضي",
         "heavy_set": "ثقيل البنية",
         "curvy": "ممتلئ",
-        "plus_size": "مقاس كبير"
+        "plus_size": "مقاس كبير",
+        "muscular": "عضلي"
       },
       "education": {
         "high_school": "ثانوي",
@@ -139,6 +143,9 @@
         "phd": "دكتوراه",
         "islamic": "دراسات إسلامية",
         "certification": "شهادة مهنية",
+        "associate_degree": "درجة الزمالة",
+        "doctorate": "دكتوراه",
+        "trade_school": "مدرسة مهنية",
         "other": "أخرى"
       },
       "languages": {
@@ -183,7 +190,8 @@
         "religious": "متدين",
         "moderate": "متوسط التدين",
         "somewhat": "قليل التدين",
-        "learning": "في طور التعلم"
+        "learning": "في طور التعلم",
+        "not_very_religious": "غير متدين كثيرًا"
       },
       "prayer_frequency": {
         "all_5": "الصلوات الخمس جميعًا",
@@ -191,7 +199,8 @@
         "some": "بعض الصلوات",
         "friday": "الجمعة فقط",
         "occasionally": "أحيانًا",
-        "learning": "أتعلّم الصلاة"
+        "learning": "أتعلّم الصلاة",
+        "never": "أبدًا"
       },
       "quran": {
         "memorized": "حفظ أجزاء كبيرة",
@@ -355,7 +364,7 @@
     "requests": "الطلبات",
     "meet": "المقابلات",
     "message": "الرسائل",
-    "profile": "الملف الشخصي"
+    "profile": "ملفي"
   },
   "badges": {
     "new": "جديد"
@@ -480,6 +489,29 @@
   "language_page": {
     "title": "اللغة والمنطقة",
     "languages": "اللغات"
+  },
+  "personal_details": {
+    "title": "البيانات الشخصية",
+    "loading": "جارٍ تحميل البيانات الشخصية...",
+    "load_error": "تعذر تحميل البيانات الشخصية",
+    "no_profile_data": "لا توجد بيانات ملف",
+    "update_success": "تم تحديث البيانات الشخصية بنجاح!",
+    "update_error": "تعذر تحديث البيانات الشخصية",
+    "update_error_retry": "تعذر تحديث البيانات الشخصية. يرجى المحاولة مرة أخرى.",
+    "about_me": "نبذة عني",
+    "about_subtitle": "أخبر الآخرين عن نفسك",
+    "about_placeholder": "شارك نبذة عن نفسك واهتماماتك وما تبحث عنه...",
+    "physical_title": "الخصائص الجسدية",
+    "physical_subtitle": "أخبرنا عن خصائصك الجسدية",
+    "height_placeholder": "الطول (سم)",
+    "weight_placeholder": "الوزن (كجم)",
+    "lifestyle_title": "نمط الحياة والعمل",
+    "lifestyle_subtitle": "أخبرنا عن حياتك ومسيرتك",
+    "occupation_placeholder": "العمل/المهنة *",
+    "income_placeholder": "الدخل الشهري (اختياري)",
+    "occupation_optional": "المهنة (اختياري)",
+    "updating": "جارٍ التحديث...",
+    "update_button": "تحديث البيانات الشخصية"
   },
   "onboarding2": {
     "title": "متوافق بالكامل مع الشريعة",

@@ -9,6 +9,7 @@ import { useNavigation } from 'expo-router';
 import { NavigationProp, useFocusEffect } from '@react-navigation/native';
 import PersonalDetailsService, { PersonalDetails, UpdatePersonalDetailsData } from '../src/services/personalDetails.service';
 import { getResponsiveFontSize, getResponsiveSpacing } from '../utils/responsive';
+import { useTranslation } from 'react-i18next';
 
 // Cache for personal details to prevent reloading
 let cachedPersonalDetails: PersonalDetails | null = null;
@@ -18,6 +19,7 @@ const PERSONAL_DETAILS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 // Personal Details Screen
 const PersonalDetailsScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
+  const { t } = useTranslation();
   
   // Loading and error states
   const [isLoading, setIsLoading] = useState(true);
@@ -152,7 +154,7 @@ const PersonalDetailsScreen = () => {
         populateFormFields(details);
       }
     } catch (error) {
-      setError('Failed to load personal details');
+      setError(t('personal_details.load_error'));
     } finally {
       setIsLoading(false);
     }
@@ -191,7 +193,7 @@ const PersonalDetailsScreen = () => {
   const validateForm = (): boolean => {
     // Basic validation - can be enhanced
     if (!personalDetails) {
-      Alert.alert('Error', 'No profile data found');
+      Alert.alert(t('common.error'), t('personal_details.no_profile_data'));
       return false;
     }
     
@@ -248,22 +250,85 @@ const PersonalDetailsScreen = () => {
       cachedPersonalDetails = null;
       
       Alert.alert(
-        'Success', 
-        'Personal details updated successfully!',
+        t('common.success'), 
+        t('personal_details.update_success'),
         [
           {
-            text: 'OK',
+            text: t('common.ok'),
             onPress: () => navigation.goBack()
           }
         ]
       );
       
     } catch (error) {
-      setError('Failed to update personal details');
-      Alert.alert('Error', 'Failed to update personal details. Please try again.');
+      setError(t('personal_details.update_error'));
+      Alert.alert(t('common.error'), t('personal_details.update_error_retry'));
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // Normalize and map chip option label/value to i18n key suffix
+  const normalizeToKey = (raw: string): string => {
+    const s = raw.toString().trim().toLowerCase();
+    const synonyms: Record<string, string> = {
+      'light brown': 'light_brown',
+      'dark brown': 'dark_brown',
+      'very fair': 'very_fair',
+      'very dark': 'very_dark',
+      'all 5 daily prayers': 'all_5',
+      '5 times daily': 'all_5',
+      'regularly': 'most',
+      'sometimes': 'some',
+      'rarely': 'occasionally',
+      'memorized significant portions': 'memorized',
+      'read fluently': 'fluent',
+      'read with help': 'with_help',
+      'learning to read': 'learning',
+      'cannot read arabic': 'cannot_read',
+      'living with parents': 'with_parents',
+      'living alone': 'alone',
+      'living with children': 'with_children',
+      'living_with_parents': 'with_parents',
+      'living_alone': 'alone',
+      'living_with_children': 'with_children',
+      'shared accommodation': 'shared',
+      'own house': 'own_house',
+      'own apartment': 'own_apartment',
+      'rent apartment': 'rent_apartment',
+      'rent house': 'rent_house',
+      'mustache only': 'mustache',
+      'clean shaven': 'clean',
+      'very religious': 'very_religious',
+      'moderately religious': 'moderate',
+      'somewhat religious': 'somewhat',
+      'not very religious': 'not_very_religious',
+      'plus size': 'plus_size',
+      'heavy set': 'heavy_set',
+      "bachelor's degree": 'bachelor',
+      "masters degree": 'master',
+      "master's degree": 'master',
+      'associate degree': 'associate_degree'
+    };
+    if (synonyms[s]) return synonyms[s];
+    return s.replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  };
+
+  const resolveOptionLabel = (
+    translationCategoryKey: string | undefined,
+    option: string | { label: string; value: string }
+  ): string => {
+    const isObject = typeof option === 'object';
+    const original = isObject ? option.label : option;
+    if (!translationCategoryKey) return original;
+    // Prefer value when present, otherwise derive from label
+    const rawKeySource = isObject ? option.value : original;
+    const key = normalizeToKey(rawKeySource);
+    const i18nKey = `${translationCategoryKey}.${key}`;
+    const translated = t(i18nKey);
+    // If no translation found, fall back to original
+    if (translated === i18nKey) return original;
+    return translated;
   };
 
   // Helper function for dropdown selector
@@ -272,19 +337,20 @@ const PersonalDetailsScreen = () => {
     options: string[] | { label: string; value: string }[],
     selectedValue: string | undefined,
     onSelect: (value: string) => void,
-    required = false
+    required = false,
+    translationCategoryKey?: string
   ) => (
     <View style={styles.selectorContainer}>
       <Text style={styles.selectorTitle}>{title} {required && '*'}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionsScroll}>
         {options.map((option) => {
           const isObject = typeof option === 'object';
-          const optionValue = isObject ? option.value : option;
-          const optionLabel = isObject ? option.label : option;
+          const optionValue = isObject ? (option as any).value : option;
+          const optionLabel = resolveOptionLabel(translationCategoryKey, option as any);
           const normSel = (selectedValue || '').toString().trim().toLowerCase();
           const isSelected = normSel.length > 0 && (
             normSel === optionValue.toString().trim().toLowerCase() ||
-            normSel === optionLabel.toString().trim().toLowerCase()
+            normSel === (isObject ? (option as any).label : option).toString().trim().toLowerCase()
           );
           return (
             <TouchableOpacity
@@ -293,7 +359,7 @@ const PersonalDetailsScreen = () => {
                 styles.optionChip,
                 isSelected && styles.optionChipSelected
               ]}
-              onPress={() => onSelect(optionValue)}
+              onPress={() => onSelect(optionValue as string)}
             >
               <Text style={[
                 styles.optionChipText,
@@ -314,15 +380,17 @@ const PersonalDetailsScreen = () => {
     options: { label: string; value: string }[],
     selectedValues: string[],
     onToggle: (value: string) => void,
-    horizontal = false
+    horizontal = false,
+    translationCategoryKey?: string
   ) => (
     <View style={styles.selectorContainer}>
       <Text style={styles.selectorTitle}>{title}</Text>
-      <Text style={styles.multiSelectNote}>You can select multiple options</Text>
+      <Text style={styles.multiSelectNote}>{t('profile_setup.languages_note')}</Text>
       {horizontal ? (
         <View style={styles.horizontalMultiSelect}>
           {options.map((option) => {
             const isSelected = selectedValues.includes(option.value);
+            const display = resolveOptionLabel(translationCategoryKey, option);
             
             return (
               <TouchableOpacity
@@ -337,7 +405,7 @@ const PersonalDetailsScreen = () => {
                   styles.optionChipText,
                   isSelected && styles.optionChipTextSelected
                 ]}>
-                  {option.label}
+                  {display}
                 </Text>
               </TouchableOpacity>
             );
@@ -346,6 +414,7 @@ const PersonalDetailsScreen = () => {
       ) : (
         options.map((option) => {
           const isSelected = selectedValues.includes(option.value);
+          const display = resolveOptionLabel(translationCategoryKey, option);
           
           return (
             <TouchableOpacity
@@ -360,7 +429,7 @@ const PersonalDetailsScreen = () => {
                 styles.multiSelectOptionText,
                 isSelected && styles.multiSelectOptionTextSelected
               ]}>
-                {option.label}
+                {display}
               </Text>
               {isSelected && (
                 <View style={styles.selectedIndicator} />
@@ -383,7 +452,7 @@ const PersonalDetailsScreen = () => {
       <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
         <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading personal details...</Text>
+          <Text style={styles.loadingText}>{t('personal_details.loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -392,7 +461,7 @@ const PersonalDetailsScreen = () => {
   return (
     <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
       <View style={[styles.container, { backgroundColor: COLORS.white }]}>
-        <Header title="Personal Details" />
+        <Header title={t('personal_details.title')} />
         
         {error && (
           <View style={styles.errorContainer}>
@@ -403,13 +472,13 @@ const PersonalDetailsScreen = () => {
         <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollContainer}>
           {/* About Me Section */}
           <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>About Me</Text>
-            <Text style={styles.sectionSubtitle}>Tell others about yourself</Text>
+            <Text style={styles.sectionTitle}>{t('personal_details.about_me')}</Text>
+            <Text style={styles.sectionSubtitle}>{t('personal_details.about_subtitle')}</Text>
             
             <View style={styles.textAreaContainer}>
               <TextInput
                 style={styles.textArea}
-                placeholder="Share a bit about yourself, your interests, and what you're looking for..."
+                placeholder={t('personal_details.about_placeholder')}
                 value={aboutMe}
                 onChangeText={setAboutMe}
                 multiline
@@ -421,14 +490,14 @@ const PersonalDetailsScreen = () => {
 
           {/* Physical Details Section */}
           <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Physical Details</Text>
-            <Text style={styles.sectionSubtitle}>Tell us about your physical characteristics</Text>
+            <Text style={styles.sectionTitle}>{t('personal_details.physical_title')}</Text>
+            <Text style={styles.sectionSubtitle}>{t('personal_details.physical_subtitle')}</Text>
             
             <View style={styles.formRow}>
               <View style={styles.halfInput}>
                 <Input
                   id="height"
-                  placeholder="Height (cm)"
+                  placeholder={t('personal_details.height_placeholder')}
                   value={height}
                   onInputChanged={(id, value) => setHeight(value)}
                   keyboardType="numeric"
@@ -437,7 +506,7 @@ const PersonalDetailsScreen = () => {
               <View style={styles.halfInput}>
                 <Input
                   id="weight"
-                  placeholder="Weight (kg)"
+                  placeholder={t('personal_details.weight_placeholder')}
                   value={weight}
                   onInputChanged={(id, value) => setWeight(value)}
                   keyboardType="numeric"
@@ -445,27 +514,28 @@ const PersonalDetailsScreen = () => {
               </View>
             </View>
 
-            {renderDropdownSelector('Eye Color', eyeColorOptions, eyeColor, setEyeColor)}
-            {renderDropdownSelector('Hair Color', hairColorOptions, hairColor, setHairColor)}
-            {renderDropdownSelector('Skin Tone', skinToneOptions, skinTone, setSkinTone)}
+            {renderDropdownSelector(t('profile_setup.eye_color'), eyeColorOptions, eyeColor, setEyeColor, false, 'profile_setup.options.eye_color')}
+            {renderDropdownSelector(t('profile_setup.hair_color'), hairColorOptions, hairColor, setHairColor, false, 'profile_setup.options.hair_color')}
+            {renderDropdownSelector(t('profile_setup.skin_color'), skinToneOptions, skinTone, setSkinTone, false, 'profile_setup.options.skin_color')}
             {renderDropdownSelector(
-              'Body Type',
+              t('profile_setup.body_type'),
               (personalDetails?.gender === 'female' ? bodyTypeOptionsAll.female : bodyTypeOptionsAll.male),
               bodyType,
               setBodyType,
-              true
+              true,
+              'profile_setup.options.body_type'
             )}
           </View>
 
           {/* Lifestyle & Work Section */}
           <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Lifestyle & Work</Text>
-            <Text style={styles.sectionSubtitle}>Tell us about your life and career</Text>
+            <Text style={styles.sectionTitle}>{t('personal_details.lifestyle_title')}</Text>
+            <Text style={styles.sectionSubtitle}>{t('personal_details.lifestyle_subtitle')}</Text>
 
-            {renderDropdownSelector('Education Level', educationOptions, education, setEducation, true)}
+            {renderDropdownSelector(t('profile_setup.education_level'), educationOptions, education, setEducation, true, 'profile_setup.options.education')}
 
             {renderMultiSelect(
-              'Languages Spoken', 
+              t('profile_setup.languages_spoken'), 
               languageOptions, 
               languages, 
               (selectedLanguage) => {
@@ -474,7 +544,8 @@ const PersonalDetailsScreen = () => {
                   : [...languages, selectedLanguage];
                 setLanguages(updatedLanguages);
               },
-              true
+              true,
+              'profile_setup.options.languages'
             )}
 
             {/* Gender-specific fields */}
@@ -482,27 +553,27 @@ const PersonalDetailsScreen = () => {
               <>
                 <Input
                   id="occupation"
-                  placeholder="Occupation/Work *"
+                  placeholder={t('personal_details.occupation_placeholder')}
                   value={occupation}
                   onInputChanged={(id, value) => setOccupation(value)}
                 />
                 <Input
                   id="income"
-                  placeholder="Monthly Income (Optional)"
+                  placeholder={t('personal_details.income_placeholder')}
                   value={income}
                   onInputChanged={(id, value) => setIncome(value)}
                 />
-                {renderDropdownSelector('Social Condition', socialConditionOptions, socialCondition, setSocialCondition, true)}
+                {renderDropdownSelector(t('profile_setup.social_condition'), socialConditionOptions, socialCondition, setSocialCondition, true, 'profile_setup.options.social_condition')}
               </>
             )}
 
             {personalDetails?.gender === 'female' && (
               <>
-                {renderDropdownSelector('Work Status', workStatusOptions, workStatus, setWorkStatus, true)}
+                {renderDropdownSelector(t('profile_setup.work_status'), workStatusOptions, workStatus, setWorkStatus, true, 'profile_setup.options.work_status')}
                 {workStatus === 'working' && (
                   <Input
                     id="occupation"
-                    placeholder="Occupation (Optional)"
+                    placeholder={t('personal_details.occupation_optional')}
                     value={occupation}
                     onInputChanged={(id, value) => setOccupation(value)}
                   />
@@ -510,44 +581,44 @@ const PersonalDetailsScreen = () => {
               </>
             )}
 
-            {renderDropdownSelector('Housing Type', housingOptions, housingType, setHousingType, true)}
-            {renderDropdownSelector('Living Condition', 
+            {renderDropdownSelector(t('profile_setup.housing_type'), housingOptions, housingType, setHousingType, true, 'profile_setup.options.housing')}
+            {renderDropdownSelector(t('profile_setup.living_condition'), 
               personalDetails?.gender === 'male' ? livingConditionOptions.male : livingConditionOptions.female, 
-              livingCondition, setLivingCondition, true
+              livingCondition, setLivingCondition, true, 'profile_setup.options.living'
             )}
           </View>
 
           {/* Religious Commitment Section */}
           <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Religious Commitment</Text>
-            <Text style={styles.sectionSubtitle}>Share your Islamic practices and beliefs</Text>
+            <Text style={styles.sectionTitle}>{t('profile_setup.religious_title')}</Text>
+            <Text style={styles.sectionSubtitle}>{t('profile_setup.religious_subtitle')}</Text>
 
-            {renderDropdownSelector('Religious Level', religiousLevelOptions, religiousLevel, setReligiousLevel, true)}
-            {renderDropdownSelector('Prayer Frequency', prayerFrequencyOptions, prayerFrequency, setPrayerFrequency, true)}
-            {renderDropdownSelector('Quran Reading Level', quranReadingOptions, quranReading, setQuranReading, true)}
+            {renderDropdownSelector(t('profile_setup.religious_level'), religiousLevelOptions, religiousLevel, setReligiousLevel, true, 'profile_setup.options.religious_level')}
+            {renderDropdownSelector(t('profile_setup.prayer_frequency'), prayerFrequencyOptions, prayerFrequency, setPrayerFrequency, true, 'profile_setup.options.prayer_frequency')}
+            {renderDropdownSelector(t('profile_setup.quran_level'), quranReadingOptions, quranReading, setQuranReading, true, 'profile_setup.options.quran')}
 
             {personalDetails?.gender === 'female' && (
-              renderDropdownSelector('Covering Level', coveringLevelOptions, coveringLevel, setCoveringLevel, true)
+              renderDropdownSelector(t('profile_setup.covering_level'), coveringLevelOptions, coveringLevel, setCoveringLevel, true, 'profile_setup.options.covering')
             )}
 
             {personalDetails?.gender === 'male' && (
-              renderDropdownSelector('Beard Practice', ['Full Beard', 'Trimmed Beard', 'Mustache Only', 'Clean Shaven'], beardPractice, setBeardPractice)
+              renderDropdownSelector(t('profile_setup.beard_practice'), ['Full Beard', 'Trimmed Beard', 'Mustache Only', 'Clean Shaven'], beardPractice, setBeardPractice, false, 'profile_setup.options.beard')
             )}
           </View>
 
           {/* Marriage Intentions Section */}
           <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Marriage Intentions</Text>
+            <Text style={styles.sectionTitle}>{t('profile_setup.polygamy_title')}</Text>
             <Text style={styles.sectionSubtitle}>
               {personalDetails?.gender === 'male' 
-                ? 'Which wife number are you looking for?' 
-                : 'Which positions would you accept in a polygamous marriage?'
+                ? t('profile_setup.polygamy_subtitle_male') 
+                : t('profile_setup.polygamy_subtitle_female')
               }
             </Text>
 
             {personalDetails?.gender === 'male' ? (
               <View style={styles.polygamySection}>
-                <Text style={styles.polygamyTitle}>Looking for which wife? *</Text>
+                <Text style={styles.polygamyTitle}>{t('profile_setup.looking_for_which_wife')}</Text>
                 <Text style={styles.polygamyNote}>
                   If you select 2nd wife, it means you currently have 1 wife.
                   If you select 3rd wife, it means you currently have 2 wives, etc.
@@ -569,13 +640,13 @@ const PersonalDetailsScreen = () => {
                           styles.optionLabel,
                           seekingWifeNumber === value && styles.optionLabelSelected
                         ]}>
-                          {option}
+                          {index === 0 ? t('profile_setup.second_wife') : index === 1 ? t('profile_setup.third_wife') : t('profile_setup.fourth_wife')}
                         </Text>
                         <Text style={[
                           styles.optionDescription,
                           seekingWifeNumber === value && styles.optionDescriptionSelected
                         ]}>
-                          Currently have {index + 1} wife{index > 0 ? 's' : ''}
+                          {t('profile_setup.currently_have', { count: index + 1, plural: index > 0 ? 's' : '' })}
                         </Text>
                       </View>
                       {seekingWifeNumber === value && (
@@ -588,9 +659,9 @@ const PersonalDetailsScreen = () => {
             ) : (
               // Female: Multi-selection for wife positions
               <View style={styles.polygamySection}>
-                <Text style={styles.polygamyTitle}>Which positions would you accept? *</Text>
+                <Text style={styles.polygamyTitle}>{t('profile_setup.positions_accept')}</Text>
                 <Text style={styles.polygamyNote}>
-                  You can select multiple positions that you would be comfortable with.
+                  {t('profile_setup.positions_note')}
                 </Text>
                 
                 {['2nd Wife', '3rd Wife', '4th Wife'].map((option, index) => {
@@ -616,13 +687,13 @@ const PersonalDetailsScreen = () => {
                           styles.optionLabel,
                           isSelected && styles.optionLabelSelected
                         ]}>
-                          {option}
+                          {index === 0 ? t('profile_setup.second_wife') : index === 1 ? t('profile_setup.third_wife') : t('profile_setup.fourth_wife')}
                         </Text>
                         <Text style={[
                           styles.optionDescription,
                           isSelected && styles.optionDescriptionSelected
                         ]}>
-                          Accept being the {option.toLowerCase()}
+                          {t('profile_setup.accept_being', { position: (index === 0 ? t('profile_setup.second_wife') : index === 1 ? t('profile_setup.third_wife') : t('profile_setup.fourth_wife')).toLowerCase() })}
                         </Text>
                       </View>
                       {isSelected && (
@@ -643,7 +714,7 @@ const PersonalDetailsScreen = () => {
       {/* Update Button */}
       <View style={styles.bottomContainer}>
         <Button
-          title={isSaving ? "Updating..." : "Update Personal Details"}
+          title={isSaving ? t('personal_details.updating') : t('personal_details.update_button')}
           filled
           style={styles.updateButton}
           onPress={savePersonalDetails}

@@ -224,7 +224,8 @@
         "green": "Green",
         "blue": "Blue",
         "gray": "Gray",
-        "amber": "Amber"
+        "amber": "Amber",
+        "other": "Other"
       },
       "hair_color": {
         "black": "Black",
@@ -234,7 +235,8 @@
         "blonde": "Blonde",
         "red": "Red",
         "gray": "Gray",
-        "white": "White"
+        "white": "White",
+        "other": "Other"
       },
       "skin_color": {
         "very_fair": "Very Fair",
@@ -243,7 +245,8 @@
         "olive": "Olive",
         "brown": "Brown",
         "dark_brown": "Dark Brown",
-        "very_dark": "Very Dark"
+        "very_dark": "Very Dark",
+        "dark": "Dark"
       },
       "body_type": {
         "slim": "Slim",
@@ -251,7 +254,8 @@
         "athletic": "Athletic",
         "heavy_set": "Heavy Set",
         "curvy": "Curvy",
-        "plus_size": "Plus Size"
+        "plus_size": "Plus Size",
+        "muscular": "Muscular"
       },
       "education": {
         "high_school": "High School",
@@ -261,6 +265,9 @@
         "phd": "PhD/Doctorate",
         "islamic": "Islamic Studies",
         "certification": "Professional Certification",
+        "associate_degree": "Associate Degree",
+        "doctorate": "Doctorate",
+        "trade_school": "Trade School",
         "other": "Other"
       },
       "languages": {
@@ -305,7 +312,8 @@
         "religious": "Religious",
         "moderate": "Moderately Religious",
         "somewhat": "Somewhat Religious",
-        "learning": "Learning"
+        "learning": "Learning",
+        "not_very_religious": "Not Very Religious"
       },
       "prayer_frequency": {
         "all_5": "All 5 Daily Prayers",
@@ -313,7 +321,8 @@
         "some": "Some Prayers",
         "friday": "Friday Only",
         "occasionally": "Occasionally",
-        "learning": "Learning to Pray"
+        "learning": "Learning to Pray",
+        "never": "Never"
       },
       "quran": {
         "memorized": "Memorized Significant Portions",
@@ -605,6 +614,29 @@
   "language_page": {
     "title": "Language & Region",
     "languages": "Languages"
+  },
+  "personal_details": {
+    "title": "Personal Details",
+    "loading": "Loading personal details...",
+    "load_error": "Failed to load personal details",
+    "no_profile_data": "No profile data found",
+    "update_success": "Personal details updated successfully!",
+    "update_error": "Failed to update personal details",
+    "update_error_retry": "Failed to update personal details. Please try again.",
+    "about_me": "About Me",
+    "about_subtitle": "Tell others about yourself",
+    "about_placeholder": "Share a bit about yourself, your interests, and what you're looking for...",
+    "physical_title": "Physical Details",
+    "physical_subtitle": "Tell us about your physical characteristics",
+    "height_placeholder": "Height (cm)",
+    "weight_placeholder": "Weight (kg)",
+    "lifestyle_title": "Lifestyle & Work",
+    "lifestyle_subtitle": "Tell us about your life and career",
+    "occupation_placeholder": "Occupation/Work *",
+    "income_placeholder": "Monthly Income (Optional)",
+    "occupation_optional": "Occupation (Optional)",
+    "updating": "Updating...",
+    "update_button": "Update Personal Details"
   },
   "match_details": {
     "photos_videos": "Photos & Videos",
