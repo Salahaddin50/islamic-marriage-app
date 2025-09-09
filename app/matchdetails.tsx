@@ -14,6 +14,7 @@ import { InterestsService, InterestStatus } from '@/src/services/interests';
 import { MeetService, MeetOverallStatus } from '@/src/services/meet';
 import { MessageRequestsService } from '@/src/services/message-requests.service';
 import { calculateTimeDifference, getLocalTimeForUser, TimeDifferenceResult } from '@/utils/timezoneUtils';
+import { useTranslation } from 'react-i18next';
 
 // Types for user profile data (comprehensive - matches database)
 interface UserProfile {
@@ -70,6 +71,7 @@ const MatchDetails = () => {
   const userId = params.userId as string;
   const navigation = useNavigation<NavigationProp<any>>();
   const router = useRouter();
+  const { t } = useTranslation();
 
   // Silence console noise while on this screen
   useEffect(() => {
@@ -418,9 +420,69 @@ const MatchDetails = () => {
 
   // Memoized helper functions for better performance
   const formatEnumValue = useCallback((value?: string) => {
-    if (!value) return 'Not specified';
+    if (!value) return t('match_details.not_specified');
     return value.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  }, [t]);
+
+  // Normalize stored values to match locale option keys (e.g., "dark brown" -> "dark_brown")
+  const normalizeOptionValue = useCallback((value?: string) => {
+    if (!value) return '';
+    return String(value).trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
   }, []);
+
+  // Map common English display labels to canonical option keys used in locales
+  const synonymMaps: Record<string, Record<string, string>> = {
+    living: {
+      living_alone: 'alone',
+      with_parents: 'with_parents',
+      with_children: 'with_children'
+    },
+    quran: {
+      memorized_significant_portions: 'memorized',
+      read_fluently: 'fluent',
+      read_with_help: 'with_help',
+      learning_to_read: 'learning',
+      cannot_read_arabic: 'cannot_read'
+    },
+    prayer_frequency: {
+      most_prayers: 'most',
+      all_5: 'all_5',
+      friday_only: 'friday',
+      occasionally: 'occasionally',
+      learning: 'learning'
+    },
+    beard: {
+      trimmed_beard: 'trimmed',
+      full_beard: 'full',
+      mustache_only: 'mustache',
+      clean_shaven: 'clean'
+    },
+    education: {
+      bachelor_s_degree: 'bachelor',
+      bachelors_degree: 'bachelor',
+      master_s_degree: 'master',
+      masters_degree: 'master',
+      phd_doctorate: 'phd',
+      associate_degree: 'some_college',
+      high_school: 'high_school'
+    }
+  };
+
+  // Translate profile option by category; returns null if no matching key
+  const translateOptionValue = useCallback((category: string, value?: string) => {
+    if (!value) return null;
+    const normalized = normalizeOptionValue(value);
+    const canonical = synonymMaps[category]?.[normalized] ?? normalized;
+    const key = `profile_setup.options.${category}.${canonical}`;
+    const translated = t(key as any);
+    return translated !== key ? translated : null;
+  }, [t, normalizeOptionValue]);
+
+  // Convenience: translate or fallback to formatted text
+  const translateOrFormat = useCallback((category: string, value?: string) => {
+    const tr = translateOptionValue(category, value);
+    return tr ?? formatEnumValue(value);
+  }, [translateOptionValue, formatEnumValue]);
 
   const parseIslamicQuestionnaire = useCallback((data?: any) => {
     if (!data) return null;
@@ -751,11 +813,11 @@ const MatchDetails = () => {
   if (error || !userProfile) {
     return (
       <View style={[styles.area, { backgroundColor: COLORS.white, justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={styles.errorText}>{error || 'User not found'}</Text>
+        <Text style={styles.errorText}>{error || t('match_details.user_not_found')}</Text>
         
         {/* Button to go back */}
         <TouchableOpacity style={styles.backButton} onPress={() => safeGoBack(navigation, router, '/(tabs)/home')}>
-          <Text style={styles.backButtonText}>Go Back</Text>
+          <Text style={styles.backButtonText}>{t('match_details.go_back')}</Text>
         </TouchableOpacity>
         
         {/* Button to try a different user - will be populated with a valid user ID from logs */}
@@ -767,7 +829,7 @@ const MatchDetails = () => {
             alert('Check console logs for valid user IDs and update the navigateToValidUser function with one of them');
           }}
         >
-          <Text style={styles.backButtonText}>Try Different User</Text>
+          <Text style={styles.backButtonText}>{t('match_details.try_different_user')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -797,7 +859,7 @@ const MatchDetails = () => {
                           {/* Media Gallery Section (Photos and Videos) */}
          {userMedia && userMedia.length > 0 && (
            <>
-             <Text style={[styles.subtitle, { color: COLORS.primary }]}>Photos & Videos</Text>
+             <Text style={[styles.subtitle, { color: COLORS.primary }]}>{t('match_details.photos_videos')}</Text>
              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.mediaScroll}>
                {userMedia
                  .sort((a, b) => {
@@ -883,74 +945,74 @@ const MatchDetails = () => {
          )}
 
          {/* About Me Section - Always show */}
-         <Text style={[styles.subtitle, { color: COLORS.primary }]}>About Me</Text>
-         <Text style={[styles.description, { color: COLORS.grayscale700 }]}>
-           {userProfile.about_me || userProfile.bio || 'No information provided'}
+         <Text style={[styles.subtitle, { color: COLORS.primary }]}>{t('match_details.about_me')}</Text>
+         <Text style={[styles.description, { color: COLORS.grayscale700 }] }>
+           {userProfile.about_me || userProfile.bio || t('match_details.no_info_provided')}
          </Text>
 
         {/* Physical Details Section - Clean UI without lines */}
-        <Text style={[styles.subtitle, { color: COLORS.primary }]}>Physical Details</Text>
+        <Text style={[styles.subtitle, { color: COLORS.primary }]}>{t('match_details.physical_details')}</Text>
         {userProfile.height_cm && (
           <Text style={[styles.cleanDetailText, { color: COLORS.grayscale700 }]}>
-            <Text style={styles.cleanDetailLabel}>Height: </Text>{userProfile.height_cm} cm
+            <Text style={styles.cleanDetailLabel}>{t('match_details.height')}: </Text>{userProfile.height_cm} cm
           </Text>
         )}
         {userProfile.weight_kg && (
           <Text style={[styles.cleanDetailText, { color: COLORS.grayscale700 }]}>
-            <Text style={styles.cleanDetailLabel}>Weight: </Text>{userProfile.weight_kg} kg
+            <Text style={styles.cleanDetailLabel}>{t('match_details.weight')}: </Text>{userProfile.weight_kg} kg
           </Text>
         )}
         {userProfile.eye_color && (
           <Text style={[styles.cleanDetailText, { color: COLORS.grayscale700 }]}>
-            <Text style={styles.cleanDetailLabel}>Eye Color: </Text>{userProfile.eye_color}
+            <Text style={styles.cleanDetailLabel}>{t('match_details.eye_color')}: </Text>{translateOrFormat('eye_color', userProfile.eye_color)}
           </Text>
         )}
         {userProfile.hair_color && (
           <Text style={[styles.cleanDetailText, { color: COLORS.grayscale700 }]}>
-            <Text style={styles.cleanDetailLabel}>Hair Color: </Text>{userProfile.hair_color}
+            <Text style={styles.cleanDetailLabel}>{t('match_details.hair_color')}: </Text>{translateOrFormat('hair_color', userProfile.hair_color)}
           </Text>
         )}
         {userProfile.skin_tone && (
           <Text style={[styles.cleanDetailText, { color: COLORS.grayscale700 }]}>
-            <Text style={styles.cleanDetailLabel}>Skin Tone: </Text>{userProfile.skin_tone}
+            <Text style={styles.cleanDetailLabel}>{t('match_details.skin_tone')}: </Text>{translateOrFormat('skin_color', userProfile.skin_tone)}
           </Text>
         )}
         {userProfile.body_type && (
           <Text style={[styles.cleanDetailText, { color: COLORS.grayscale700 }]}>
-            <Text style={styles.cleanDetailLabel}>Body Type: </Text>{userProfile.body_type}
+            <Text style={styles.cleanDetailLabel}>{t('match_details.body_type')}: </Text>{translateOrFormat('body_type', userProfile.body_type)}
           </Text>
         )}
 
                                  {/* Lifestyle & Work Section - Always show and clean UI */}
-         <Text style={[styles.subtitle, { color: COLORS.primary }]}>Lifestyle & Work</Text>
+         <Text style={[styles.subtitle, { color: COLORS.primary }]}>{t('match_details.lifestyle_work')}</Text>
         
         {/* Education Level - Always show */}
         <Text style={[styles.cleanDetailText, { color: COLORS.grayscale700 }]}>
-          <Text style={styles.cleanDetailLabel}>Education Level: </Text>{userProfile.education_level || 'Not specified'}
+          <Text style={styles.cleanDetailLabel}>{t('match_details.education_level')}: </Text>{userProfile.education_level ? translateOrFormat('education', userProfile.education_level) : t('match_details.not_specified')}
         </Text>
         
         {/* Languages Spoken */}
         <Text style={[styles.cleanDetailText, { color: COLORS.grayscale700 }]}>
-          <Text style={styles.cleanDetailLabel}>Languages Spoken: </Text>
+          <Text style={styles.cleanDetailLabel}>{t('match_details.languages_spoken')}: </Text>
           {userProfile.languages_spoken && userProfile.languages_spoken.length > 0 
-            ? userProfile.languages_spoken.join(', ') 
-            : 'Not specified'}
+            ? userProfile.languages_spoken.map((lng: string) => translateOrFormat('languages', lng)).join(', ') 
+            : t('match_details.not_specified')}
         </Text>
 
         {/* Gender-specific work information */}
         {userProfile.gender === 'male' && (
           <>
             <Text style={[styles.cleanDetailText, { color: COLORS.grayscale700 }]}>
-              <Text style={styles.cleanDetailLabel}>Occupation: </Text>{userProfile.occupation || 'Not specified'}
+              <Text style={styles.cleanDetailLabel}>{t('match_details.occupation')}: </Text>{userProfile.occupation || t('match_details.not_specified')}
             </Text>
             {userProfile.monthly_income && (
               <Text style={[styles.cleanDetailText, { color: COLORS.grayscale700 }]}>
-                <Text style={styles.cleanDetailLabel}>Monthly Income: </Text>{userProfile.monthly_income}
+                <Text style={styles.cleanDetailLabel}>{t('match_details.monthly_income')}: </Text>{userProfile.monthly_income}
               </Text>
             )}
             <Text style={[styles.cleanDetailText, { color: COLORS.grayscale700 }]}>
-              <Text style={styles.cleanDetailLabel}>Social Condition: </Text>
-              {userProfile.social_condition ? formatEnumValue(userProfile.social_condition) : 'Not specified'}
+              <Text style={styles.cleanDetailLabel}>{t('match_details.social_condition')}: </Text>
+              {userProfile.social_condition ? translateOrFormat('social_condition', userProfile.social_condition) : t('match_details.not_specified')}
             </Text>
           </>
         )}
@@ -958,12 +1020,12 @@ const MatchDetails = () => {
         {userProfile.gender === 'female' && (
           <>
             <Text style={[styles.cleanDetailText, { color: COLORS.grayscale700 }]}>
-              <Text style={styles.cleanDetailLabel}>Work Status: </Text>
-              {userProfile.work_status ? formatEnumValue(userProfile.work_status) : 'Not specified'}
+              <Text style={styles.cleanDetailLabel}>{t('match_details.work_status')}: </Text>
+              {userProfile.work_status ? translateOrFormat('work_status', userProfile.work_status) : t('match_details.not_specified')}
             </Text>
             {(userProfile.work_status === 'working' || userProfile.occupation) && (
               <Text style={[styles.cleanDetailText, { color: COLORS.grayscale700 }]}>
-                <Text style={styles.cleanDetailLabel}>Occupation: </Text>{userProfile.occupation || 'Not specified'}
+                <Text style={styles.cleanDetailLabel}>{t('match_details.occupation')}: </Text>{userProfile.occupation || t('match_details.not_specified')}
               </Text>
             )}
           </>
@@ -971,72 +1033,72 @@ const MatchDetails = () => {
 
         {/* Housing Type - Always show */}
         <Text style={[styles.cleanDetailText, { color: COLORS.grayscale700 }]}>
-          <Text style={styles.cleanDetailLabel}>Housing Type: </Text>{userProfile.housing_type || 'Not specified'}
+          <Text style={styles.cleanDetailLabel}>{t('match_details.housing_type')}: </Text>{userProfile.housing_type ? translateOrFormat('housing', userProfile.housing_type) : t('match_details.not_specified')}
         </Text>
         
         {/* Living Condition - Always show */}
         <Text style={[styles.cleanDetailText, { color: COLORS.grayscale700 }]}>
-          <Text style={styles.cleanDetailLabel}>Living Condition: </Text>
-          {userProfile.living_condition ? formatEnumValue(userProfile.living_condition) : 'Not specified'}
+          <Text style={styles.cleanDetailLabel}>{t('match_details.living_condition')}: </Text>
+          {userProfile.living_condition ? translateOrFormat('living', userProfile.living_condition) : t('match_details.not_specified')}
         </Text>
 
                                  {/* Religious Commitment Section - Clean UI */}
-         <Text style={[styles.subtitle, { color: COLORS.primary }]}>Religious Commitment</Text>
+         <Text style={[styles.subtitle, { color: COLORS.primary }]}>{t('match_details.religious_commitment')}</Text>
         <Text style={[styles.cleanDetailText, { color: COLORS.grayscale700 }]}>
-          <Text style={styles.cleanDetailLabel}>Religious Level: </Text>
-          {islamicData?.religious_level || 'Not specified'}
+          <Text style={styles.cleanDetailLabel}>{t('match_details.religious_level')}: </Text>
+          {islamicData?.religious_level ? translateOrFormat('religious_level', islamicData.religious_level) : t('match_details.not_specified')}
         </Text>
         <Text style={[styles.cleanDetailText, { color: COLORS.grayscale700 }]}>
-          <Text style={styles.cleanDetailLabel}>Prayer Frequency: </Text>
-          {islamicData?.prayer_frequency || 'Not specified'}
+          <Text style={styles.cleanDetailLabel}>{t('match_details.prayer_frequency')}: </Text>
+          {islamicData?.prayer_frequency ? translateOrFormat('prayer_frequency', islamicData.prayer_frequency) : t('match_details.not_specified')}
         </Text>
         <Text style={[styles.cleanDetailText, { color: COLORS.grayscale700 }]}>
-          <Text style={styles.cleanDetailLabel}>Quran Reading Level: </Text>
-          {islamicData?.quran_reading_level || 'Not specified'}
+          <Text style={styles.cleanDetailLabel}>{t('match_details.quran_reading_level')}: </Text>
+          {islamicData?.quran_reading_level ? translateOrFormat('quran', islamicData.quran_reading_level) : t('match_details.not_specified')}
         </Text>
         {userProfile.gender === 'female' && (
           <Text style={[styles.cleanDetailText, { color: COLORS.grayscale700 }]}>
-            <Text style={styles.cleanDetailLabel}>Covering Level: </Text>
-            {islamicData?.covering_level || 'Not specified'}
+            <Text style={styles.cleanDetailLabel}>{t('match_details.covering_level')}: </Text>
+            {islamicData?.covering_level ? translateOrFormat('covering', islamicData.covering_level) : t('match_details.not_specified')}
           </Text>
         )}
         {userProfile.gender === 'male' && (
           <Text style={[styles.cleanDetailText, { color: COLORS.grayscale700 }]}>
-            <Text style={styles.cleanDetailLabel}>Beard Practice: </Text>
-            {islamicData?.beard_practice || 'Not specified'}
+            <Text style={styles.cleanDetailLabel}>{t('match_details.beard_practice')}: </Text>
+            {islamicData?.beard_practice ? translateOrFormat('beard', islamicData.beard_practice) : t('match_details.not_specified')}
           </Text>
         )}
 
                                    {/* Marriage Intentions Section - Gender-specific filtering */}
-         <Text style={[styles.subtitle, { color: COLORS.primary }]}>Marriage Intentions</Text>
+         <Text style={[styles.subtitle, { color: COLORS.primary }]}>{t('match_details.marriage_intentions')}</Text>
          
          {/* For Males ONLY: Show seeking_wife_number */}
          {userProfile.gender === 'male' && (
            <Text style={[styles.cleanDetailText, { color: COLORS.grayscale700 }]}>
-             <Text style={styles.cleanDetailLabel}>Looking for which wife: </Text>
+             <Text style={styles.cleanDetailLabel}>{t('match_details.looking_for_wife')}: </Text>
              {islamicData?.seeking_wife_number ? 
-               (islamicData.seeking_wife_number === '1' ? '1st Wife' :
-                islamicData.seeking_wife_number === '2' ? '2nd Wife' : 
-                islamicData.seeking_wife_number === '3' ? '3rd Wife' : 
-                islamicData.seeking_wife_number === '4' ? '4th Wife' : 
-                `${islamicData.seeking_wife_number} Wife`) 
-               : 'Not specified'}
+               (islamicData.seeking_wife_number === '1' ? t('match_details.first_wife') :
+                islamicData.seeking_wife_number === '2' ? t('match_details.second_wife') : 
+                islamicData.seeking_wife_number === '3' ? t('match_details.third_wife') : 
+                islamicData.seeking_wife_number === '4' ? t('match_details.fourth_wife') : 
+                `${islamicData.seeking_wife_number}`) 
+               : t('match_details.not_specified')}
            </Text>
          )}
          
          {/* For Females ONLY: Show accepted_wife_positions */}
          {userProfile.gender === 'female' && (
            <Text style={[styles.cleanDetailText, { color: COLORS.grayscale700 }]}>
-             <Text style={styles.cleanDetailLabel}>Accepted wife positions: </Text>
+             <Text style={styles.cleanDetailLabel}>{t('match_details.accepted_wife_positions')}: </Text>
              {islamicData?.accepted_wife_positions && Array.isArray(islamicData.accepted_wife_positions) && islamicData.accepted_wife_positions.length > 0 ?
                islamicData.accepted_wife_positions.map((position: string) => 
-                 position === '1' ? '1st Wife' :
-                 position === '2' ? '2nd Wife' : 
-                 position === '3' ? '3rd Wife' : 
-                 position === '4' ? '4th Wife' : 
-                 `${position} Wife`
-               ).join(', ')
-               : 'Not specified'}
+                 position === '1' ? t('match_details.first_wife') :
+                 position === '2' ? t('match_details.second_wife') : 
+                 position === '3' ? t('match_details.third_wife') : 
+                 position === '4' ? t('match_details.fourth_wife') : 
+                 `${position}`)
+               .join(', ')
+               : t('match_details.not_specified')}
            </Text>
          )}
 
@@ -1093,7 +1155,7 @@ const MatchDetails = () => {
               style={styles.closeButton}
               onPress={closeFullscreenImage}
             >
-              <Text style={styles.closeButtonText}>Close</Text>
+              <Text style={styles.closeButtonText}>{t('match_details.close')}</Text>
             </TouchableOpacity>
           </TouchableOpacity>
         </View>
@@ -1136,13 +1198,13 @@ const MatchDetails = () => {
               setIsInterestSender(true);
               setInterestRecordId(res?.id || null);
             } catch (e) {
-              Alert.alert('Error', 'Unable to send interest');
+              Alert.alert(t('common.error'), t('match_details.unable_send_interest'));
             }
           }}
         >
           <Image source={icons.heart} contentFit="contain" style={styles.actionIcon} />
           <Text style={[styles.actionText, ((interestStatus === 'pending' && isInterestSender)) && styles.actionTextDisabled]}>
-            {(interestStatus === 'accepted') ? 'Approved' : ((interestStatus === 'pending' && isInterestSender) ? 'Requested' : 'Ask Photo')}
+            {(interestStatus === 'accepted') ? t('match_details.approved') : ((interestStatus === 'pending' && isInterestSender) ? t('match_details.requested') : t('match_details.ask_photo'))}
           </Text>
         </TouchableOpacity>
 
@@ -1156,11 +1218,11 @@ const MatchDetails = () => {
           onPress={async () => {
             if (interestStatus !== 'accepted') { setShowVideoPreconditionModal(true); return; }
             if (meetStatus === 'accepted' && meetLink) {
-              try { await Linking.openURL(meetLink); } catch { Alert.alert('Error', 'Unable to open meeting link'); }
+              try { await Linking.openURL(meetLink); } catch { Alert.alert(t('common.error'), t('match_details.unable_open_meeting_link')); }
               return;
             }
             if (meetStatus === 'pending') {
-              Alert.alert('Video Meet', isMeetSender ? 'Request submitted. Waiting for approval.' : 'You have a pending meet request. Please approve in Meet tab.');
+              Alert.alert(t('match_details.video_meet'), isMeetSender ? t('match_details.pending_meet_waiting') : t('match_details.pending_meet_approve_in_tab'));
               return;
             }
             // No meet request yet → show info modal first
@@ -1169,7 +1231,7 @@ const MatchDetails = () => {
         >
           <Image source={icons.videoCamera2} contentFit="contain" style={styles.actionIcon} />
           <Text style={[styles.actionText]}>
-            {(meetStatus === 'accepted') ? 'Approved' : ((meetStatus === 'pending' && isMeetSender) ? 'Requested' : 'Video meet')}
+            {(meetStatus === 'accepted') ? t('match_details.approved') : ((meetStatus === 'pending' && isMeetSender) ? t('match_details.requested') : t('match_details.video_meet'))}
           </Text>
         </TouchableOpacity>
 
@@ -1190,7 +1252,7 @@ const MatchDetails = () => {
             styles.actionText,
             (messageStatus === 'pending' && isMessageSender) && styles.actionTextDisabled
           ]}>
-            {messageStatus === 'accepted' ? 'Approved' : (messageStatus === 'pending' && isMessageSender) ? 'Requested' : 'Message'}
+            {messageStatus === 'accepted' ? t('match_details.approved') : (messageStatus === 'pending' && isMessageSender) ? t('match_details.requested') : t('match_details.message')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -1203,41 +1265,41 @@ const MatchDetails = () => {
       >
         <View style={styles.fullscreenContainer}>
           <View style={[styles.modalCard, { maxWidth: 340 }]}>
-            <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 12, textAlign: 'center', color: COLORS.primary }]}>Photo Request Process</Text>
+            <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 12, textAlign: 'center', color: COLORS.primary }]}>{t('match_details.photo_request_process')}</Text>
             
             <View style={styles.infoStepContainer}>
               <View style={styles.infoStepNumberContainer}>
                 <Text style={styles.infoStepNumber}>1</Text>
               </View>
-              <Text style={styles.infoStepText}>You send a photo request to this person</Text>
+              <Text style={styles.infoStepText}>{t('match_details.step_1_photo')}</Text>
             </View>
             
             <View style={styles.infoStepContainer}>
               <View style={styles.infoStepNumberContainer}>
                 <Text style={styles.infoStepNumber}>2</Text>
               </View>
-              <Text style={styles.infoStepText}>They receive a notification in their "Requests" page</Text>
+              <Text style={styles.infoStepText}>{t('match_details.step_2_photo')}</Text>
             </View>
             
             <View style={styles.infoStepContainer}>
               <View style={styles.infoStepNumberContainer}>
                 <Text style={styles.infoStepNumber}>3</Text>
               </View>
-              <Text style={styles.infoStepText}>If they approve your request, you'll see their photos unblurred</Text>
+              <Text style={styles.infoStepText}>{t('match_details.step_3_photo')}</Text>
             </View>
             
             <View style={styles.infoStepContainer}>
               <View style={styles.infoStepNumberContainer}>
                 <Text style={styles.infoStepNumber}>4</Text>
               </View>
-              <Text style={styles.infoStepText}>Check the "Requests" page to see the approved requests</Text>
+              <Text style={styles.infoStepText}>{t('match_details.step_4_photo')}</Text>
             </View>
             
             <View style={styles.infoStepContainer}>
               <View style={styles.infoStepNumberContainer}>
                 <Text style={styles.infoStepNumber}>5</Text>
               </View>
-              <Text style={styles.infoStepText}>Once approved, you can request video meetings</Text>
+              <Text style={styles.infoStepText}>{t('match_details.step_5_photo')}</Text>
             </View>
             
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
@@ -1245,7 +1307,7 @@ const MatchDetails = () => {
                 style={[styles.infoButton, styles.cancelButton]} 
                 onPress={() => setShowPhotoRequestInfoModal(false)}
               >
-                <Text style={[styles.infoButtonText, { color: COLORS.primary }]}>Cancel</Text>
+                <Text style={[styles.infoButtonText, { color: COLORS.primary }]}>{t('match_details.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.infoButton, styles.confirmButton]} 
@@ -1257,12 +1319,12 @@ const MatchDetails = () => {
                     setIsInterestSender(true);
                     setInterestRecordId(res?.id || null);
                   } catch (e) {
-                    Alert.alert('Error', 'Unable to send photo request');
+                    Alert.alert(t('common.error'), t('match_details.unable_send_photo_request'));
                   }
                 }}
               >
                 <Image source={icons.heart2} contentFit="contain" style={{ width: 18, height: 18, tintColor: COLORS.white, marginRight: 8 }} />
-                <Text style={styles.infoButtonText}>Send</Text>
+                <Text style={styles.infoButtonText}>{t('match_details.send')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1278,32 +1340,32 @@ const MatchDetails = () => {
       >
         <View style={styles.fullscreenContainer}>
           <View style={[styles.modalCard, { maxWidth: 360 }]}> 
-            <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 12, textAlign: 'center', color: COLORS.primary }]}>Video Meet Info</Text>
+            <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 12, textAlign: 'center', color: COLORS.primary }]}>{t('match_details.video_meet_info')}</Text>
             <View style={styles.infoStepContainer}>
               <View style={styles.infoStepNumberContainer}>
                 <Text style={styles.infoStepNumber}>1</Text>
               </View>
-              <Text style={styles.infoStepText}>First click Ask Photo to request pictures of the user.</Text>
+              <Text style={styles.infoStepText}>{t('match_details.step_1_video')}</Text>
             </View>
             <View style={styles.infoStepContainer}>
               <View style={styles.infoStepNumberContainer}>
                 <Text style={styles.infoStepNumber}>2</Text>
               </View>
-              <Text style={styles.infoStepText}>Once she accepts your photo request (likes your profile), Video Meet will be active.</Text>
+              <Text style={styles.infoStepText}>{t('match_details.step_2_video')}</Text>
             </View>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
               <TouchableOpacity 
                 style={[styles.infoButton, styles.cancelButton]} 
                 onPress={() => setShowVideoPreconditionModal(false)}
               >
-                <Text style={[styles.infoButtonText, { color: COLORS.primary }]}>OK</Text>
+                <Text style={[styles.infoButtonText, { color: COLORS.primary }]}>{t('match_details.ok')}</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.infoButton, styles.confirmButton]} 
                 onPress={() => { setShowVideoPreconditionModal(false); setShowPhotoRequestInfoModal(true); }}
               >
                 <Image source={icons.heart2} contentFit="contain" style={{ width: 18, height: 18, tintColor: COLORS.white, marginRight: 8 }} />
-                <Text style={styles.infoButtonText}>Ask Photo</Text>
+                <Text style={styles.infoButtonText}>{t('match_details.ask_photo')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1319,41 +1381,41 @@ const MatchDetails = () => {
       >
         <View style={styles.fullscreenContainer}>
           <View style={[styles.modalCard, { maxWidth: 340 }]}>
-            <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 12, textAlign: 'center', color: COLORS.primary }]}>Video Meet Process</Text>
+            <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 12, textAlign: 'center', color: COLORS.primary }]}>{t('match_details.video_meet_process')}</Text>
             
             <View style={styles.infoStepContainer}>
               <View style={styles.infoStepNumberContainer}>
                 <Text style={styles.infoStepNumber}>1</Text>
               </View>
-              <Text style={styles.infoStepText}>You schedule a video meeting with this person</Text>
+              <Text style={styles.infoStepText}>{t('match_details.step_1_meet')}</Text>
             </View>
             
             <View style={styles.infoStepContainer}>
               <View style={styles.infoStepNumberContainer}>
                 <Text style={styles.infoStepNumber}>2</Text>
               </View>
-              <Text style={styles.infoStepText}>They receive a notification in their "Meet" page</Text>
+              <Text style={styles.infoStepText}>{t('match_details.step_2_meet')}</Text>
             </View>
             
             <View style={styles.infoStepContainer}>
               <View style={styles.infoStepNumberContainer}>
                 <Text style={styles.infoStepNumber}>3</Text>
               </View>
-              <Text style={styles.infoStepText}>If they approve, a secure video meeting link is created</Text>
+              <Text style={styles.infoStepText}>{t('match_details.step_3_meet')}</Text>
             </View>
             
             <View style={styles.infoStepContainer}>
               <View style={styles.infoStepNumberContainer}>
                 <Text style={styles.infoStepNumber}>4</Text>
               </View>
-              <Text style={styles.infoStepText}>Check the "Meet" page to see your approved meetings</Text>
+              <Text style={styles.infoStepText}>{t('match_details.step_4_meet')}</Text>
             </View>
             
             <View style={styles.infoStepContainer}>
               <View style={styles.infoStepNumberContainer}>
                 <Text style={styles.infoStepNumber}>5</Text>
               </View>
-              <Text style={styles.infoStepText}>Join the meeting at the scheduled time (available 60 minutes before)</Text>
+              <Text style={styles.infoStepText}>{t('match_details.step_5_meet')}</Text>
             </View>
             
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
@@ -1361,7 +1423,7 @@ const MatchDetails = () => {
                 style={[styles.infoButton, styles.cancelButton]} 
                 onPress={() => setShowVideoMeetInfoModal(false)}
               >
-                <Text style={[styles.infoButtonText, { color: COLORS.primary }]}>Cancel</Text>
+                <Text style={[styles.infoButtonText, { color: COLORS.primary }]}>{t('match_details.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.infoButton, styles.confirmButton]} 
@@ -1399,7 +1461,7 @@ const MatchDetails = () => {
                 }}
               >
                 <Image source={icons.videoCamera2} contentFit="contain" style={{ width: 18, height: 18, tintColor: COLORS.white, marginRight: 8 }} />
-                <Text style={styles.infoButtonText}>Schedule</Text>
+                <Text style={styles.infoButtonText}>{t('match_details.schedule')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1415,7 +1477,7 @@ const MatchDetails = () => {
       >
         <View style={styles.fullscreenContainer}>
           <View style={styles.modalCard}>
-            <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 8 }]}>Schedule Video Meet</Text>
+            <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 8 }]}>{t('match_details.schedule_video_meet')}</Text>
             
             {/* Timezone Information */}
             {(timeDifference || (currentUserProfile && userProfile)) && (
@@ -1427,12 +1489,12 @@ const MatchDetails = () => {
                     style={[styles.timezoneIcon, { tintColor: timeDifference?.isSignificant ? COLORS.red : COLORS.primary }]}
                   />
                   <Text style={[styles.timezoneText, { color: timeDifference?.isSignificant ? COLORS.red : COLORS.grayscale700 }]}>
-                    {timeDifference ? timeDifference.message : 'Calculating time difference...'}
+                    {timeDifference ? timeDifference.message : t('match_details.calculating_time_difference')}
                   </Text>
                 </View>
                 {timeDifference?.isSignificant && (
                   <Text style={styles.timezoneWarning}>
-                    ⚠️ Please consider the time difference when selecting a meeting time
+                    ⚠️ {t('match_details.time_difference_warning')}
                   </Text>
                 )}
 
@@ -1449,7 +1511,7 @@ const MatchDetails = () => {
                     style={[styles.timezoneIcon, { tintColor: COLORS.primary }]}
                   />
                   <Text style={[styles.timezoneText, { color: COLORS.grayscale700 }]}>
-                    Please consider time zones when scheduling your meeting
+                    {t('match_details.timezone_reminder')}
                   </Text>
                 </View>
               </View>
@@ -1484,14 +1546,14 @@ const MatchDetails = () => {
                 {/* Show time in both timezones when both date and time are selected */}
                 {meetDate && meetTime && timeDifference && timeDifference.hoursDifference > 0 && (
                   <div style={{ width: '100%', marginBottom: 12, padding: 12, backgroundColor: '#f8f9fa', borderRadius: 8, border: '1px solid #e9ecef' }}>
-                    <div style={{ fontSize: 14, fontWeight: '600', marginBottom: 8, textAlign: 'center', color: '#495057' }}>Meeting Time Comparison</div>
+                    <div style={{ fontSize: 14, fontWeight: '600', marginBottom: 8, textAlign: 'center', color: '#495057' }}>{t('match_details.meeting_time_comparison')}</div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
                       <div style={{ textAlign: 'center', flex: 1 }}>
-                        <div style={{ fontWeight: '500', color: '#6c757d' }}>Your Time</div>
+                        <div style={{ fontWeight: '500', color: '#6c757d' }}>{t('match_details.your_time')}</div>
                         <div style={{ color: '#495057' }}>{meetTime}</div>
                       </div>
                       <div style={{ textAlign: 'center', flex: 1 }}>
-                        <div style={{ fontWeight: '500', color: '#6c757d' }}>Their Time</div>
+                        <div style={{ fontWeight: '500', color: '#6c757d' }}>{t('match_details.their_time')}</div>
                         <div style={{ color: '#495057' }}>
                           {(() => {
                             try {
@@ -1523,22 +1585,22 @@ const MatchDetails = () => {
             )}
             <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}>
               <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={() => { setShowMeetModal(false); setScheduledAt(''); setMeetDate(''); setMeetTime(''); }}>
-                <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>Cancel</Text>
+                <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>{t('match_details.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.primary }]} onPress={async () => {
                 try {
                   let iso = '';
                   if (Platform.OS === 'web') {
-                    if (!meetDate || !meetTime) { Alert.alert('Select time', 'Please select date and time'); return; }
+                    if (!meetDate || !meetTime) { Alert.alert(t('match_details.select_time'), t('match_details.please_select_date_time')); return; }
                     // Block past dates (yesterday and earlier)
-                    if (meetDate < todayDateStr) { Alert.alert('Invalid date', 'Please select today or a future date.'); return; }
+                    if (meetDate < todayDateStr) { Alert.alert(t('match_details.invalid_date'), t('match_details.select_today_future')); return; }
                     iso = new Date(`${meetDate}T${meetTime}`).toISOString();
                   } else {
                     iso = scheduledAt ? new Date(scheduledAt.replace(' ', 'T')).toISOString() : '';
-                    if (!iso) { Alert.alert('Select time', 'Please enter date and time'); return; }
+                    if (!iso) { Alert.alert(t('match_details.select_time'), t('match_details.enter_date_time')); return; }
                     // Validate entered date is today or future
                     const datePart = scheduledAt.split(' ')[0];
-                    if (datePart && datePart < todayDateStr) { Alert.alert('Invalid date', 'Please select today or a future date.'); return; }
+                    if (datePart && datePart < todayDateStr) { Alert.alert(t('match_details.invalid_date'), t('match_details.select_today_future')); return; }
                   }
                   
                   await MeetService.sendRequest(userId, iso);
@@ -1549,18 +1611,18 @@ const MatchDetails = () => {
                   setScheduledAt('');
                   setMeetDate('');
                   setMeetTime('');
-                  Alert.alert('Video Meet', 'Request submitted and awaiting approval.');
+                  Alert.alert(t('match_details.video_meet'), t('match_details.request_submitted'));
                 } catch (error: any) {
                   // Check if it's a package upgrade error
                   if (error?.message?.includes('upgrade your package to Premium')) {
                     setShowMeetModal(false);
                     setShowUpgradeModal(true);
                   } else {
-                    Alert.alert('Error', 'Unable to send meet request');
+                    Alert.alert(t('common.error'), t('match_details.unable_send_meet_request'));
                   }
                 }
               }}>
-                <Text style={styles.tinyBtnText}>Send</Text>
+                <Text style={styles.tinyBtnText}>{t('match_details.send')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1576,7 +1638,7 @@ const MatchDetails = () => {
       >
         <View style={styles.fullscreenContainer}>
           <View style={[styles.modalCard, { maxWidth: 360 }]}> 
-            <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 12, textAlign: 'center', color: COLORS.primary }]}>Chat Request Process</Text>
+            <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 12, textAlign: 'center', color: COLORS.primary }]}>{t('match_details.chat_request_process')}</Text>
 
             <View style={styles.infoStepContainer}>
               <View style={styles.infoStepNumberContainer}>
@@ -1584,15 +1646,15 @@ const MatchDetails = () => {
               </View>
               <Text style={styles.infoStepText}>
                 {meetStatus === 'none'
-                  ? 'You need first to arrange a meeting by clicking Video Meet and waiting for approval.'
+                  ? t('match_details.need_meeting_first')
                   : (canMessage
-                      ? 'You swear by Allah that you have already video meeting with the person and you intend marriage by requesting messaging with her.'
-                      : 'Chat will be active one hour after the video meeting.')}
+                      ? t('match_details.swear_for_nikah')
+                      : t('match_details.chat_after_meeting'))}
               </Text>
             </View>
 
             {!!meetScheduledAt && (
-              <Text style={[styles.infoStepText, { textAlign: 'center', marginBottom: 12 }]}>Meeting time: {formatMeetingDateShort(meetScheduledAt)}</Text>
+              <Text style={[styles.infoStepText, { textAlign: 'center', marginBottom: 12 }]}>{t('match_details.meeting_time')}: {formatMeetingDateShort(meetScheduledAt)}</Text>
             )}
 
             {meetStatus !== 'none' && !canMessage && (
@@ -1601,14 +1663,14 @@ const MatchDetails = () => {
                   <View style={styles.infoStepNumberContainer}>
                     <Text style={styles.infoStepNumber}>2</Text>
                   </View>
-                  <Text style={styles.infoStepText}>You swear to Allah that you had a video meeting with the person and want to proceed for nikah by requesting chat.</Text>
+                  <Text style={styles.infoStepText}>{t('match_details.swear_had_meeting')}</Text>
                 </View>
 
                 <View style={styles.infoStepContainer}>
                   <View style={styles.infoStepNumberContainer}>
                     <Text style={styles.infoStepNumber}>3</Text>
                   </View>
-                  <Text style={styles.infoStepText}>If the user accepts your request, you will see user's WhatsApp number in the Messages page.</Text>
+                  <Text style={styles.infoStepText}>{t('match_details.see_whatsapp')}</Text>
                 </View>
               </>
             )}
@@ -1618,7 +1680,7 @@ const MatchDetails = () => {
                 <View style={styles.infoStepNumberContainer}>
                   <Text style={styles.infoStepNumber}>2</Text>
                 </View>
-                <Text style={styles.infoStepText}>If the user accepts you will see user's WhatsApp number in the Messages page.</Text>
+                <Text style={styles.infoStepText}>{t('match_details.see_whatsapp_messages')}</Text>
               </View>
             )}
 
@@ -1642,7 +1704,7 @@ const MatchDetails = () => {
                     <Text style={{ color: COLORS.white, fontFamily: 'bold', fontSize: 14 }}>✓</Text>
                   )}
                 </View>
-                <Text style={[styles.infoStepText, { flex: 1 }]}>Yes, I swear</Text>
+                <Text style={[styles.infoStepText, { flex: 1 }]}>{t('match_details.yes_i_swear')}</Text>
               </TouchableOpacity>
             )}
 
@@ -1651,7 +1713,7 @@ const MatchDetails = () => {
                 style={[styles.infoButton, styles.cancelButton]} 
                 onPress={() => setShowChatInfoModal(false)}
               >
-                <Text style={[styles.infoButtonText, { color: COLORS.primary }]}>Cancel</Text>
+                <Text style={[styles.infoButtonText, { color: COLORS.primary }]}>{t('match_details.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[
@@ -1666,16 +1728,16 @@ const MatchDetails = () => {
                   (async () => {
                     try {
                       await MessageRequestsService.send(userId);
-                      Alert.alert('Chat Request', 'Your request has been sent. Check Messages to view updates.');
+                      Alert.alert(t('common.success'), t('match_details.chat_request_sent'));
                       router.push('/(tabs)/chats');
                     } catch (e) {
-                      Alert.alert('Error', 'Unable to send chat request');
+                      Alert.alert(t('common.error'), t('match_details.unable_send_chat_request'));
                     }
                   })();
                 }}
               >
                 <Image source={icons.chat} contentFit="contain" style={{ width: 18, height: 18, tintColor: COLORS.white, marginRight: 8 }} />
-                <Text style={styles.infoButtonText}>Request</Text>
+                <Text style={styles.infoButtonText}>{t('match_details.request')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1691,10 +1753,10 @@ const MatchDetails = () => {
       >
         <View style={styles.fullscreenContainer}>
           <View style={[styles.modalCard, { maxWidth: 340 }]}>
-            <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 16, textAlign: 'center', color: COLORS.primary }]}>Upgrade Required</Text>
+            <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 16, textAlign: 'center', color: COLORS.primary }]}>{t('match_details.upgrade_required')}</Text>
             
             <Text style={[styles.infoStepText, { textAlign: 'center', marginBottom: 20 }]}>
-              You need to upgrade your package to Premium to arrange a video meet
+              {t('match_details.need_premium')}
             </Text>
             
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
@@ -1702,7 +1764,7 @@ const MatchDetails = () => {
                 style={[styles.infoButton, styles.cancelButton]} 
                 onPress={() => setShowUpgradeModal(false)}
               >
-                <Text style={[styles.infoButtonText, { color: COLORS.primary }]}>Cancel</Text>
+                <Text style={[styles.infoButtonText, { color: COLORS.primary }]}>{t('match_details.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.infoButton, styles.confirmButton]} 
@@ -1711,7 +1773,7 @@ const MatchDetails = () => {
                   router.push('/membership');
                 }}
               >
-                <Text style={styles.infoButtonText}>Upgrade</Text>
+                <Text style={styles.infoButtonText}>{t('match_details.upgrade')}</Text>
               </TouchableOpacity>
             </View>
           </View>
