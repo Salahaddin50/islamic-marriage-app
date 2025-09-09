@@ -31,7 +31,7 @@ const AdminLogin: React.FC = () => {
             <View style={styles.content}>
               <View style={styles.logoContainer}>
             <Text style={styles.logoIcon}>🛡️</Text>
-                <Text style={styles.appName}>Hume Admin</Text>
+                <Text style={styles.appName}>Zawajplus Admin</Text>
                 <Text style={styles.subtitle}>Administrative Dashboard</Text>
               </View>
 

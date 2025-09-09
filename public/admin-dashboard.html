@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Hume</title>
+    <title>Admin Dashboard - Zawajplus</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -16,7 +16,7 @@
             <div class="sidebar-header">
                 <div class="logo">
                     <i class="fas fa-shield-alt"></i>
-                    <span>Hume Admin</span>
+                    <span>Zawajplus Admin</span>
                 </div>
             </div>
             
@@ -145,9 +145,15 @@
                         <div class="chart-header">
                             <h3>User Growth</h3>
                             <div class="chart-controls">
+                                <select class="gender-filter" data-target="users">
+                                    <option value="">All</option>
+                                    <option value="male">Males</option>
+                                    <option value="female">Females</option>
+                                </select>
                                 <button class="chart-btn active" data-period="7">7 Days</button>
                                 <button class="chart-btn" data-period="30">30 Days</button>
                                 <button class="chart-btn" data-period="90">90 Days</button>
+                                <button class="chart-btn" data-period="all">All Time</button>
                             </div>
                         </div>
                         <div class="chart-container">
@@ -161,6 +167,66 @@
                         </div>
                         <div class="chart-container">
                             <canvas id="demographicsChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Subscriptions</h3>
+                            <div class="chart-controls">
+                                <select class="gender-filter" data-target="subs">
+                                    <option value="">All</option>
+                                    <option value="male">Males</option>
+                                    <option value="female">Females</option>
+                                </select>
+                                <button class="chart-btn active" data-period="7" data-target="subs">7 Days</button>
+                                <button class="chart-btn" data-period="30" data-target="subs">30 Days</button>
+                                <button class="chart-btn" data-period="90" data-target="subs">90 Days</button>
+                                <button class="chart-btn" data-period="all" data-target="subs">All Time</button>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="subsChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Accepted Interests</h3>
+                            <div class="chart-controls">
+                                <select class="gender-filter" data-target="interests">
+                                    <option value="">All</option>
+                                    <option value="male">Males</option>
+                                    <option value="female">Females</option>
+                                </select>
+                                <button class="chart-btn active" data-period="7" data-target="interests">7 Days</button>
+                                <button class="chart-btn" data-period="30" data-target="interests">30 Days</button>
+                                <button class="chart-btn" data-period="90" data-target="interests">90 Days</button>
+                                <button class="chart-btn" data-period="all" data-target="interests">All Time</button>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="interestsChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Accepted Meet Requests</h3>
+                            <div class="chart-controls">
+                                <select class="gender-filter" data-target="meets">
+                                    <option value="">All</option>
+                                    <option value="male">Males</option>
+                                    <option value="female">Females</option>
+                                </select>
+                                <button class="chart-btn active" data-period="7" data-target="meets">7 Days</button>
+                                <button class="chart-btn" data-period="30" data-target="meets">30 Days</button>
+                                <button class="chart-btn" data-period="90" data-target="meets">90 Days</button>
+                                <button class="chart-btn" data-period="all" data-target="meets">All Time</button>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="meetsChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -188,6 +254,14 @@
                     <div class="section-header">
                         <h3>Pending Approvals</h3>
                         <span class="approval-count" id="approvalCount">0</span>
+                        <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+                            <label for="approvalsGenderFilter" style="font-size:12px; color:#6b7280;">Gender</label>
+                            <select id="approvalsGenderFilter" class="filter-select" style="padding:4px 8px; font-size:12px;">
+                                <option value="">All</option>
+                                <option value="male">Males</option>
+                                <option value="female">Females</option>
+                            </select>
+                        </div>
                     </div>
                     
                     <div class="approvals-list" id="approvalsList">
@@ -203,7 +277,7 @@
 
     <script src="admin-common.js"></script>
     <script>
-        let userGrowthChart, demographicsChart;
+        let userGrowthChart, demographicsChart, subsChart, interestsChart, meetsChart;
 
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
@@ -246,16 +320,16 @@
                     .select('*', { count: 'exact', head: true })
                     .gte('created_at', today);
 
-                // Get active subscriptions (if subscriptions table exists)
+                // Get total paid subscriptions from payment_records (completed)
                 let activeSubscriptions = 0;
                 try {
                     const { count } = await supabase
-                        .from('subscriptions')
+                        .from('payment_records')
                         .select('*', { count: 'exact', head: true })
-                        .eq('status', 'active');
+                        .eq('status', 'completed');
                     activeSubscriptions = count || 0;
                 } catch (e) {
-                    console.log('Subscriptions table not found');
+                    console.log('payment_records table not accessible');
                 }
 
                 // Get matches today (if matches table exists)
@@ -310,26 +384,8 @@
             // Always use real data
             
             // REAL DATA MODE
-            // Get user growth data for last 7 days
-            const dates = [];
-            const userCounts = [];
-            
-            for (let i = 6; i >= 0; i--) {
-                const date = new Date();
-                date.setDate(date.getDate() - i);
-                const dateStr = date.toISOString().split('T')[0];
-                dates.push(date.toLocaleDateString());
-                
-                try {
-                    const { count } = await supabase
-                        .from('user_profiles')
-                        .select('*', { count: 'exact', head: true })
-                        .lte('created_at', dateStr + 'T23:59:59');
-                    userCounts.push(count || 0);
-                } catch (error) {
-                    userCounts.push(0);
-                }
-            }
+            // Default load: 7 days
+            const { labels: dates, values: userCounts } = await fetchUserGrowthSeries(7, getGenderFilter('users'));
 
             userGrowthChart = new Chart(userGrowthCtx, {
                 type: 'line',
@@ -372,20 +428,16 @@
             // Demographics Chart
             const demographicsCtx = document.getElementById('demographicsChart').getContext('2d');
             
-            // Get gender distribution
+            // Get gender distribution (use count-only, no rows)
             try {
-                const { data: maleCount } = await supabase
+                const { count: maleUsers } = await supabase
                     .from('user_profiles')
-                    .select('id', { count: 'exact' })
+                    .select('*', { count: 'exact', head: true })
                     .eq('gender', 'male');
-                    
-                const { data: femaleCount } = await supabase
+                const { count: femaleUsers } = await supabase
                     .from('user_profiles')
-                    .select('id', { count: 'exact' })
+                    .select('*', { count: 'exact', head: true })
                     .eq('gender', 'female');
-
-                const maleUsers = maleCount?.length || 0;
-                const femaleUsers = femaleCount?.length || 0;
 
                 demographicsChart = new Chart(demographicsCtx, {
                     type: 'doughnut',
@@ -454,7 +506,7 @@
                 // Get recent user registrations
                 const { data: recentUsers } = await supabase
                     .from('user_profiles')
-                    .select('first_name, last_name, email, created_at')
+                    .select('first_name, last_name, user_id, created_at')
                     .order('created_at', { ascending: false })
                     .limit(10);
 
@@ -467,7 +519,7 @@
                             <div class="activity-content">
                                 <div class="activity-title">New user registered</div>
                                 <div class="activity-description">
-                                    ${user.first_name} ${user.last_name} (${user.email})
+                                    ${user.first_name} ${user.last_name} (<span class="email-link" data-user-id="${user.user_id}"></span>)
                                 </div>
                                 <div class="activity-time">${formatTimeAgo(user.created_at)}</div>
                             </div>
@@ -481,6 +533,7 @@
                         </div>
                     `;
                 }
+                if (window.fillEmailsForElements) window.fillEmailsForElements(activityList);
             } catch (error) {
                 console.error('Error loading recent activity:', error);
                 
@@ -513,17 +566,23 @@
         async function loadPendingApprovals() {
             const approvalsList = document.getElementById('approvalsList');
             const approvalCount = document.getElementById('approvalCount');
+            const genderFilterEl = document.getElementById('approvalsGenderFilter');
+            const genderFilter = genderFilterEl ? (genderFilterEl.value || '') : '';
             
             // Always use real data
             
             try {
                 // Get profiles pending approval
-                const { data: pendingProfiles } = await supabase
+                let query = supabase
                     .from('user_profiles')
-                    .select('id, first_name, last_name, email, created_at')
+                    .select('id, first_name, last_name, user_id, created_at, gender')
                     .is('admin_approved', null)
                     .order('created_at', { ascending: false })
-                    .limit(5);
+                    .limit(20);
+                if (genderFilter) {
+                    query = query.eq('gender', genderFilter);
+                }
+                const { data: pendingProfiles } = await query;
 
                 if (pendingProfiles && pendingProfiles.length > 0) {
                     approvalCount.textContent = pendingProfiles.length;
@@ -531,7 +590,7 @@
                         <div class="approval-item">
                             <div class="approval-info">
                                 <div class="approval-name">${profile.first_name} ${profile.last_name}</div>
-                                <div class="approval-email">${profile.email}</div>
+                                <div class="approval-email"><span class="email-link" data-user-id="${profile.user_id}"></span></div>
                                 <div class="approval-time">Registered ${formatTimeAgo(profile.created_at)}</div>
                             </div>
                             <div class="approval-actions">
@@ -555,6 +614,7 @@
                         </div>
                     `;
                 }
+                if (window.fillEmailsForElements) window.fillEmailsForElements(approvalsList);
             } catch (error) {
                 console.error('Error loading pending approvals:', error);
                 
@@ -642,6 +702,15 @@
             return `${Math.floor(diffInSeconds / 86400)} days ago`;
         }
 
+        // Re-load approvals when gender filter changes
+        document.addEventListener('change', (e) => {
+            const t = e.target;
+            if (!(t instanceof HTMLElement)) return;
+            if (t.id === 'approvalsGenderFilter') {
+                loadPendingApprovals();
+            }
+        });
+
         // Chart period controls
         document.querySelectorAll('.chart-btn').forEach(btn => {
             btn.addEventListener('click', function() {
@@ -654,10 +723,230 @@
         });
 
         async function updateUserGrowthChart(days) {
-            // This would update the chart with new period data
-            // Implementation would be similar to loadCharts but with different date range
-            console.log('Updating chart for', days, 'days');
+            try {
+                const series = await fetchUserGrowthSeries(days, getGenderFilter('users'));
+                userGrowthChart.data.labels = series.labels;
+                userGrowthChart.data.datasets[0].data = series.values;
+                userGrowthChart.update();
+            } catch (e) {
+                console.error('Update chart failed', e);
+            }
         }
+
+        async function fetchUserGrowthSeries(period, gender) {
+            const labels = [];
+            const values = [];
+            if (period === 'all') {
+                // All time by month
+                try {
+                    const { data, error } = await supabase
+                        .from('user_profiles')
+                        .select('created_at, gender')
+                        .order('created_at', { ascending: true });
+                    if (error) throw error;
+                    const buckets = new Map(); // key: YYYY-MM, value: count up to end-of-month
+                    for (const row of (data || [])) {
+                        if (gender && String(row.gender).toLowerCase() !== String(gender).toLowerCase()) continue;
+                        const d = new Date(row.created_at);
+                        const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+                        buckets.set(ym, (buckets.get(ym) || 0) + 1);
+                    }
+                    // build cumulative
+                    const keys = Array.from(buckets.keys()).sort();
+                    let running = 0;
+                    for (const k of keys) {
+                        running += buckets.get(k) || 0;
+                        labels.push(k);
+                        values.push(running);
+                    }
+                } catch (e) {
+                    // fallback empty
+                }
+            } else {
+                const numDays = parseInt(period, 10) || 7;
+                for (let i = numDays - 1; i >= 0; i--) {
+                    const date = new Date();
+                    date.setDate(date.getDate() - i);
+                    const dateStr = date.toISOString().split('T')[0];
+                    labels.push(date.toLocaleDateString());
+                    try {
+                        let query = supabase
+                            .from('user_profiles')
+                            .select('*', { count: 'exact', head: true })
+                            .lte('created_at', dateStr + 'T23:59:59');
+                        if (gender) query = query.eq('gender', gender);
+                        const { count } = await query;
+                        values.push(count || 0);
+                    } catch (e) {
+                        values.push(0);
+                    }
+                }
+            }
+            return { labels, values };
+        }
+
+        // Helpers for additional charts
+        function getGenderFilter(target) {
+            const el = document.querySelector(`.gender-filter[data-target="${target}"]`);
+            return el ? (el.value || '') : '';
+        }
+
+        function buildTimeSeriesChart(ctx, label, series, color = '#10b981') {
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: series.labels,
+                    datasets: [{
+                        label,
+                        data: series.values,
+                        borderColor: color,
+                        backgroundColor: color.replace(')', ',0.1)').replace('rgb', 'rgba'),
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.1)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        async function fetchCountSeries(period, counterFn) {
+            const labels = [];
+            const values = [];
+            if (period === 'all') {
+                const { data } = await supabase.from('user_profiles').select('created_at').order('created_at', { ascending: true }).limit(1);
+                const startDate = data && data[0] ? new Date(data[0].created_at) : new Date();
+                const now = new Date();
+                const cursor = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+                while (cursor <= now) {
+                    const label = `${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,'0')}`;
+                    const start = new Date(cursor.getFullYear(), cursor.getMonth(), 1, 0, 0, 0).toISOString();
+                    const end = new Date(cursor.getFullYear(), cursor.getMonth()+1, 0, 23, 59, 59).toISOString();
+                    labels.push(label);
+                    const v = await counterFn(start, end);
+                    values.push(v);
+                    cursor.setMonth(cursor.getMonth() + 1);
+                }
+            } else {
+                const numDays = parseInt(period, 10) || 7;
+                for (let i = numDays - 1; i >= 0; i--) {
+                    const d = new Date();
+                    d.setDate(d.getDate() - i);
+                    const start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0).toISOString();
+                    const end = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59).toISOString();
+                    labels.push(d.toLocaleDateString());
+                    const v = await counterFn(start, end);
+                    values.push(v);
+                }
+            }
+            return { labels, values };
+        }
+
+        async function fetchSubsSeries(period, gender) {
+            // Preload user ids for gender if specified
+            let genderIds = null;
+            if (gender) {
+                const { data: rows } = await supabase.from('user_profiles').select('user_id').eq('gender', gender);
+                genderIds = new Set((rows || []).map(r => r.user_id).filter(Boolean));
+            }
+            return await fetchCountSeries(period, async (start, end) => {
+                let q = supabase
+                    .from('payment_records')
+                    .select('user_id', { count: 'exact' })
+                    .gte('created_at', start)
+                    .lte('created_at', end)
+                    .eq('status', 'completed');
+                const { data } = await q;
+                if (!data) return 0;
+                if (!genderIds) return data.length;
+                return data.filter(r => genderIds.has(r.user_id)).length;
+            });
+        }
+
+        async function fetchInterestsSeries(period, gender) {
+            let genderIds = null;
+            if (gender) {
+                const { data: rows } = await supabase.from('user_profiles').select('user_id').eq('gender', gender);
+                genderIds = new Set((rows || []).map(r => r.user_id).filter(Boolean));
+            }
+            return await fetchCountSeries(period, async (start, end) => {
+                const { data } = await supabase
+                    .from('interests')
+                    .select('sender_id, updated_at, status')
+                    .gte('updated_at', start)
+                    .lte('updated_at', end)
+                    .eq('status', 'accepted');
+                if (!data) return 0;
+                if (!genderIds) return data.length;
+                return data.filter(r => genderIds.has(r.sender_id)).length;
+            });
+        }
+
+        async function fetchMeetsSeries(period, gender) {
+            let genderIds = null;
+            if (gender) {
+                const { data: rows } = await supabase.from('user_profiles').select('user_id').eq('gender', gender);
+                genderIds = new Set((rows || []).map(r => r.user_id).filter(Boolean));
+            }
+            return await fetchCountSeries(period, async (start, end) => {
+                const { data } = await supabase
+                    .from('meet_requests')
+                    .select('sender_id, updated_at, status')
+                    .gte('updated_at', start)
+                    .lte('updated_at', end)
+                    .eq('status', 'accepted');
+                if (!data) return 0;
+                if (!genderIds) return data.length;
+                return data.filter(r => genderIds.has(r.sender_id)).length;
+            });
+        }
+
+        // Initialize additional charts after DOM ready
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const subsCtx = document.getElementById('subsChart')?.getContext('2d');
+                const interestsCtx = document.getElementById('interestsChart')?.getContext('2d');
+                const meetsCtx = document.getElementById('meetsChart')?.getContext('2d');
+                if (subsCtx) subsChart = buildTimeSeriesChart(subsCtx, 'Subscriptions', await fetchSubsSeries(7, getGenderFilter('subs')));
+                if (interestsCtx) interestsChart = buildTimeSeriesChart(interestsCtx, 'Approved Interests', await fetchInterestsSeries(7, getGenderFilter('interests')));
+                if (meetsCtx) meetsChart = buildTimeSeriesChart(meetsCtx, 'Approved Meets', await fetchMeetsSeries(7, getGenderFilter('meets')));
+            } catch (e) { console.error(e); }
+        });
+
+        // Listen for gender dropdowns and extra period buttons
+        document.addEventListener('change', async (e) => {
+            const t = e.target;
+            if (!(t instanceof HTMLElement)) return;
+            if (t.classList.contains('gender-filter')) {
+                const target = t.getAttribute('data-target');
+                if (target === 'users') updateUserGrowthChart(document.querySelector('.chart-btn.active')?.getAttribute('data-period') || '7');
+                if (target === 'subs' && subsChart) { const p = document.querySelector('.chart-btn.active[data-target="subs"]')?.getAttribute('data-period') || '7'; const s = await fetchSubsSeries(p, getGenderFilter('subs')); subsChart.data.labels = s.labels; subsChart.data.datasets[0].data = s.values; subsChart.update(); }
+                if (target === 'interests' && interestsChart) { const p = document.querySelector('.chart-btn.active[data-target="interests"]')?.getAttribute('data-period') || '7'; const s = await fetchInterestsSeries(p, getGenderFilter('interests')); interestsChart.data.labels = s.labels; interestsChart.data.datasets[0].data = s.values; interestsChart.update(); }
+                if (target === 'meets' && meetsChart) { const p = document.querySelector('.chart-btn.active[data-target="meets"]')?.getAttribute('data-period') || '7'; const s = await fetchMeetsSeries(p, getGenderFilter('meets')); meetsChart.data.labels = s.labels; meetsChart.data.datasets[0].data = s.values; meetsChart.update(); }
+            }
+        });
+
+        document.addEventListener('click', async (e) => {
+            const t = e.target;
+            if (!(t instanceof HTMLElement)) return;
+            if (t.classList.contains('chart-btn') && t.getAttribute('data-target')) {
+                const target = t.getAttribute('data-target');
+                const period = t.getAttribute('data-period');
+                document.querySelectorAll(`.chart-btn[data-target="${target}"]`).forEach(b => b.classList.remove('active'));
+                t.classList.add('active');
+                if (target === 'subs' && subsChart) { const s = await fetchSubsSeries(period, getGenderFilter('subs')); subsChart.data.labels = s.labels; subsChart.data.datasets[0].data = s.values; subsChart.update(); }
+                if (target === 'interests' && interestsChart) { const s = await fetchInterestsSeries(period, getGenderFilter('interests')); interestsChart.data.labels = s.labels; interestsChart.data.datasets[0].data = s.values; interestsChart.update(); }
+                if (target === 'meets' && meetsChart) { const s = await fetchMeetsSeries(period, getGenderFilter('meets')); meetsChart.data.labels = s.labels; meetsChart.data.datasets[0].data = s.values; meetsChart.update(); }
+            }
+        });
     </script>
 </body>
 </html>
