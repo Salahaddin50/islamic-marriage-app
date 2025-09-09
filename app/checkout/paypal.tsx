@@ -31,6 +31,7 @@ export default function PaypalCheckout() {
   const [error, setError] = useState<string | null>(null);
   const [paymentData, setPaymentData] = useState<any>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const cancelledRef = useRef(false);
 
   const clientId = process.env.EXPO_PUBLIC_PAYPAL_CLIENT_ID || '';
   const packageId = String(params?.package_id || '');
@@ -86,7 +87,7 @@ export default function PaypalCheckout() {
         const paypal = await loadPayPal(clientId);
         if (!containerRef.current) throw new Error('Container missing');
 
-        paypal.Buttons({
+        const buttons = paypal.Buttons({
           style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' },
           createOrder: () => {
             return securePayment.order_id;
@@ -129,14 +130,46 @@ export default function PaypalCheckout() {
             }
           },
           onCancel: () => {
-            router.replace('/membership?tab=payments');
+            cancelledRef.current = true;
+            (async () => {
+              try {
+                const { data: { session: s } } = await supabase.auth.getSession();
+                if (s && securePayment?.payment_id) {
+                  await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/cancel-paypal-payment`, {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${s.access_token}`,
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ payment_id: securePayment.payment_id })
+                  });
+                }
+              } catch {}
+              router.replace('/membership?tab=payments');
+            })();
           },
           onError: (err: any) => {
             console.error('PayPal error:', err);
-            setError('Payment failed. Please try again.');
-            setTimeout(() => router.replace('/membership?tab=payments'), 2000);
+            (async () => {
+              try {
+                const { data: { session: s } } = await supabase.auth.getSession();
+                if (s && securePayment?.payment_id) {
+                  await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/cancel-paypal-payment`, {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${s.access_token}`,
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ payment_id: securePayment.payment_id })
+                  });
+                }
+              } catch {}
+              setError('Payment failed. Please try again.');
+              setTimeout(() => router.replace('/membership?tab=payments'), 1200);
+            })();
           },
-        }).render(containerRef.current);
+        });
+        buttons.render(containerRef.current);
 
         setLoading(false);
       } catch (e: any) {
@@ -146,6 +179,28 @@ export default function PaypalCheckout() {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientId, packageId]);
+
+  // If user navigates away/back, attempt to cancel pending payment immediately
+  useEffect(() => {
+    return () => {
+      (async () => {
+        try {
+          if (!paymentData?.payment_id) return;
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) return;
+          if (cancelledRef.current) return; // already handled in onCancel
+          await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/cancel-paypal-payment`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ payment_id: paymentData.payment_id })
+          });
+        } catch {}
+      })();
+    }
+  }, [paymentData?.payment_id]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white }}>

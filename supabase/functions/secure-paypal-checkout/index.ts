@@ -137,7 +137,7 @@ serve(async (req) => {
           shipping_preference: 'NO_SHIPPING',
           user_action: 'PAY_NOW',
           return_url: `${req.headers.get('origin') || 'http://localhost:8081'}/membership?tab=payments`,
-          cancel_url: `${req.headers.get('origin') || 'http://localhost:8081'}/membership?tab=payments`,
+          cancel_url: `${req.headers.get('origin') || 'http://localhost:8081'}/membership?tab=payments&cancel_payment_id=${encodeURIComponent(payment.payment_id)}`,
         }
       })
     })

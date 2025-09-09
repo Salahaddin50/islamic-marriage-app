@@ -255,7 +255,7 @@
 
             filtered = allRecords.filter(r => {
                 const email = (window.getCachedEmailForUser && window.getCachedEmailForUser(r.user_id)) ? window.getCachedEmailForUser(r.user_id).toLowerCase() : '';
-                const recordComplaints = Array.isArray(r.complaints) ? r.complaints : [];
+                const hasComplaints = r.complaints !== null && r.complaints !== undefined;
                 const statusStr = (r.status === null ? 'null' : String(r.status)).toLowerCase();
                 const pkgStr = (r.package_type || '').toLowerCase();
                 const updatedAt = new Date(r.updated_at);
@@ -285,10 +285,10 @@
                 let matchesUpdated = true;
                 if (start) matchesUpdated = updatedAt >= start;
 
-                // complaints
+                // complaints (null vs not null)
                 let matchesComplaints = true;
-                if (complaints === 'yes') matchesComplaints = (recordComplaints && recordComplaints.length > 0);
-                if (complaints === 'no') matchesComplaints = !(recordComplaints && recordComplaints.length > 0);
+                if (complaints === 'yes') matchesComplaints = hasComplaints;
+                if (complaints === 'no') matchesComplaints = !hasComplaints;
 
                 return matchesSearch && matchesStatus && matchesPkg && matchesUpdated && matchesComplaints;
             });
@@ -320,7 +320,7 @@
                 const pkg = normalizePackage(r.package_type);
                 const status = (r.status===null?'null':String(r.status).toLowerCase());
                 const statusClass = status==='completed'?'status-completed':status==='pending'?'status-pending':status==='failed'?'status-failed':status==='refunded'?'status-refunded':'status-null';
-                const complaintsCount = Array.isArray(r.complaints)? r.complaints.length : 0;
+                const complaintsHtml = formatComplaint(r.complaints);
                 const prof = userProfileById.get(r.user_id) || {};
                 const displayName = [prof.first_name, prof.last_name].filter(Boolean).join(' ') || r.user_id;
                 const phone = formatPhone(prof.phone_code, prof.mobile_number);
@@ -355,7 +355,7 @@
                         </td>
                         <td><span class="date-small">${formatDateTime(r.updated_at)}</span></td>
                         <td><span class="date-small">${formatDateTime(r.created_at)}</span></td>
-                        <td>${complaintsCount>0?`<span class="complaint-badge">${complaintsCount}</span>`:'-'}</td>
+                        <td>${complaintsHtml || '-'}</td>
                     </tr>
                 `;
             }).join('');
@@ -374,6 +374,33 @@
             if (c){ n = n.replace(/^0+/, ''); return `+${c}${n}`; }
             if (n.startsWith('00')) n = n.slice(2); return `+${n}`;
         }
+
+        function formatComplaint(val){
+            if (val === null || val === undefined) return '';
+            try {
+                if (Array.isArray(val)) {
+                    if (val.length === 0) return '';
+                    const parts = val.slice(0, 3).map(v => complaintItemToText(v));
+                    return parts.map(p => `<span class="complaint-badge" title="${escapeHtml(p)}">${escapeHtml(truncateText(p, 60))}</span>`).join(' ');
+                }
+                const text = complaintItemToText(val);
+                return `<span class="complaint-badge" title="${escapeHtml(text)}">${escapeHtml(truncateText(text, 60))}</span>`;
+            } catch { return ''; }
+        }
+        function complaintItemToText(v){
+            if (v === null || v === undefined) return '';
+            if (typeof v === 'string') return v;
+            if (typeof v === 'object') {
+                // Try common fields
+                for (const k of ['message','reason','note','details','complaint','text','description']){
+                    if (v && typeof v[k] === 'string' && v[k]) return v[k];
+                }
+                return JSON.stringify(v);
+            }
+            return String(v);
+        }
+        function truncateText(t, n){ try { return t.length>n ? t.slice(0,n)+'…' : t; } catch { return t; } }
+        function escapeHtml(s){ return String(s).replace(/[&<>"]g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
         async function updatePackageType(id, value){
             try{

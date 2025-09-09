@@ -212,6 +212,16 @@ DO $$ BEGIN
   END IF;
 END $$;
 
+-- Allow users to delete their own pending payment records (for checkout cancel)
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='payment_records' AND policyname='Users can delete own pending payment records'
+  ) THEN
+    CREATE POLICY "Users can delete own pending payment records" ON payment_records
+      FOR DELETE USING (auth.uid() = user_id AND status = 'pending');
+  END IF;
+END $$;
+
 -- RLS Policies for package_features (read-only for users) (idempotent)
 DO $$ BEGIN
   IF NOT EXISTS (
