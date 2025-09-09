@@ -1,0 +1,27 @@
+{
+  "onboarding": {
+    "welcome_greeting": "Esselamü Aleyküm",
+    "welcome_title": "Zawajplus'a Hoş Geldiniz",
+    "welcome_description": "Kuran ilkelerine göre çok eşli evliliklere özel olarak adanmış tek İslami platform.",
+    "get_started": "Başlayın",
+    "skip_to_login": "Girişe Geç",
+    "next": "İleri",
+    "skip": "Atla",
+    "back": "Geri",
+    "continue": "Devam Et"
+  },
+  "common": {
+    "loading": "Yükleniyor...",
+    "error": "Hata",
+    "success": "Başarılı",
+    "cancel": "İptal",
+    "save": "Kaydet",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "done": "Tamam",
+    "close": "Kapat",
+    "ok": "Tamam",
+    "yes": "Evet",
+    "no": "Hayır"
+  }
+}

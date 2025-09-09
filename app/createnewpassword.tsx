@@ -3,6 +3,8 @@ import React, { useCallback, useEffect, useReducer, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, SIZES, icons, illustrations } from '../constants';
 import Header from '../components/Header';
+import { useLanguage } from '../src/contexts/LanguageContext';
+import LanguageSelector from '../src/components/LanguageSelector';
 import { reducer } from '../utils/reducers/formReducers';
 import { validateInput } from '../utils/actions/formActions';
 import Input from '../components/Input';
@@ -45,6 +47,7 @@ type Nav = {
 // Create New Password Screen
 const CreateNewPassword = () => {
     const { navigate } = useNavigation<Nav>();
+    const { t } = useLanguage();
     const router = useRouter();
     const [formState, dispatchFormState] = useReducer(reducer, initialState);
     const [error, setError] = useState<string | null>(null);
@@ -178,12 +181,10 @@ const CreateNewPassword = () => {
                                 resizeMode='contain'
                                 style={styles.modalIllustration}
                             />
-                            <Text style={[styles.modalTitle, {
-                                color: COLORS.greyscale900
-                            }]}>Congratulations!</Text>
-                            <Text style={styles.modalSubtitle}>Your password has been successfully reset! You can now sign in with your new password.</Text>
+                            <Text style={[styles.modalTitle, { color: COLORS.greyscale900 }]}>{t('auth.create_new_password.modal_title')}</Text>
+                            <Text style={styles.modalSubtitle}>{t('auth.create_new_password.modal_subtitle')}</Text>
                             <Button
-                                title="Continue to Login"
+                                title={t('auth.create_new_password.continue_to_login')}
                                 filled
                                 onPress={() => {
                                     setModalVisible(false)
@@ -207,12 +208,15 @@ const CreateNewPassword = () => {
                 style={styles.container}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             >
-                <Header title="Create New Password" />
+                <Header title={t('auth.create_new_password.header_title')} />
                 <ScrollView 
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={styles.scrollContent}
                     keyboardShouldPersistTaps="handled"
                 >
+                    <View style={{ position: 'absolute', top: 8, right: 16 }}>
+                        <LanguageSelector showLabel={false} />
+                    </View>
                     {/* Illustration Section */}
                     <View style={styles.logoContainer}>
                         <Image
@@ -223,10 +227,8 @@ const CreateNewPassword = () => {
                     </View>
 
                     {/* Title Section */}
-                    <Text style={styles.title}>Create Your New Password</Text>
-                    <Text style={styles.subtitle}>
-                        Your new password must be different from your previous password
-                    </Text>
+                    <Text style={styles.title}>{t('auth.create_new_password.title')}</Text>
+                    <Text style={styles.subtitle}>{t('auth.create_new_password.subtitle')}</Text>
 
                     {/* Form Section */}
                     <View style={styles.formContainer}>
@@ -235,7 +237,7 @@ const CreateNewPassword = () => {
                             errorText={formState.inputValidities['newPassword']}
                             autoCapitalize="none"
                             id="newPassword"
-                            placeholder="New Password"
+                            placeholder={t('auth.create_new_password.new_password_placeholder')}
                             placeholderTextColor={COLORS.gray}
                             icon={icons.padlock}
                             secureTextEntry={true}
@@ -245,14 +247,14 @@ const CreateNewPassword = () => {
                         {/* Password Strength Indicator */}
                         {passwordStrength && (
                             <View style={styles.strengthContainer}>
-                                <Text style={styles.strengthLabel}>Password Strength: </Text>
+                                <Text style={styles.strengthLabel}>{t('auth.create_new_password.strength_label')} </Text>
                                 <Text style={[
                                     styles.strengthText,
                                     passwordStrength === 'Weak' && styles.weakText,
                                     passwordStrength === 'Medium' && styles.mediumText,
                                     passwordStrength === 'Strong' && styles.strongText,
                                 ]}>
-                                    {passwordStrength}
+                                    {passwordStrength === 'Weak' ? t('auth.create_new_password.strength_weak') : passwordStrength === 'Medium' ? t('auth.create_new_password.strength_medium') : passwordStrength === 'Strong' ? t('auth.create_new_password.strength_strong') : ''}
                                 </Text>
                             </View>
                         )}
@@ -262,7 +264,7 @@ const CreateNewPassword = () => {
                             errorText={formState.inputValidities['confirmNewPassword']}
                             autoCapitalize="none"
                             id="confirmNewPassword"
-                            placeholder="Confirm New Password"
+                            placeholder={t('auth.create_new_password.confirm_new_password_placeholder')}
                             placeholderTextColor={COLORS.gray}
                             icon={icons.padlock}
                             secureTextEntry={true}
@@ -276,17 +278,17 @@ const CreateNewPassword = () => {
 
                         {/* Password Requirements */}
                         <View style={styles.requirementsContainer}>
-                            <Text style={styles.requirementsTitle}>Password must contain:</Text>
-                            <Text style={styles.requirementText}>• At least 8 characters</Text>
-                            <Text style={styles.requirementText}>• One uppercase letter</Text>
-                            <Text style={styles.requirementText}>• One lowercase letter</Text>
-                            <Text style={styles.requirementText}>• One number</Text>
-                            <Text style={styles.requirementText}>• One special character (@$!%*?&)</Text>
+                            <Text style={styles.requirementsTitle}>{t('auth.create_new_password.requirements_title')}</Text>
+                            <Text style={styles.requirementText}>{t('auth.create_new_password.requirement_8_chars')}</Text>
+                            <Text style={styles.requirementText}>{t('auth.create_new_password.requirement_upper')}</Text>
+                            <Text style={styles.requirementText}>{t('auth.create_new_password.requirement_lower')}</Text>
+                            <Text style={styles.requirementText}>{t('auth.create_new_password.requirement_number')}</Text>
+                            <Text style={styles.requirementText}>{t('auth.create_new_password.requirement_special')}</Text>
                         </View>
 
                         {/* Reset Password Button */}
                         <Button
-                            title={isLoading ? "Resetting Password..." : "Reset Password"}
+                            title={isLoading ? t('auth.create_new_password.resetting') : t('auth.create_new_password.reset_button')}
                             filled
                             onPress={handlePasswordReset}
                             style={styles.resetButton}

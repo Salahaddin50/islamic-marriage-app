@@ -7,8 +7,11 @@ import Button from '../components/Button';
 import Onboarding1Styles from '../styles/OnboardingStyles';
 import { COLORS, illustrations, images } from '../constants';
 import { router } from 'expo-router';
+import { useLanguage } from '../src/contexts/LanguageContext';
+import LanguageSelector from '../src/components/LanguageSelector';
 
 const Onboarding2 = () => {
+  const { t } = useLanguage();
   const [progress, setProgress] = useState(0);
   const intervalRef = useRef<any>(null);
   const navigatingRef = useRef(false);
@@ -39,6 +42,11 @@ const Onboarding2 = () => {
       backgroundColor: COLORS.white
     }]}>
       <PageContainer>
+        {/* Language Selector */}
+        <View style={Onboarding1Styles.languageContainer}>
+          <LanguageSelector showLabel={false} style={Onboarding1Styles.languageSelector} />
+        </View>
+        
         <View style={Onboarding1Styles.contentContainer}>
           <Image
             source={illustrations.onboarding2}
@@ -52,19 +60,19 @@ const Onboarding2 = () => {
           />
           <View style={Onboarding1Styles.buttonContainer}>
             <View style={Onboarding1Styles.titleContainer}>
-              <Text style={Onboarding1Styles.title}>Fully Shariah</Text>
-              <Text style={Onboarding1Styles.subTitle}>COMPLIANT</Text>
+              <Text style={Onboarding1Styles.title}>{t('onboarding2.title')}</Text>
+              <Text style={Onboarding1Styles.subTitle}>{t('onboarding2.subtitle')}</Text>
             </View>
 
             <Text style={Onboarding1Styles.description}>
-              Every aspect of our platform strictly follows Shariah law and Islamic marriage principles.
+              {t('onboarding2.description')}
             </Text>
 
             <View style={Onboarding1Styles.dotsContainer}>
               {progress < 1 && <DotsView progress={progress} numDots={4} />}
             </View>
             <Button
-              title="Next"
+              title={t('onboarding.next')}
               filled
               onPress={() => {
                 navigatingRef.current = true;
@@ -74,7 +82,7 @@ const Onboarding2 = () => {
               style={Onboarding1Styles.nextButton}
             />
             <Button
-              title="Skip"
+              title={t('onboarding.skip')}
               onPress={() => {
                 navigatingRef.current = true;
                 if (intervalRef.current) clearInterval(intervalRef.current);

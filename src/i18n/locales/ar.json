@@ -1,0 +1,139 @@
+{
+  "onboarding": {
+    "welcome_greeting": "السلام عليكم",
+    "welcome_title": "مرحبًا بكم في زواج بلس",
+    "welcome_description": "المنصة الإسلامية الوحيدة المخصصة للزواج المتعدد وفقًا لمبادئ القرآن الكريم.",
+    "get_started": "ابدأ",
+    "skip_to_login": "تخطي إلى تسجيل الدخول",
+    "next": "التالي",
+    "skip": "تخطي",
+    "back": "رجوع",
+    "continue": "متابعة"
+  },
+  "onboarding2": {
+    "title": "متوافق بالكامل مع الشريعة",
+    "subtitle": "مُطابق",
+    "description": "كل جوانب منصتنا تتبع أحكام الشريعة الإسلامية ومبادئ الزواج الإسلامي بدقة."
+  },
+  "onboarding3": {
+    "title": "ملفات موثَّقة",
+    "subtitle": "للمستخدمين",
+    "description": "يتم توثيق ملفات جميع النساء من قِبل فريقنا ويتم إبلاغ الأولياء لضمان الشفافية."
+  },
+  "onboarding4": {
+    "title": "نية جادّة",
+    "subtitle": "للزواج",
+    "description": "هذه المنصة مخصّصة فقط للجادّين، وكل تواصل يُقصد به الزواج."
+  },
+  "welcome_page": {
+    "title": "السلام عليكم",
+    "subtitle": "منصّة مخصّصة لمن يسعى لإحياء سنّة التعدّد المباركة. جميع ملفات النساء موثّقة ويُخطر الأولياء لضمان الشفافية التامة.",
+    "continue_with_google": "متابعة مع جوجل",
+    "continue_with_email": "متابعة بالبريد الإلكتروني",
+    "already_have_account": "لديك حساب بالفعل؟",
+    "log_in": "تسجيل الدخول",
+    "terms_privacy": "بالمتابعة، فأنت توافق على شروط الخدمة وسياسة الخصوصية"
+  },
+  "auth": {
+    "login": {
+      "title": "مرحبًا بعودتك",
+      "subtitle": "سجّل الدخول إلى حسابك",
+      "email_placeholder": "عنوان البريد الإلكتروني",
+      "password_placeholder": "كلمة المرور",
+      "forgot_password": "نسيت كلمة المرور؟",
+      "sign_in": "تسجيل الدخول",
+      "dont_have_account": "لا تملك حسابًا؟",
+      "sign_up": "إنشاء حساب",
+      "or_continue_with": "أو المتابعة عبر",
+      "google": "جوجل",
+      "remember_me": "تذكّرني"
+    },
+    "signup": {
+      "title": "إنشاء حساب",
+      "subtitle": "انضمّ إلى آلاف المسلمين الذين يجدون شريك حياتهم المثالي",
+      "first_name_placeholder": "الاسم الأول",
+      "last_name_placeholder": "اسم العائلة",
+      "email_placeholder": "عنوان البريد الإلكتروني",
+      "password_placeholder": "كلمة المرور",
+      "confirm_password_placeholder": "تأكيد كلمة المرور",
+      "create_account": "إنشاء حساب",
+      "already_have_account": "لديك حساب بالفعل؟",
+      "sign_in": "تسجيل الدخول",
+      "or_continue_with": "أو المتابعة عبر",
+      "google": "جوجل",
+      "agree_terms": "أوافق على شروط الخدمة وسياسة الخصوصية"
+    },
+    "forgot_password": {
+      "methods": {
+        "title": "نسيت كلمة المرور",
+        "subtitle": "اختر بيانات الاتصال التي نستخدمها لإعادة تعيين كلمة المرور",
+        "via_sms": "عبر الرسائل النصية:",
+        "via_email": "عبر البريد الإلكتروني:",
+        "continue": "متابعة",
+        "soon": "سيتم تفعيلها قريبًا"
+      },
+      "email": {
+        "title": "نسيت كلمة المرور",
+        "subtitle": "أدخل بريدك الإلكتروني وسنرسل لك رابطًا لإعادة تعيين كلمة المرور",
+        "email_placeholder": "عنوان البريد الإلكتروني",
+        "send_link": "إرسال رابط إعادة التعيين",
+        "back_to_login": "العودة لتسجيل الدخول",
+        "check_email": "تحقّق من بريدك الإلكتروني",
+        "sent_instructions": "أرسلنا تعليمات إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.",
+        "didnt_receive": "لم يصلك البريد؟",
+        "resend": "إعادة الإرسال"
+      },
+      "phone": {
+        "title": "نسيت كلمة المرور",
+        "subtitle": "أدخل رقم هاتفك وسنرسل لك رمز تحقق",
+        "phone_placeholder": "رقم الهاتف",
+        "send_code": "إرسال الرمز",
+        "back_to_login": "العودة لتسجيل الدخول"
+      }
+    },
+    "otp_verification": {
+      "title": "التحقّق بالرمز",
+      "subtitle": "أدخل رمز التحقق الذي أرسلناه إلى",
+      "verify": "تحقّق",
+      "didnt_receive": "لم يصلك الرمز؟",
+      "resend": "إعادة الإرسال",
+      "code_expires": "ينتهي الرمز خلال"
+    },
+    "create_new_password": {
+      "header_title": "إنشاء كلمة مرور جديدة",
+      "title": "أنشئ كلمة المرور الجديدة",
+      "subtitle": "يجب أن تكون كلمة المرور الجديدة مختلفة عن السابقة",
+      "new_password_placeholder": "كلمة المرور الجديدة",
+      "confirm_new_password_placeholder": "تأكيد كلمة المرور الجديدة",
+      "requirements_title": "يجب أن تحتوي كلمة المرور على:",
+      "requirement_8_chars": "• ٨ أحرف على الأقل",
+      "requirement_upper": "• حرف كبير واحد",
+      "requirement_lower": "• حرف صغير واحد",
+      "requirement_number": "• رقم واحد",
+      "requirement_special": "• رمز خاص واحد (@$!%*?&)",
+      "strength_label": "قوة كلمة المرور:",
+      "strength_weak": "ضعيفة",
+      "strength_medium": "متوسطة",
+      "strength_strong": "قوية",
+      "resetting": "جاري إعادة التعيين...",
+      "reset_button": "إعادة تعيين كلمة المرور",
+      "modal_title": "تهانينا!",
+      "modal_subtitle": "تمت إعادة تعيين كلمة المرور بنجاح! يمكنك تسجيل الدخول الآن بكلمتك الجديدة.",
+      "continue_to_login": "المتابعة لتسجيل الدخول"
+    }
+  },
+  "common": {
+    "loading": "جاري التحميل...",
+    "error": "خطأ",
+    "success": "نجاح",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "done": "تم",
+    "close": "إغلاق",
+    "ok": "موافق",
+    "yes": "نعم",
+    "no": "لا"
+  }
+}

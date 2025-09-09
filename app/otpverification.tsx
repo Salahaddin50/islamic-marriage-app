@@ -2,6 +2,8 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '../components/Header';
+import { useLanguage } from '../src/contexts/LanguageContext';
+import LanguageSelector from '../src/components/LanguageSelector';
 import { COLORS } from '../constants';
 import { OtpInput } from "react-native-otp-entry";
 import Button from "../components/Button";
@@ -14,6 +16,7 @@ type Nav = {
 // OTP Verification Screen
 const OTPVerification = () => {
     const { navigate } = useNavigation<Nav>();
+    const { t } = useLanguage();
     const [time, setTime] = useState(59);
 
     useEffect(() => {
@@ -28,11 +31,14 @@ const OTPVerification = () => {
     return (
         <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
             <View style={[styles.container, { backgroundColor: COLORS.white }]}>
-                <Header title="Forgot Password" />
+                <Header title={t('auth.otp_verification.title')} />
                 <ScrollView>
-                    <Text style={[styles.title, {
-                        color: COLORS.black
-                    }]}>Code has been send to +1 111 ******99</Text>
+                    <View style={{ position: 'absolute', top: 8, right: 16 }}>
+                        <LanguageSelector showLabel={false} />
+                    </View>
+                    <Text style={[styles.title, { color: COLORS.black }]}>
+                        {t('auth.otp_verification.subtitle')} +1 111 ******99
+                    </Text>
                     <OtpInput
                         numberOfDigits={4}
                         onTextChange={(text) => console.log(text)}
@@ -53,17 +59,13 @@ const OTPVerification = () => {
                             }
                         }} />
                     <View style={styles.codeContainer}>
-                        <Text style={[styles.code, {
-                            color: COLORS.greyscale900
-                        }]}>Resend code in</Text>
+                        <Text style={[styles.code, { color: COLORS.greyscale900 }]}>{t('auth.otp_verification.didnt_receive')}</Text>
                         <Text style={styles.time}>{`  ${time}  `}</Text>
-                        <Text style={[styles.code, {
-                            color: COLORS.greyscale900
-                        }]}>s</Text>
+                        <Text style={[styles.code, { color: COLORS.greyscale900 }]}>{t('auth.otp_verification.code_expires')}</Text>
                     </View>
                 </ScrollView>
                 <Button
-                    title="Verify"
+                    title={t('auth.otp_verification.verify')}
                     filled
                     style={styles.button}
                     onPress={() => { navigate("createnewpassword") }}

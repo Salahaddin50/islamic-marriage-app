@@ -7,6 +7,15 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
+    languageContainer: {
+        position: 'absolute',
+        top: 20,
+        right: 20,
+        zIndex: 10,
+    },
+    languageSelector: {
+        // No fixed width needed - will auto-size based on content
+    },
     contentContainer: {
         flex: 1,
         alignItems: 'center'

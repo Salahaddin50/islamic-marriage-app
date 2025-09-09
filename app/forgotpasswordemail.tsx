@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useReducer, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, SIZES, icons, images } from '../constants';
 import Header from '../components/Header';
+import { useLanguage } from '../src/contexts/LanguageContext';
 import { reducer } from '../utils/reducers/formReducers';
 import { validateInput } from '../utils/actions/formActions';
 import Input from '../components/Input';
@@ -77,6 +78,7 @@ const clearResetAttempts = async () => {
 // Forgot Password Screen
 const ForgotPasswordEmail = () => {
     const { navigate } = useNavigation<Nav>();
+    const { t } = useLanguage();
     const router = useRouter();
     const [formState, dispatchFormState] = useReducer(reducer, initialState);
     const [error, setError] = useState<string | null>(null);
@@ -261,7 +263,7 @@ const ForgotPasswordEmail = () => {
                 style={styles.container}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             >
-                <Header title="Forgot Password" />
+                <Header title={t('auth.forgot_password.email.title')} />
                 <ScrollView 
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={styles.scrollContent}
@@ -277,9 +279,9 @@ const ForgotPasswordEmail = () => {
                     </View>
 
                     {/* Title Section */}
-                    <Text style={styles.title}>Reset Your Password</Text>
+                    <Text style={styles.title}>{t('auth.forgot_password.email.title')}</Text>
                     <Text style={styles.subtitle}>
-                        Enter your email address and we'll send you a link to reset your password
+                        {t('auth.forgot_password.email.subtitle')}
                     </Text>
 
                     {/* Form Section */}
@@ -288,7 +290,7 @@ const ForgotPasswordEmail = () => {
                             id="email"
                             onInputChanged={inputChangedHandler}
                             errorText={formState.inputValidities['email']}
-                            placeholder="Email Address"
+                            placeholder={t('auth.forgot_password.email.email_placeholder')}
                             placeholderTextColor={COLORS.gray}
                             icon={icons.email}
                             keyboardType="email-address"
@@ -302,10 +304,10 @@ const ForgotPasswordEmail = () => {
                                 isLocked 
                                     ? `Locked (${Math.ceil(lockoutTimeRemaining / 60)}m ${lockoutTimeRemaining % 60}s)`
                                     : isLoading 
-                                        ? "Sending Reset Link..." 
+                                        ? t('common.loading')
                                         : emailSent
-                                            ? "Email Sent!"
-                                            : "Send Reset Link"
+                                            ? t('auth.forgot_password.email.check_email')
+                                            : t('auth.forgot_password.email.send_link')
                             }
                             filled
                             onPress={handlePasswordReset}
@@ -322,19 +324,14 @@ const ForgotPasswordEmail = () => {
                             onPress={() => router.push('/login')}
                             style={styles.backToLoginContainer}
                         >
-                            <Text style={styles.backToLoginText}>Remember your password? Sign In</Text>
+                            <Text style={styles.backToLoginText}>{t('auth.login.already_have_account') || 'Already have an account?'} {t('auth.login.sign_in')}</Text>
                         </TouchableOpacity>
                     </View>
                 </ScrollView>
 
                 {/* Bottom Sign Up Link */}
                 <View style={styles.bottomContainer}>
-                    <Text style={styles.bottomText}>
-                        Don't have an account?{' '}
-                        <TouchableOpacity onPress={() => router.push('/signup')}>
-                            <Text style={styles.signUpText}>Sign Up</Text>
-                        </TouchableOpacity>
-                    </Text>
+                    <Text style={styles.bottomText}>{t('auth.login.dont_have_account')} <Text style={styles.signUpText}>{t('auth.login.sign_up')}</Text></Text>
                 </View>
             </KeyboardAvoidingView>
         </SafeAreaView>

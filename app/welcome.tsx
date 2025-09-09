@@ -13,6 +13,8 @@ import { useNavigation } from "expo-router";
 import { getResponsiveFontSize, getResponsiveSpacing, getResponsiveWidth, isMobileWeb } from "../utils/responsive";
 import { supabase } from "../src/config/supabase";
 import DesktopMobileNotice from "../components/DesktopMobileNotice";
+import { useLanguage } from "../src/contexts/LanguageContext";
+import LanguageSelector from "../src/components/LanguageSelector";
 
 type Nav = {
     navigate: (value: string) => void
@@ -21,6 +23,7 @@ type Nav = {
 // Responsive Welcome Screen
 const Welcome = () => {
     const { navigate } = useNavigation<Nav>();
+    const { t } = useLanguage();
 
     // Handle Google Sign In with Supabase - INSTANT redirect
     const handleGoogleSignIn = async () => {
@@ -61,6 +64,12 @@ const Welcome = () => {
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             >
                 <DesktopMobileNotice />
+                
+                {/* Language Selector */}
+                <View style={styles.languageContainer}>
+                    <LanguageSelector showLabel={false} style={styles.languageSelector} />
+                </View>
+                
                 {/* Main Content */}
                 <View style={styles.contentContainer}>
                     {/* Logo Section */}
@@ -73,9 +82,9 @@ const Welcome = () => {
                     </View>
 
                     {/* Title Section */}
-                    <Text style={styles.title}>Assalamu Aleykoum</Text>
+                    <Text style={styles.title}>{t('welcome_page.title')}</Text>
                     <Text style={styles.subtitle}>
-                        A dedicated platform for those seeking to live the blessed Sunnah of polygamy. All female profiles are verified and Walis are notified for complete transparency.
+                        {t('welcome_page.subtitle')}
                     </Text>
 
                     {/* Social Buttons Section */}
@@ -90,7 +99,7 @@ const Welcome = () => {
                                 style={styles.socialIcon}
                                 resizeMode="contain"
                             />
-                            <Text style={styles.googleButtonText}>Continue with Google</Text>
+                            <Text style={styles.googleButtonText}>{t('welcome_page.continue_with_google')}</Text>
                         </TouchableOpacity>
 
                         {/* Email Registration */}
@@ -103,16 +112,16 @@ const Welcome = () => {
                                 style={styles.socialIcon}
                                 resizeMode="contain"
                             />
-                            <Text style={styles.emailButtonText}>Continue with Email</Text>
+                            <Text style={styles.emailButtonText}>{t('welcome_page.continue_with_email')}</Text>
                         </TouchableOpacity>
                     </View>
 
                     {/* Login Link */}
                     <View style={styles.loginContainer}>
                         <Text style={styles.loginText}>
-                            Already have an account?{' '}
+                            {t('welcome_page.already_have_account')}{' '}
                             <TouchableOpacity onPress={() => navigate("login")}>
-                                <Text style={styles.loginLink}>Log In</Text>
+                                <Text style={styles.loginLink}>{t('welcome_page.log_in')}</Text>
                             </TouchableOpacity>
                         </Text>
                     </View>
@@ -121,14 +130,7 @@ const Welcome = () => {
                 {/* Terms and Privacy */}
                 <View style={styles.bottomContainer}>
                     <Text style={styles.bottomText}>
-                        By continuing, you accept our{' '}
-                        <TouchableOpacity onPress={() => navigate("settingsprivacypolicy")}>
-                            <Text style={styles.bottomLink}>Terms of Use</Text>
-                        </TouchableOpacity>
-                        {' '}and{' '}
-                        <TouchableOpacity onPress={() => navigate("settingsprivacypolicy")}>
-                            <Text style={styles.bottomLink}>Privacy Policy</Text>
-                        </TouchableOpacity>
+                        {t('welcome_page.terms_privacy')}
                     </Text>
                 </View>
             </KeyboardAvoidingView>
@@ -145,6 +147,15 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: COLORS.white,
+    },
+    languageContainer: {
+        position: 'absolute',
+        top: getResponsiveSpacing(20),
+        right: getResponsiveSpacing(20),
+        zIndex: 10,
+    },
+    languageSelector: {
+        // No fixed width needed - will auto-size based on content
     },
     contentContainer: {
         flex: 1,

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { COLORS, SIZES, icons, illustrations } from '../constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '../components/Header';
+import { useLanguage } from '../src/contexts/LanguageContext';
 import Button from '../components/Button';
 import { useNavigation } from 'expo-router';
 import { getResponsiveFontSize, getResponsiveSpacing } from '../utils/responsive';
@@ -14,6 +15,7 @@ type Nav = {
 // Forgot Password Methods
 const ForgotPasswordMethods = () => {
     const { navigate } = useNavigation<Nav>();
+    const { t } = useLanguage();
     const [selectedMethod, setSelectedMethod] = useState('email'); // Default to email since SMS is disabled
 
     const handleMethodPress = (method: any) => {
@@ -25,7 +27,7 @@ const ForgotPasswordMethods = () => {
     return (
         <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
             <View style={[styles.container, { backgroundColor: COLORS.white }]}>
-                <Header title="Forgot Password" />
+                <Header title={t('auth.forgot_password.methods.title')} />
                 <ScrollView showsVerticalScrollIndicator={false}>
                     <View style={styles.passwordContainer}>
                         <Image
@@ -34,10 +36,9 @@ const ForgotPasswordMethods = () => {
                             style={styles.password}
                         />
                     </View>
-                    <Text style={[styles.title, {
-                        color: COLORS.greyscale900
-                    }]}>Select which contact details
-                        should we use to reset your password</Text>
+                    <Text style={[styles.title, { color: COLORS.greyscale900 }]}>
+                        {t('auth.forgot_password.methods.subtitle')}
+                    </Text>
                     <View
                         style={[
                             styles.methodContainer,
@@ -51,11 +52,11 @@ const ForgotPasswordMethods = () => {
                         </View>
                         <View style={styles.methodContent}>
                             <View style={styles.methodTextContainer}>
-                                <Text style={[styles.methodTitle, styles.disabledMethodTitle]}>via SMS:</Text>
+                                <Text style={[styles.methodTitle, styles.disabledMethodTitle]}>{t('auth.forgot_password.methods.via_sms')}</Text>
                                 <Text style={[styles.methodSubtitle, styles.disabledMethodSubtitle]}>+1 111 ******99</Text>
                             </View>
                             <View style={styles.comingSoonBadge}>
-                                <Text style={styles.comingSoonText}>Will be activated soon</Text>
+                                <Text style={styles.comingSoonText}>{t('auth.forgot_password.methods.soon')}</Text>
                             </View>
                         </View>
                     </View>
@@ -73,14 +74,14 @@ const ForgotPasswordMethods = () => {
                                 style={styles.icon} />
                         </View>
                         <View>
-                            <Text style={styles.methodTitle}>via Email:</Text>
+                            <Text style={styles.methodTitle}>{t('auth.forgot_password.methods.via_email')}</Text>
                             <Text style={[styles.methodSubtitle, {
                                 color: COLORS.black
                             }]}>and***ley@yourdomain.com</Text>
                         </View>
                     </TouchableOpacity>
                     <Button
-                        title="Continue"
+                        title={t('auth.forgot_password.methods.continue')}
                         filled
                         style={styles.button}
                         onPress={() => navigate('forgotpasswordemail')}

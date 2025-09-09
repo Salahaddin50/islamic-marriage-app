@@ -1,0 +1,140 @@
+{
+  "onboarding": {
+    "welcome_greeting": "Assalamu Aleykoum",
+    "welcome_title": "Welcome to Zawajplus",
+    "welcome_description": "The only Islamic platform dedicated exclusively for polygamous marriages following Quranic principles.",
+    "get_started": "Get Started",
+    "skip_to_login": "Skip to Login",
+    "next": "Next",
+    "skip": "Skip",
+    "back": "Back",
+    "continue": "Continue"
+  },
+  "onboarding2": {
+    "title": "Fully Shariah",
+    "subtitle": "COMPLIANT",
+    "description": "Every aspect of our platform strictly follows Shariah law and Islamic marriage principles."
+  },
+  "onboarding3": {
+    "title": "Verified",
+    "subtitle": "PROFILES",
+    "description": "All female profiles are verified by our team and Walis are properly informed."
+  },
+  "onboarding4": {
+    "title": "Serious",
+    "subtitle": "INTENTIONS",
+    "description": "This platform is exclusively for serious individuals where every communication is intended for marriage."
+  },
+  "welcome_page": {
+    "title": "Assalamu Aleykoum",
+    "subtitle": "A dedicated platform for those seeking to live the blessed Sunnah of polygamy. All female profiles are verified and Walis are notified for complete transparency.",
+    "continue_with_google": "Continue with Google",
+    "continue_with_email": "Continue with Email",
+    "already_have_account": "Already have an account?",
+    "log_in": "Log In",
+    "terms_privacy": "By continuing, you agree to our Terms of Service and Privacy Policy"
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome Back",
+      "subtitle": "Sign in to your account",
+      "email_placeholder": "Email Address",
+      "password_placeholder": "Password",
+      "forgot_password": "Forgot Password?",
+      "sign_in": "Sign In",
+      "already_have_account": "Already have an account?",
+      "dont_have_account": "Don't have an account?",
+      "sign_up": "Sign Up",
+      "or_continue_with": "Or continue with",
+      "google": "Google",
+      "remember_me": "Remember me"
+    },
+    "signup": {
+      "title": "Create Account",
+      "subtitle": "Join thousands of Muslims finding their perfect match",
+      "first_name_placeholder": "First Name",
+      "last_name_placeholder": "Last Name", 
+      "email_placeholder": "Email Address",
+      "password_placeholder": "Password",
+      "confirm_password_placeholder": "Confirm Password",
+      "create_account": "Create Account",
+      "already_have_account": "Already have an account?",
+      "sign_in": "Sign In",
+      "or_continue_with": "Or continue with",
+      "google": "Google",
+      "agree_terms": "I agree to the Terms of Service and Privacy Policy"
+    },
+    "forgot_password": {
+      "methods": {
+        "title": "Forgot Password",
+        "subtitle": "Select which contact details should we use to reset your password",
+        "via_sms": "via SMS:",
+        "via_email": "via Email:",
+        "continue": "Continue",
+        "soon": "Will be activated soon"
+      },
+      "email": {
+        "title": "Forgot Password",
+        "subtitle": "Enter your email address and we'll send you a link to reset your password",
+        "email_placeholder": "Email Address",
+        "send_link": "Send Reset Link",
+        "back_to_login": "Back to Login",
+        "check_email": "Check your email",
+        "sent_instructions": "We've sent password reset instructions to your email address.",
+        "didnt_receive": "Didn't receive the email?",
+        "resend": "Resend"
+      },
+      "phone": {
+        "title": "Forgot Password",
+        "subtitle": "Enter your phone number and we'll send you a verification code",
+        "phone_placeholder": "Phone Number",
+        "send_code": "Send Code",
+        "back_to_login": "Back to Login"
+      }
+    },
+    "otp_verification": {
+      "title": "OTP Verification",
+      "subtitle": "Enter the verification code we sent to",
+      "verify": "Verify",
+      "didnt_receive": "Didn't receive the code?",
+      "resend": "Resend",
+      "code_expires": "Code expires in"
+    },
+    "create_new_password": {
+      "header_title": "Create New Password",
+      "title": "Create Your New Password",
+      "subtitle": "Your new password must be different from your previous password",
+      "new_password_placeholder": "New Password",
+      "confirm_new_password_placeholder": "Confirm New Password",
+      "requirements_title": "Password must contain:",
+      "requirement_8_chars": "• At least 8 characters",
+      "requirement_upper": "• One uppercase letter",
+      "requirement_lower": "• One lowercase letter",
+      "requirement_number": "• One number",
+      "requirement_special": "• One special character (@$!%*?&)",
+      "strength_label": "Password Strength:",
+      "strength_weak": "Weak",
+      "strength_medium": "Medium",
+      "strength_strong": "Strong",
+      "resetting": "Resetting Password...",
+      "reset_button": "Reset Password",
+      "modal_title": "Congratulations!",
+      "modal_subtitle": "Your password has been successfully reset! You can now sign in with your new password.",
+      "continue_to_login": "Continue to Login"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "done": "Done",
+    "close": "Close",
+    "ok": "OK",
+    "yes": "Yes",
+    "no": "No"
+  }
+}

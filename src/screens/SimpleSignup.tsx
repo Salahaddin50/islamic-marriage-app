@@ -22,6 +22,8 @@ import RegistrationService from '../services/registration.service';
 import { supabase } from '../config/supabase';
 import DesktopMobileNotice from '../../components/DesktopMobileNotice';
 import * as SecureStore from 'expo-secure-store';
+import { useLanguage } from '../contexts/LanguageContext';
+import LanguageSelector from '../../src/components/LanguageSelector';
 
 // Anti-spam configuration for signup
 const MAX_SIGNUP_ATTEMPTS = 3;
@@ -108,6 +110,7 @@ interface Props {
 const SimpleSignup: React.FC<Props> = ({ onGoogleSignup, onSignupSuccess }) => {
   const navigation = useNavigation();
   const router = useRouter();
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [lockoutTimeRemaining, setLockoutTimeRemaining] = useState(0);
@@ -431,6 +434,9 @@ const SimpleSignup: React.FC<Props> = ({ onGoogleSignup, onSignupSuccess }) => {
       >
         <DesktopMobileNotice />
         <Header showBackButton={true} />
+        <View style={{ position: 'absolute', top: 8, right: 16 }}>
+          <LanguageSelector showLabel={false} />
+        </View>
         
         <ScrollView 
           showsVerticalScrollIndicator={false} 
@@ -441,10 +447,8 @@ const SimpleSignup: React.FC<Props> = ({ onGoogleSignup, onSignupSuccess }) => {
             <Image source={images.logo2} resizeMode='contain' style={styles.logo} />
           </View>
           
-          <Text style={styles.title}>Create Your Account</Text>
-          <Text style={styles.subtitle}>
-            Join the Islamic community for meaningful connections
-          </Text>
+          <Text style={styles.title}>{t('auth.signup.title')}</Text>
+          <Text style={styles.subtitle}>{t('auth.signup.subtitle')}</Text>
 
           <View style={styles.formContainer}>
             <Controller
@@ -453,7 +457,7 @@ const SimpleSignup: React.FC<Props> = ({ onGoogleSignup, onSignupSuccess }) => {
               render={({ field: { onChange, value } }) => (
                 <Input
                   id="email"
-                  placeholder="Email Address *"
+                  placeholder={`${t('auth.signup.email_placeholder')} *`}
                   onInputChanged={(id, text) => onChange(text)}
                   errorText={errors.email?.message}
                   icon={icons.email}
@@ -469,7 +473,7 @@ const SimpleSignup: React.FC<Props> = ({ onGoogleSignup, onSignupSuccess }) => {
               render={({ field: { onChange, value } }) => (
                 <Input
                   id="password"
-                  placeholder="Password *"
+                  placeholder={`${t('auth.signup.password_placeholder')} *`}
                   onInputChanged={(id, text) => onChange(text)}
                   errorText={errors.password?.message}
                   icon={icons.padlock}
@@ -484,7 +488,7 @@ const SimpleSignup: React.FC<Props> = ({ onGoogleSignup, onSignupSuccess }) => {
               render={({ field: { onChange, value } }) => (
                 <Input
                   id="confirmPassword"
-                  placeholder="Confirm Password *"
+                  placeholder={`${t('auth.signup.confirm_password_placeholder')} *`}
                   onInputChanged={(id, text) => onChange(text)}
                   errorText={errors.confirmPassword?.message}
                   icon={icons.padlock}
@@ -508,7 +512,7 @@ const SimpleSignup: React.FC<Props> = ({ onGoogleSignup, onSignupSuccess }) => {
                       {value && <Text style={styles.checkmark}>✓</Text>}
                     </View>
                     <Text style={styles.checkboxText}>
-                      I agree to the Terms of Service and Privacy Policy *
+                      {t('auth.signup.agree_terms')} *
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -523,8 +527,8 @@ const SimpleSignup: React.FC<Props> = ({ onGoogleSignup, onSignupSuccess }) => {
                 isLocked 
                   ? `Locked (${Math.ceil(lockoutTimeRemaining / 60)}m ${lockoutTimeRemaining % 60}s)`
                   : isLoading 
-                    ? "Creating Account..." 
-                    : "Create Account"
+                    ? t('common.loading') 
+                    : t('auth.signup.create_account')
               }
               onPress={handleSubmit(handleSignup)}
               style={[
@@ -546,7 +550,7 @@ const SimpleSignup: React.FC<Props> = ({ onGoogleSignup, onSignupSuccess }) => {
                   style={styles.googleIcon}
                   resizeMode="contain"
                 />
-                <Text style={styles.googleButtonText}>Continue with Google</Text>
+                <Text style={styles.googleButtonText}>{t('auth.signup.google')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -556,9 +560,9 @@ const SimpleSignup: React.FC<Props> = ({ onGoogleSignup, onSignupSuccess }) => {
       {/* Bottom fixed Sign In link (matching Login screen) */}
       <View style={styles.bottomContainer}>
         <Text style={styles.bottomText}>
-          Already have an account?{' '}
+          {t('auth.login.already_have_account')}{' '}
           <TouchableOpacity onPress={() => navigation.navigate('login')}>
-            <Text style={styles.signInText}>Sign In</Text>
+            <Text style={styles.signInText}>{t('auth.login.sign_in')}</Text>
           </TouchableOpacity>
         </Text>
       </View>

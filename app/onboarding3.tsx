@@ -7,8 +7,11 @@ import Button from '../components/Button';
 import Onboarding1Styles from '../styles/OnboardingStyles';
 import { COLORS, illustrations, images } from '../constants';
 import { router } from 'expo-router';
+import { useLanguage } from '../src/contexts/LanguageContext';
+import LanguageSelector from '../src/components/LanguageSelector';
 
 const Onboarding3 = () => {
+  const { t } = useLanguage();
   const [progress, setProgress] = useState(0);
   const intervalRef = useRef<any>(null);
   const navigatingRef = useRef(false);
@@ -39,6 +42,11 @@ const Onboarding3 = () => {
       backgroundColor: COLORS.white
     }]}>
       <PageContainer>
+        {/* Language Selector */}
+        <View style={Onboarding1Styles.languageContainer}>
+          <LanguageSelector showLabel={false} style={Onboarding1Styles.languageSelector} />
+        </View>
+        
         <View style={Onboarding1Styles.contentContainer}>
           <Image
             source={illustrations.onboarding3}
@@ -54,19 +62,19 @@ const Onboarding3 = () => {
             backgroundColor: COLORS.white
           }]}>
             <View style={Onboarding1Styles.titleContainer}>
-              <Text style={Onboarding1Styles.title}>Verified</Text>
-              <Text style={Onboarding1Styles.subTitle}>PROFILES</Text>
+              <Text style={Onboarding1Styles.title}>{t('onboarding3.title')}</Text>
+              <Text style={Onboarding1Styles.subTitle}>{t('onboarding3.subtitle')}</Text>
             </View>
 
             <Text style={Onboarding1Styles.description}>
-              All female profiles are verified by our team and Walis are properly informed.
+              {t('onboarding3.description')}
             </Text>
 
             <View style={Onboarding1Styles.dotsContainer}>
               {progress < 1 && <DotsView progress={progress} numDots={4} />}
             </View>
             <Button
-              title="Next"
+              title={t('onboarding.next')}
               filled
               onPress={() => {
                 navigatingRef.current = true;
@@ -76,7 +84,7 @@ const Onboarding3 = () => {
               style={Onboarding1Styles.nextButton}
             />
             <Button
-              title="Skip"
+              title={t('onboarding.skip')}
               onPress={() => {
                 navigatingRef.current = true;
                 if (intervalRef.current) clearInterval(intervalRef.current);

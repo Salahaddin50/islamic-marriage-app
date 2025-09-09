@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, SIZES, icons, images } from '../constants';
 import Header from '../components/Header';
+import { useLanguage } from '../src/contexts/LanguageContext';
+import LanguageSelector from '../src/components/LanguageSelector';
 import Checkbox from 'expo-checkbox';
 import Button from '../components/Button';
 import { useNavigation } from 'expo-router';
@@ -15,6 +17,7 @@ type Nav = {
 // Forgot Password Phone Number Screen
 const ForgotPasswordPhoneNumber = () => {
     const { navigate } = useNavigation<Nav>();
+    const { t } = useLanguage();
     const [error, setError] = useState(null);
     const [isChecked, setChecked] = useState(false);
     const [areas, setAreas] = useState([]);
@@ -115,8 +118,11 @@ const ForgotPasswordPhoneNumber = () => {
     return (
         <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
             <View style={[styles.container, { backgroundColor: COLORS.white }]}>
-                <Header title="Forgot Password" />
+                <Header title={t('auth.forgot_password.phone.title')} />
                 <ScrollView style={{ marginVertical: 54 }} showsVerticalScrollIndicator={false}>
+                    <View style={{ position: 'absolute', top: 8, right: 16 }}>
+                        <LanguageSelector showLabel={false} />
+                    </View>
                     <View style={styles.logoContainer}>
                         <Image
                             source={images.logo2}
@@ -124,9 +130,7 @@ const ForgotPasswordPhoneNumber = () => {
                             style={styles.logo}
                         />
                     </View>
-                    <Text style={[styles.title, {
-                        color: COLORS.black
-                    }]}>Enter to Your Phone Number</Text>
+                    <Text style={[styles.title, { color: COLORS.black }]}>{t('auth.forgot_password.phone.subtitle')}</Text>
                     <View style={[styles.inputContainer, { backgroundColor: COLORS.greyscale500 }]}>
                         <TouchableOpacity
                             style={styles.selectFlagContainer}
@@ -152,7 +156,7 @@ const ForgotPasswordPhoneNumber = () => {
                         {/* Phone Number Text Input */}
                         <TextInput
                             style={[styles.input, { color: COLORS.black }]}
-                            placeholder="Enter your phone number"
+                            placeholder={t('auth.forgot_password.phone.phone_placeholder')}
                             placeholderTextColor={COLORS.gray}
                             selectionColor="#111"
                             keyboardType="numeric"
@@ -169,30 +173,28 @@ const ForgotPasswordPhoneNumber = () => {
                             <View style={{ flex: 1 }}>
                                 <Text style={[styles.privacy, {
                                     color: COLORS.black
-                                }]}>Remenber me</Text>
+                                }]}> {t('auth.login.remember_me')} </Text>
                             </View>
                         </View>
                     </View>
                     <Button
-                        title="Reset Password"
+                        title={t('auth.forgot_password.phone.send_code')}
                         filled
                         onPress={() => navigate("otpverification")}
                         style={styles.button}
                     />
                     <TouchableOpacity
                         onPress={() => navigate("login")}>
-                        <Text style={styles.forgotPasswordBtnText}>Remenber the password?</Text>
+                        <Text style={styles.forgotPasswordBtnText}>{t('auth.login.already_have_account') || 'Already have an account?'}</Text>
                     </TouchableOpacity>
                     <View>
                     </View>
                 </ScrollView>
                 <View style={styles.bottomContainer}>
-                    <Text style={[styles.bottomLeft, {
-                        color: COLORS.black
-                    }]}>Don't have an account ?</Text>
+                    <Text style={[styles.bottomLeft, { color: COLORS.black }]}>{t('auth.login.dont_have_account')}</Text>
                     <TouchableOpacity
                         onPress={() => navigate("signup")}>
-                        <Text style={styles.bottomRight}>{" "}Sign Up</Text>
+                        <Text style={styles.bottomRight}>{" "}{t('auth.login.sign_up')}</Text>
                     </TouchableOpacity>
                 </View>
             </View>

@@ -16,6 +16,8 @@ import GlobalNotificationPopup from '@/components/GlobalNotificationPopup';
 import { NotificationRecord } from '@/src/services/notifications';
 import React from 'react';
 import { installUrlSanitizer } from '@/utils/responsive';
+import { LanguageProvider } from '@/src/contexts/LanguageContext';
+import '@/src/i18n';
 
 // Import CSS for web builds
 if (Platform.OS === 'web') {
@@ -208,8 +210,9 @@ export default function RootLayout() {
 
 
   return (
-    <NotificationProvider>
-      <Stack screenOptions={{ headerShown: false }}>
+    <LanguageProvider>
+      <NotificationProvider>
+        <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="onboarding2" />
         <Stack.Screen name="onboarding3" />
@@ -268,6 +271,7 @@ export default function RootLayout() {
           setCurrentNotification(null);
         }}
       />
-    </NotificationProvider>
+      </NotificationProvider>
+    </LanguageProvider>
   );
 }

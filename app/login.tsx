@@ -21,6 +21,8 @@ import { useNavigation, useRouter, router } from 'expo-router';
 import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from '../utils/responsive';
 import * as SecureStore from 'expo-secure-store';
 import DesktopMobileNotice from '../components/DesktopMobileNotice';
+import { useLanguage } from '../src/contexts/LanguageContext';
+import LanguageSelector from '../src/components/LanguageSelector';
 
 // Anti-spam configuration
 const MAX_LOGIN_ATTEMPTS = 5;
@@ -126,6 +128,7 @@ const clearRememberedCredentials = async () => {
 // Responsive Login Screen
 const Login = () => {
     const { navigate } = useNavigation<Nav>();
+    const { t } = useLanguage();
     const [formState, dispatchFormState] = useReducer(reducer, initialState);
     const [error, setError] = useState<string | null>(null);
     const [isChecked, setChecked] = useState(false);
@@ -401,6 +404,12 @@ const Login = () => {
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             >
                 <DesktopMobileNotice />
+                
+                {/* Language Selector */}
+                <View style={styles.languageContainer}>
+                    <LanguageSelector showLabel={false} style={styles.languageSelector} />
+                </View>
+                
                 <Header title="" showBackButton={false} />
                 <ScrollView 
                     showsVerticalScrollIndicator={false}
@@ -417,9 +426,9 @@ const Login = () => {
                     </View>
 
                     {/* Title Section */}
-                    <Text style={styles.title}>Login to Your Account</Text>
+                    <Text style={styles.title}>{t('auth.login.title')}</Text>
                     <Text style={styles.subtitle}>
-                        Welcome back to the Islamic community
+                        {t('auth.login.subtitle')}
                     </Text>
 
                     {/* Form Section */}
@@ -428,7 +437,7 @@ const Login = () => {
                             id="email"
                             onInputChanged={inputChangedHandler}
                             errorText={formState.inputValidities['email']}
-                            placeholder="Email Address"
+                            placeholder={t('auth.login.email_placeholder')}
                             placeholderTextColor={COLORS.gray}
                             icon={icons.email}
                             keyboardType="email-address"
@@ -441,7 +450,7 @@ const Login = () => {
                             errorText={formState.inputValidities['password']}
                             autoCapitalize="none"
                             id="password"
-                            placeholder="Password"
+                            placeholder={t('auth.login.password_placeholder')}
                             placeholderTextColor={COLORS.gray}
                             icon={icons.padlock}
                             secureTextEntry={true}
@@ -460,7 +469,7 @@ const Login = () => {
                                     color={isChecked ? COLORS.primary : COLORS.gray}
                                     onValueChange={setChecked}
                                 />
-                                <Text style={styles.checkboxText}>Remember me</Text>
+                                <Text style={styles.checkboxText}>{t('auth.login.remember_me')}</Text>
                             </TouchableOpacity>
                         </View>
 
@@ -470,8 +479,8 @@ const Login = () => {
                                 isLocked 
                                     ? `Locked (${Math.ceil(lockoutTimeRemaining / 60)}m ${lockoutTimeRemaining % 60}s)`
                                     : isLoading 
-                                        ? "Logging in..." 
-                                        : "Login"
+                                        ? t('common.loading')
+                                        : t('auth.login.sign_in')
                             }
                             filled
                             onPress={handleLogin}
@@ -494,13 +503,13 @@ const Login = () => {
                             onPress={() => navigate("forgotpasswordmethods")}
                             style={styles.forgotPasswordContainer}
                         >
-                            <Text style={styles.forgotPasswordText}>Forgot your password?</Text>
+                            <Text style={styles.forgotPasswordText}>{t('auth.login.forgot_password')}</Text>
                         </TouchableOpacity>
                     </View>
 
                     {/* Google OAuth Section */}
                     <View style={styles.oauthContainer}>
-                        <OrSeparator text="or continue with" />
+                        <OrSeparator text={t('auth.login.or_continue_with')} />
                         
                         <TouchableOpacity
                             style={styles.googleButton}
@@ -511,7 +520,7 @@ const Login = () => {
                                 style={styles.googleIcon}
                                 resizeMode="contain"
                             />
-                            <Text style={styles.googleButtonText}>Continue with Google</Text>
+                            <Text style={styles.googleButtonText}>{t('auth.login.google')}</Text>
                         </TouchableOpacity>
                     </View>
                 </ScrollView>
@@ -519,9 +528,9 @@ const Login = () => {
                 {/* Bottom Sign Up Link */}
                 <View style={styles.bottomContainer}>
                     <Text style={styles.bottomText}>
-                        Don't have an account?{' '}
+                        {t('auth.login.dont_have_account')}{' '}
                         <TouchableOpacity onPress={() => navigate("signup")}>
-                            <Text style={styles.signUpText}>Sign Up</Text>
+                            <Text style={styles.signUpText}>{t('auth.login.sign_up')}</Text>
                         </TouchableOpacity>
                     </Text>
                 </View>
@@ -539,6 +548,15 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: COLORS.white,
+    },
+    languageContainer: {
+        position: 'absolute',
+        top: getResponsiveSpacing(20),
+        right: getResponsiveSpacing(20),
+        zIndex: 10,
+    },
+    languageSelector: {
+        // No fixed width needed - will auto-size based on content
     },
     scrollContent: {
         flexGrow: 1,

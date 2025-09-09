@@ -14,8 +14,11 @@ import { COLORS, illustrations, images } from '../constants';
 import { router } from 'expo-router';
 import { getResponsiveFontSize, getResponsiveSpacing, getResponsiveWidth, getResponsiveHeight, isMobileWeb } from '../utils/responsive';
 import { supabase } from '../src/config/supabase';
+import { useLanguage } from '../src/contexts/LanguageContext';
+import LanguageSelector from '../src/components/LanguageSelector';
 
 const Index = () => {
+  const { t } = useLanguage();
   const [progress, setProgress] = useState(0);
   const intervalRef = useRef<any>(null);
   const navigatingRef = useRef(false);
@@ -108,13 +111,18 @@ const Index = () => {
               />
             </View>
 
+            {/* Language Selector */}
+            <View style={styles.languageContainer}>
+              <LanguageSelector showLabel={false} style={styles.languageSelector} />
+            </View>
+
             {/* Content Section */}
             <View style={styles.bottomContainer}>
               <View style={styles.textContainer}>
-                <Text style={styles.title}>Assalamu Aleykoum</Text>
-                <Text style={styles.subtitle}>Welcome to Zawajplus</Text>
+                <Text style={styles.title}>{t('onboarding.welcome_greeting')}</Text>
+                <Text style={styles.subtitle}>{t('onboarding.welcome_title')}</Text>
                 <Text style={styles.description}>
-                  The only Islamic platform dedicated exclusively for polygamous marriages following Quranic principles.
+                  {t('onboarding.welcome_description')}
                 </Text>
               </View>
 
@@ -126,7 +134,7 @@ const Index = () => {
               {/* Action Buttons */}
               <View style={styles.buttonContainer}>
                 <Button
-                  title="Get Started"
+                  title={t('onboarding.get_started')}
                   filled
                   onPress={() => {
                     navigatingRef.current = true;
@@ -136,7 +144,7 @@ const Index = () => {
                   style={styles.nextButton}
                 />
                 <Button
-                  title="Skip to Login"
+                  title={t('onboarding.skip_to_login')}
                   onPress={() => {
                     navigatingRef.current = true;
                     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -188,6 +196,15 @@ const styles = StyleSheet.create({
     width: getResponsiveWidth(60),
     height: getResponsiveHeight(20),
     opacity: 0.3,
+  },
+  languageContainer: {
+    position: 'absolute',
+    top: getResponsiveSpacing(20),
+    right: getResponsiveSpacing(20),
+    zIndex: 10,
+  },
+  languageSelector: {
+    // No fixed width needed - will auto-size based on content
   },
   bottomContainer: {
     width: '100%',
