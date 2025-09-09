@@ -52,6 +52,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="/admin-packages.html" class="nav-link">
+                        <i class="fas fa-box"></i>
+                        <span>Packages</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="/admin-management.html" class="nav-link">
                         <i class="fas fa-user-cog"></i>
                         <span>Admin Management</span>
@@ -271,6 +277,7 @@
                         </div>
                     </div>
                 </div>
+
             </div>
         </main>
     </div>
@@ -700,6 +707,137 @@
             if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
             if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
             return `${Math.floor(diffInSeconds / 86400)} days ago`;
+        }
+
+        // ================= Packages (payment_records) =================
+        let pkgAll = [], pkgFiltered = [], pkgPage = 1, pkgPerPage = 10;
+        const pkgHandleSearch = debounce(() => pkgApplyFilters(), 300);
+
+        async function pkgFetchRecords(){
+            const tbody = document.getElementById('pkgTbody');
+            if (!tbody) return;
+            tbody.innerHTML = '<tr><td colspan="6">Loading...</td></tr>';
+            try {
+                const { data, error } = await supabase
+                    .from('payment_records')
+                    .select('id, user_id, package_type, status, created_at, updated_at, complaints')
+                    .order('updated_at', { ascending:false })
+                    .limit(1000);
+                if (error) throw error;
+                pkgAll = data || [];
+            } catch(e){
+                console.error('Load payment_records error', e);
+                pkgAll = [];
+            }
+            pkgApplyFilters();
+        }
+
+        function pkgNormalizePackage(v){
+            const s = String(v||'').toLowerCase();
+            if (s.includes('gold')) return 'golden';
+            if (s.includes('vip')) return 'vip';
+            if (s.includes('prem')) return 'premium';
+            return s || 'free';
+        }
+
+        function pkgApplyFilters(){
+            const q = (document.getElementById('pkgSearchInput')?.value || '').toLowerCase().trim();
+            const status = document.getElementById('pkgStatusFilter')?.value || '';
+            const pkg = document.getElementById('pkgPackageFilter')?.value || '';
+            const upd = document.getElementById('pkgUpdatedFilter')?.value || 'all';
+            const comp = document.getElementById('pkgComplaintsFilter')?.value || '';
+            const now = new Date();
+            const start = upd==='today'? new Date(now.getFullYear(),now.getMonth(),now.getDate()) : upd==='7'? new Date(now.getTime()-7*24*3600*1000) : upd==='30'? new Date(now.getTime()-30*24*3600*1000) : null;
+
+            pkgFiltered = pkgAll.filter(r => {
+                const email = (window.getCachedEmailForUser && window.getCachedEmailForUser(r.user_id)) ? window.getCachedEmailForUser(r.user_id).toLowerCase() : '';
+                const statusStr = (r.status===null?'null':String(r.status)).toLowerCase();
+                const pkgStr = pkgNormalizePackage(r.package_type);
+                const updatedAt = new Date(r.updated_at);
+                const complaintsCount = Array.isArray(r.complaints)? r.complaints.length : 0;
+
+                const okSearch = !q || (r.user_id||'').toLowerCase().includes(q) || email.includes(q) || statusStr.includes(q) || pkgStr.includes(q);
+                const okStatus = !status || (status==='null'? r.status===null : statusStr===status);
+                const okPkg = !pkg || pkgStr===pkg;
+                const okUpdated = !start || updatedAt >= start;
+                const okComplaints = !comp || (comp==='yes'? complaintsCount>0 : complaintsCount===0);
+                return okSearch && okStatus && okPkg && okUpdated && okComplaints;
+            });
+            pkgPage = 1;
+            pkgRender();
+        }
+
+        function pkgRender(){
+            const tbody = document.getElementById('pkgTbody');
+            if (!tbody) return;
+            if (!pkgFiltered.length){
+                tbody.innerHTML = '<tr><td colspan="6">No records found</td></tr>';
+                const c = document.getElementById('pkgRecordsCount'); if (c) c.textContent='(0)';
+                document.getElementById('pkgPagination').innerHTML='';
+                return;
+            }
+            const totalPages = Math.ceil(pkgFiltered.length / pkgPerPage);
+            const start = (pkgPage-1)*pkgPerPage;
+            const rows = pkgFiltered.slice(start, start+pkgPerPage);
+            tbody.innerHTML = rows.map(r => {
+                const pkg = pkgNormalizePackage(r.package_type);
+                const status = (r.status===null?'null':String(r.status).toLowerCase());
+                const statusClass = status==='completed'?'status-completed':status==='pending'?'status-pending':status==='failed'?'status-failed':status==='refunded'?'status-refunded':'status-null';
+                const complaintsCount = Array.isArray(r.complaints)? r.complaints.length : 0;
+                return `
+                <tr>
+                    <td>
+                        <div>${r.user_id}</div>
+                        <div><span class="email-link" data-user-id="${r.user_id}"></span></div>
+                    </td>
+                    <td>
+                        <select style="padding:4px 8px; font-size:12px;" onchange="pkgUpdatePackage('${r.id}', this.value)">
+                            <option value="free" ${pkg==='free'?'selected':''}>Free</option>
+                            <option value="premium" ${pkg==='premium'?'selected':''}>Premium</option>
+                            <option value="vip" ${pkg==='vip'?'selected':''}>VIP Premium</option>
+                            <option value="golden" ${pkg==='golden'?'selected':''}>Golden Premium</option>
+                        </select>
+                    </td>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="status-badge ${statusClass}">${status}</span>
+                            <select style="padding:4px 8px; font-size:12px;" onchange="pkgUpdateStatus('${r.id}', this.value)">
+                                <option value="completed" ${status==='completed'?'selected':''}>Completed</option>
+                                <option value="pending" ${status==='pending'?'selected':''}>Pending</option>
+                                <option value="failed" ${status==='failed'?'selected':''}>Failed</option>
+                                <option value="refunded" ${status==='refunded'?'selected':''}>Refunded</option>
+                                <option value="null" ${status==='null'?'selected':''}>Null</option>
+                            </select>
+                        </div>
+                    </td>
+                    <td>${formatDateTime(r.updated_at)}</td>
+                    <td>${formatDateTime(r.created_at)}</td>
+                    <td>${complaintsCount>0?`<span class='complaint-badge'>${complaintsCount}</span>`:'-'}</td>
+                </tr>`;
+            }).join('');
+            if (window.fillEmailsForElements) window.fillEmailsForElements(document.getElementById('packagesSection'));
+            const c = document.getElementById('pkgRecordsCount'); if (c) c.textContent = `(${pkgFiltered.length})`;
+            const cont = document.getElementById('pkgPagination');
+            cont.innerHTML = '';
+            cont.appendChild(createPagination(pkgPage, totalPages, (p)=>{ pkgPage=p; pkgRender(); }));
+        }
+
+        async function pkgUpdatePackage(id, value){
+            try{
+                const { error } = await supabase.from('payment_records').update({ package_type: value }).eq('id', id);
+                if (error) throw error;
+                showNotification('Package updated','success');
+                pkgFetchRecords();
+            }catch(e){ showNotification('Failed to update package','error'); pkgFetchRecords(); }
+        }
+        async function pkgUpdateStatus(id, value){
+            try{
+                const statusVal = (value==='null')? null : value;
+                const { error } = await supabase.from('payment_records').update({ status: statusVal }).eq('id', id);
+                if (error) throw error;
+                showNotification('Status updated','success');
+                pkgFetchRecords();
+            }catch(e){ showNotification('Failed to update status','error'); pkgFetchRecords(); }
         }
 
         // Re-load approvals when gender filter changes

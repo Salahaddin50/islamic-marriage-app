@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Packages - Zawajplus Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="admin-styles.css">
+    <style>
+        .table-actions-inline select {
+            padding: 4px 8px;
+            font-size: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #fff;
+        }
+        .status-badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:600; }
+        .status-completed { background:#dcfce7; color:#16a34a; }
+        .status-pending { background:#fef3c7; color:#d97706; }
+        .status-failed { background:#fee2e2; color:#dc2626; }
+        .status-refunded { background:#e0e7ff; color:#4338ca; }
+        .status-null { background:#f3f4f6; color:#6b7280; }
+        .complaint-badge { background:#fee2e2; color:#dc2626; padding:2px 6px; border-radius:6px; font-size:11px; }
+        .email-cell .email-link { white-space:nowrap; }
+        .filters-inline { display:flex; gap:12px; flex-wrap:wrap; }
+        .filters-inline .filter-group { min-width: 180px; }
+        .user-name { font-weight:600; color:#1f2937; }
+        .user-meta { color:#6b7280; font-size:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+        .date-small { font-size: 11px; color:#6b7280; }
+    </style>
+    
+    
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Zawajplus Admin</span>
+                </div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/admin-dashboard.html" class="nav-link">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin-female-profiles.html" class="nav-link">
+                        <i class="fas fa-female"></i>
+                        <span>Female Profiles</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin-male-profiles.html" class="nav-link">
+                        <i class="fas fa-male"></i>
+                        <span>Male Profiles</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin-interests.html" class="nav-link">
+                        <i class="fas fa-tags"></i>
+                        <span>Interests</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin-meet-requests.html" class="nav-link">
+                        <i class="fas fa-video"></i>
+                        <span>Meet Requests</span>
+                    </a>
+                </li>
+                <li class="nav-item active">
+                    <a href="/admin-packages.html" class="nav-link">
+                        <i class="fas fa-box"></i>
+                        <span>Packages</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <button class="sidebar-toggle" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 class="page-title">Packages</h1>
+                </div>
+                <div class="top-bar-right">
+                    <div class="admin-info">
+                        <div class="admin-details">
+                            <span class="admin-name" id="adminName">Loading...</span>
+                            <span class="admin-role" id="adminRole">Admin</span>
+                        </div>
+                        <div class="admin-avatar">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <div class="filters-section">
+                    <div class="filters-inline">
+                        <div class="filter-group" style="flex:1; min-width:260px;">
+                            <label class="filter-label">Search</label>
+                            <input type="text" id="searchInput" class="filter-input" placeholder="Search by user, package, status, email..." oninput="handleSearch()" />
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Payment Status</label>
+                            <select id="statusFilter" class="filter-select" onchange="applyFilters()">
+                                <option value="">All</option>
+                                <option value="completed">Completed</option>
+                                <option value="pending">Pending</option>
+                                <option value="failed">Failed</option>
+                                <option value="refunded">Refunded</option>
+                                <option value="null">Null</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Package Name</label>
+                            <select id="packageFilter" class="filter-select" onchange="applyFilters()">
+                                <option value="">All</option>
+                                <option value="free">Free</option>
+                                <option value="premium">Premium</option>
+                                <option value="vip">VIP Premium</option>
+                                <option value="golden">Golden Premium</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Updated</label>
+                            <select id="updatedFilter" class="filter-select" onchange="applyFilters()">
+                                <option value="all">All Time</option>
+                                <option value="today">Today</option>
+                                <option value="7">Last 7 Days</option>
+                                <option value="30">Last 30 Days</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Complaints</label>
+                            <select id="complaintsFilter" class="filter-select" onchange="applyFilters()">
+                                <option value="">All</option>
+                                <option value="yes">Yes</option>
+                                <option value="no">No</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="data-table">
+                    <div class="table-header">
+                        <div class="table-title">Payment Records <span id="recordsCount"></span></div>
+                        <div class="table-actions">
+                            <button class="btn btn-secondary btn-sm" onclick="reload()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                        </div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table class="table" id="packagesTable">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Package Name</th>
+                                    <th>Payment Status</th>
+                                    <th>Updated</th>
+                                    <th>Created</th>
+                                    <th>Complaints</th>
+                                </tr>
+                            </thead>
+                            <tbody id="packagesTbody">
+                                <tr><td colspan="6">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination-container" id="paginationContainer"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="admin-common.js"></script>
+    <script>
+        let allRecords = [];
+        let filtered = [];
+        let currentPage = 1;
+        let itemsPerPage = 15;
+        let userProfileById = new Map();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAdminInfo();
+            fetchRecords();
+        });
+
+        async function fetchRecords() {
+            const tbody = document.getElementById('packagesTbody');
+            tbody.innerHTML = '<tr><td colspan="6">Loading...</td></tr>';
+            try {
+                // Read payment_records
+                const { data, error } = await window.supabaseClient
+                    .from('payment_records')
+                    .select('id, user_id, package_type, status, updated_at, created_at, complaints')
+                    .order('updated_at', { ascending: false })
+                    .limit(1000);
+                if (error) throw error;
+                allRecords = data || [];
+                // Fetch user names and phones
+                const ids = Array.from(new Set((allRecords||[]).map(r => r.user_id).filter(Boolean)));
+                userProfileById.clear();
+                if (ids.length){
+                    const { data: profs } = await window.supabaseClient
+                        .from('user_profiles')
+                        .select('user_id, first_name, last_name, phone_code, mobile_number')
+                        .in('user_id', ids);
+                    (profs||[]).forEach(p => userProfileById.set(p.user_id, p));
+                }
+                applyFilters();
+            } catch (e) {
+                console.error('Load payment_records error:', e);
+                const tbody = document.getElementById('packagesTbody');
+                tbody.innerHTML = '<tr><td colspan="6">Failed to load records.</td></tr>';
+            }
+        }
+
+        function reload(){ fetchRecords(); }
+
+        const handleSearch = debounce(() => applyFilters(), 300);
+
+        function applyFilters() {
+            const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+            const status = document.getElementById('statusFilter').value;
+            const pkg = document.getElementById('packageFilter').value;
+            const upd = document.getElementById('updatedFilter').value;
+            const complaints = document.getElementById('complaintsFilter').value;
+
+            const now = new Date();
+            const start = (() => {
+                if (upd === 'today') return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                if (upd === '7') return new Date(now.getTime() - 7*24*3600*1000);
+                if (upd === '30') return new Date(now.getTime() - 30*24*3600*1000);
+                return null;
+            })();
+
+            filtered = allRecords.filter(r => {
+                const email = (window.getCachedEmailForUser && window.getCachedEmailForUser(r.user_id)) ? window.getCachedEmailForUser(r.user_id).toLowerCase() : '';
+                const recordComplaints = Array.isArray(r.complaints) ? r.complaints : [];
+                const statusStr = (r.status === null ? 'null' : String(r.status)).toLowerCase();
+                const pkgStr = (r.package_type || '').toLowerCase();
+                const updatedAt = new Date(r.updated_at);
+
+                // search
+                const matchesSearch = !q ||
+                    (r.user_id || '').toLowerCase().includes(q) ||
+                    pkgStr.includes(q) ||
+                    statusStr.includes(q) ||
+                    email.includes(q);
+
+                // status
+                let matchesStatus = true;
+                if (status) {
+                    if (status === 'null') matchesStatus = r.status === null;
+                    else matchesStatus = statusStr === status;
+                }
+
+                // package
+                let matchesPkg = true;
+                if (pkg) {
+                    const norm = normalizePackage(pkgStr);
+                    matchesPkg = norm === pkg;
+                }
+
+                // updated window
+                let matchesUpdated = true;
+                if (start) matchesUpdated = updatedAt >= start;
+
+                // complaints
+                let matchesComplaints = true;
+                if (complaints === 'yes') matchesComplaints = (recordComplaints && recordComplaints.length > 0);
+                if (complaints === 'no') matchesComplaints = !(recordComplaints && recordComplaints.length > 0);
+
+                return matchesSearch && matchesStatus && matchesPkg && matchesUpdated && matchesComplaints;
+            });
+
+            currentPage = 1;
+            renderTable();
+        }
+
+        function normalizePackage(value){
+            const v = String(value||'').toLowerCase();
+            if (v.includes('gold')) return 'golden';
+            if (v.includes('vip')) return 'vip';
+            if (v.includes('prem')) return 'premium';
+            return v || 'free';
+        }
+
+        function renderTable(){
+            const tbody = document.getElementById('packagesTbody');
+            if (!filtered.length) {
+                tbody.innerHTML = '<tr><td colspan="6">No records found</td></tr>';
+                document.getElementById('recordsCount').textContent = '(0)';
+                document.getElementById('paginationContainer').innerHTML='';
+                return;
+            }
+            const totalPages = Math.ceil(filtered.length / itemsPerPage);
+            const start = (currentPage-1)*itemsPerPage;
+            const rows = filtered.slice(start, start+itemsPerPage);
+            tbody.innerHTML = rows.map(r => {
+                const pkg = normalizePackage(r.package_type);
+                const status = (r.status===null?'null':String(r.status).toLowerCase());
+                const statusClass = status==='completed'?'status-completed':status==='pending'?'status-pending':status==='failed'?'status-failed':status==='refunded'?'status-refunded':'status-null';
+                const complaintsCount = Array.isArray(r.complaints)? r.complaints.length : 0;
+                const prof = userProfileById.get(r.user_id) || {};
+                const displayName = [prof.first_name, prof.last_name].filter(Boolean).join(' ') || r.user_id;
+                const phone = formatPhone(prof.phone_code, prof.mobile_number);
+                return `
+                    <tr>
+                        <td class="email-cell">
+                            <div class="user-name">${displayName}</div>
+                            <div class="user-meta">
+                                <span class="email-link" data-user-id="${r.user_id}"></span>
+                                ${phone ? `<span>${phone}</span>` : ''}
+                            </div>
+                        </td>
+                        <td class="table-actions-inline">
+                            <select onchange="updatePackageType('${r.id}', this.value)">
+                                <option value="free" ${pkg==='free'?'selected':''}>Free</option>
+                                <option value="premium" ${pkg==='premium'?'selected':''}>Premium</option>
+                                <option value="vip" ${pkg==='vip'?'selected':''}>VIP Premium</option>
+                                <option value="golden" ${pkg==='golden'?'selected':''}>Golden Premium</option>
+                            </select>
+                        </td>
+                        <td class="table-actions-inline">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span class="status-badge ${statusClass}">${status}</span>
+                                <select onchange="updateStatus('${r.id}', this.value)">
+                                    <option value="completed" ${status==='completed'?'selected':''}>Completed</option>
+                                    <option value="pending" ${status==='pending'?'selected':''}>Pending</option>
+                                    <option value="failed" ${status==='failed'?'selected':''}>Failed</option>
+                                    <option value="refunded" ${status==='refunded'?'selected':''}>Refunded</option>
+                                    <option value="null" ${status==='null'?'selected':''}>Null</option>
+                                </select>
+                            </div>
+                        </td>
+                        <td><span class="date-small">${formatDateTime(r.updated_at)}</span></td>
+                        <td><span class="date-small">${formatDateTime(r.created_at)}</span></td>
+                        <td>${complaintsCount>0?`<span class="complaint-badge">${complaintsCount}</span>`:'-'}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            if (window.fillEmailsForElements) window.fillEmailsForElements(document.getElementById('packagesTable'));
+            document.getElementById('recordsCount').textContent = `(${filtered.length})`;
+            const cont = document.getElementById('paginationContainer');
+            cont.innerHTML = '';
+            cont.appendChild(createPagination(currentPage, totalPages, (p)=>{ currentPage=p; renderTable(); }));
+        }
+
+        function digitsOnly(v){ return (v||'').toString().replace(/\D/g,''); }
+        function formatPhone(code, number){
+            const c = digitsOnly(code); let n = digitsOnly(number);
+            if (!c && !n) return '';
+            if (c){ n = n.replace(/^0+/, ''); return `+${c}${n}`; }
+            if (n.startsWith('00')) n = n.slice(2); return `+${n}`;
+        }
+
+        async function updatePackageType(id, value){
+            try{
+                const { error } = await window.supabaseClient
+                    .from('payment_records')
+                    .update({ package_type: value })
+                    .eq('id', id);
+                if (error) throw error;
+                showNotification('Package updated', 'success');
+                fetchRecords();
+            }catch(e){
+                console.error(e);
+                showNotification('Failed to update package', 'error');
+                fetchRecords();
+            }
+        }
+        async function updateStatus(id, value){
+            try{
+                const statusVal = (value==='null')? null : value;
+                const { error } = await window.supabaseClient
+                    .from('payment_records')
+                    .update({ status: statusVal })
+                    .eq('id', id);
+                if (error) throw error;
+                showNotification('Status updated', 'success');
+                fetchRecords();
+            }catch(e){
+                console.error(e);
+                showNotification('Failed to update status', 'error');
+                fetchRecords();
+            }
+        }
+    </script>
+</body>
+</html>
+
+
