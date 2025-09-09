@@ -88,6 +88,14 @@
             overflow: hidden;
         }
 
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: 50% 25%;
+            display: block;
+        }
+
         .profile-info {
             flex: 1;
         }
@@ -491,16 +499,7 @@
                                 <option value="golden">Golden Premium</option>
                             </select>
                         </div>
-                        <div class="filter-group">
-                            <label class="filter-label">Payment Status</label>
-                            <select id="paymentFilter" class="filter-select" onchange="handleFilter()">
-                                <option value="">All</option>
-                                <option value="completed">Paid</option>
-                                <option value="pending">Payment Pending</option>
-                                <option value="failed">Payment Failed</option>
-                                <option value="free">Free Account</option>
-                            </select>
-                        </div>
+                        
                     </div>
                     <div class="filters-actions">
                         <button class="btn btn-secondary" onclick="clearFilters()">
@@ -693,7 +692,8 @@
                     <div class="profile-header">
                         <div class="profile-avatar">
                             ${profile.profile_picture_url ? 
-                                `<img src="${profile.profile_picture_url}" alt="${profile.first_name}"
+                                `<img class="avatar-img" src="${profile.profile_picture_url}" alt="${profile.first_name}"
+                                      loading="lazy" decoding="async" referrerpolicy="no-referrer"
                                       style="cursor:pointer;"
                                       onclick="openAvatarFullscreen('${profile.profile_picture_url}', '${profile.first_name} ${profile.last_name}')"
                                       onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -1197,7 +1197,7 @@
             const ageFilter = getVal('ageFilter');
             const dateFilter = getVal('dateFilter');
             const packageFilter = getVal('packageFilter');
-            const paymentFilter = getVal('paymentFilter');
+            
             const countryFilter = getVal('countryFilter');
 
             const includes = (v) => (typeof v === 'string') && v.toLowerCase().includes(searchTerm);
@@ -1261,14 +1261,7 @@
                     matchesPackage = normalizePackageType(profile.package_type) === packageFilter;
                 }
 
-                // payment status
-                let matchesPayment = true;
-                if (paymentFilter) {
-                    const s = (profile.payment_status || '').toLowerCase();
-                    matchesPayment = s === paymentFilter;
-                }
-
-                return matchesSearch && matchesApproval && matchesAge && matchesCountry && matchesDate && matchesPackage && matchesPayment;
+                return matchesSearch && matchesApproval && matchesAge && matchesCountry && matchesDate && matchesPackage;
             });
 
             currentPage = 1;
@@ -1278,7 +1271,7 @@
         }
 
         function clearFilters() {
-            ['searchInput','approvalFilter','ageFilter','dateFilter','packageFilter','paymentFilter','countryFilter'].forEach(id => {
+            ['searchInput','approvalFilter','ageFilter','dateFilter','packageFilter','countryFilter'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.value = '';
             });
