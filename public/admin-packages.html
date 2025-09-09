@@ -400,7 +400,7 @@
             return String(v);
         }
         function truncateText(t, n){ try { return t.length>n ? t.slice(0,n)+'…' : t; } catch { return t; } }
-        function escapeHtml(s){ return String(s).replace(/[&<>"]g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+        function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
         async function updatePackageType(id, value){
             try{
