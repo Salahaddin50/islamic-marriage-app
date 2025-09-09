@@ -793,7 +793,12 @@
                 }
 
                 showNotification('Profile approved successfully', 'success');
-                loadProfiles();
+                // Update in-memory profile to avoid full reload
+                const idx = profiles.findIndex(p => p.id === profileId);
+                if (idx !== -1) {
+                    profiles[idx].admin_approved = true;
+                }
+                applyFilters();
             } catch (error) {
                 console.error('Error approving profile:', error);
                 showNotification('Error approving profile', 'error');
@@ -818,7 +823,11 @@
                 }
 
                 showNotification('Profile rejected', 'success');
-                loadProfiles();
+                const idx = profiles.findIndex(p => p.id === profileId);
+                if (idx !== -1) {
+                    profiles[idx].admin_approved = false;
+                }
+                applyFilters();
             } catch (error) {
                 console.error('Error rejecting profile:', error);
                 showNotification('Error rejecting profile', 'error');

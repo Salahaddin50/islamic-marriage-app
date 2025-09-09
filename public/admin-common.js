@@ -13,9 +13,21 @@ window.supabaseClient = supabase;
 let currentAdmin = null;
 let supabaseSession = null;
 
-// Authentication check
+// Helper to detect login page
+function isLoginPage() {
+    try {
+        const path = (window.location && window.location.pathname) || '';
+        return path.includes('admin.html');
+    } catch {
+        return false;
+    }
+}
+
+// Authentication check (skip on login page)
 document.addEventListener('DOMContentLoaded', function() {
-    checkAuth();
+    if (!isLoginPage()) {
+        checkAuth();
+    }
 });
 
 async function checkAuth() {
@@ -79,7 +91,7 @@ async function checkAuth() {
 }
 
 function redirectToLogin() {
-    if (!window.location.pathname.includes('admin.html')) {
+    if (!isLoginPage()) {
         window.location.href = '/admin.html';
     }
 }
@@ -126,7 +138,7 @@ supabase.auth.onAuthStateChange((event, session) => {
             localStorage.removeItem('supabaseSession');
         }
 
-        if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        if ((event === 'SIGNED_OUT' || event === 'USER_DELETED') && !isLoginPage()) {
             redirectToLogin();
         }
     } catch (err) {
