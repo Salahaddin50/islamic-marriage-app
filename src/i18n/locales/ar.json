@@ -10,6 +10,204 @@
     "back": "رجوع",
     "continue": "متابعة"
   },
+  "profile_setup": {
+    "progress": "الخطوة {{current}} من {{total}}",
+    "continue": "متابعة",
+    "fill_later": "سأكمل لاحقًا",
+
+    "basic_title": "المعلومات الأساسية",
+    "basic_subtitle": "دعنا نتعرّف عليك أكثر",
+    "first_name_placeholder": "الاسم الأول *",
+    "last_name_placeholder": "اسم العائلة",
+    "about_me_label": "نبذة عني",
+    "about_me_placeholder": "اكتب نبذة قصيرة عنك واهتماماتك وما تبحث عنه...",
+    "phone_code_placeholder": "اختر رمز الهاتف *",
+    "search_phone_code": "ابحث عن رمز الدولة...",
+    "mobile_number_placeholder": "رقم الجوال *",
+    "dob_placeholder": "تاريخ الميلاد *",
+    "country_placeholder": "اختر الدولة *",
+    "search_country": "ابحث عن دولة...",
+    "city_placeholder": "اختر المدينة *",
+    "city_placeholder_disabled": "اختر الدولة أولًا",
+    "search_city": "ابحث عن مدينة...",
+    "gender_label": "الجنس *",
+    "male": "ذكر",
+    "female": "أنثى",
+    "commitments_title": "الالتزام الإسلامي (مطلوب) *",
+    "commitment_sunnah": "أفهم أن هذه المنصّة مخصّصة لسنّة التعدّد",
+    "commitment_halal": "أُقسم بالله أنني جاد وأبحث فقط عن الحلال",
+    "commitment_fair_male": "أُقسم بالله أنوي العدل بين زوجاتي",
+    "commitment_fair_female": "أُقسم بالله أنوي أن أكون زوجةً صالحةً لزوجي",
+
+    "physical_title": "الخصائص الجسدية",
+    "physical_subtitle": "ساعد الآخرين على معرفة مظهرك",
+    "height_placeholder": "الطول (سم) *",
+    "weight_placeholder": "الوزن (كجم) *",
+    "eye_color": "لون العين",
+    "hair_color": "لون الشعر",
+    "skin_color": "لون البشرة",
+    "body_type": "نوع الجسم",
+
+    "lifestyle_title": "نمط الحياة والعمل",
+    "lifestyle_subtitle": "أخبرنا عن حياتك ومسيرتك",
+    "education_level": "المستوى التعليمي",
+    "languages_spoken": "اللغات المحكية",
+    "languages_note": "يمكنك اختيار أكثر من لغة",
+    "occupation_placeholder": "العمل/المهنة *",
+    "income_placeholder": "الدخل الشهري (اختياري)",
+    "social_condition": "الوضع الاجتماعي",
+    "work_status": "حالة العمل",
+    "housing_type": "نوع السكن",
+    "living_condition": "وضع السكن",
+
+    "religious_title": "الالتزام الديني",
+    "religious_subtitle": "شاركنا ممارساتك ومعتقداتك الإسلامية",
+    "religious_level": "مستوى التدين",
+    "prayer_frequency": "المواظبة على الصلاة",
+    "quran_level": "مستوى قراءة القرآن",
+    "covering_level": "مستوى التغطية",
+    "beard_practice": "حالة اللحية",
+
+    "media_title": "الصور والفيديوهات",
+    "media_subtitle": "أضف 3 صور على الأقل. الفيديوهات اختيارية.",
+    "my_photos": "صوري ({{count}})",
+    "add_photo": "إضافة صورة",
+    "uploading": "جاري الرفع...",
+    "need_three_photos": "أضف 3 صور على الأقل للمتابعة.",
+    "my_videos": "فيديوهاتي ({{count}})",
+    "add_video": "إضافة فيديو",
+
+    "polygamy_title": "نوايا الزواج",
+    "polygamy_subtitle_male": "أي ترتيب زوجة تبحث عنه؟",
+    "polygamy_subtitle_female": "ما المراتب التي تقبلينها في زواجٍ مُتعدِّد؟",
+    "looking_for_which_wife": "تبحث عن أي زوجة؟ *",
+    "positions_accept": "ما المراتب التي تقبلينها؟ *",
+    "positions_note": "يمكنك اختيار أكثر من خيار مما يناسبك.",
+    "second_wife": "الزوجة الثانية",
+    "third_wife": "الزوجة الثالثة",
+    "fourth_wife": "الزوجة الرابعة",
+    "currently_have": "لديك حاليًا {{count}} زوجة{{plural}}",
+    "accept_being": "أقبل أن أكون {{position}}",
+    "complete_registration": "إكمال التسجيل",
+    "completing_registration": "جارٍ إكمال التسجيل...",
+    "profile_complete_title": "اكتمل الملف الشخصي!",
+    "profile_complete_body": "تم إعداد ملفك الشخصي بنجاح. أهلًا بك في زواج بلس!",
+    "start_browsing": "ابدأ التصفّح"
+    ,
+    "options": {
+      "eye_color": {
+        "brown": "بني",
+        "black": "أسود",
+        "hazel": "عسلي",
+        "green": "أخضر",
+        "blue": "أزرق",
+        "gray": "رمادي",
+        "amber": "كهرماني"
+      },
+      "hair_color": {
+        "black": "أسود",
+        "dark_brown": "بني داكن",
+        "brown": "بني",
+        "light_brown": "بني فاتح",
+        "blonde": "أشقر",
+        "red": "أحمر",
+        "gray": "رمادي",
+        "white": "أبيض"
+      },
+      "skin_color": {
+        "very_fair": "فاتح جدًا",
+        "fair": "فاتح",
+        "medium": "متوسط",
+        "olive": "قمحي",
+        "brown": "بني",
+        "dark_brown": "بني داكن",
+        "very_dark": "داكن جدًا"
+      },
+      "body_type": {
+        "slim": "نحيف",
+        "average": "متوسط",
+        "athletic": "رياضي",
+        "heavy_set": "ثقيل البنية",
+        "curvy": "ممتلئ",
+        "plus_size": "مقاس كبير"
+      },
+      "education": {
+        "high_school": "ثانوي",
+        "some_college": "درس جامعيًا جزئيًا",
+        "bachelor": "بكالوريوس",
+        "master": "ماجستير",
+        "phd": "دكتوراه",
+        "islamic": "دراسات إسلامية",
+        "certification": "شهادة مهنية",
+        "other": "أخرى"
+      },
+      "languages": {
+        "arabic": "العربية",
+        "english": "الإنجليزية",
+        "turkish": "التركية",
+        "russian": "الروسية",
+        "spanish": "الإسبانية",
+        "french": "الفرنسية",
+        "urdu": "الأردية"
+      },
+      "housing": {
+        "rent_apartment": "شقة إيجار",
+        "rent_house": "منزل إيجار",
+        "own_apartment": "شقة ملك",
+        "own_house": "منزل ملك",
+        "family_home": "منزل العائلة",
+        "shared": "سكن مشترك",
+        "other": "أخرى"
+      },
+      "living": {
+        "with_parents": "مع الوالدين",
+        "alone": "بمفردي",
+        "with_children": "مع الأبناء"
+      },
+      "social_condition": {
+        "sufficient": "مستور",
+        "rich": "غني",
+        "very_rich": "غني جدًا"
+      },
+      "covering": {
+        "will_cover": "سألتزم بالتغطية",
+        "hijab": "حجاب",
+        "niqab": "نقاب"
+      },
+      "work_status": {
+        "not_working": "لا تعمل/لا يعمل",
+        "working": "تعمل/يعمل"
+      },
+      "religious_level": {
+        "very_religious": "متدين جدًا",
+        "religious": "متدين",
+        "moderate": "متوسط التدين",
+        "somewhat": "قليل التدين",
+        "learning": "في طور التعلم"
+      },
+      "prayer_frequency": {
+        "all_5": "الصلوات الخمس جميعًا",
+        "most": "أغلب الصلوات",
+        "some": "بعض الصلوات",
+        "friday": "الجمعة فقط",
+        "occasionally": "أحيانًا",
+        "learning": "أتعلّم الصلاة"
+      },
+      "quran": {
+        "memorized": "حفظ أجزاء كبيرة",
+        "fluent": "يقرأ بطلاقة",
+        "with_help": "يقرأ بمساعدة",
+        "learning": "يتعلم القراءة",
+        "cannot_read": "لا يستطيع قراءة العربية"
+      },
+      "beard": {
+        "full": "لحية كاملة",
+        "trimmed": "لحية مشذبة",
+        "mustache": "شوارب فقط",
+        "clean": "حليق"
+      }
+    }
+  },
   "onboarding2": {
     "title": "متوافق بالكامل مع الشريعة",
     "subtitle": "مُطابق",

@@ -137,4 +137,197 @@
     "yes": "Yes",
     "no": "No"
   }
+  ,
+  "profile_setup": {
+    "progress": "Step {{current}} of {{total}}",
+    "continue": "Continue",
+    "fill_later": "Fill Later",
+    "basic_title": "Basic Information",
+    "basic_subtitle": "Let's get to know you better",
+    "first_name_placeholder": "First Name *",
+    "last_name_placeholder": "Last Name",
+    "about_me_label": "About Me",
+    "about_me_placeholder": "Share a bit about yourself, your interests, and what you're looking for...",
+    "phone_code_placeholder": "Select Phone Code *",
+    "search_phone_code": "Search country code...",
+    "mobile_number_placeholder": "Mobile Number *",
+    "dob_placeholder": "Date of Birth *",
+    "country_placeholder": "Select Country *",
+    "search_country": "Search country...",
+    "city_placeholder": "Select City *",
+    "city_placeholder_disabled": "Select Country First",
+    "search_city": "Search city...",
+    "gender_label": "Gender *",
+    "male": "Male",
+    "female": "Female",
+    "commitments_title": "Islamic Commitment (Required) *",
+    "commitment_sunnah": "I understand that this site is for Polygamy Sunnah",
+    "commitment_halal": "I swear Allah I am serious and looking only for halal",
+    "commitment_fair_male": "I swear Allah I intend to be fair in my new wife",
+    "commitment_fair_female": "I swear Allah I intend to be a pious wife for my husband",
+    "physical_title": "Physical Details",
+    "physical_subtitle": "Help others know what you look like",
+    "height_placeholder": "Height (cm) *",
+    "weight_placeholder": "Weight (kg) *",
+    "eye_color": "Eye Color",
+    "hair_color": "Hair Color",
+    "skin_color": "Skin Color",
+    "body_type": "Body Type",
+    "lifestyle_title": "Lifestyle & Work",
+    "lifestyle_subtitle": "Tell us about your life and career",
+    "education_level": "Education Level",
+    "languages_spoken": "Languages Spoken",
+    "languages_note": "You can select multiple languages",
+    "occupation_placeholder": "Occupation/Work *",
+    "income_placeholder": "Monthly Income (Optional)",
+    "social_condition": "Social Condition",
+    "work_status": "Work Status",
+    "housing_type": "Housing Type",
+    "living_condition": "Living Condition",
+    "religious_title": "Religious Commitment",
+    "religious_subtitle": "Share your Islamic practices and beliefs",
+    "religious_level": "Religious Level",
+    "prayer_frequency": "Prayer Frequency",
+    "quran_level": "Quran Reading Level",
+    "covering_level": "Covering Level",
+    "beard_practice": "Beard Practice",
+    "media_title": "Photos & Videos",
+    "media_subtitle": "Add at least 3 photos. Videos are optional.",
+    "my_photos": "My Photos ({{count}})",
+    "add_photo": "Add Photo",
+    "uploading": "Uploading...",
+    "need_three_photos": "Add at least 3 photos to continue.",
+    "my_videos": "My Videos ({{count}})",
+    "add_video": "Add Video",
+    "polygamy_title": "Marriage Intentions",
+    "polygamy_subtitle_male": "Which wife number are you looking for?",
+    "polygamy_subtitle_female": "Which positions would you accept in a polygamous marriage?",
+    "looking_for_which_wife": "Looking for which wife? *",
+    "positions_accept": "Which positions would you accept? *",
+    "positions_note": "You can select multiple positions that you would be comfortable with.",
+    "second_wife": "2nd Wife",
+    "third_wife": "3rd Wife",
+    "fourth_wife": "4th Wife",
+    "currently_have": "Currently have {{count}} wife{{plural}}",
+    "accept_being": "Accept being the {{position}}",
+    "complete_registration": "Complete Registration",
+    "completing_registration": "Completing Registration...",
+    "profile_complete_title": "Profile Complete!",
+    "profile_complete_body": "Your profile has been set up successfully. Welcome to Zawajplus!",
+    "start_browsing": "Start Browsing"
+    ,
+    "options": {
+      "eye_color": {
+        "brown": "Brown",
+        "black": "Black",
+        "hazel": "Hazel",
+        "green": "Green",
+        "blue": "Blue",
+        "gray": "Gray",
+        "amber": "Amber"
+      },
+      "hair_color": {
+        "black": "Black",
+        "dark_brown": "Dark Brown",
+        "brown": "Brown",
+        "light_brown": "Light Brown",
+        "blonde": "Blonde",
+        "red": "Red",
+        "gray": "Gray",
+        "white": "White"
+      },
+      "skin_color": {
+        "very_fair": "Very Fair",
+        "fair": "Fair",
+        "medium": "Medium",
+        "olive": "Olive",
+        "brown": "Brown",
+        "dark_brown": "Dark Brown",
+        "very_dark": "Very Dark"
+      },
+      "body_type": {
+        "slim": "Slim",
+        "average": "Average",
+        "athletic": "Athletic",
+        "heavy_set": "Heavy Set",
+        "curvy": "Curvy",
+        "plus_size": "Plus Size"
+      },
+      "education": {
+        "high_school": "High School",
+        "some_college": "Some College",
+        "bachelor": "Bachelor's Degree",
+        "master": "Master's Degree",
+        "phd": "PhD/Doctorate",
+        "islamic": "Islamic Studies",
+        "certification": "Professional Certification",
+        "other": "Other"
+      },
+      "languages": {
+        "arabic": "Arabic",
+        "english": "English",
+        "turkish": "Turkish",
+        "russian": "Russian",
+        "spanish": "Spanish",
+        "french": "French",
+        "urdu": "Urdu"
+      },
+      "housing": {
+        "rent_apartment": "Rent Apartment",
+        "rent_house": "Rent House",
+        "own_apartment": "Own Apartment",
+        "own_house": "Own House",
+        "family_home": "Family Home",
+        "shared": "Shared Accommodation",
+        "other": "Other"
+      },
+      "living": {
+        "with_parents": "Living with Parents",
+        "alone": "Living Alone",
+        "with_children": "Living with Children"
+      },
+      "social_condition": {
+        "sufficient": "Sufficient",
+        "rich": "Rich",
+        "very_rich": "Very Rich"
+      },
+      "covering": {
+        "will_cover": "Will Cover",
+        "hijab": "Hijab",
+        "niqab": "Niqab"
+      },
+      "work_status": {
+        "not_working": "Not Working",
+        "working": "Working"
+      },
+      "religious_level": {
+        "very_religious": "Very Religious",
+        "religious": "Religious",
+        "moderate": "Moderately Religious",
+        "somewhat": "Somewhat Religious",
+        "learning": "Learning"
+      },
+      "prayer_frequency": {
+        "all_5": "All 5 Daily Prayers",
+        "most": "Most Prayers",
+        "some": "Some Prayers",
+        "friday": "Friday Only",
+        "occasionally": "Occasionally",
+        "learning": "Learning to Pray"
+      },
+      "quran": {
+        "memorized": "Memorized Significant Portions",
+        "fluent": "Read Fluently",
+        "with_help": "Read with Help",
+        "learning": "Learning to Read",
+        "cannot_read": "Cannot Read Arabic"
+      },
+      "beard": {
+        "full": "Full Beard",
+        "trimmed": "Trimmed Beard",
+        "mustache": "Mustache Only",
+        "clean": "Clean Shaven"
+      }
+    }
+  }
 }

@@ -31,6 +31,7 @@ import { Image } from 'expo-image';
 import { DEFAULT_VIDEO_THUMBNAIL } from '../constants/defaultThumbnails';
 import type { PhotoVideoItem } from '../src/services/photos-videos.service';
 import { generateVideoThumbnail } from '../utils/videoThumbnailGenerator';
+import { useLanguage } from '../src/contexts/LanguageContext';
 
 // ================================
 // VALIDATION SCHEMAS
@@ -113,6 +114,7 @@ type PolygamyDetails = z.infer<typeof polygamySchema>;
 
 const ProfileSetup: React.FC = () => {
   const navigation = useNavigation();
+  const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [comprehensiveData, setComprehensiveData] = useState({});
@@ -963,76 +965,130 @@ const ProfileSetup: React.FC = () => {
 
   // Options for dropdowns
   const eyeColorOptions = [
-    'Brown', 'Black', 'Hazel', 'Green', 'Blue', 'Gray', 'Amber'
+    { label: t('profile_setup.options.eye_color.brown'), value: 'Brown' },
+    { label: t('profile_setup.options.eye_color.black'), value: 'Black' },
+    { label: t('profile_setup.options.eye_color.hazel'), value: 'Hazel' },
+    { label: t('profile_setup.options.eye_color.green'), value: 'Green' },
+    { label: t('profile_setup.options.eye_color.blue'), value: 'Blue' },
+    { label: t('profile_setup.options.eye_color.gray'), value: 'Gray' },
+    { label: t('profile_setup.options.eye_color.amber'), value: 'Amber' },
   ];
 
   const hairColorOptions = [
-    'Black', 'Dark Brown', 'Brown', 'Light Brown', 'Blonde', 'Red', 'Gray', 'White'
+    { label: t('profile_setup.options.hair_color.black'), value: 'Black' },
+    { label: t('profile_setup.options.hair_color.dark_brown'), value: 'Dark Brown' },
+    { label: t('profile_setup.options.hair_color.brown'), value: 'Brown' },
+    { label: t('profile_setup.options.hair_color.light_brown'), value: 'Light Brown' },
+    { label: t('profile_setup.options.hair_color.blonde'), value: 'Blonde' },
+    { label: t('profile_setup.options.hair_color.red'), value: 'Red' },
+    { label: t('profile_setup.options.hair_color.gray'), value: 'Gray' },
+    { label: t('profile_setup.options.hair_color.white'), value: 'White' },
   ];
 
   const skinColorOptions = [
-    'Very Fair', 'Fair', 'Medium', 'Olive', 'Brown', 'Dark Brown', 'Very Dark'
+    { label: t('profile_setup.options.skin_color.very_fair'), value: 'Very Fair' },
+    { label: t('profile_setup.options.skin_color.fair'), value: 'Fair' },
+    { label: t('profile_setup.options.skin_color.medium'), value: 'Medium' },
+    { label: t('profile_setup.options.skin_color.olive'), value: 'Olive' },
+    { label: t('profile_setup.options.skin_color.brown'), value: 'Brown' },
+    { label: t('profile_setup.options.skin_color.dark_brown'), value: 'Dark Brown' },
+    { label: t('profile_setup.options.skin_color.very_dark'), value: 'Very Dark' },
   ];
 
   // Body type options filtered by gender to avoid mismatched suggestions
   const bodyTypeOptionsAll = {
-    male: ['Slim', 'Average', 'Athletic', 'Heavy Set'],
-    female: ['Slim', 'Average', 'Athletic', 'Curvy', 'Plus Size']
+    male: [
+      { label: t('profile_setup.options.body_type.slim'), value: 'Slim' },
+      { label: t('profile_setup.options.body_type.average'), value: 'Average' },
+      { label: t('profile_setup.options.body_type.athletic'), value: 'Athletic' },
+      { label: t('profile_setup.options.body_type.heavy_set'), value: 'Heavy Set' },
+    ],
+    female: [
+      { label: t('profile_setup.options.body_type.slim'), value: 'Slim' },
+      { label: t('profile_setup.options.body_type.average'), value: 'Average' },
+      { label: t('profile_setup.options.body_type.athletic'), value: 'Athletic' },
+      { label: t('profile_setup.options.body_type.curvy'), value: 'Curvy' },
+      { label: t('profile_setup.options.body_type.plus_size'), value: 'Plus Size' },
+    ],
   } as const;
 
   const educationOptions = [
-    'High School', 'Some College', 'Bachelor\'s Degree', 'Master\'s Degree', 
-    'PhD/Doctorate', 'Islamic Studies', 'Professional Certification', 'Other'
+    { label: t('profile_setup.options.education.high_school'), value: 'High School' },
+    { label: t('profile_setup.options.education.some_college'), value: 'Some College' },
+    { label: t('profile_setup.options.education.bachelor'), value: "Bachelor's Degree" },
+    { label: t('profile_setup.options.education.master'), value: "Master's Degree" },
+    { label: t('profile_setup.options.education.phd'), value: 'PhD/Doctorate' },
+    { label: t('profile_setup.options.education.islamic'), value: 'Islamic Studies' },
+    { label: t('profile_setup.options.education.certification'), value: 'Professional Certification' },
+    { label: t('profile_setup.options.education.other'), value: 'Other' },
   ];
 
   const languageOptions = [
-    { label: 'Arabic', value: 'Arabic' },
-    { label: 'English', value: 'English' },
-    { label: 'Turkish', value: 'Turkish' },
-    { label: 'Russian', value: 'Russian' },
-    { label: 'Spanish', value: 'Spanish' },
-    { label: 'French', value: 'French' },
-    { label: 'Urdu', value: 'Urdu' }
+    { label: t('profile_setup.options.languages.arabic'), value: 'Arabic' },
+    { label: t('profile_setup.options.languages.english'), value: 'English' },
+    { label: t('profile_setup.options.languages.turkish'), value: 'Turkish' },
+    { label: t('profile_setup.options.languages.russian'), value: 'Russian' },
+    { label: t('profile_setup.options.languages.spanish'), value: 'Spanish' },
+    { label: t('profile_setup.options.languages.french'), value: 'French' },
+    { label: t('profile_setup.options.languages.urdu'), value: 'Urdu' },
   ];
 
   const housingOptions = [
-    'Rent Apartment', 'Rent House', 'Own Apartment', 'Own House', 
-    'Family Home', 'Shared Accommodation', 'Other'
+    { label: t('profile_setup.options.housing.rent_apartment'), value: 'rent_apartment' },
+    { label: t('profile_setup.options.housing.rent_house'), value: 'rent_house' },
+    { label: t('profile_setup.options.housing.own_apartment'), value: 'own_apartment' },
+    { label: t('profile_setup.options.housing.own_house'), value: 'own_house' },
+    { label: t('profile_setup.options.housing.family_home'), value: 'family_home' },
+    { label: t('profile_setup.options.housing.shared'), value: 'shared_accommodation' },
+    { label: t('profile_setup.options.housing.other'), value: 'other' },
   ];
 
   const livingConditionOptions = [
-    { label: 'Living with Parents', value: 'living_with_parents' },
-    { label: 'Living Alone', value: 'living_alone' },
-    { label: 'Living with Children', value: 'living_with_children' }
+    { label: t('profile_setup.options.living.with_parents'), value: 'living_with_parents' },
+    { label: t('profile_setup.options.living.alone'), value: 'living_alone' },
+    { label: t('profile_setup.options.living.with_children'), value: 'living_with_children' },
   ];
 
   const socialConditionOptions = [
-    { label: 'Sufficient', value: 'sufficient' },
-    { label: 'Rich', value: 'rich' },
-    { label: 'Very Rich', value: 'very_rich' }
+    { label: t('profile_setup.options.social_condition.sufficient'), value: 'sufficient' },
+    { label: t('profile_setup.options.social_condition.rich'), value: 'rich' },
+    { label: t('profile_setup.options.social_condition.very_rich'), value: 'very_rich' },
   ];
 
   const coveringLevelOptions = [
-    { label: 'Will Cover', value: 'will_cover' },
-    { label: 'Hijab', value: 'hijab' },
-    { label: 'Niqab', value: 'niqab' }
+    { label: t('profile_setup.options.covering.will_cover'), value: 'Will Cover' },
+    { label: t('profile_setup.options.covering.hijab'), value: 'Hijab' },
+    { label: t('profile_setup.options.covering.niqab'), value: 'Niqab' },
   ];
 
   const workStatusOptions = [
-    { label: 'Not Working', value: 'not_working' },
-    { label: 'Working', value: 'working' }
+    { label: t('profile_setup.options.work_status.not_working'), value: 'not_working' },
+    { label: t('profile_setup.options.work_status.working'), value: 'working' },
   ];
 
   const religiousLevelOptions = [
-    'Very Religious', 'Religious', 'Moderately Religious', 'Somewhat Religious', 'Learning'
+    { label: t('profile_setup.options.religious_level.very_religious'), value: 'Very Religious' },
+    { label: t('profile_setup.options.religious_level.religious'), value: 'Religious' },
+    { label: t('profile_setup.options.religious_level.moderate'), value: 'Moderately Religious' },
+    { label: t('profile_setup.options.religious_level.somewhat'), value: 'Somewhat Religious' },
+    { label: t('profile_setup.options.religious_level.learning'), value: 'Learning' },
   ];
 
   const prayerFrequencyOptions = [
-    'All 5 Daily Prayers', 'Most Prayers', 'Some Prayers', 'Friday Only', 'Occasionally', 'Learning to Pray'
+    { label: t('profile_setup.options.prayer_frequency.all_5'), value: 'All 5 Daily Prayers' },
+    { label: t('profile_setup.options.prayer_frequency.most'), value: 'Most Prayers' },
+    { label: t('profile_setup.options.prayer_frequency.some'), value: 'Some Prayers' },
+    { label: t('profile_setup.options.prayer_frequency.friday'), value: 'Friday Only' },
+    { label: t('profile_setup.options.prayer_frequency.occasionally'), value: 'Occasionally' },
+    { label: t('profile_setup.options.prayer_frequency.learning'), value: 'Learning to Pray' },
   ];
 
   const quranReadingOptions = [
-    'Memorized Significant Portions', 'Read Fluently', 'Read with Help', 'Learning to Read', 'Cannot Read Arabic'
+    { label: t('profile_setup.options.quran.memorized'), value: 'Memorized Significant Portions' },
+    { label: t('profile_setup.options.quran.fluent'), value: 'Read Fluently' },
+    { label: t('profile_setup.options.quran.with_help'), value: 'Read with Help' },
+    { label: t('profile_setup.options.quran.learning'), value: 'Learning to Read' },
+    { label: t('profile_setup.options.quran.cannot_read'), value: 'Cannot Read Arabic' },
   ];
 
   // Helper function for dropdown selector
@@ -1083,7 +1139,7 @@ const ProfileSetup: React.FC = () => {
   ) => (
     <View style={styles.selectorContainer}>
       <Text style={styles.selectorTitle}>{title} {required && '*'}</Text>
-      <Text style={styles.multiSelectNote}>You can select multiple languages</Text>
+      <Text style={styles.multiSelectNote}>{t('profile_setup.languages_note')}</Text>
       <View style={styles.multiSelectContainer}>
         {options.map((option) => {
           const isSelected = selectedValues.includes(option.value);
@@ -1196,7 +1252,7 @@ const ProfileSetup: React.FC = () => {
           <View style={styles.progressBar}>
             <View style={[styles.progressFill, { width: `${(currentStep / 6) * 100}%` }]} />
           </View>
-          <Text style={styles.progressText}>Step {currentStep} of 6</Text>
+          <Text style={styles.progressText}>{t('profile_setup.progress', { current: currentStep, total: 6 })}</Text>
         </View>
 
         {/* Step 1: Basic Information */}
@@ -1207,10 +1263,8 @@ const ProfileSetup: React.FC = () => {
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={styles.stepScrollContent}
           >
-            <Text style={styles.stepTitle}>Basic Information</Text>
-            <Text style={styles.stepSubtitle}>
-              Let's get to know you better
-            </Text>
+            <Text style={styles.stepTitle}>{t('profile_setup.basic_title')}</Text>
+            <Text style={styles.stepSubtitle}>{t('profile_setup.basic_subtitle')}</Text>
 
             <View style={styles.formContainer}>
               <Controller
@@ -1219,7 +1273,7 @@ const ProfileSetup: React.FC = () => {
                 render={({ field: { onChange, value } }) => (
                   <Input
                     id="firstName"
-                    placeholder="First Name *"
+                    placeholder={t('profile_setup.first_name_placeholder')}
                     value={value}
                     onInputChanged={(id, text) => onChange(text)}
                     errorText={errors.firstName?.message}
@@ -1234,7 +1288,7 @@ const ProfileSetup: React.FC = () => {
                 render={({ field: { onChange, value } }) => (
                   <Input
                     id="lastName"
-                    placeholder="Last Name"
+                    placeholder={t('profile_setup.last_name_placeholder')}
                     value={value}
                     onInputChanged={(id, text) => onChange(text)}
                     errorText={errors.lastName?.message}
@@ -1245,14 +1299,14 @@ const ProfileSetup: React.FC = () => {
 
               {/* About Me Section */}
               <View style={styles.textAreaContainer}>
-                <Text style={styles.textAreaLabel}>About Me</Text>
+                <Text style={styles.textAreaLabel}>{t('profile_setup.about_me_label')}</Text>
                 <Controller
                   control={control}
                   name="aboutMe"
                   render={({ field: { onChange, value } }) => (
                     <TextInput
                       style={styles.textArea}
-                      placeholder="Share a bit about yourself, your interests, and what you're looking for..."
+                      placeholder={t('profile_setup.about_me_placeholder')}
                       value={value}
                       onChangeText={onChange}
                       multiline
@@ -1274,10 +1328,10 @@ const ProfileSetup: React.FC = () => {
                   <SearchableDropdown
                     data={phoneCodesData}
                     onSelect={(item) => onChange(item.value)}
-                    placeholder="Select Phone Code *"
+                    placeholder={t('profile_setup.phone_code_placeholder')}
                     selectedValue={value}
                     error={errors.phoneCode?.message}
-                    searchPlaceholder="Search country code..."
+                    searchPlaceholder={t('profile_setup.search_phone_code')}
                     icon={icons.telephone}
                   />
                 )}
@@ -1290,7 +1344,8 @@ const ProfileSetup: React.FC = () => {
                 render={({ field: { onChange, value } }) => (
                   <Input
                     id="mobileNumber"
-                    placeholder="Mobile Number *"
+                    placeholder={t('profile_setup.mobile_number_placeholder')}
+                    value={value}
                     onInputChanged={(id, text) => onChange(text)}
                     errorText={errors.mobileNumber?.message}
                     icon={icons.call}
@@ -1312,7 +1367,7 @@ const ProfileSetup: React.FC = () => {
                         styles.dateInputText,
                         !value && styles.dateInputPlaceholder
                       ]}>
-                        {value || 'Date of Birth *'}
+                        {value || t('profile_setup.dob_placeholder')}
                       </Text>
                       <View style={styles.calendarIcon}>
                         <Text style={styles.calendarEmoji}>📅</Text>
@@ -1333,10 +1388,10 @@ const ProfileSetup: React.FC = () => {
                   <SearchableDropdown
                     data={getCountriesAsDropdownItems()}
                     onSelect={(item) => handleCountryChange(item)}
-                    placeholder="Select Country *"
+                    placeholder={t('profile_setup.country_placeholder')}
                     selectedValue={value}
                     error={errors.country?.message}
-                    searchPlaceholder="Search country..."
+                    searchPlaceholder={t('profile_setup.search_country')}
                     icon={icons.location}
                   />
                 )}
@@ -1350,11 +1405,11 @@ const ProfileSetup: React.FC = () => {
                   <SearchableDropdown
                     data={getCitiesForCountry(selectedCountry)}
                     onSelect={(item) => onChange(item.value)}
-                    placeholder={selectedCountry ? "Select City *" : "Select Country First"}
+                    placeholder={selectedCountry ? t('profile_setup.city_placeholder') : t('profile_setup.city_placeholder_disabled')}
                     selectedValue={value}
                     error={errors.city?.message}
                     disabled={!selectedCountry}
-                    searchPlaceholder="Search city..."
+                    searchPlaceholder={t('profile_setup.search_city')}
                     icon={icons.location}
                   />
                 )}
@@ -1362,7 +1417,7 @@ const ProfileSetup: React.FC = () => {
 
               {/* Gender Selection */}
               <View style={styles.genderContainer}>
-                <Text style={styles.genderTitle}>Gender *</Text>
+                <Text style={styles.genderTitle}>{t('profile_setup.gender_label')}</Text>
                 <View style={styles.genderButtons}>
                   <Controller
                     control={control}
@@ -1380,7 +1435,7 @@ const ProfileSetup: React.FC = () => {
                             styles.genderButtonText,
                             value === 'male' && styles.genderButtonTextSelected
                           ]}>
-                            Male
+                            {t('profile_setup.male')}
                           </Text>
                         </TouchableOpacity>
                         <TouchableOpacity
@@ -1394,7 +1449,7 @@ const ProfileSetup: React.FC = () => {
                             styles.genderButtonText,
                             value === 'female' && styles.genderButtonTextSelected
                           ]}>
-                            Female
+                            {t('profile_setup.female')}
                           </Text>
                         </TouchableOpacity>
                       </>
@@ -1408,7 +1463,7 @@ const ProfileSetup: React.FC = () => {
 
               {/* Polygamy Sunnah Checkboxes */}
               <View style={styles.checkboxContainer}>
-                <Text style={styles.checkboxSectionTitle}>Islamic Commitment (Required) *</Text>
+                <Text style={styles.checkboxSectionTitle}>{t('profile_setup.commitments_title')}</Text>
                 
                 {/* First Checkbox */}
                 <TouchableOpacity 
@@ -1420,9 +1475,7 @@ const ProfileSetup: React.FC = () => {
                       <Text style={styles.checkboxTick}>✓</Text>
                     )}
                   </View>
-                  <Text style={styles.checkboxText}>
-                    I understand that this site is for Polygamy Sunnah
-                  </Text>
+                  <Text style={styles.checkboxText}>{t('profile_setup.commitment_sunnah')}</Text>
                 </TouchableOpacity>
 
                 {/* Second Checkbox */}
@@ -1435,9 +1488,7 @@ const ProfileSetup: React.FC = () => {
                       <Text style={styles.checkboxTick}>✓</Text>
                     )}
                   </View>
-                  <Text style={styles.checkboxText}>
-                    I swear Allah I am serious and looking only for halal
-                  </Text>
+                  <Text style={styles.checkboxText}>{t('profile_setup.commitment_halal')}</Text>
                 </TouchableOpacity>
 
                 {/* Third Checkbox - Gender Specific */}
@@ -1452,21 +1503,20 @@ const ProfileSetup: React.FC = () => {
                   </View>
                   <Text style={styles.checkboxText}>
                     {watchedValues?.gender === 'male' 
-                      ? 'I swear Allah I intend to be fair in my new wife'
-                      : 'I swear Allah I intend to be a pious wife for my husband'
-                    }
+                      ? t('profile_setup.commitment_fair_male')
+                      : t('profile_setup.commitment_fair_female')}
                   </Text>
                 </TouchableOpacity>
               </View>
 
               <Button
-                title="Continue"
+                title={t('profile_setup.continue')}
                 onPress={handleSubmit(handleBasicInfo)}
                 style={[styles.continueButton, step1Complete ? { backgroundColor: COLORS.primary, borderColor: COLORS.primary } : { backgroundColor: COLORS.white, borderColor: COLORS.primary }]}
                 textColor={step1Complete ? COLORS.white : COLORS.primary}
               />
               <Button
-                title="Fill Later"
+                title={t('profile_setup.fill_later')}
                 onPress={async () => { try { await supabase.auth.signOut(); } catch {} finally { router.replace('/'); } }}
                 style={[styles.continueButton, { backgroundColor: COLORS.white, borderColor: COLORS.primary }]}
                 textColor={COLORS.primary}
@@ -1478,8 +1528,8 @@ const ProfileSetup: React.FC = () => {
         {/* Step 2: Physical Details */}
         {currentStep === 2 && (
           <ScrollView style={styles.stepContainer} showsVerticalScrollIndicator={false}>
-            <Text style={styles.stepTitle}>Physical Details</Text>
-            <Text style={styles.stepSubtitle}>Help others know what you look like</Text>
+            <Text style={styles.stepTitle}>{t('profile_setup.physical_title')}</Text>
+            <Text style={styles.stepSubtitle}>{t('profile_setup.physical_subtitle')}</Text>
 
             <View style={styles.formContainer}>
               <View style={styles.rowContainer}>
@@ -1490,7 +1540,7 @@ const ProfileSetup: React.FC = () => {
                     render={({ field: { onChange, value } }) => (
                       <Input
                         id="height"
-                        placeholder="Height (cm) *"
+                        placeholder={t('profile_setup.height_placeholder')}
                         value={value ? String(value) : ''}
                         onInputChanged={(id, text) => onChange(parseInt(text) || 0)}
                         errorText={physicalForm.formState.errors.height?.message}
@@ -1506,7 +1556,7 @@ const ProfileSetup: React.FC = () => {
                     render={({ field: { onChange, value } }) => (
                       <Input
                         id="weight"
-                        placeholder="Weight (kg) *"
+                        placeholder={t('profile_setup.weight_placeholder')}
                         value={value ? String(value) : ''}
                         onInputChanged={(id, text) => onChange(parseInt(text) || 0)}
                         errorText={physicalForm.formState.errors.weight?.message}
@@ -1521,7 +1571,7 @@ const ProfileSetup: React.FC = () => {
                 control={physicalForm.control}
                 name="eyeColor"
                 render={({ field: { onChange, value } }) => 
-                  renderDropdownSelector('Eye Color', eyeColorOptions, value, onChange, true)
+                  renderDropdownSelector(t('profile_setup.eye_color'), eyeColorOptions, value, onChange, true)
                 }
               />
 
@@ -1529,7 +1579,7 @@ const ProfileSetup: React.FC = () => {
                 control={physicalForm.control}
                 name="hairColor"
                 render={({ field: { onChange, value } }) => 
-                  renderDropdownSelector('Hair Color', hairColorOptions, value, onChange, true)
+                  renderDropdownSelector(t('profile_setup.hair_color'), hairColorOptions, value, onChange, true)
                 }
               />
 
@@ -1537,7 +1587,7 @@ const ProfileSetup: React.FC = () => {
                 control={physicalForm.control}
                 name="skinColor"
                 render={({ field: { onChange, value } }) => 
-                  renderDropdownSelector('Skin Color', skinColorOptions, value, onChange, true)
+                  renderDropdownSelector(t('profile_setup.skin_color'), skinColorOptions, value, onChange, true)
                 }
               />
 
@@ -1547,18 +1597,18 @@ const ProfileSetup: React.FC = () => {
                 render={({ field: { onChange, value } }) => {
                   const gender = watchedValues.gender || 'male';
                   const options = gender === 'female' ? bodyTypeOptionsAll.female : bodyTypeOptionsAll.male;
-                  return renderDropdownSelector('Body Type', options, value, onChange, true);
+                  return renderDropdownSelector(t('profile_setup.body_type'), options, value, onChange, true);
                 }}
               />
 
               <Button
-                title="Continue"
+                title={t('profile_setup.continue')}
                 onPress={physicalForm.handleSubmit(handlePhysicalDetailsNext)}
                 style={[styles.continueButton, step2Complete ? { backgroundColor: COLORS.primary, borderColor: COLORS.primary } : { backgroundColor: COLORS.white, borderColor: COLORS.primary }]}
                 textColor={step2Complete ? COLORS.white : COLORS.primary}
               />
               <Button
-                title="Fill Later"
+                title={t('profile_setup.fill_later')}
                 onPress={async () => { try { await supabase.auth.signOut(); } catch {} finally { router.replace('/'); } }}
                 style={[styles.continueButton, { backgroundColor: COLORS.white, borderColor: COLORS.primary }]}
                 textColor={COLORS.primary}
@@ -1570,15 +1620,15 @@ const ProfileSetup: React.FC = () => {
         {/* Step 3: Lifestyle & Work */}
         {currentStep === 3 && (
           <ScrollView style={styles.stepContainer} showsVerticalScrollIndicator={false}>
-            <Text style={styles.stepTitle}>Lifestyle & Work</Text>
-            <Text style={styles.stepSubtitle}>Tell us about your life and career</Text>
+            <Text style={styles.stepTitle}>{t('profile_setup.lifestyle_title')}</Text>
+            <Text style={styles.stepSubtitle}>{t('profile_setup.lifestyle_subtitle')}</Text>
 
             <View style={styles.formContainer}>
               <Controller
                 control={lifestyleForm.control}
                 name="education"
                 render={({ field: { onChange, value } }) => 
-                  renderDropdownSelector('Education Level', educationOptions, value, onChange, true)
+                  renderDropdownSelector(t('profile_setup.education_level'), educationOptions, value, onChange, true)
                 }
               />
 
@@ -1587,7 +1637,7 @@ const ProfileSetup: React.FC = () => {
                 name="languagesSpoken"
                 render={({ field: { onChange, value } }) => 
                   renderMultiSelector(
-                    'Languages Spoken', 
+                    t('profile_setup.languages_spoken'), 
                     languageOptions, 
                     value || [], 
                     (selectedLanguage) => {
@@ -1611,7 +1661,7 @@ const ProfileSetup: React.FC = () => {
                     render={({ field: { onChange, value } }) => (
                       <Input
                         id="occupation"
-                        placeholder="Occupation/Work *"
+                        placeholder={t('profile_setup.occupation_placeholder')}
                         value={value}
                         onInputChanged={(id, text) => onChange(text)}
                         errorText={lifestyleForm.formState.errors.occupation?.message}
@@ -1625,7 +1675,7 @@ const ProfileSetup: React.FC = () => {
                     render={({ field: { onChange, value } }) => (
                       <Input
                         id="income"
-                        placeholder="Monthly Income (Optional)"
+                        placeholder={t('profile_setup.income_placeholder')}
                         onInputChanged={(id, text) => onChange(text)}
                       />
                     )}
@@ -1635,7 +1685,7 @@ const ProfileSetup: React.FC = () => {
                     control={lifestyleForm.control}
                     name="socialCondition"
                     render={({ field: { onChange, value } }) => 
-                      renderDropdownSelector('Social Condition', socialConditionOptions, value, onChange, true)
+                      renderDropdownSelector(t('profile_setup.social_condition'), socialConditionOptions, value, onChange, true)
                     }
                   />
                 </>
@@ -1648,7 +1698,7 @@ const ProfileSetup: React.FC = () => {
                     control={lifestyleForm.control}
                     name="workStatus"
                     render={({ field: { onChange, value } }) => 
-                      renderDropdownSelector('Work Status', workStatusOptions, value, onChange, true)
+                      renderDropdownSelector(t('profile_setup.work_status'), workStatusOptions, value, onChange, true)
                     }
                   />
 
@@ -1659,7 +1709,7 @@ const ProfileSetup: React.FC = () => {
                       render={({ field: { onChange, value } }) => (
                         <Input
                           id="occupation"
-                          placeholder="Occupation (Optional)"
+                          placeholder={t('profile_setup.occupation_placeholder')}
                           value={value}
                           onInputChanged={(id, text) => onChange(text)}
                         />
@@ -1673,7 +1723,7 @@ const ProfileSetup: React.FC = () => {
                 control={lifestyleForm.control}
                 name="housingType"
                 render={({ field: { onChange, value } }) => 
-                  renderDropdownSelector('Housing Type', housingOptions, value, onChange, true)
+                  renderDropdownSelector(t('profile_setup.housing_type'), housingOptions, value, onChange, true)
                 }
               />
 
@@ -1681,18 +1731,18 @@ const ProfileSetup: React.FC = () => {
                 control={lifestyleForm.control}
                 name="livingCondition"
                 render={({ field: { onChange, value } }) => 
-                  renderDropdownSelector('Living Condition', livingConditionOptions, value, onChange, true)
+                  renderDropdownSelector(t('profile_setup.living_condition'), livingConditionOptions, value, onChange, true)
                 }
               />
 
               <Button
-                title="Continue"
+                title={t('profile_setup.continue')}
                 onPress={lifestyleForm.handleSubmit(handleLifestyleNext)}
                 style={[styles.continueButton, step3Complete ? { backgroundColor: COLORS.primary, borderColor: COLORS.primary } : { backgroundColor: COLORS.white, borderColor: COLORS.primary }]}
                 textColor={step3Complete ? COLORS.white : COLORS.primary}
               />
               <Button
-                title="Fill Later"
+                title={t('profile_setup.fill_later')}
                 onPress={async () => { try { await supabase.auth.signOut(); } catch {} finally { router.replace('/'); } }}
                 style={[styles.continueButton, { backgroundColor: COLORS.white, borderColor: COLORS.primary }]}
                 textColor={COLORS.primary}
@@ -1704,15 +1754,15 @@ const ProfileSetup: React.FC = () => {
         {/* Step 4: Religious Commitment */}
         {currentStep === 4 && (
           <ScrollView style={styles.stepContainer} showsVerticalScrollIndicator={false}>
-            <Text style={styles.stepTitle}>Religious Commitment</Text>
-            <Text style={styles.stepSubtitle}>Share your Islamic practices and beliefs</Text>
+            <Text style={styles.stepTitle}>{t('profile_setup.religious_title')}</Text>
+            <Text style={styles.stepSubtitle}>{t('profile_setup.religious_subtitle')}</Text>
 
             <View style={styles.formContainer}>
               <Controller
                 control={religiousForm.control}
                 name="religiousLevel"
                 render={({ field: { onChange, value } }) => 
-                  renderDropdownSelector('Religious Level', religiousLevelOptions, value, onChange, true)
+                  renderDropdownSelector(t('profile_setup.religious_level'), religiousLevelOptions, value, onChange, true)
                 }
               />
 
@@ -1720,7 +1770,7 @@ const ProfileSetup: React.FC = () => {
                 control={religiousForm.control}
                 name="prayerFrequency"
                 render={({ field: { onChange, value } }) => 
-                  renderDropdownSelector('Prayer Frequency', prayerFrequencyOptions, value, onChange, true)
+                  renderDropdownSelector(t('profile_setup.prayer_frequency'), prayerFrequencyOptions, value, onChange, true)
                 }
               />
 
@@ -1728,7 +1778,7 @@ const ProfileSetup: React.FC = () => {
                 control={religiousForm.control}
                 name="quranReading"
                 render={({ field: { onChange, value } }) => 
-                  renderDropdownSelector('Quran Reading Level', quranReadingOptions, value, onChange, true)
+                  renderDropdownSelector(t('profile_setup.quran_level'), quranReadingOptions, value, onChange, true)
                 }
               />
 
@@ -1737,7 +1787,7 @@ const ProfileSetup: React.FC = () => {
                   control={religiousForm.control}
                   name="coveringLevel"
                   render={({ field: { onChange, value } }) => 
-                    renderDropdownSelector('Covering Level', coveringLevelOptions, value, onChange, true)
+                    renderDropdownSelector(t('profile_setup.covering_level'), coveringLevelOptions, value, onChange, true)
                   }
                 />
               )}
@@ -1747,19 +1797,29 @@ const ProfileSetup: React.FC = () => {
                   control={religiousForm.control}
                   name="beardPractice"
                   render={({ field: { onChange, value } }) => 
-                    renderDropdownSelector('Beard Practice', ['Full Beard', 'Trimmed Beard', 'Mustache Only', 'Clean Shaven'], value, onChange)
+                    renderDropdownSelector(
+                      t('profile_setup.beard_practice'),
+                      [
+                        t('profile_setup.options.beard.full'),
+                        t('profile_setup.options.beard.trimmed'),
+                        t('profile_setup.options.beard.mustache'),
+                        t('profile_setup.options.beard.clean'),
+                      ],
+                      value,
+                      onChange
+                    )
                   }
                 />
               )}
 
               <Button
-                title="Continue"
+                title={t('profile_setup.continue')}
                 onPress={religiousForm.handleSubmit(handleReligiousNext)}
                 style={[styles.continueButton, step4Complete ? { backgroundColor: COLORS.primary, borderColor: COLORS.primary } : { backgroundColor: COLORS.white, borderColor: COLORS.primary }]}
                 textColor={step4Complete ? COLORS.white : COLORS.primary}
               />
               <Button
-                title="Fill Later"
+                title={t('profile_setup.fill_later')}
                 onPress={async () => { try { await supabase.auth.signOut(); } catch {} finally { router.replace('/'); } }}
                 style={[styles.continueButton, { backgroundColor: COLORS.white, borderColor: COLORS.primary }]}
                 textColor={COLORS.primary}
@@ -1782,20 +1842,20 @@ const ProfileSetup: React.FC = () => {
               onScroll={(e) => { setMediaScrollY(e.nativeEvent.contentOffset.y || 0); }}
               scrollEventThrottle={16}
             >
-            <Text style={styles.stepTitle}>Photos & Videos</Text>
-            <Text style={styles.stepSubtitle}>Add at least 3 photos. Videos are optional.</Text>
+            <Text style={styles.stepTitle}>{t('profile_setup.media_title')}</Text>
+            <Text style={styles.stepSubtitle}>{t('profile_setup.media_subtitle')}</Text>
 
             <View style={styles.formContainer}>
               {/* Photos Section */}
               <View style={styles.sectionHeaderInline}>
-                <Text style={styles.sectionTitleInline}>My Photos ({photos.length})</Text>
+                <Text style={styles.sectionTitleInline}>{t('profile_setup.my_photos', { count: photos.length })}</Text>
                 <TouchableOpacity 
                   style={[styles.addButtonInline, mediaUploading && styles.addButtonDisabledInline]}
                   onPress={() => !mediaUploading && pickAndUploadMedia('photo')}
                   disabled={mediaUploading}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.addButtonTextInline}>{mediaUploading ? 'Uploading...' : 'Add Photo'}</Text>
+                  <Text style={styles.addButtonTextInline}>{mediaUploading ? t('profile_setup.uploading') : t('profile_setup.add_photo')}</Text>
                 </TouchableOpacity>
               </View>
 
@@ -1811,19 +1871,19 @@ const ProfileSetup: React.FC = () => {
                   ItemSeparatorComponent={() => <View style={styles.gridSeparator} />}
                 />
               ) : (
-                <Text style={styles.mediaInfoText}>Add at least 3 photos to continue.</Text>
+                <Text style={styles.mediaInfoText}>{t('profile_setup.need_three_photos')}</Text>
               )}
 
               {/* Videos Section */}
               <View style={[styles.sectionHeaderInline, { marginTop: getResponsiveSpacing(16) }]}>
-                <Text style={styles.sectionTitleInline}>My Videos ({videos.length})</Text>
+                <Text style={styles.sectionTitleInline}>{t('profile_setup.my_videos', { count: videos.length })}</Text>
                 <TouchableOpacity 
                   style={[styles.addButtonInline, mediaUploading && styles.addButtonDisabledInline]}
                   onPress={() => !mediaUploading && pickAndUploadMedia('video')}
                   disabled={mediaUploading}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.addButtonTextInline}>{mediaUploading ? 'Uploading...' : 'Add Video'}</Text>
+                  <Text style={styles.addButtonTextInline}>{mediaUploading ? t('profile_setup.uploading') : t('profile_setup.add_video')}</Text>
                 </TouchableOpacity>
               </View>
 
@@ -1841,7 +1901,7 @@ const ProfileSetup: React.FC = () => {
               ) : null}
 
               <Button
-                title="Continue"
+                title={t('profile_setup.continue')}
                 onPress={handleMediaNext}
                 style={styles.continueButton}
                 disabled={mediaLoading || mediaUploading || photos.length < 3}
@@ -1859,25 +1919,23 @@ const ProfileSetup: React.FC = () => {
         {/* Step 6: Marriage Intentions */}
         {currentStep === 6 && (
           <ScrollView style={styles.stepContainer} showsVerticalScrollIndicator={false}>
-            <Text style={styles.stepTitle}>Marriage Intentions</Text>
+            <Text style={styles.stepTitle}>{t('profile_setup.polygamy_title')}</Text>
             <Text style={styles.stepSubtitle}>
               {watchedValues.gender === 'male' 
-                ? 'Which wife number are you looking for?' 
-                : 'Which positions would you accept in a polygamous marriage?'
-              }
+                ? t('profile_setup.polygamy_subtitle_male') 
+                : t('profile_setup.polygamy_subtitle_female')}
             </Text>
 
             <View style={styles.formContainer}>
               {watchedValues.gender === 'male' ? (
                 // Male: Single selection for wife number
                 <View style={styles.polygamySection}>
-                  <Text style={styles.polygamyTitle}>Looking for which wife? *</Text>
+                  <Text style={styles.polygamyTitle}>{t('profile_setup.looking_for_which_wife')}</Text>
                   <Text style={styles.polygamyNote}>
-                    If you select 2nd wife, it means you currently have 1 wife.
-                    If you select 3rd wife, it means you currently have 2 wives, etc.
+                    {t('profile_setup.positions_note')}
                   </Text>
                   
-                  {['2nd Wife', '3rd Wife', '4th Wife'].map((option, index) => {
+                  {[t('profile_setup.second_wife'), t('profile_setup.third_wife'), t('profile_setup.fourth_wife')].map((option, index) => {
                     const value = `${index + 2}`;
                     return (
                       <TouchableOpacity
@@ -1899,7 +1957,7 @@ const ProfileSetup: React.FC = () => {
                             styles.optionDescription,
                             polygamyDetails.seekingWifeNumber === value && styles.optionDescriptionSelected
                           ]}>
-                            Currently have {index + 1} wife{index > 0 ? 's' : ''}
+                            {t('profile_setup.currently_have', { count: index + 1, plural: index > 0 ? 's' : '' })}
                           </Text>
                         </View>
                         {polygamyDetails.seekingWifeNumber === value && (
@@ -1912,12 +1970,12 @@ const ProfileSetup: React.FC = () => {
               ) : (
                 // Female: Multi-selection for wife positions
                 <View style={styles.polygamySection}>
-                  <Text style={styles.polygamyTitle}>Which positions would you accept? *</Text>
+                  <Text style={styles.polygamyTitle}>{t('profile_setup.positions_accept')}</Text>
                   <Text style={styles.polygamyNote}>
-                    You can select multiple positions that you would be comfortable with.
+                    {t('profile_setup.positions_note')}
                   </Text>
                   
-                  {['2nd Wife', '3rd Wife', '4th Wife'].map((option, index) => {
+                  {[t('profile_setup.second_wife'), t('profile_setup.third_wife'), t('profile_setup.fourth_wife')].map((option, index) => {
                     const value = `${index + 2}`;
                     const isSelected = polygamyDetails.acceptedWifePositions?.includes(value) || false;
                     
@@ -1947,7 +2005,7 @@ const ProfileSetup: React.FC = () => {
                             styles.optionDescription,
                             isSelected && styles.optionDescriptionSelected
                           ]}>
-                            Accept being the {option.toLowerCase()}
+                            {t('profile_setup.accept_being', { position: option.toLowerCase() })}
                           </Text>
                         </View>
                         {isSelected && (
@@ -1960,7 +2018,7 @@ const ProfileSetup: React.FC = () => {
               )}
 
               <Button
-                title={isLoading ? "Completing Registration..." : "Complete Registration"}
+                title={isLoading ? t('profile_setup.completing_registration') : t('profile_setup.complete_registration')}
                 onPress={handlePolygamyNext}
                 style={styles.continueButton}
                 disabled={isLoading || (
