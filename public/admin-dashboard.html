@@ -143,6 +143,17 @@
                             <div class="stat-change positive" id="matchesChange">+0</div>
                         </div>
                     </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #06b6d4, #0e7490);">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number" id="meetToday">0</div>
+                            <div class="stat-label">Meet Today</div>
+                            <div class="stat-change positive" id="meetTodayChange">+0</div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Charts Section -->
@@ -339,16 +350,40 @@
                     console.log('payment_records table not accessible');
                 }
 
-                // Get matches today (if matches table exists)
+                // Matches today = accepted interests updated today
                 let matchesToday = 0;
                 try {
+                    const start = new Date();
+                    start.setHours(0,0,0,0);
+                    const end = new Date();
+                    end.setHours(23,59,59,999);
                     const { count } = await supabase
-                        .from('matches')
+                        .from('interests')
                         .select('*', { count: 'exact', head: true })
-                        .gte('created_at', today);
+                        .eq('status', 'accepted')
+                        .gte('updated_at', start.toISOString())
+                        .lte('updated_at', end.toISOString());
                     matchesToday = count || 0;
                 } catch (e) {
-                    console.log('Matches table not found');
+                    matchesToday = 0;
+                }
+
+                // Meet Today = accepted meet_requests scheduled today
+                let meetToday = 0;
+                try {
+                    const start = new Date();
+                    start.setHours(0,0,0,0);
+                    const end = new Date();
+                    end.setHours(23,59,59,999);
+                    const { count } = await supabase
+                        .from('meet_requests')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('status', 'accepted')
+                        .gte('scheduled_at', start.toISOString())
+                        .lte('scheduled_at', end.toISOString());
+                    meetToday = count || 0;
+                } catch (e) {
+                    meetToday = 0;
                 }
 
                 // Update UI
@@ -356,12 +391,14 @@
                 document.getElementById('newUsersToday').textContent = newUsersToday || 0;
                 document.getElementById('activeSubscriptions').textContent = activeSubscriptions;
                 document.getElementById('matchesToday').textContent = matchesToday;
+                document.getElementById('meetToday').textContent = meetToday;
 
                 // Calculate changes (simplified for demo)
                 document.getElementById('totalUsersChange').textContent = '+12%';
                 document.getElementById('newUsersTodayChange').textContent = `+${newUsersToday || 0}`;
                 document.getElementById('subscriptionsChange').textContent = '+8%';
                 document.getElementById('matchesChange').textContent = `+${matchesToday || 0}`;
+                document.getElementById('meetTodayChange').textContent = `+${meetToday || 0}`;
 
             } catch (error) {
                 console.error('Error loading stats:', error);

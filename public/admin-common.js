@@ -156,11 +156,40 @@ supabase.auth.onAuthStateChange((event, session) => {
 });
 
 // Global helper for handling auth issues from API calls
-window.handleAuthIssue = async function(message = 'Session expired. Please sign in again.') {
+window.handleAuthIssue = async function(errOrMessage = 'Session issue detected') {
     try {
-        showNotification(message, 'warning');
+        let shouldLogout = false;
+        let message = 'Session issue detected';
+
+        if (typeof errOrMessage === 'object' && errOrMessage) {
+            const maybeMsg = String(errOrMessage.message || '');
+            const maybeCode = String(errOrMessage.code || '');
+            const maybeStatus = errOrMessage.status;
+
+            message = maybeMsg || message;
+
+            // Consider only true auth problems as logout-worthy
+            if (maybeStatus === 401 || maybeCode === '401' || /jwt|token|auth/i.test(maybeMsg)) {
+                shouldLogout = true;
+            }
+            // 403/RLS denials should NOT log the user out
+            if (maybeStatus === 403) {
+                shouldLogout = false;
+            }
+        } else if (typeof errOrMessage === 'string') {
+            message = errOrMessage;
+            // If only a generic string is passed, do not force logout
+            shouldLogout = false;
+        } else {
+            // Unknown input: be safe and logout
+            shouldLogout = true;
+        }
+
+        showNotification(message, shouldLogout ? 'warning' : 'error');
+        if (shouldLogout) {
+            await logout();
+        }
     } catch (_) {}
-    await logout();
 };
 
 // Sidebar toggle for mobile

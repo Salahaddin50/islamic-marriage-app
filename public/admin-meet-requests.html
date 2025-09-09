@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meet Requests - Zawajplus Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="admin-styles.css">
+    <style>
+        .filters-inline { display:flex; gap:12px; flex-wrap:wrap; }
+        .filters-inline .filter-group { min-width: 180px; }
+        .user-name { font-weight:600; color:#1f2937; }
+        .user-meta { color:#6b7280; font-size:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+        .date-small { font-size: 11px; color:#6b7280; }
+        .status-badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:600; }
+        .status-accepted { background:#dcfce7; color:#16a34a; }
+        .status-rejected { background:#fee2e2; color:#dc2626; }
+        .status-pending { background:#fef3c7; color:#d97706; }
+        .status-null { background:#f3f4f6; color:#6b7280; }
+        .table-actions-inline select { padding: 4px 8px; font-size: 12px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Zawajplus Admin</span>
+                </div>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="/admin-dashboard.html" class="nav-link"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
+                <li class="nav-item"><a href="/admin-female-profiles.html" class="nav-link"><i class="fas fa-female"></i><span>Female Profiles</span></a></li>
+                <li class="nav-item"><a href="/admin-male-profiles.html" class="nav-link"><i class="fas fa-male"></i><span>Male Profiles</span></a></li>
+                <li class="nav-item"><a href="/admin-interests.html" class="nav-link"><i class="fas fa-tags"></i><span>Interests</span></a></li>
+                <li class="nav-item active"><a href="/admin-meet-requests.html" class="nav-link"><i class="fas fa-video"></i><span>Meet Requests</span></a></li>
+                <li class="nav-item"><a href="/admin-packages.html" class="nav-link"><i class="fas fa-box"></i><span>Packages</span></a></li>
+            </ul>
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <button class="sidebar-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                    <h1 class="page-title">Meet Requests</h1>
+                </div>
+                <div class="top-bar-right">
+                    <div class="admin-info">
+                        <div class="admin-details">
+                            <span class="admin-name" id="adminName">Loading...</span>
+                            <span class="admin-role" id="adminRole">Admin</span>
+                        </div>
+                        <div class="admin-avatar"><i class="fas fa-user-circle"></i></div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <div class="filters-section">
+                    <div class="filters-inline">
+                        <div class="filter-group" style="flex:1; min-width:260px;">
+                            <label class="filter-label">Search</label>
+                            <input type="text" id="searchInput" class="filter-input" placeholder="Search by sender, receiver, email..." oninput="handleSearch()" />
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Status</label>
+                            <select id="statusFilter" class="filter-select" onchange="applyFilters()">
+                                <option value="">All</option>
+                                <option value="accepted">Accepted</option>
+                                <option value="rejected">Rejected</option>
+                                <option value="pending">Pending</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Time</label>
+                            <select id="timeFilter" class="filter-select" onchange="applyFilters()">
+                                <option value="all">All Time</option>
+                                <option value="today">Today</option>
+                                <option value="7">Last 7 Days</option>
+                                <option value="30">Last 30 Days</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Scheduled</label>
+                            <select id="scheduledFilter" class="filter-select" onchange="applyFilters()">
+                                <option value="">Any</option>
+                                <option value="today">Today</option>
+                                <option value="yesterday">Yesterday</option>
+                                <option value="week">This Week</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Sender Gender</label>
+                            <select id="senderGenderFilter" class="filter-select" onchange="applyFilters()">
+                                <option value="">All</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Receiver Gender</label>
+                            <select id="receiverGenderFilter" class="filter-select" onchange="applyFilters()">
+                                <option value="">All</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="filters-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="resetFilters()"><i class="fas fa-eraser"></i> Reset Filters</button>
+                    </div>
+                </div>
+
+                <div class="data-table">
+                    <div class="table-header">
+                        <div class="table-title">Meet Requests <span id="recordsCount"></span></div>
+                        <div class="table-actions">
+                            <button class="btn btn-secondary btn-sm" onclick="reload()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                        </div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table class="table" id="meetTable">
+                            <thead>
+                                <tr>
+                                    <th>Sender</th>
+                                    <th>Receiver</th>
+                                    <th>Status</th>
+                                    <th>Scheduled</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody id="meetTbody">
+                                <tr><td colspan="5">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination-container" id="paginationContainer"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="admin-common.js"></script>
+    <script>
+        let allRows = [];
+        let filtered = [];
+        let currentPage = 1;
+        let itemsPerPage = 15;
+        const senderProfiles = new Map();
+        const receiverProfiles = new Map();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAdminInfo();
+            fetchRows();
+        });
+
+        async function fetchRows(){
+            const tbody = document.getElementById('meetTbody');
+            tbody.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
+            try{
+                const { data, error } = await window.supabaseClient
+                    .from('meet_requests')
+                    .select('id, sender_id, receiver_id, status, created_at, scheduled_at')
+                    .order('created_at', { ascending: false })
+                    .limit(1000);
+                if (error) throw error;
+                allRows = data || [];
+
+                const senderIds = Array.from(new Set(allRows.map(r => r.sender_id)));
+                const receiverIds = Array.from(new Set(allRows.map(r => r.receiver_id)));
+                senderProfiles.clear();
+                receiverProfiles.clear();
+
+                if (senderIds.length){
+                    const { data: senders } = await window.supabaseClient
+                        .from('user_profiles')
+                        .select('user_id, first_name, last_name, phone_code, mobile_number, gender')
+                        .in('user_id', senderIds);
+                    (senders||[]).forEach(p => senderProfiles.set(p.user_id, p));
+                }
+                if (receiverIds.length){
+                    const { data: receivers } = await window.supabaseClient
+                        .from('user_profiles')
+                        .select('user_id, first_name, last_name, phone_code, mobile_number, gender')
+                        .in('user_id', receiverIds);
+                    (receivers||[]).forEach(p => receiverProfiles.set(p.user_id, p));
+                }
+
+                applyFilters();
+            }catch(e){
+                console.error('Load meet_requests error:', e);
+                tbody.innerHTML = '<tr><td colspan="4">Failed to load records.</td></tr>';
+            }
+        }
+
+        function reload(){ fetchRows(); }
+
+        const handleSearch = debounce(() => applyFilters(), 300);
+
+        function resetFilters(){
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('timeFilter').value = 'all';
+            document.getElementById('senderGenderFilter').value = '';
+            document.getElementById('receiverGenderFilter').value = '';
+            applyFilters();
+        }
+
+        function applyFilters(){
+            const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+            const status = document.getElementById('statusFilter').value;
+            const time = document.getElementById('timeFilter').value;
+            const sGender = document.getElementById('senderGenderFilter').value;
+            const rGender = document.getElementById('receiverGenderFilter').value;
+            const scheduled = document.getElementById('scheduledFilter').value;
+
+            const now = new Date();
+            const start = (() => {
+                if (time === 'today') return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                if (time === '7') return new Date(now.getTime() - 7*24*3600*1000);
+                if (time === '30') return new Date(now.getTime() - 30*24*3600*1000);
+                return null;
+            })();
+
+            filtered = allRows.filter(r => {
+                const s = senderProfiles.get(r.sender_id) || {};
+                const rec = receiverProfiles.get(r.receiver_id) || {};
+                const sName = [s.first_name, s.last_name].filter(Boolean).join(' ').toLowerCase();
+                const rName = [rec.first_name, rec.last_name].filter(Boolean).join(' ').toLowerCase();
+                const emailS = (window.getCachedEmailForUser && window.getCachedEmailForUser(r.sender_id)) ? window.getCachedEmailForUser(r.sender_id).toLowerCase() : '';
+                const emailR = (window.getCachedEmailForUser && window.getCachedEmailForUser(r.receiver_id)) ? window.getCachedEmailForUser(r.receiver_id).toLowerCase() : '';
+                const createdAt = new Date(r.created_at);
+                const statusStr = (r.status===null?'null':String(r.status).toLowerCase());
+
+                const matchesSearch = !q || sName.includes(q) || rName.includes(q) || emailS.includes(q) || emailR.includes(q);
+
+                let matchesStatus = true;
+                if (status){
+                    if (status==='null') matchesStatus = r.status === null;
+                    else matchesStatus = statusStr === status;
+                }
+
+                let matchesTime = true;
+                if (start) matchesTime = createdAt >= start;
+
+                let matchesSG = true; if (sGender) matchesSG = (s.gender||'').toLowerCase() === sGender;
+                let matchesRG = true; if (rGender) matchesRG = (rec.gender||'').toLowerCase() === rGender;
+                // scheduled filter
+                let matchesScheduled = true;
+                if (scheduled) {
+                    const sched = r.scheduled_at ? new Date(r.scheduled_at) : null;
+                    const now2 = new Date();
+                    if (scheduled === 'today') {
+                        const startDay = new Date(now2.getFullYear(), now2.getMonth(), now2.getDate());
+                        const endDay = new Date(now2.getFullYear(), now2.getMonth(), now2.getDate()+1);
+                        matchesScheduled = !!sched && sched >= startDay && sched < endDay;
+                    } else if (scheduled === 'yesterday') {
+                        const startDay = new Date(now2.getFullYear(), now2.getMonth(), now2.getDate()-1);
+                        const endDay = new Date(now2.getFullYear(), now2.getMonth(), now2.getDate());
+                        matchesScheduled = !!sched && sched >= startDay && sched < endDay;
+                    } else if (scheduled === 'week') {
+                        const day = now2.getDay();
+                        const diffToMonday = (day === 0 ? 6 : day - 1);
+                        const startWeek = new Date(now2.getFullYear(), now2.getMonth(), now2.getDate() - diffToMonday);
+                        matchesScheduled = !!sched && sched >= startWeek;
+                    }
+                }
+
+                return matchesSearch && matchesStatus && matchesTime && matchesSG && matchesRG && matchesScheduled;
+            });
+
+            currentPage = 1;
+            renderTable();
+        }
+
+        function renderTable(){
+            const tbody = document.getElementById('meetTbody');
+            if (!filtered.length){
+                tbody.innerHTML = '<tr><td colspan="4">No records found</td></tr>';
+                document.getElementById('recordsCount').textContent = '(0)';
+                document.getElementById('paginationContainer').innerHTML = '';
+                return;
+            }
+            const totalPages = Math.ceil(filtered.length / itemsPerPage);
+            const start = (currentPage-1)*itemsPerPage;
+            const rows = filtered.slice(start, start+itemsPerPage);
+            tbody.innerHTML = rows.map(r => {
+                const s = senderProfiles.get(r.sender_id) || {};
+                const rec = receiverProfiles.get(r.receiver_id) || {};
+                const sName = [s.first_name, s.last_name].filter(Boolean).join(' ') || r.sender_id;
+                const rName = [rec.first_name, rec.last_name].filter(Boolean).join(' ') || r.receiver_id;
+                const sGenderTag = ((s.gender||'').toLowerCase()==='female') ? '(f)' : '(m)';
+                const rGenderTag = ((rec.gender||'').toLowerCase()==='female') ? '(f)' : '(m)';
+                const sPhone = formatPhone(s.phone_code, s.mobile_number);
+                const rPhone = formatPhone(rec.phone_code, rec.mobile_number);
+                const status = (r.status===null?'null':String(r.status).toLowerCase());
+                const statusClass = status==='accepted'?'status-accepted':status==='rejected'?'status-rejected':status==='pending'?'status-pending':'status-null';
+                return `
+                    <tr>
+                        <td>
+                            <div class="user-name"><a href="/matchdetails?userId=${r.sender_id}" target="_blank">${sName} ${sGenderTag}</a></div>
+                            <div class="user-meta">
+                                <span class="email-link" data-user-id="${r.sender_id}"></span>
+                                ${sPhone ? `<a href=\"https://wa.me/${sPhone.replace(/\\+/g,'')}\" target=\"_blank\">${sPhone}</a>` : ''}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="user-name"><a href="/matchdetails?userId=${r.receiver_id}" target="_blank">${rName} ${rGenderTag}</a></div>
+                            <div class="user-meta">
+                                <span class="email-link" data-user-id="${r.receiver_id}"></span>
+                                ${rPhone ? `<a href=\"https://wa.me/${rPhone.replace(/\\+/g,'')}\" target=\"_blank\">${rPhone}</a>` : ''}
+                            </div>
+                        </td>
+                        <td class="table-actions-inline">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span class="status-badge ${statusClass}">${status}</span>
+                                <select onchange="updateMeetStatus('${r.id}', this.value)">
+                                    <option value="accepted" ${status==='accepted'?'selected':''}>Accepted</option>
+                                    <option value="rejected" ${status==='rejected'?'selected':''}>Rejected</option>
+                                    <option value="pending" ${status==='pending'?'selected':''}>Pending</option>
+                                </select>
+                            </div>
+                        </td>
+                        <td><span class="date-small">${r.scheduled_at ? formatDateTime(r.scheduled_at) : '-'}</span></td>
+                        <td><span class="date-small">${formatDateTime(r.created_at)}</span></td>
+                    </tr>
+                `;
+            }).join('');
+
+            if (window.fillEmailsForElements) window.fillEmailsForElements(document.getElementById('meetTable'));
+            document.getElementById('recordsCount').textContent = `(${filtered.length})`;
+            const cont = document.getElementById('paginationContainer');
+            cont.innerHTML = '';
+            cont.appendChild(createPagination(currentPage, totalPages, (p)=>{ currentPage=p; renderTable(); }));
+        }
+
+        function digitsOnly(v){ return (v||'').toString().replace(/\D/g,''); }
+        function formatPhone(code, number){
+            const c = digitsOnly(code); let n = digitsOnly(number);
+            if (!c && !n) return '';
+            if (c){ n = n.replace(/^0+/, ''); return `+${c}${n}`; }
+            if (n.startsWith('00')) n = n.slice(2); return `+${n}`;
+        }
+
+        async function updateMeetStatus(id, value){
+            try{
+                const statusVal = (value==='null')? null : value;
+                const { error } = await window.supabaseClient
+                    .from('meet_requests')
+                    .update({ status: statusVal })
+                    .eq('id', id);
+                if (error) throw error;
+                showNotification('Status updated', 'success');
+                fetchRows();
+            }catch(e){
+                console.error(e);
+                if (window.handleAuthIssue) window.handleAuthIssue(e);
+                showNotification('Failed to update status', 'error');
+                fetchRows();
+            }
+        }
+    </script>
+</body>
+</html>
+

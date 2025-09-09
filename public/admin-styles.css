@@ -494,6 +494,15 @@ body {
     margin-bottom: 2px;
 }
 
+/* Name links inside tables/cards - black, no underline */
+.user-name a,
+.user-name a:visited,
+.user-name a:hover,
+.user-name a:active {
+    color: #1f2937;
+    text-decoration: none;
+}
+
 .approval-time {
     color: #9ca3af;
     font-size: 12px;

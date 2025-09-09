@@ -128,7 +128,6 @@
                                 <option value="pending">Pending</option>
                                 <option value="failed">Failed</option>
                                 <option value="refunded">Refunded</option>
-                                <option value="null">Null</option>
                             </select>
                         </div>
                         <div class="filter-group">
@@ -158,6 +157,9 @@
                                 <option value="no">No</option>
                             </select>
                         </div>
+                    </div>
+                    <div class="filters-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="resetFilters()"><i class="fas fa-eraser"></i> Reset Filters</button>
                     </div>
                 </div>
 
@@ -237,6 +239,15 @@
         function reload(){ fetchRecords(); }
 
         const handleSearch = debounce(() => applyFilters(), 300);
+
+        function resetFilters(){
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('packageFilter').value = '';
+            document.getElementById('updatedFilter').value = 'all';
+            document.getElementById('complaintsFilter').value = '';
+            applyFilters();
+        }
 
         function applyFilters() {
             const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
@@ -330,7 +341,7 @@
                             <div class="user-name">${displayName}</div>
                             <div class="user-meta">
                                 <span class="email-link" data-user-id="${r.user_id}"></span>
-                                ${phone ? `<span>${phone}</span>` : ''}
+                                ${phone ? `<a href="https://wa.me/${phone.replace(/\\+/g,'')}" target="_blank">${phone}</a>` : ''}
                             </div>
                         </td>
                         <td class="table-actions-inline">
@@ -349,7 +360,6 @@
                                     <option value="pending" ${status==='pending'?'selected':''}>Pending</option>
                                     <option value="failed" ${status==='failed'?'selected':''}>Failed</option>
                                     <option value="refunded" ${status==='refunded'?'selected':''}>Refunded</option>
-                                    <option value="null" ${status==='null'?'selected':''}>Null</option>
                                 </select>
                             </div>
                         </td>
