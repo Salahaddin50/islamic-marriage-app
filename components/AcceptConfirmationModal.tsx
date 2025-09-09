@@ -10,6 +10,7 @@ import {
 import { Image } from 'expo-image';
 import { COLORS, SIZES, icons } from '@/constants';
 import { getResponsiveFontSize, getResponsiveWidth } from '@/utils/responsive';
+import { useTranslation } from 'react-i18next';
 
 interface AcceptConfirmationModalProps {
   visible: boolean;
@@ -29,6 +30,7 @@ const AcceptConfirmationModal: React.FC<AcceptConfirmationModalProps> = ({
   requestType
 }) => {
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const { t } = useTranslation();
 
   const handleAccept = () => {
     if (isConfirmed) {
@@ -44,7 +46,7 @@ const AcceptConfirmationModal: React.FC<AcceptConfirmationModalProps> = ({
   };
 
   const getRequestTypeText = () => {
-    return requestType === 'photo' ? 'photo request' : 'video meet request';
+    return requestType === 'photo' ? t('interests.modal.photo_request') : t('interests.modal.video_meet_request');
   };
 
   const getIcon = () => {
@@ -70,7 +72,7 @@ const AcceptConfirmationModal: React.FC<AcceptConfirmationModalProps> = ({
                   style={[styles.headerIcon, { tintColor: COLORS.primary }]}
                 />
               </View>
-              <Text style={styles.headerTitle}>Accept {getRequestTypeText()}</Text>
+              <Text style={styles.headerTitle}>{t('interests.modal.accept_title', { type: getRequestTypeText() })}</Text>
               <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
                 <Image
                   source={icons.close}
@@ -83,23 +85,23 @@ const AcceptConfirmationModal: React.FC<AcceptConfirmationModalProps> = ({
             {/* Content */}
             <View style={styles.content}>
               <Text style={styles.mainText}>
-                You are about to accept the {getRequestTypeText()} from{' '}
+                {t('interests.modal.accept_about_to', { type: getRequestTypeText() })}{' '}
                 <Text style={styles.userName}>{userName}, {userAge}</Text>.
               </Text>
 
               <Text style={styles.confirmationText}>
-                By accepting this request, you confirm that:
+                {t('interests.modal.accept_confirm_header')}
               </Text>
 
               <View style={styles.confirmationPoints}>
                 <Text style={styles.bulletPoint}>
-                  • You have reviewed {userName}'s profile thoroughly
+                  • {t('interests.modal.point_review_profile', { name: userName })}
                 </Text>
                 <Text style={styles.bulletPoint}>
-                  • You indeed consider marriage with this user
+                  • {t('interests.modal.point_consider_marriage')}
                 </Text>
                 <Text style={styles.bulletPoint}>
-                  • You are serious about your intentions
+                  • {t('interests.modal.point_serious_intentions')}
                 </Text>
               </View>
 
@@ -119,7 +121,7 @@ const AcceptConfirmationModal: React.FC<AcceptConfirmationModalProps> = ({
                   )}
                 </View>
                 <Text style={styles.checkboxText}>
-                  I swear by Allah I am serious and accept
+                  {t('interests.modal.oath_text')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -131,7 +133,7 @@ const AcceptConfirmationModal: React.FC<AcceptConfirmationModalProps> = ({
                 onPress={handleClose}
                 activeOpacity={0.7}
               >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+                <Text style={styles.cancelButtonText}>{t('interests.modal.cancel')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -147,7 +149,7 @@ const AcceptConfirmationModal: React.FC<AcceptConfirmationModalProps> = ({
                   styles.acceptButtonText,
                   !isConfirmed && styles.acceptButtonTextDisabled
                 ]}>
-                  Accept Request
+                  {t('interests.modal.accept_request')}
                 </Text>
               </TouchableOpacity>
             </View>

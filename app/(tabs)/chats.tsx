@@ -10,6 +10,7 @@ import { useNavigation } from 'expo-router';
 import { NavigationProp, useIsFocused } from '@react-navigation/native';
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+import { useTranslation } from 'react-i18next';
 
 // Define the types for the route and focused props
 interface TabRoute {
@@ -26,12 +27,13 @@ const Messages = () => {
   const navigation = useNavigation<NavigationProp<any>>();
   const isFocused = useIsFocused();
   const layout = useWindowDimensions();
+  const { t } = useTranslation();
 
   const [index, setIndex] = useState(0);
   const [routes, setRoutes] = useState([
-    { key: 'received', title: 'Received (0)' },
-    { key: 'sent', title: 'Sent (0)' },
-    { key: 'approved', title: 'Approved (0)' },
+    { key: 'received', title: t('messages.tabs.received_with_count', { count: 0 }) },
+    { key: 'sent', title: t('messages.tabs.sent_with_count', { count: 0 }) },
+    { key: 'approved', title: t('messages.tabs.approved_with_count', { count: 0 }) },
   ]);
 
   const [incoming, setIncoming] = useState<MessageRequestRecord[]>([]);
@@ -231,11 +233,11 @@ const Messages = () => {
 
   useEffect(() => {
     setRoutes([
-      { key: 'received', title: `Received (${incoming.length})` },
-      { key: 'sent', title: `Sent (${outgoing.length})` },
-      { key: 'approved', title: `Approved (${approved.length})` },
+      { key: 'received', title: t('messages.tabs.received_with_count', { count: incoming.length }) },
+      { key: 'sent', title: t('messages.tabs.sent_with_count', { count: outgoing.length }) },
+      { key: 'approved', title: t('messages.tabs.approved_with_count', { count: approved.length }) },
     ]);
-  }, [incoming.length, outgoing.length, approved.length]);
+  }, [incoming.length, outgoing.length, approved.length, t]);
 
   const Row = ({ row, idx, otherUserId, rightContent }: { row: MessageRequestRecord; idx: number; otherUserId: string; rightContent?: React.ReactNode }) => {
     const other = profilesById[otherUserId];
@@ -279,7 +281,7 @@ const Messages = () => {
           {Array.from({ length: 6 }).map((_, i) => (<SkeletonRow key={i} idx={i} />))}
         </>
       ) : incoming.length === 0 ? (
-        <Text style={styles.subtitle}>No received chat requests</Text>
+        <Text style={styles.subtitle}>{t('messages.empty.received')}</Text>
       ) : (
         incoming.map((row, idx) => (
           <Row
@@ -297,10 +299,10 @@ const Messages = () => {
                     setShowAcceptInfoModal(true);
                   }}
                 >
-                  <Text style={styles.tinyBtnText}>Accept</Text>
+                  <Text style={styles.tinyBtnText}>{t('messages.actions.accept')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={async () => { await MessageRequestsService.reject(row.id); await loadAll(); }}>
-                  <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>Reject</Text>
+                  <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>{t('messages.actions.reject')}</Text>
                 </TouchableOpacity>
               </>
             }
@@ -317,7 +319,7 @@ const Messages = () => {
           {Array.from({ length: 6 }).map((_, i) => (<SkeletonRow key={i} idx={i} />))}
         </>
       ) : outgoing.length === 0 ? (
-        <Text style={styles.subtitle}>No sent chat requests</Text>
+        <Text style={styles.subtitle}>{t('messages.empty.sent')}</Text>
       ) : (
         outgoing.map((row, idx) => (
           <Row
@@ -327,7 +329,7 @@ const Messages = () => {
             otherUserId={row.receiver_id}
             rightContent={
               <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={async () => { await MessageRequestsService.cancel(row.id); await loadAll(); }}>
-                <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>Withdraw</Text>
+                <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>{t('messages.actions.withdraw')}</Text>
               </TouchableOpacity>
             }
           />
@@ -343,7 +345,7 @@ const Messages = () => {
           {Array.from({ length: 6 }).map((_, i) => (<SkeletonRow key={i} idx={i} />))}
         </>
       ) : approved.length === 0 ? (
-        <Text style={styles.subtitle}>No approved chat requests</Text>
+        <Text style={styles.subtitle}>{t('messages.empty.approved')}</Text>
       ) : (
         approved.map((row, idx) => {
           const otherUserId = myUserId && row.sender_id === myUserId ? row.receiver_id : row.sender_id;
@@ -366,7 +368,7 @@ const Messages = () => {
                       Linking.openURL(url).catch(() => {});
                     }}
                   >
-                    <Text style={styles.tinyBtnText}>{phoneDigits ? 'WhatsApp' : 'No number'}</Text>
+                    <Text style={styles.tinyBtnText}>{phoneDigits ? t('messages.actions.whatsapp') : t('messages.no_number')}</Text>
                   </TouchableOpacity>
                   {phoneDigits && (
                     <Text style={[styles.lastMessageTime, { color: COLORS.greyscale900 }]}>{`+${phoneDigits}`}</Text>
@@ -400,7 +402,7 @@ const Messages = () => {
       <View style={styles.headerContainer}>
         <View style={styles.headerLeft}>
           <Image source={icons.chat} contentFit='contain' style={[styles.headerLogo, {tintColor: COLORS.primary}]} />
-          <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>Messages</Text>
+          <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>{t('messages.header_title')}</Text>
         </View>
         <View style={styles.headerRight}>
           <TouchableOpacity onPress={refreshPage} style={{ padding: 8, borderRadius: 20, marginLeft: 8 }}>
@@ -432,15 +434,13 @@ const Messages = () => {
         >
           <View style={styles.modalContainer}>
             <View style={styles.modalCard}>
-              <Text style={styles.modalTitle}>Accept Chat Request</Text>
+              <Text style={styles.modalTitle}>{t('messages.accept_modal.title')}</Text>
 
               <View style={styles.infoStepContainer}> 
                 <View style={styles.infoStepNumberContainer}>
                   <Text style={styles.infoStepNumber}>1</Text>
                 </View>
-                <Text style={styles.infoStepText}>
-                  By accepting you swear to Allah that you had a video meeting with the person and you intend to discuss the marriage further.
-                </Text>
+                <Text style={styles.infoStepText}>{t('messages.accept_modal.oath_text')}</Text>
               </View>
 
               <TouchableOpacity
@@ -462,7 +462,7 @@ const Messages = () => {
                     <Text style={{ color: COLORS.white, fontFamily: 'bold', fontSize: 14 }}>✓</Text>
                   )}
                 </View>
-                <Text style={[styles.infoStepText, { flex: 1 }]}>Yes, I swear</Text>
+                <Text style={[styles.infoStepText, { flex: 1 }]}>{t('messages.accept_modal.yes_i_swear')}</Text>
               </TouchableOpacity>
 
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
@@ -470,7 +470,7 @@ const Messages = () => {
                   style={[styles.infoButton, styles.cancelButton]}
                   onPress={() => setShowAcceptInfoModal(false)}
                 >
-                  <Text style={[styles.infoButtonText, { color: COLORS.primary }]}>Cancel</Text>
+                  <Text style={[styles.infoButtonText, { color: COLORS.primary }]}>{t('messages.accept_modal.cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.infoButton, styles.confirmButton, !acceptOathConfirmed && { opacity: 0.6 }]}
@@ -485,7 +485,7 @@ const Messages = () => {
                     } catch {}
                   }}
                 >
-                  <Text style={styles.infoButtonText}>Accept</Text>
+                  <Text style={styles.infoButtonText}>{t('messages.actions.accept')}</Text>
         </TouchableOpacity>
               </View>
             </View>

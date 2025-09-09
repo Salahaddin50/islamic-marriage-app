@@ -12,6 +12,7 @@ import { useNavigation, router } from 'expo-router';
 import SettingsItem from '@/components/SettingsItem';
 import { getResponsiveFontSize, getResponsiveSpacing, getResponsiveWidth, isMobileWeb } from '@/utils/responsive';
 import { supabase, auth } from '@/src/config/supabase';
+import { useTranslation } from 'react-i18next';
 
 
 type Nav = {
@@ -42,6 +43,7 @@ const Profile = () => {
     };
   }, []);
   const refRBSheet = useRef<any>(null);
+  const { t, i18n } = useTranslation();
   const { navigate } = useNavigation<Nav>();
 
   const [isPublicProfile, setIsPublicProfile] = useState(true);
@@ -79,13 +81,12 @@ const Profile = () => {
           />
           <Text style={[styles.headerTitle, {
             color: COLORS.greyscale900
-          }]}>Profile</Text>
+          }]}>${''}</Text>
+          <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>{t('profile_page.header_title')}</Text>
         </View>
         <View style={styles.headerRight}>
-          <Text style={[styles.profileModeText, {
-            color: COLORS.greyscale900
-          }]}>
-            {isPublicProfile ? 'Public' : 'Private'}
+          <Text style={[styles.profileModeText, { color: COLORS.greyscale900 }]}>
+            {isPublicProfile ? t('profile_page.visibility.public') : t('profile_page.visibility.private')}
           </Text>
           <Switch
             value={isPublicProfile}
@@ -106,7 +107,6 @@ const Profile = () => {
             }}
             thumbColor={COLORS.white} // Inactive thumb color
             ios_backgroundColor={COLORS.grayscale400} // iOS track background for inactive state
-            activeThumbColor={'#000000'} // Explicitly black thumb when active
             style={styles.profileSwitch}
           />
         </View>
@@ -188,7 +188,7 @@ const Profile = () => {
             userId={currentUserId ?? undefined}
           />
         </TouchableOpacity>
-        <Text style={[styles.title, { color: COLORS.greyscale900 }]}>{displayName || 'Profile'}</Text>
+        <Text style={[styles.title, { color: COLORS.greyscale900 }]}>{displayName || t('profile_page.header_title')}</Text>
         <Text style={[styles.subtitle, { color: COLORS.greyscale900 }]}>{email}</Text>
       </View>
     )
@@ -208,25 +208,13 @@ const Profile = () => {
         {isMale && (
           <SettingsItem
             icon={icons.crown2}
-            name="My Membership"
+            name={t('profile_page.items.my_membership')}
             onPress={() => navigate("membership")}
           />
         )}
-        <SettingsItem
-          icon={icons.image}
-          name="My Photos and Videos"
-          onPress={() => navigate("photosvideos")}
-        />
-        <SettingsItem
-          icon={icons.idCard}
-          name="Personal Details"
-          onPress={() => navigate("personaldetails")}
-        />
-        <SettingsItem
-          icon={icons.userOutline}
-          name="Edit Profile"
-          onPress={() => navigate("editprofile")}
-        />
+        <SettingsItem icon={icons.image} name={t('profile_page.items.my_photos_videos')} onPress={() => navigate("photosvideos")} />
+        <SettingsItem icon={icons.idCard} name={t('profile_page.items.personal_details')} onPress={() => navigate("personaldetails")} />
+        <SettingsItem icon={icons.userOutline} name={t('profile_page.items.edit_profile')} onPress={() => navigate("editprofile")} />
         {/* Hidden sections - Settings, Payment, Security (can be re-enabled in future) */}
         {false && (
           <>
@@ -259,14 +247,10 @@ const Profile = () => {
                 tintColor: COLORS.greyscale900
               }]}
             />
-            <Text style={[styles.settingsName, {
-              color: COLORS.greyscale900
-            }]}>Language</Text>
+            <Text style={[styles.settingsName, { color: COLORS.greyscale900 }]}>{t('profile_page.items.language')}</Text>
           </View>
           <View style={styles.rightContainer}>
-            <Text style={[styles.rightLanguage, {
-              color: COLORS.greyscale900
-            }]}>English (US)</Text>
+            <Text style={[styles.rightLanguage, { color: COLORS.greyscale900 }]}>{i18n.language === 'ar' ? 'العربية' : 'English'}</Text>
             <Image
               source={icons.arrowRight}
               contentFit='contain'
@@ -277,28 +261,13 @@ const Profile = () => {
           </View>
         </TouchableOpacity>
         {/* Dark Mode hidden per request */}
-        <SettingsItem
-          icon={icons.lockedComputerOutline}
-          name="Privacy Policy"
-          onPress={() => navigate("settingsprivacypolicy")}
-        />
-        <SettingsItem
-          icon={icons.infoCircle}
-          name="Help Center"
-          onPress={() => navigate("settingshelpcenter")}
-        />
-        <SettingsItem
-          icon={icons.bookmark2}
-          name="Reminder about Poligamy Sunnah"
-          onPress={() => navigate("settingsnikahreminder")}
-        />
-        <SettingsItem
-          icon={icons.people4}
-          name="Invite Friends"
-          onPress={async () => {
+        <SettingsItem icon={icons.lockedComputerOutline} name={t('profile_page.items.privacy_policy')} onPress={() => navigate("settingsprivacypolicy")} />
+        <SettingsItem icon={icons.infoCircle} name={t('profile_page.items.help_center')} onPress={() => navigate("settingshelpcenter")} />
+        <SettingsItem icon={icons.bookmark2} name={t('profile_page.items.polygamy_reminder')} onPress={() => navigate("settingsnikahreminder")} />
+        <SettingsItem icon={icons.people4} name={t('profile_page.items.invite_friends')} onPress={async () => {
             try {
               const appUrl = Platform.OS === 'web' ? (typeof window !== 'undefined' ? (window.location.origin || '/') : '/') : 'https://zawajplus.app';
-              const shareText = `Join me on Zawajplus: ${appUrl}`;
+              const shareText = `${t('profile_page.share_invite')}: ${appUrl}`;
               // Web Share API if available
               // @ts-ignore
               if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.share) {
@@ -321,9 +290,7 @@ const Profile = () => {
                 tintColor: "red"
               }]}
             />
-            <Text style={[styles.logoutName, {
-              color: "red"
-            }]}>Logout</Text>
+            <Text style={[styles.logoutName, { color: 'red' }]}>{t('profile_page.items.logout')}</Text>
           </View>
         </TouchableOpacity>
       </View>
@@ -361,16 +328,14 @@ const Profile = () => {
           }
         }}
       >
-        <Text style={styles.bottomTitle}>Logout</Text>
+        <Text style={styles.bottomTitle}>{t('profile_page.logout.title')}</Text>
         <View style={[styles.separateLine, {
           backgroundColor: COLORS.grayscale200,
         }]} />
-        <Text style={[styles.bottomSubtitle, {
-          color: COLORS.black
-        }]}>Are you sure you want to log out?</Text>
+        <Text style={[styles.bottomSubtitle, { color: COLORS.black }]}>{t('profile_page.logout.confirm')}</Text>
         <View style={styles.bottomContainer}>
           <Button
-            title="Cancel"
+            title={t('common.cancel')}
             style={{
               width: (SIZES.width - 32) / 2 - 8,
               backgroundColor: COLORS.tansparentPrimary,
@@ -381,7 +346,7 @@ const Profile = () => {
             onPress={() => refRBSheet.current?.close()}
           />
           <Button
-            title="Yes, Logout"
+            title={t('profile_page.logout.yes_logout')}
             filled
             style={styles.logoutButton}
             onPress={async () => {

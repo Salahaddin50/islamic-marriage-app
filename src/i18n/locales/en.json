@@ -485,6 +485,123 @@
   "badges": {
     "new": "new"
   },
+  "interests": {
+    "member": "Member",
+    "header_photo_requests": "Photo Requests",
+    "tabs": {
+      "received_with_count": "Received ({{count}})",
+      "sent_with_count": "Sent ({{count}})",
+      "approved_with_count": "Approved ({{count}})"
+    },
+    "empty": {
+      "received": "No received interests",
+      "sent": "No sent interests",
+      "approved": "No approved interests"
+    },
+    "actions": {
+      "accept": "Accept",
+      "reject": "Reject",
+      "withdraw": "Withdraw",
+      "cancel": "Cancel"
+    },
+    "modal": {
+      "photo_request": "photo request",
+      "video_meet_request": "video meet request",
+      "accept_title": "Accept {{type}}",
+      "accept_about_to": "You are about to accept the {{type}} from",
+      "accept_confirm_header": "By accepting this request, you confirm that:",
+      "point_review_profile": "You have reviewed {{name}}'s profile thoroughly",
+      "point_consider_marriage": "You indeed consider marriage with this user",
+      "point_serious_intentions": "You are serious about your intentions",
+      "oath_text": "I swear by Allah I am serious and accept",
+      "cancel": "Cancel",
+      "accept_request": "Accept Request"
+    }
+  },
+  "meet_requests": {
+    "header_title": "Meet Requests",
+    "tabs": {
+      "received_with_count": "Received ({{count}})",
+      "sent_with_count": "Sent ({{count}})",
+      "approved_with_count": "Approved ({{count}})"
+    },
+    "empty": {
+      "received": "No received meet requests",
+      "sent": "No sent meet requests",
+      "approved": "No approved meet requests"
+    },
+    "actions": {
+      "accept": "Accept",
+      "reject": "Reject",
+      "withdraw": "Withdraw",
+      "cancel": "Cancel",
+      "call": "Call"
+    },
+    "meeting_not_active_title": "Meeting not active yet",
+    "meeting_not_active_body": "Join link will be active 10 minutes before the scheduled time.",
+    "join": "Join",
+    "call_now": "Call Now",
+    "incoming_call": "Incoming video call...",
+    "calling": "Calling...",
+    "enable_sound": "enable sound",
+    "close": "Close",
+    "call_info": {
+      "title": "Video Call Access",
+      "scheduled_for": "Scheduled for",
+      "available_window": "Video call is available 60 minutes before and after the scheduled time",
+      "can_call_now": "You can call now",
+      "window_ended": "Video call window has ended. Please cancel this call request and send new request from the profile's page",
+      "not_yet_available": "Video call is not yet available"
+    }
+  },
+  "messages": {
+    "header_title": "Messages",
+    "tabs": {
+      "received_with_count": "Received ({{count}})",
+      "sent_with_count": "Sent ({{count}})",
+      "approved_with_count": "Approved ({{count}})"
+    },
+    "empty": {
+      "received": "No received chat requests",
+      "sent": "No sent chat requests",
+      "approved": "No approved chat requests"
+    },
+    "actions": {
+      "accept": "Accept",
+      "reject": "Reject",
+      "withdraw": "Withdraw",
+      "whatsapp": "WhatsApp"
+    },
+    "no_number": "No number",
+    "accept_modal": {
+      "title": "Accept Chat Request",
+      "oath_text": "By accepting you swear to Allah that you had a video meeting with the person and you intend to discuss the marriage further.",
+      "yes_i_swear": "Yes, I swear",
+      "cancel": "Cancel"
+    }
+  },
+  "profile_page": {
+    "header_title": "Profile",
+    "visibility": { "public": "Public", "private": "Private" },
+    "items": {
+      "my_membership": "My Membership",
+      "my_photos_videos": "My Photos and Videos",
+      "personal_details": "Personal Details",
+      "edit_profile": "Edit Profile",
+      "language": "Language",
+      "privacy_policy": "Privacy Policy",
+      "help_center": "Help Center",
+      "polygamy_reminder": "Reminder about Poligamy Sunnah",
+      "invite_friends": "Invite Friends",
+      "logout": "Logout"
+    },
+    "share_invite": "Join me on Zawajplus",
+    "logout": {
+      "title": "Logout",
+      "confirm": "Are you sure you want to log out?",
+      "yes_logout": "Yes, Logout"
+    }
+  },
   "match_details": {
     "photos_videos": "Photos & Videos",
     "about_me": "About Me",

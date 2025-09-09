@@ -360,6 +360,123 @@
   "badges": {
     "new": "جديد"
   },
+  "interests": {
+    "member": "عضو",
+    "header_photo_requests": "طلبات الصور",
+    "tabs": {
+      "received_with_count": "الواردة ({{count}})",
+      "sent_with_count": "المرسلة ({{count}})",
+      "approved_with_count": "المقبولة ({{count}})"
+    },
+    "empty": {
+      "received": "لا توجد طلبات واردة",
+      "sent": "لا توجد طلبات مرسلة",
+      "approved": "لا توجد طلبات مقبولة"
+    },
+    "actions": {
+      "accept": "قبول",
+      "reject": "رفض",
+      "withdraw": "سحب",
+      "cancel": "إلغاء"
+    },
+    "modal": {
+      "photo_request": "طلب الصور",
+      "video_meet_request": "طلب مقابلة فيديو",
+      "accept_title": "قبول {{type}}",
+      "accept_about_to": "أنت على وشك قبول {{type}} من",
+      "accept_confirm_header": "بقبول هذا الطلب، فأنت تؤكد أن:",
+      "point_review_profile": "لقد راجعت ملف {{name}} جيدًا",
+      "point_consider_marriage": "أنت فعلًا تفكر بالزواج من هذا المستخدم",
+      "point_serious_intentions": "أنت جاد في نواياك",
+      "oath_text": "أقسم بالله أنني جاد وأوافق",
+      "cancel": "إلغاء",
+      "accept_request": "قبول الطلب"
+    }
+  },
+  "meet_requests": {
+    "header_title": "طلبات المقابلات",
+    "tabs": {
+      "received_with_count": "الواردة ({{count}})",
+      "sent_with_count": "المرسلة ({{count}})",
+      "approved_with_count": "المقبولة ({{count}})"
+    },
+    "empty": {
+      "received": "لا توجد طلبات مقابلة واردة",
+      "sent": "لا توجد طلبات مقابلة مرسلة",
+      "approved": "لا توجد طلبات مقابلة مقبولة"
+    },
+    "actions": {
+      "accept": "قبول",
+      "reject": "رفض",
+      "withdraw": "سحب",
+      "cancel": "إلغاء",
+      "call": "اتصال"
+    },
+    "meeting_not_active_title": "المقابلة غير مفعّلة بعد",
+    "meeting_not_active_body": "سيُفعّل رابط الانضمام قبل الموعد بـ 10 دقائق.",
+    "join": "انضمام",
+    "call_now": "اتصل الآن",
+    "incoming_call": "مكالمة فيديو واردة...",
+    "calling": "جارٍ الاتصال...",
+    "enable_sound": "تفعيل الصوت",
+    "close": "إغلاق",
+    "call_info": {
+      "title": "الوصول إلى مكالمة الفيديو",
+      "scheduled_for": "مجدولة في",
+      "available_window": "المكالمة متاحة قبل وبعد الموعد بـ 60 دقيقة",
+      "can_call_now": "يمكنك الاتصال الآن",
+      "window_ended": "انتهت نافذة المكالمة. يرجى إلغاء هذا الطلب وإرسال طلب جديد من صفحة الملف الشخصي",
+      "not_yet_available": "المكالمة غير متاحة بعد"
+    }
+  },
+  "messages": {
+    "header_title": "الرسائل",
+    "tabs": {
+      "received_with_count": "الواردة ({{count}})",
+      "sent_with_count": "المرسلة ({{count}})",
+      "approved_with_count": "المقبولة ({{count}})"
+    },
+    "empty": {
+      "received": "لا توجد طلبات دردشة واردة",
+      "sent": "لا توجد طلبات دردشة مرسلة",
+      "approved": "لا توجد طلبات دردشة مقبولة"
+    },
+    "actions": {
+      "accept": "قبول",
+      "reject": "رفض",
+      "withdraw": "سحب",
+      "whatsapp": "واتساب"
+    },
+    "no_number": "لا يوجد رقم",
+    "accept_modal": {
+      "title": "قبول طلب الدردشة",
+      "oath_text": "بقبولك، تقسم بالله أنك أجريت مقابلة فيديو مع الشخص وتنوي مناقشة الزواج لاحقًا.",
+      "yes_i_swear": "نعم، أُقسم",
+      "cancel": "إلغاء"
+    }
+  },
+  "profile_page": {
+    "header_title": "الملف الشخصي",
+    "visibility": { "public": "عام", "private": "خاص" },
+    "items": {
+      "my_membership": "اشتراكي",
+      "my_photos_videos": "صوري وفيديوهاتي",
+      "personal_details": "البيانات الشخصية",
+      "edit_profile": "تعديل الملف",
+      "language": "اللغة",
+      "privacy_policy": "سياسة الخصوصية",
+      "help_center": "مركز المساعدة",
+      "polygamy_reminder": "تذكير بسنّة التعدّد",
+      "invite_friends": "دعوة الأصدقاء",
+      "logout": "تسجيل الخروج"
+    },
+    "share_invite": "انضم إليّ على زواج بلس",
+    "logout": {
+      "title": "تسجيل الخروج",
+      "confirm": "هل أنت متأكد أنك تريد تسجيل الخروج؟",
+      "yes_logout": "نعم، تسجيل الخروج"
+    }
+  },
   "onboarding2": {
     "title": "متوافق بالكامل مع الشريعة",
     "subtitle": "مُطابق",

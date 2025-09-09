@@ -12,10 +12,12 @@ import { NavigationProp, useIsFocused } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import AcceptConfirmationModal from '@/components/AcceptConfirmationModal';
+import { useTranslation } from 'react-i18next';
 
 const InterestsScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
   const isFocused = useIsFocused();
+  const { t } = useTranslation();
   const [incoming, setIncoming] = useState<InterestRecord[]>([]);
   const [outgoing, setOutgoing] = useState<InterestRecord[]>([]);
   const [approved, setApproved] = useState<InterestRecord[]>([]);
@@ -23,9 +25,9 @@ const InterestsScreen = () => {
   const layout = useWindowDimensions();
   const [index, setIndex] = useState(0);
   const [routes, setRoutes] = useState([
-    { key: 'received', title: 'Received (0)' },
-    { key: 'sent', title: 'Sent (0)' },
-    { key: 'approved', title: 'Approved (0)' },
+    { key: 'received', title: t('interests.tabs.received_with_count', { count: 0 }) },
+    { key: 'sent', title: t('interests.tabs.sent_with_count', { count: 0 }) },
+    { key: 'approved', title: t('interests.tabs.approved_with_count', { count: 0 }) },
   ]);
 
   const [profilesById, setProfilesById] = useState<Record<string, { name: string; age?: number; avatar?: any }>>({});
@@ -88,7 +90,7 @@ const InterestsScreen = () => {
         .select('user_id, first_name, last_name, date_of_birth, profile_picture_url, gender')
         .in('user_id', toFetch);
       (data || []).forEach((row: any) => {
-        const name = (row.first_name || 'Member').toString();
+        const name = (row.first_name || t('interests.member')).toString();
         map[row.user_id] = {
           name,
           age: calculateAge(row.date_of_birth),
@@ -261,41 +263,14 @@ const InterestsScreen = () => {
     }
   }, [index]);
 
-  useEffect(() => {
-    let channel: any = null;
-    let isMounted = true;
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      const myId = user?.id;
-      if (!myId) return;
-      channel = supabase
-        .channel('interests-realtime')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'interests' }, (payload: any) => {
-          const row = (payload.new || payload.old) as InterestRecord | undefined;
-          if (!row) return;
-          if (row.sender_id === myId || row.receiver_id === myId) {
-            // Relevant change for me → refresh lists
-            loadAll();
-          }
-        })
-        .subscribe();
-    })();
-    return () => {
-      if (channel) {
-        supabase.removeChannel(channel);
-      }
-      isMounted = false;
-    };
-  }, []);
-
-  // Keep tab titles in sync with counts so Web/native always display counts
+  // Keep tab titles in sync with counts and translate
   useEffect(() => {
     setRoutes([
-      { key: 'received', title: `Received (${incoming.length})` },
-      { key: 'sent', title: `Sent (${outgoing.length})` },
-      { key: 'approved', title: `Approved (${approved.length})` },
+      { key: 'received', title: t('interests.tabs.received_with_count', { count: incoming.length }) },
+      { key: 'sent', title: t('interests.tabs.sent_with_count', { count: outgoing.length }) },
+      { key: 'approved', title: t('interests.tabs.approved_with_count', { count: approved.length }) },
     ]);
-  }, [incoming.length, outgoing.length, approved.length]);
+  }, [incoming.length, outgoing.length, approved.length, t]);
 
   const renderTabBar = (props: any) => (
     <TabBar
@@ -309,7 +284,7 @@ const InterestsScreen = () => {
         if (route.key === 'received') count = incoming.length;
         else if (route.key === 'sent') count = outgoing.length;
         else if (route.key === 'approved') count = approved.length;
-        const label = `${route.title} (${count})`;
+        const label = route.title;
         return (
           <Text style={{ color: focused ? COLORS.primary : 'gray', fontSize: 16, fontFamily: 'bold' }}>{label}</Text>
         );
@@ -321,7 +296,7 @@ const InterestsScreen = () => {
     <View style={styles.headerContainer}>
       <View style={styles.headerLeft}>
         <Image source={images.logo} contentFit='contain' style={styles.headerLogo} />
-        <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>Photo Requests</Text>
+        <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>{t('interests.header_photo_requests')}</Text>
       </View>
       <View style={styles.headerRight}>
         <TouchableOpacity onPress={refreshPage} style={{ padding: 8, borderRadius: 20, marginLeft: 8 }}>
@@ -352,7 +327,7 @@ const InterestsScreen = () => {
       ) : (
         <>
           {incoming.length === 0 ? (
-            <Text style={styles.subtitle}>No received interests</Text>
+            <Text style={styles.subtitle}>{t('interests.empty.received')}</Text>
           ) : (
             incoming.map((row, idx) => {
               const otherUserId = row.sender_id;
@@ -371,10 +346,10 @@ const InterestsScreen = () => {
                       </TouchableOpacity>
                       <View style={styles.rowActions}>
                         <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.primary }]} onPress={() => handleAcceptClick(row)}>
-                          <Text style={styles.tinyBtnText}>Accept</Text>
+                          <Text style={styles.tinyBtnText}>{t('interests.actions.accept')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={() => reject(row.id)}>
-                          <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>Reject</Text>
+                          <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>{t('interests.actions.reject')}</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -400,7 +375,7 @@ const InterestsScreen = () => {
       ) : (
         <>
           {outgoing.length === 0 ? (
-            <Text style={styles.subtitle}>No sent interests</Text>
+            <Text style={styles.subtitle}>{t('interests.empty.sent')}</Text>
           ) : (
             outgoing.map((row, idx) => {
               const otherUserId = row.receiver_id;
@@ -419,7 +394,7 @@ const InterestsScreen = () => {
                       </TouchableOpacity>
                       <View style={styles.rowActions}>
                         <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={() => withdraw(row.id)}>
-                          <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>Withdraw</Text>
+                          <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>{t('interests.actions.withdraw')}</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -445,7 +420,7 @@ const InterestsScreen = () => {
       ) : (
         <>
           {approved.length === 0 ? (
-            <Text style={styles.subtitle}>No approved interests</Text>
+            <Text style={styles.subtitle}>{t('interests.empty.approved')}</Text>
           ) : (
             approved.map((row, idx) => {
               const otherUserId = myUserId && row.sender_id === myUserId ? row.receiver_id : row.sender_id;
@@ -464,7 +439,7 @@ const InterestsScreen = () => {
                       </TouchableOpacity>
                       <View style={styles.rowActions}>
                         <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={() => cancelApproved(row.id)}>
-                          <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>Cancel</Text>
+                          <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>{t('interests.actions.cancel')}</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -507,7 +482,7 @@ const InterestsScreen = () => {
             setSelectedInterest(null);
           }}
           onAccept={confirmAccept}
-          userName={selectedInterest ? (profilesById[selectedInterest.sender_id]?.name || 'Member') : ''}
+          userName={selectedInterest ? (profilesById[selectedInterest.sender_id]?.name || t('interests.member')) : ''}
           userAge={selectedInterest ? (profilesById[selectedInterest.sender_id]?.age || 0) : 0}
           requestType="photo"
         />

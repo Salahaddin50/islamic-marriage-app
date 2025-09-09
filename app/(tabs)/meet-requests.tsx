@@ -14,11 +14,13 @@ import { WebView } from 'react-native-webview';
 import { AGORA_APP_ID } from '@/src/config/agora';
 import AcceptConfirmationModal from '@/components/AcceptConfirmationModal';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 const MeetRequestsScreen = () => {
   const navigation = useNavigation<NavigationProp<any>>();
   const router = useRouter();
   const isFocused = useIsFocused();
+  const { t } = useTranslation();
   const [incoming, setIncoming] = useState<MeetRecord[]>([]);
   const [outgoing, setOutgoing] = useState<MeetRecord[]>([]);
   const [approved, setApproved] = useState<MeetRecord[]>([]);
@@ -26,9 +28,9 @@ const MeetRequestsScreen = () => {
   const layout = useWindowDimensions();
   const [index, setIndex] = useState(0);
   const [routes, setRoutes] = useState([
-    { key: 'received', title: 'Received (0)' },
-    { key: 'sent', title: 'Sent (0)' },
-    { key: 'approved', title: 'Approved (0)' },
+    { key: 'received', title: t('meet_requests.tabs.received_with_count', { count: 0 }) },
+    { key: 'sent', title: t('meet_requests.tabs.sent_with_count', { count: 0 }) },
+    { key: 'approved', title: t('meet_requests.tabs.approved_with_count', { count: 0 }) },
   ]);
 
   const [profilesById, setProfilesById] = useState<Record<string, { name: string; age?: number; avatar?: any }>>({});
@@ -772,11 +774,11 @@ const MeetRequestsScreen = () => {
 
   useEffect(() => {
     setRoutes([
-      { key: 'received', title: `Received (${incoming.length})` },
-      { key: 'sent', title: `Sent (${outgoing.length})` },
-      { key: 'approved', title: `Approved (${approved.length})` },
+      { key: 'received', title: t('meet_requests.tabs.received_with_count', { count: incoming.length }) },
+      { key: 'sent', title: t('meet_requests.tabs.sent_with_count', { count: outgoing.length }) },
+      { key: 'approved', title: t('meet_requests.tabs.approved_with_count', { count: approved.length }) },
     ]);
-  }, [incoming.length, outgoing.length, approved.length]);
+  }, [incoming.length, outgoing.length, approved.length, t]);
 
   const renderTabBar = (props: any) => (
     <TabBar
@@ -792,7 +794,7 @@ const MeetRequestsScreen = () => {
     <View style={styles.headerContainer}>
       <View style={styles.headerLeft}>
         <Image source={icons.videoCamera2} contentFit='contain' style={[styles.headerLogo, {tintColor: COLORS.primary}]} />
-        <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>Meet Requests</Text>
+        <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>{t('meet_requests.header_title')}</Text>
       </View>
       <View style={styles.headerRight}>
         <TouchableOpacity onPress={refreshPage} style={{ padding: 8, borderRadius: 20, marginLeft: 8 }}>
@@ -868,11 +870,11 @@ const MeetRequestsScreen = () => {
                           const url = toMeetJitsiUrl(row.meet_link);
                           if (url) Linking.openURL(url);
                         }
-                        else { Alert.alert('Meeting not active yet', 'Join link will be active 10 minutes before the scheduled time.'); }
+                        else { Alert.alert(t('meet_requests.meeting_not_active_title'), t('meet_requests.meeting_not_active_body')); }
                       }}
                       disabled={!canJoin}
                     >
-                      <Text style={[styles.joinLink, !canJoin && { color: 'gray', opacity: 0.7 }]}>Join</Text>
+                      <Text style={[styles.joinLink, !canJoin && { color: 'gray', opacity: 0.7 }]}>{t('meet_requests.join')}</Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -909,7 +911,7 @@ const MeetRequestsScreen = () => {
           {Array.from({ length: 6 }).map((_, i) => (<SkeletonRow key={i} idx={i} />))}
         </>
       ) : incoming.length === 0 ? (
-        <Text style={styles.subtitle}>No received meet requests</Text>
+        <Text style={styles.subtitle}>{t('meet_requests.empty.received')}</Text>
       ) : (
         incoming.map((row, idx) => (
           <Row
@@ -923,10 +925,10 @@ const MeetRequestsScreen = () => {
             actions={
               <>
                 <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.primary }]} onPress={() => handleAcceptClick(row)}>
-                  <Text style={styles.tinyBtnText}>Accept</Text>
+                  <Text style={styles.tinyBtnText}>{t('meet_requests.actions.accept')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={() => reject(row.id)}>
-                  <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>Reject</Text>
+                  <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>{t('meet_requests.actions.reject')}</Text>
                 </TouchableOpacity>
               </>
             }
@@ -943,7 +945,7 @@ const MeetRequestsScreen = () => {
           {Array.from({ length: 6 }).map((_, i) => (<SkeletonRow key={i} idx={i} />))}
         </>
       ) : outgoing.length === 0 ? (
-        <Text style={styles.subtitle}>No sent meet requests</Text>
+        <Text style={styles.subtitle}>{t('meet_requests.empty.sent')}</Text>
       ) : (
         outgoing.map((row, idx) => (
           <Row
@@ -956,7 +958,7 @@ const MeetRequestsScreen = () => {
             requestText={formatRequestTime(row.created_at)}
             actions={
               <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={() => withdraw(row.id)}>
-                <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>Withdraw</Text>
+                <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>{t('meet_requests.actions.withdraw')}</Text>
               </TouchableOpacity>
             }
           />
@@ -972,7 +974,7 @@ const MeetRequestsScreen = () => {
           {Array.from({ length: 6 }).map((_, i) => (<SkeletonRow key={i} idx={i} />))}
         </>
       ) : approved.length === 0 ? (
-        <Text style={styles.subtitle}>No approved meet requests</Text>
+        <Text style={styles.subtitle}>{t('meet_requests.empty.approved')}</Text>
       ) : (
         approved.map((row, idx) => {
           const scheduledMs = row.scheduled_at ? new Date(row.scheduled_at).getTime() : NaN;
@@ -1025,10 +1027,10 @@ const MeetRequestsScreen = () => {
                       } catch {}
                     }}
                   >
-                    <Text style={styles.tinyBtnText}>Call</Text>
+                    <Text style={styles.tinyBtnText}>{t('meet_requests.actions.call')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={() => withdraw(row.id)}>
-                    <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>Cancel</Text>
+                    <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>{t('meet_requests.actions.cancel')}</Text>
                   </TouchableOpacity>
                 </>
               }
@@ -1062,12 +1064,12 @@ const MeetRequestsScreen = () => {
         >
           <View style={styles.modalContainer}>
             <View style={styles.modalCard}>
-              <Text style={styles.modalTitle}>Video Call Access</Text>
+              <Text style={styles.modalTitle}>{t('meet_requests.call_info.title')}</Text>
               
               <View style={styles.meetingInfoContainer}>
                 {selectedMeetRow?.scheduled_at && (
                   <Text style={styles.scheduledTimeText}>
-                    Scheduled for: {formatMeetingDate(selectedMeetRow.scheduled_at)}
+                    {t('meet_requests.call_info.scheduled_for')}: {formatMeetingDate(selectedMeetRow.scheduled_at)}
                   </Text>
                 )}
                 
@@ -1078,7 +1080,7 @@ const MeetRequestsScreen = () => {
                     style={{ width: 24, height: 24, tintColor: COLORS.primary, marginRight: 12 }} 
                   />
                   <Text style={styles.infoText}>
-                    Video call is available 60 minutes before and after the scheduled time
+                    {t('meet_requests.call_info.available_window')}
                   </Text>
                 </View>
                 
@@ -1091,10 +1093,10 @@ const MeetRequestsScreen = () => {
                   <Text style={styles.infoText}>
                     {selectedMeetRow && selectedMeetRow.scheduled_at ? (
                       isWithinRingWindow(selectedMeetRow.scheduled_at)
-                        ? "You can call now"
+                        ? t('meet_requests.call_info.can_call_now')
                         : isAfterRingWindow(selectedMeetRow.scheduled_at)
-                          ? "Video call window has ended. Please cancel this call request and send new request from the profile's page"
-                          : "Video call is not yet available"
+                          ? t('meet_requests.call_info.window_ended')
+                          : t('meet_requests.call_info.not_yet_available')
                     ) : ""}
                   </Text>
                 </View>
@@ -1105,7 +1107,7 @@ const MeetRequestsScreen = () => {
                   style={[styles.modalButton, styles.cancelButton]} 
                   onPress={() => setShowJoinInfoModal(false)}
                 >
-                  <Text style={[styles.modalButtonText, { color: COLORS.primary }]}>Close</Text>
+                  <Text style={[styles.modalButtonText, { color: COLORS.primary }]}>{t('meet_requests.close')}</Text>
                 </TouchableOpacity>
                 
                 {selectedMeetRow && selectedMeetRow.meet_link && isWithinRingWindow(selectedMeetRow.scheduled_at) && (
@@ -1122,7 +1124,7 @@ const MeetRequestsScreen = () => {
                     }}
                   >
                     <Image source={icons.videoCamera2} contentFit="contain" style={{ width: 18, height: 18, tintColor: COLORS.white, marginRight: 8 }} />
-                    <Text style={styles.modalButtonText}>Call Now</Text>
+                    <Text style={styles.modalButtonText}>{t('meet_requests.call_now')}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -1153,7 +1155,7 @@ const MeetRequestsScreen = () => {
                     {incomingCall.callerName}
                   </Text>
                   <Text style={[styles.ringCallText, { color: COLORS.greyscale600 }]}>
-                    Incoming video call...
+                    {t('meet_requests.incoming_call')}
                   </Text>
                 </View>
                 
@@ -1211,7 +1213,7 @@ const MeetRequestsScreen = () => {
                     {outgoingCall.receiverName}
                   </Text>
                   <Text style={[styles.ringCallText, { color: COLORS.greyscale600 }]}>
-                    Calling...
+                    {t('meet_requests.calling')}
                   </Text>
                 </View>
                 
@@ -1329,7 +1331,7 @@ const MeetRequestsScreen = () => {
                     }}
                     style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 18, borderWidth: 1, borderColor: COLORS.primary, backgroundColor: COLORS.tansparentPrimary }}
                   >
-                    <Text style={{ color: COLORS.primary, fontFamily: 'medium' }}>enable sound</Text>
+                    <Text style={{ color: COLORS.primary, fontFamily: 'medium' }}>{t('meet_requests.enable_sound')}</Text>
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity
@@ -1345,7 +1347,7 @@ const MeetRequestsScreen = () => {
                   }}
                 >
                   <Image source={icons.videoCamera2} contentFit='contain' style={{ width: 18, height: 18, tintColor: COLORS.white, marginRight: 8 }} />
-                  <Text style={styles.modalButtonText}>Join</Text>
+                  <Text style={styles.modalButtonText}>{t('meet_requests.join')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.modalButton, styles.cancelButton]}
@@ -1362,7 +1364,7 @@ const MeetRequestsScreen = () => {
                     stopWebBeep();
                   }}
                 >
-                  <Text style={[styles.modalButtonText, { color: COLORS.primary }]}>Close</Text>
+                  <Text style={[styles.modalButtonText, { color: COLORS.primary }]}>{t('meet_requests.close')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1458,10 +1460,10 @@ const MeetRequestsScreen = () => {
         >
           <View style={styles.fullscreenContainer}>
             <View style={[styles.modalCard, { maxWidth: 340 }]}>
-              <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 16, textAlign: 'center', color: COLORS.primary }]}>Upgrade Required</Text>
+              <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 16, textAlign: 'center', color: COLORS.primary }]}>{t('match_details.upgrade_required')}</Text>
               
               <Text style={[styles.infoStepText, { textAlign: 'center', marginBottom: 20 }]}>
-                You need to upgrade your package to Premium to arrange a video meet
+                {t('match_details.need_premium')}
               </Text>
               
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
@@ -1469,7 +1471,7 @@ const MeetRequestsScreen = () => {
                   style={[styles.infoButton, styles.cancelButton]} 
                   onPress={() => setShowUpgradeModal(false)}
                 >
-                  <Text style={[styles.infoButtonText, { color: COLORS.primary }]}>Cancel</Text>
+                  <Text style={[styles.infoButtonText, { color: COLORS.primary }]}>{t('match_details.cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={[styles.infoButton, styles.confirmButton]} 
@@ -1478,7 +1480,7 @@ const MeetRequestsScreen = () => {
                     router.push('/membership');
                   }}
                 >
-                  <Text style={styles.infoButtonText}>Upgrade</Text>
+                  <Text style={styles.infoButtonText}>{t('match_details.upgrade')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
