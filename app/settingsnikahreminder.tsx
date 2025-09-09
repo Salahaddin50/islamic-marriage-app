@@ -7,6 +7,7 @@ import { COLORS, icons, SIZES } from '../constants';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { safeGoBack } from '../utils/responsive';
+import { useTranslation } from 'react-i18next';
 
 const Section: React.FC<{ title: string } & React.PropsWithChildren> = ({ title, children }) => (
   <View style={styles.section}>
@@ -19,60 +20,54 @@ const Section: React.FC<{ title: string } & React.PropsWithChildren> = ({ title,
 
 export default function SettingsNikahReminder() {
   const navigation = useNavigation<NavigationProp<any>>();
+  const { t } = useTranslation();
+
   const renderHeader = () => (
     <View style={styles.headerContainer}>
       <View style={styles.headerLeft}>
         <TouchableOpacity onPress={() => safeGoBack(navigation, router, '/(tabs)/profile')}>
           <Image source={icons.arrowBack} contentFit="contain" style={[styles.backIcon, { tintColor: COLORS.greyscale900 }]} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>Reminder about Poligamy Sunnah</Text>
+        <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>{t('reminder_page.title')}</Text>
       </View>
     </View>
   );
 
   return (
-    <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
-      <View style={[styles.container, { backgroundColor: COLORS.white }]}>
+    <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}> 
+      <View style={[styles.container, { backgroundColor: COLORS.white }]}> 
         {renderHeader()}
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
-          <Section title="Ayat from the Qur'an">
+          <Section title={t('reminder_page.section_ayat_title')}>
             <Text style={styles.item}>
-              {`"…then marry those that please you of women, two, three, or four. But if you fear that you will not be just, then [marry only] one…"`} (An-Nisa 4:3)
+              {t('reminder_page.ayat_quote')}
             </Text>
-            <Text style={styles.note}>Justice between wives is an explicit condition for permissibility.</Text>
+            <Text style={styles.note}>{t('reminder_page.ayat_note')}</Text>
           </Section>
 
-          <Section title="Authentic Hadiths">
+          <Section title={t('reminder_page.section_hadith_title')}>
             <Text style={styles.item}>
-              {`The Prophet (ﷺ) said: "The best of you are those who are best to their families, and I am the best of you to my family."`} (Tirmidhi)
+              {t('reminder_page.hadith_1')}
             </Text>
             <Text style={styles.item}>
-              {`The Prophet (ﷺ) said: "Fear Allah and be just among your children (and family)."`} (Bukhari & Muslim)
+              {t('reminder_page.hadith_2')}
             </Text>
-            <Text style={styles.note}>Kindness, justice, and maintaining rights are binding duties.</Text>
+            <Text style={styles.note}>{t('reminder_page.hadith_note')}</Text>
           </Section>
 
-          <Section title="Statements of Scholars">
-            <Text style={styles.item}>
-              Polygyny is permissible with the strict condition of justice in maintenance, time, housing, and fair treatment. If justice is feared to be unmet, one marriage is safer.
-            </Text>
-            <Text style={styles.item}>
-              Justice does not include equality in the heart, but it requires fairness in outward rights and responsibilities.
-            </Text>
-            <Text style={styles.item}>
-              Entering polygyny is a serious covenant. Failing to uphold justice is a major sin and a cause of worldly and spiritual harm.
-            </Text>
+          <Section title={t('reminder_page.section_scholars_title')}>
+            <Text style={styles.item}>{t('reminder_page.scholars_1')}</Text>
+            <Text style={styles.item}>{t('reminder_page.scholars_2')}</Text>
+            <Text style={styles.item}>{t('reminder_page.scholars_3')}</Text>
           </Section>
 
-          <Section title="Adab (Etiquettes) and Responsibilities">
-            <Text style={styles.item}>- Uphold justice equally in spending, housing, and time.</Text>
-            <Text style={styles.item}>- Maintain privacy and dignity of each wife; avoid harm and comparison.</Text>
-            <Text style={styles.item}>- Be truthful, responsible, and transparent from the beginning.</Text>
-            <Text style={styles.item}>- Involve families appropriately and honor guardianship protocols.</Text>
-            <Text style={styles.item}>- Keep intentions pure for a halal marriage and seek Allah’s pleasure.</Text>
+          <Section title={t('reminder_page.section_adab_title')}>
+            <Text style={styles.item}>{t('reminder_page.adab_1')}</Text>
+            <Text style={styles.item}>{t('reminder_page.adab_2')}</Text>
+            <Text style={styles.item}>{t('reminder_page.adab_3')}</Text>
+            <Text style={styles.item}>{t('reminder_page.adab_4')}</Text>
+            <Text style={styles.item}>{t('reminder_page.adab_5')}</Text>
           </Section>
-
-          
         </ScrollView>
       </View>
     </SafeAreaView>

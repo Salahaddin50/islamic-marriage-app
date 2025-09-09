@@ -20,6 +20,7 @@ import SimpleAvatar from '../components/SimpleAvatar';
 import { supabase } from '../src/config/supabase';
 import { getCountriesAsDropdownItems, getCitiesForCountry } from '../data/countries';
 import type { GenderType } from '../src/types/database.types';
+import { useTranslation } from 'react-i18next';
 
 // Cache for profile data
 let cachedUserProfile: UserProfile | null = null;
@@ -29,6 +30,7 @@ const USER_PROFILE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 // Edit Profile Screen
 const EditProfile = () => {
   const navigation = useNavigation<NavigationProp<any>>();
+  const { t } = useTranslation();
   
   // Loading and error states
   const [isLoading, setIsLoading] = useState(true);
@@ -56,8 +58,8 @@ const EditProfile = () => {
   const [openDatePicker, setOpenDatePicker] = useState(false);
 
   const genderOptions = [
-    { label: 'Male', value: 'male' },
-    { label: 'Female', value: 'female' },
+    { label: t('profile_setup.male'), value: 'male' },
+    { label: t('profile_setup.female'), value: 'female' },
   ];
 
   // Load user profile on component mount
@@ -88,7 +90,7 @@ const EditProfile = () => {
         populateProfileFields(userProfile);
       }
     } catch (error) {
-      setError('Failed to load profile data');
+      setError(t('edit_profile.load_error'));
     } finally {
       setIsLoading(false);
     }
@@ -139,22 +141,22 @@ const EditProfile = () => {
 
   const validateForm = (): boolean => {
     if (!firstName.trim()) {
-      Alert.alert('Validation Error', 'First name is required');
+      Alert.alert(t('common.error'), t('edit_profile.first_name_required'));
       return false;
     }
     
     if (!selectedGender) {
-      Alert.alert('Validation Error', 'Gender is required');
+      Alert.alert(t('common.error'), t('edit_profile.gender_required'));
       return false;
     }
     
     if (!dateOfBirth) {
-      Alert.alert('Validation Error', 'Date of birth is required');
+      Alert.alert(t('common.error'), t('edit_profile.dob_required'));
       return false;
     }
     
     if (mobileNumber && !phoneCode) {
-      Alert.alert('Validation Error', 'Phone code is required when mobile number is provided');
+      Alert.alert(t('common.error'), t('edit_profile.phone_code_required'));
       return false;
     }
     
@@ -204,19 +206,19 @@ const EditProfile = () => {
       cachedUserProfile = null;
       
       Alert.alert(
-        'Success', 
-        'Profile updated successfully!',
+        t('common.success'), 
+        t('edit_profile.update_success'),
         [
           {
-            text: 'OK',
+            text: t('common.ok'),
             onPress: () => navigation.goBack()
           }
         ]
       );
       
     } catch (error) {
-      setError('Failed to update profile');
-      Alert.alert('Error', 'Failed to update profile. Please try again.');
+      setError(t('edit_profile.update_error'));
+      Alert.alert(t('common.error'), t('edit_profile.update_error_retry'));
     } finally {
       setIsSaving(false);
     }
@@ -228,7 +230,7 @@ const EditProfile = () => {
       <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
         <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading profile...</Text>
+          <Text style={styles.loadingText}>{t('edit_profile.loading')}</Text>
             </View>
       </SafeAreaView>
     );
@@ -238,7 +240,7 @@ const EditProfile = () => {
     <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
       <View style={[styles.container, { backgroundColor: COLORS.white }]}>
         <Header 
-          title="Edit Profile" 
+          title={t('edit_profile.title')} 
           fallbackRoute="/(tabs)/profile"
         />
         
@@ -254,7 +256,7 @@ const EditProfile = () => {
             <View style={styles.avatarContainer}>
               <SimpleAvatar 
                 size={120}
-                displayName={firstName || 'User'}
+                displayName={firstName || t('edit_profile.user_placeholder')}
                 forceRefresh={refreshTrigger}
               />
             </View>
@@ -265,7 +267,7 @@ const EditProfile = () => {
             {/* First Name */}
             <Input
               id="firstName"
-              placeholder="First Name *"
+              placeholder={t('edit_profile.first_name_placeholder')}
               value={firstName}
               onInputChanged={(id, value) => setFirstName(value)}
               icon={icons.user}
@@ -274,7 +276,7 @@ const EditProfile = () => {
             {/* Last Name */}
             <Input
               id="lastName"
-              placeholder="Last Name"
+              placeholder={t('edit_profile.last_name_placeholder')}
               value={lastName}
               onInputChanged={(id, value) => setLastName(value)}
               icon={icons.user}
@@ -284,16 +286,16 @@ const EditProfile = () => {
             <SearchableDropdown
               data={phoneCodesData}
               onSelect={(item) => setPhoneCode(item.value)}
-              placeholder="Select Phone Code"
+              placeholder={t('edit_profile.select_phone_code')}
               selectedValue={phoneCode}
-              searchPlaceholder="Search country code..."
+              searchPlaceholder={t('edit_profile.search_country_code')}
               icon={icons.telephone}
             />
 
             {/* Mobile Number */}
             <Input
               id="mobileNumber"
-              placeholder="Mobile Number"
+              placeholder={t('edit_profile.mobile_placeholder')}
               value={mobileNumber}
               onInputChanged={(id, value) => setMobileNumber(value)}
               icon={icons.call}
@@ -310,7 +312,7 @@ const EditProfile = () => {
                   styles.dateInputText,
                   !dateOfBirth && styles.dateInputPlaceholder
                 ]}>
-                  {dateOfBirth || 'Date of Birth *'}
+                  {dateOfBirth || t('edit_profile.dob_placeholder')}
                 </Text>
                 <View style={styles.calendarIcon}>
                   <Text style={styles.calendarEmoji}>📅</Text>
@@ -322,18 +324,18 @@ const EditProfile = () => {
             <SearchableDropdown
               data={genderOptions}
               onSelect={(item) => setSelectedGender(item.value as GenderType)}
-              placeholder="Select Gender *"
+              placeholder={t('edit_profile.gender_placeholder')}
               selectedValue={selectedGender}
-              searchPlaceholder="Search gender..."
+              searchPlaceholder={t('edit_profile.search_gender')}
             />
 
             {/* Country */}
             <SearchableDropdown
               data={getCountriesAsDropdownItems()}
               onSelect={handleCountryChange}
-              placeholder="Select Country"
+              placeholder={t('edit_profile.select_country')}
               selectedValue={selectedCountry}
-              searchPlaceholder="Search country..."
+              searchPlaceholder={t('edit_profile.search_country')}
               icon={icons.location}
             />
 
@@ -341,17 +343,17 @@ const EditProfile = () => {
             <SearchableDropdown
               data={availableCities}
               onSelect={(item) => setSelectedCity(item.value)}
-              placeholder={selectedCountry ? "Select City" : "Select Country First"}
+              placeholder={selectedCountry ? t('edit_profile.select_city') : t('edit_profile.select_country_first')}
               selectedValue={selectedCity}
               disabled={!selectedCountry}
-              searchPlaceholder="Search city..."
+              searchPlaceholder={t('edit_profile.search_city')}
               icon={icons.location}
             />
 
             {/* Occupation */}
             <Input
               id="occupation"
-              placeholder="Occupation"
+              placeholder={t('edit_profile.occupation_placeholder')}
               value={occupation}
               onInputChanged={(id, value) => setOccupation(value)}
               icon={icons.bag}
@@ -359,10 +361,10 @@ const EditProfile = () => {
 
             {/* About Me */}
             <View style={styles.textAreaContainer}>
-              <Text style={styles.textAreaLabel}>About Me</Text>
+              <Text style={styles.textAreaLabel}>{t('edit_profile.about_me_label')}</Text>
               <TextInput
                 style={styles.textArea}
-                placeholder="Tell us about yourself..."
+                placeholder={t('edit_profile.about_placeholder')}
                 value={aboutMe}
                 onChangeText={setAboutMe}
                 multiline
@@ -386,7 +388,7 @@ const EditProfile = () => {
       {/* Update Button */}
       <View style={styles.bottomContainer}>
         <Button
-          title={isSaving ? "Updating..." : "Update Profile"}
+          title={isSaving ? t('edit_profile.updating') : t('edit_profile.update_button')}
           filled
           style={styles.continueButton}
           onPress={saveProfile}

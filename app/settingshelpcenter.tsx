@@ -11,6 +11,7 @@ import { Image } from 'expo-image';
 import HelpCenterItem from '@/components/HelpCenterItem';
 import { safeGoBack } from '../utils/responsive';
 import { SupportTeamService } from '../src/services/support-team.service';
+import { useTranslation } from 'react-i18next';
 
 interface KeywordItemProps {
     item: {
@@ -33,6 +34,7 @@ interface RenderLabelProps {
 }
 
 const faqsRoute = () => {
+    const { t } = useTranslation();
     const [selectedKeywords, setSelectedKeywords] = useState<any>([]);
     const [expanded, setExpanded] = useState(-1);
     const [searchText, setSearchText] = useState('');
@@ -121,7 +123,7 @@ const faqsRoute = () => {
                             color: COLORS.grayscale400,
                         },
                     ]}
-                    placeholder="Search"
+                    placeholder={t('help_center.search_placeholder')}
                     placeholderTextColor={COLORS.grayscale400}
                     value={searchText}
                     onChangeText={(text) => setSearchText(text)}
@@ -172,6 +174,7 @@ const faqsRoute = () => {
 };
 
 const contactUsRoute = () => {
+    const { t } = useTranslation();
     const navigation = useNavigation<NavigationProp<any>>();
     const [customerSupportPhone, setCustomerSupportPhone] = useState<string | null>(null);
 
@@ -186,7 +189,7 @@ const contactUsRoute = () => {
 
     const handleEmail = () => {
         const email = 'asim.mammadov82@outlook.com';
-        const subject = encodeURIComponent('Support request');
+        const subject = encodeURIComponent(t('help_center.support_email_subject'));
         const mailto = `mailto:${email}?subject=${subject}`;
         try {
             // @ts-ignore
@@ -217,15 +220,15 @@ const contactUsRoute = () => {
     return (
         <View style={[styles.routeContainer, {
             backgroundColor: COLORS.tertiaryWhite
-        }]}>
+        }]}> 
             <HelpCenterItem
                 icon={icons.headset}
-                title="Contact Us"
+                title={t('help_center.contact_us')}
                 onPress={handleEmail}
             />
             <HelpCenterItem
                 icon={icons.whatsapp}
-                title="WhatsApp"
+                title={t('help_center.whatsapp')}
                 onPress={handleWhatsApp}
             />
         </View>
@@ -238,12 +241,13 @@ const renderScene = SceneMap({
 
 // Settings help Center Screen
 const SettingsHelpCenter = () => {
+    const { t } = useTranslation();
     const layout = useWindowDimensions();
 
     const [index, setIndex] = React.useState(0);
     const [routes] = React.useState([
-        { key: 'first', title: 'FAQ' },
-        { key: 'second', title: 'Contact Us' },
+        { key: 'first', title: t('help_center.tab_faq') },
+        { key: 'second', title: t('help_center.tab_contact') },
     ]);
 
     const renderTabBar = (props: any) => (
@@ -288,7 +292,7 @@ const SettingsHelpCenter = () => {
                     </TouchableOpacity>
                     <Text style={[styles.headerTitle, {
                         color: COLORS.greyscale900
-                    }]}>Help Center</Text>
+                    }]}>{t('help_center.header_title')}</Text>
                 </View>
                 <TouchableOpacity>
                     <Image
@@ -304,8 +308,8 @@ const SettingsHelpCenter = () => {
     }
 
     return (
-        <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
-            <View style={[styles.container, { backgroundColor: COLORS.white }]}>
+        <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}> 
+            <View style={[styles.container, { backgroundColor: COLORS.white }]}> 
                 {renderHeader()}
                 <TabView
                     navigationState={{ index, routes }}
