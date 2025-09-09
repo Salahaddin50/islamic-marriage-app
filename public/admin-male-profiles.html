@@ -168,6 +168,21 @@
             color: #d97706;
         }
 
+        .contact-links {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+            font-size: 13px;
+            color: #374151;
+            flex-wrap: wrap;
+        }
+        .contact-links a {
+            color: #374151;
+            text-decoration: none;
+        }
+        .contact-links a .fa-whatsapp { color: #25D366; }
+        .contact-links a .fa-envelope { color: #6b7280; }
+
         .media-section {
             margin-top: 16px;
             padding-top: 16px;
@@ -461,6 +476,12 @@
                             </select>
                         </div>
                         <div class="filter-group">
+                            <label class="filter-label">Country</label>
+                            <select id="countryFilter" class="filter-select" onchange="handleFilter()">
+                                <option value="">All Countries</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
                             <label class="filter-label">Package</label>
                             <select id="packageFilter" class="filter-select" onchange="handleFilter()">
                                 <option value="">All</option>
@@ -527,40 +548,52 @@
             // Always use real data
 
             try {
-                const { data, error } = await window.supabaseClient
-                    .from('user_profiles')
-                    .select(`
-                        id,
-                        user_id,
-                        first_name,
-                        last_name,
-                        gender,
-                        date_of_birth,
-                        country,
-                        city,
-                        height_cm,
-                        weight_kg,
-                        eye_color,
-                        hair_color,
-                        skin_tone,
-                        body_type,
-                        education_level,
-                        occupation,
-                        work_status,
-                        housing_type,
-                        living_condition,
-                        phone_code,
-                        mobile_number,
-                        languages_spoken,
-                        profile_picture_url,
-                        about_me,
-                        is_public,
-                        admin_approved,
-                        created_at,
-                        updated_at
-                    `)
-                    .eq('gender', 'male')
-                    .order('created_at', { ascending: false });
+                // Try RPC joining email (security definer) first
+                let data = null;
+                let error = null;
+                try {
+                    const rpcRes = await window.supabaseClient
+                        .rpc('get_profiles_with_email', { in_gender: 'male' });
+                    if (rpcRes.error) throw rpcRes.error;
+                    data = rpcRes.data;
+                } catch (rpcErr) {
+                    const res = await window.supabaseClient
+                        .from('user_profiles')
+                        .select(`
+                            id,
+                            user_id,
+                            first_name,
+                            last_name,
+                            gender,
+                            date_of_birth,
+                            country,
+                            city,
+                            height_cm,
+                            weight_kg,
+                            eye_color,
+                            hair_color,
+                            skin_tone,
+                            body_type,
+                            education_level,
+                            occupation,
+                            work_status,
+                            housing_type,
+                            living_condition,
+                            phone_code,
+                            mobile_number,
+                            languages_spoken,
+                            profile_picture_url,
+                            about_me,
+                            is_public,
+                            admin_approved,
+                            created_at,
+                            updated_at
+                        `)
+                        .eq('gender', 'male')
+                        .order('created_at', { ascending: false });
+                    data = res.data;
+                    error = res.error;
+                }
 
                 if (error) {
                     if (error.code === 'PGRST301' || error.message?.toLowerCase().includes('jwt') || error.message?.toLowerCase().includes('auth')) {
@@ -594,6 +627,7 @@
 
                 profiles = merged;
                 filteredProfiles = [...profiles];
+                populateCountryOptions();
                 renderProfiles();
 
             } catch (error) {
@@ -677,6 +711,10 @@
                                 <span>City: ${profile.city || 'N/A'}</span>
                                 <span>Joined: ${formatDate(profile.created_at)}</span>
                             </div>
+                            <div class="contact-links">
+                                ${getWhatsAppLink(profile)}
+                                <span class="email-link" data-user-id="${profile.user_id}"></span>
+                            </div>
                         </div>
                         <div class="profile-actions">
                             ${getApprovalStatus(profile.admin_approved)}
@@ -709,6 +747,9 @@
                     </div>
                 </div>
             `).join('');
+
+            // Fill async email placeholders
+            if (window.fillEmailsForElements) window.fillEmailsForElements(container);
 
             // Update count and render pagination
             const countEl = document.getElementById('profilesCount');
@@ -747,6 +788,42 @@
             } else {
                 return '<span class="approval-status pending"><i class="fas fa-clock"></i> Pending</span>';
             }
+        }
+
+        function digitsOnly(value) {
+            return (value || '').toString().replace(/\D/g, '');
+        }
+
+        function formatE164(phoneCode, mobileNumber) {
+            const country = digitsOnly(phoneCode);
+            let msisdn = digitsOnly(mobileNumber);
+            if (!msisdn && !country) return null;
+            if (country) {
+                if (msisdn.startsWith('00' + country)) {
+                    msisdn = msisdn.slice(('00' + country).length);
+                }
+                if (msisdn.startsWith(country)) {
+                    return { display: '+' + msisdn, dial: msisdn };
+                }
+                msisdn = msisdn.replace(/^0+/, '');
+                const full = country + msisdn;
+                return { display: '+' + full, dial: full };
+            }
+            if (msisdn.startsWith('00')) msisdn = msisdn.slice(2);
+            return { display: '+' + msisdn, dial: msisdn };
+        }
+
+        function getWhatsAppLink(profile) {
+            const fmt = formatE164(profile.phone_code, profile.mobile_number);
+            if (!fmt || !fmt.dial) return '';
+            const url = `https://wa.me/${fmt.dial}`;
+            return `<a href="${url}" target="_blank" rel="noopener"><i class=\"fab fa-whatsapp\"></i> ${fmt.display}</a>`;
+        }
+
+        function getEmailLink(profile) {
+            const email = profile.email || '';
+            if (!email) return '';
+            return `<a href="mailto:${email}"><i class="fas fa-envelope"></i> ${email}</a>`;
         }
 
         function normalizePackageType(value) {
@@ -1121,16 +1198,21 @@
             const dateFilter = getVal('dateFilter');
             const packageFilter = getVal('packageFilter');
             const paymentFilter = getVal('paymentFilter');
+            const countryFilter = getVal('countryFilter');
 
             const includes = (v) => (typeof v === 'string') && v.toLowerCase().includes(searchTerm);
 
             filteredProfiles = profiles.filter(profile => {
                 // search across fields
+                const cachedEmail = (window.getCachedEmailForUser && window.getCachedEmailForUser(profile.user_id)) ? window.getCachedEmailForUser(profile.user_id).toLowerCase() : '';
+                const ageVal = calculateAge(profile.date_of_birth);
+                const ageStr = typeof ageVal === 'number' ? String(ageVal) : '';
+                const phone = `${profile.phone_code||''}${profile.mobile_number||''}`.toLowerCase();
                 const matchesSearch = !searchTerm ||
                     includes(profile.first_name) || includes(profile.last_name) ||
                     includes(profile.city) || includes(profile.country) ||
                     includes(profile.occupation) || includes(profile.about_me) ||
-                    String(profile.mobile_number || '').includes(searchTerm);
+                    phone.includes(searchTerm) || ageStr.includes(searchTerm) || cachedEmail.includes(searchTerm);
 
                 // approval
                 let matchesApproval = true;
@@ -1148,6 +1230,12 @@
                         else if (ageFilter === '36-45') matchesAge = age >= 36 && age <= 45;
                         else if (ageFilter === '46+') matchesAge = age >= 46;
                     }
+                }
+
+                // country filter
+                let matchesCountry = true;
+                if (countryFilter) {
+                    matchesCountry = (profile.country||'') === countryFilter;
                 }
 
                 // joined date
@@ -1180,7 +1268,7 @@
                     matchesPayment = s === paymentFilter;
                 }
 
-                return matchesSearch && matchesApproval && matchesAge && matchesDate && matchesPackage && matchesPayment;
+                return matchesSearch && matchesApproval && matchesAge && matchesCountry && matchesDate && matchesPackage && matchesPayment;
             });
 
             currentPage = 1;
@@ -1190,11 +1278,27 @@
         }
 
         function clearFilters() {
-            ['searchInput','approvalFilter','ageFilter','dateFilter','packageFilter','paymentFilter'].forEach(id => {
+            ['searchInput','approvalFilter','ageFilter','dateFilter','packageFilter','paymentFilter','countryFilter'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.value = '';
             });
             applyFilters();
+        }
+
+        function populateCountryOptions() {
+            try {
+                const select = document.getElementById('countryFilter');
+                if (!select) return;
+                const set = new Set((profiles||[]).map(p => (p.country||'')).filter(Boolean));
+                const sorted = Array.from(set).sort((a,b)=>a.localeCompare(b));
+                while (select.options.length > 1) select.remove(1);
+                for (const c of sorted) {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = c;
+                    select.appendChild(opt);
+                }
+            } catch {}
         }
 
         function exportProfiles() {

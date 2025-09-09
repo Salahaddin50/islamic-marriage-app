@@ -253,6 +253,58 @@ function debounce(func, wait) {
     };
 }
 
+// Cache for auth emails to avoid many round trips
+const __authEmailCache = new Map();
+
+async function fetchEmailForUser(userId) {
+    if (!userId) return null;
+    if (__authEmailCache.has(userId)) return __authEmailCache.get(userId);
+    try {
+        const rpc = await window.supabaseClient.rpc('get_email_for_user', { in_user_id: userId });
+        if (!rpc.error && rpc.data && typeof rpc.data.email === 'string') {
+            __authEmailCache.set(userId, rpc.data.email);
+            return rpc.data.email;
+        }
+    } catch {}
+    return null;
+}
+
+function getEmailLinkHtml(email) {
+    return `<a href="mailto:${email}"><i class="fas fa-envelope"></i> ${email}</a>`;
+}
+
+// Fill email placeholders inside cards
+window.fillEmailsForElements = async function(rootEl = document) {
+    try {
+        const nodes = rootEl.querySelectorAll?.('.email-link[data-user-id]') || [];
+        for (const el of nodes) {
+            if (el.getAttribute('data-filled') === 'true') continue;
+            const userId = el.getAttribute('data-user-id');
+            const cached = __authEmailCache.get(userId);
+            if (cached) {
+                el.innerHTML = getEmailLinkHtml(cached);
+                el.setAttribute('data-filled', 'true');
+                continue;
+            }
+            const email = await fetchEmailForUser(userId);
+            if (email) {
+                el.innerHTML = getEmailLinkHtml(email);
+                el.setAttribute('data-filled', 'true');
+            }
+        }
+    } catch (e) {}
+}
+
+// Expose cached email getter for search usage
+window.getCachedEmailForUser = function(userId) {
+    try {
+        if (!userId) return null;
+        return __authEmailCache.get(userId) || null;
+    } catch {
+        return null;
+    }
+}
+
 // Table utilities
 function createPagination(currentPage, totalPages, onPageChange) {
     const pagination = document.createElement('div');
