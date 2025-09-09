@@ -394,17 +394,65 @@
         // supabase client is available from admin-common.js as window.supabaseClient
         let isLoading = false;
 
-        // Check if user is already logged in after page loads
+        // Check if user is already logged in after page loads (production-safe)
         window.addEventListener('load', function() {
             checkAuthState();
         });
 
         async function checkAuthState() {
-            const adminAuth = localStorage.getItem('adminAuth');
-            const adminUser = localStorage.getItem('adminUser');
-            
-            if (adminAuth === 'true' && adminUser) {
-                window.location.href = '/admin-dashboard.html';
+            try {
+                const adminAuth = localStorage.getItem('adminAuth');
+                const adminUserStr = localStorage.getItem('adminUser');
+                const sessionStr = localStorage.getItem('supabaseSession');
+
+                if (adminAuth !== 'true' || !adminUserStr) return;
+
+                // Rehydrate session tokens if present
+                if (sessionStr) {
+                    try {
+                        const sess = JSON.parse(sessionStr);
+                        if (sess && sess.access_token && sess.refresh_token) {
+                            await window.supabaseClient.auth.setSession({
+                                access_token: sess.access_token,
+                                refresh_token: sess.refresh_token
+                            });
+                        }
+                    } catch {}
+                }
+
+                // Verify session is valid
+                const { data: sessionRes } = await window.supabaseClient.auth.getSession();
+                if (!sessionRes || !sessionRes.session) {
+                    // Stale local credentials → clear to avoid loops
+                    localStorage.removeItem('adminAuth');
+                    localStorage.removeItem('adminUser');
+                    localStorage.removeItem('supabaseSession');
+                    return;
+                }
+
+                // Verify admin is approved
+                const adminUser = JSON.parse(adminUserStr);
+                const { data: adminCheck, error } = await window.supabaseClient
+                    .from('admin_users')
+                    .select('is_approved')
+                    .eq('id', adminUser.id)
+                    .maybeSingle();
+                if (error || !adminCheck || adminCheck.is_approved !== true) {
+                    // Not approved anymore
+                    localStorage.removeItem('adminAuth');
+                    localStorage.removeItem('adminUser');
+                    localStorage.removeItem('supabaseSession');
+                    return;
+                }
+
+                // All good → redirect (respect .html-less routing)
+                const dashUrl = (window.location.pathname.includes('.html')) ? '/admin-dashboard.html' : '/admin-dashboard';
+                window.location.href = dashUrl;
+            } catch (e) {
+                // On any error, clear and stay on login
+                localStorage.removeItem('adminAuth');
+                localStorage.removeItem('adminUser');
+                localStorage.removeItem('supabaseSession');
             }
         }
 

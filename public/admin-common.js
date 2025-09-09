@@ -17,7 +17,7 @@ let supabaseSession = null;
 function isLoginPage() {
     try {
         const path = (window.location && window.location.pathname) || '';
-        return path.includes('admin.html');
+        return path.endsWith('/admin.html') || path.endsWith('admin.html') || path.endsWith('/admin') || path.endsWith('/admin/');
     } catch {
         return false;
     }
@@ -90,9 +90,18 @@ async function checkAuth() {
     }
 }
 
+function getLoginUrl() {
+    try {
+        const path = (window.location && window.location.pathname) || '';
+        return path.includes('.html') ? '/admin.html' : '/admin';
+    } catch {
+        return '/admin';
+    }
+}
+
 function redirectToLogin() {
     if (!isLoginPage()) {
-        window.location.href = '/admin.html';
+        window.location.href = getLoginUrl();
     }
 }
 
@@ -125,7 +134,7 @@ async function logout() {
     localStorage.removeItem('supabaseSession');
     
     // Redirect to login
-    window.location.href = '/admin.html';
+    window.location.href = getLoginUrl();
 }
 
 // Keep session in sync and handle refresh failures
