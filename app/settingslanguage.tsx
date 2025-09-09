@@ -1,50 +1,50 @@
 import { View, Text, StyleSheet } from 'react-native';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { COLORS } from '../constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '../components/Header';
 import { router } from 'expo-router';
 import { ScrollView } from 'react-native-virtualized-view';
 import LanguageItem from '@/components/LanguageItem';
+import { useTranslation } from 'react-i18next';
+import { changeLanguage, getCurrentLanguage, getSupportedLanguages } from '@/src/i18n';
 
 const SettingsLanguage = () => {
-    const [selectedItem, setSelectedItem] = useState(null);
+    const { t, i18n } = useTranslation();
+    const [selectedItem, setSelectedItem] = useState<string | null>(null);
 
-    const handleCheckboxPress = (itemTitle: any) => {
-        if (selectedItem === itemTitle) {
-            // If the clicked item is already selected, deselect it
-            setSelectedItem(null);
-        } else {
-            // Otherwise, select the clicked item
-            setSelectedItem(itemTitle);
-        }
+    useEffect(() => {
+        setSelectedItem(getCurrentLanguage());
+    }, []);
+
+    const handleSelect = async (code: string) => {
+        if (selectedItem === code) return;
+        setSelectedItem(code);
+        await changeLanguage(code);
+        // ensure UI reflects new language when returning
+        router.push('/(tabs)/profile');
     };
+
+    const langs = getSupportedLanguages();
 
     return (
         <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
             <View style={[styles.container, { backgroundColor: COLORS.white }]}>
                 <Header 
-                  title="Language & Region" 
+                  title={t('language_page.title')} 
                   onBackPress={() => router.push('/(tabs)/profile')}
                 />
                 <ScrollView showsVerticalScrollIndicator={false}>
-                    <Text style={[styles.title, { color: COLORS.black }]}>Languages</Text>
+                    <Text style={[styles.title, { color: COLORS.black }]}>{t('language_page.languages')}</Text>
                     <View style={{ marginTop: 12 }}>
-                        <LanguageItem
-                            checked={selectedItem === 'English'}
-                            name="English"
-                            onPress={() => handleCheckboxPress('English')}
-                        />
-                        <LanguageItem
-                            checked={selectedItem === 'Russian'}
-                            name="Russian"
-                            onPress={() => handleCheckboxPress('Russian')}
-                        />
-                        <LanguageItem
-                            checked={selectedItem === 'Arabic'}
-                            name="Arabic"
-                            onPress={() => handleCheckboxPress('Arabic')}
-                        />
+                        {langs.map(l => (
+                            <LanguageItem
+                                key={l.code}
+                                checked={selectedItem === l.code}
+                                name={`${l.nativeName} (${l.name})`}
+                                onPress={() => handleSelect(l.code)}
+                            />
+                        ))}
                     </View>
                 </ScrollView>
             </View>

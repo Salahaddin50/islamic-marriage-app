@@ -477,6 +477,10 @@
       "yes_logout": "نعم، تسجيل الخروج"
     }
   },
+  "language_page": {
+    "title": "اللغة والمنطقة",
+    "languages": "اللغات"
+  },
   "onboarding2": {
     "title": "متوافق بالكامل مع الشريعة",
     "subtitle": "مُطابق",

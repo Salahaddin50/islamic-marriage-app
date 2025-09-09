@@ -602,6 +602,10 @@
       "yes_logout": "Yes, Logout"
     }
   },
+  "language_page": {
+    "title": "Language & Region",
+    "languages": "Languages"
+  },
   "match_details": {
     "photos_videos": "Photos & Videos",
     "about_me": "About Me",
