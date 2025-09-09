@@ -1,12 +1,14 @@
 import { Tabs, router } from "expo-router";
 import { View, Text, Platform } from "react-native";
 import { Image } from "expo-image";
+import { useLanguage } from "@/src/contexts/LanguageContext";
 import { COLORS, icons, FONTS, SIZES } from "../../constants";
 import { getResponsiveFontSize, getResponsiveSpacing, isMobileWeb } from "../../utils/responsive";
 import React, { useEffect, useState } from 'react';
 import { supabase } from "../../src/config/supabase";
 
 const TabLayout = () => {
+  const { t } = useLanguage();
   const [approvedInterestNewCount, setApprovedInterestNewCount] = useState<number>(0);
   const [approvedMeetNewCount, setApprovedMeetNewCount] = useState<number>(0);
   const [approvedMessageNewCount, setApprovedMessageNewCount] = useState<number>(0);
@@ -186,7 +188,7 @@ const TabLayout = () => {
                 <Text style={{
                   ...FONTS.body4,
                   color: focused ? COLORS.primary : COLORS.gray3,
-                }}>Home</Text>
+                }}>{t('tabs.home')}</Text>
               </View>
             )
           },
@@ -217,7 +219,7 @@ const TabLayout = () => {
                   {(receivedInterestPendingCount > 0 || approvedInterestNewCount > 0) && (
                     <View style={{ position: 'absolute', top: isMobileWeb() ? 1 : 3, left: isMobileWeb() ? 26 : 30, backgroundColor: COLORS.primary, minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}>
                       <Text style={{ color: COLORS.white, fontSize: 10, fontFamily: 'bold' }}>
-                        {receivedInterestPendingCount > 0 ? 'new' : (approvedInterestNewCount > 99 ? '99+' : approvedInterestNewCount)}
+                        {receivedInterestPendingCount > 0 ? t('badges.new') : (approvedInterestNewCount > 99 ? '99+' : approvedInterestNewCount)}
                       </Text>
                     </View>
                   )}
@@ -225,7 +227,7 @@ const TabLayout = () => {
                 <Text style={{
                   ...FONTS.body4,
                   color: focused ? COLORS.primary : COLORS.gray3,
-                }}>Requests</Text>
+                }}>{t('tabs.requests')}</Text>
               </View>
             )
           },
@@ -256,7 +258,7 @@ const TabLayout = () => {
                   {(receivedMeetPendingCount > 0 || approvedMeetNewCount > 0) && (
                     <View style={{ position: 'absolute', top: isMobileWeb() ? 1 : 3, left: isMobileWeb() ? 26 : 30, backgroundColor: COLORS.primary, minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}>
                       <Text style={{ color: COLORS.white, fontSize: 10, fontFamily: 'bold' }}>
-                        {receivedMeetPendingCount > 0 ? 'new' : (approvedMeetNewCount > 99 ? '99+' : approvedMeetNewCount)}
+                        {receivedMeetPendingCount > 0 ? t('badges.new') : (approvedMeetNewCount > 99 ? '99+' : approvedMeetNewCount)}
                       </Text>
                     </View>
                   )}
@@ -264,7 +266,7 @@ const TabLayout = () => {
                 <Text style={{
                   ...FONTS.body4,
                   color: focused ? COLORS.primary : COLORS.gray3,
-                }}>Meet</Text>
+                }}>{t('tabs.meet')}</Text>
               </View>
             )
           },
@@ -295,7 +297,7 @@ const TabLayout = () => {
                   {(receivedMessagePendingCount > 0 || approvedMessageNewCount > 0) && (
                     <View style={{ position: 'absolute', top: isMobileWeb() ? 1 : 3, left: isMobileWeb() ? 26 : 30, backgroundColor: COLORS.primary, minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}>
                       <Text style={{ color: COLORS.white, fontSize: 10, fontFamily: 'bold' }}>
-                        {receivedMessagePendingCount > 0 ? 'new' : (approvedMessageNewCount > 99 ? '99+' : approvedMessageNewCount)}
+                        {receivedMessagePendingCount > 0 ? t('badges.new') : (approvedMessageNewCount > 99 ? '99+' : approvedMessageNewCount)}
                       </Text>
                     </View>
                   )}
@@ -303,7 +305,7 @@ const TabLayout = () => {
                 <Text style={{
                   ...FONTS.body4,
                   color: focused ? COLORS.primary : COLORS.gray3,
-                }}>Message</Text>
+                }}>{t('tabs.message')}</Text>
               </View>
             )
           },
@@ -336,7 +338,7 @@ const TabLayout = () => {
                 <Text style={{
                   ...FONTS.body4,
                   color: focused ? COLORS.primary : COLORS.gray3,
-                }}>Profile</Text>
+                }}>{t('tabs.profile')}</Text>
               </View>
             )
           },

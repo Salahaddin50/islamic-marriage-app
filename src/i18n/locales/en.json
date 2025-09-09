@@ -330,4 +330,159 @@
       }
     }
   }
+  ,
+  "home": {
+    "filters": {
+      "select_country": "Select Country",
+      "select_city": "Select City",
+      "reset": "Reset",
+      "apply": "Apply",
+      "title_country": "Country",
+      "title_city": "City",
+      "title_age": "Age",
+      "title_height": "Height Range (cm)",
+      "title_education": "Education Level",
+      "title_work": "Work Status",
+      "filters_active_count": "{{count}}",
+      "education_options": {
+        "high_school": "High School",
+        "some_college": "Some College",
+        "associate_degree": "Associate Degree",
+        "bachelors_degree": "Bachelor's Degree",
+        "masters_degree": "Master's Degree",
+        "doctorate": "Doctorate",
+        "trade_school": "Trade School",
+        "other": "Other"
+      },
+      "work_options": {
+        "working": "Working",
+        "not_working": "Not Working"
+      },
+      "eye_color_options": {
+        "brown": "Brown",
+        "black": "Black",
+        "hazel": "Hazel",
+        "green": "Green",
+        "blue": "Blue",
+        "gray": "Gray",
+        "amber": "Amber"
+      },
+      "hair_color_options": {
+        "black": "Black",
+        "dark_brown": "Dark Brown",
+        "brown": "Brown",
+        "light_brown": "Light Brown",
+        "blonde": "Blonde",
+        "red": "Red",
+        "gray": "Gray",
+        "white": "White"
+      },
+      "skin_tone_options": {
+        "very_fair": "Very Fair",
+        "fair": "Fair",
+        "medium": "Medium",
+        "olive": "Olive",
+        "dark": "Dark",
+        "very_dark": "Very Dark"
+      },
+      "body_type_options": {
+        "slim": "Slim",
+        "athletic": "Athletic",
+        "average": "Average",
+        "curvy": "Curvy",
+        "muscular": "Muscular"
+      },
+      "language_options": {
+        "arabic": "Arabic",
+        "english": "English",
+        "turkish": "Turkish",
+        "russian": "Russian",
+        "spanish": "Spanish",
+        "french": "French",
+        "urdu": "Urdu"
+      },
+      "housing_options": {
+        "own_house": "Own House",
+        "rent_apartment": "Rent Apartment",
+        "family_home": "Family Home",
+        "shared_accommodation": "Shared Accommodation",
+        "other": "Other"
+      },
+      "living_condition_options": {
+        "living_with_parents": "Living with Parents",
+        "living_alone": "Living Alone",
+        "living_with_children": "Living with Children"
+      },
+      "social_condition_options": {
+        "sufficient": "Sufficient",
+        "rich": "Rich",
+        "very_rich": "Very Rich"
+      },
+      "religious_level_options": {
+        "very_religious": "Very Religious",
+        "religious": "Religious",
+        "moderately_religious": "Moderately Religious",
+        "somewhat_religious": "Somewhat Religious",
+        "not_very_religious": "Not Very Religious"
+      },
+      "prayer_frequency_options": {
+        "5_times_daily": "5 Times Daily",
+        "regularly": "Regularly",
+        "sometimes": "Sometimes",
+        "rarely": "Rarely",
+        "never": "Never"
+      },
+      "quran_reading_options": {
+        "memorized_significant_portions": "Memorized Significant Portions",
+        "read_fluently": "Read Fluently",
+        "read_with_help": "Read with Help",
+        "learning_to_read": "Learning to Read",
+        "cannot_read_arabic": "Cannot Read Arabic"
+      },
+      "covering_level_options": {
+        "will_cover": "Will Cover",
+        "hijab": "Hijab",
+        "niqab": "Niqab"
+      },
+      "beard_practice_options": {
+        "full_beard": "Full Beard",
+        "trimmed_beard": "Trimmed Beard",
+        "mustache_only": "Mustache Only",
+        "clean_shaven": "Clean Shaven"
+      },
+      "wife_number_options": {
+        "2": "2nd Wife",
+        "3": "3rd Wife",
+        "4": "4th Wife"
+      },
+      "title_eye_color": "Eye Color",
+      "title_hair_color": "Hair Color",
+      "title_skin_tone": "Skin Tone",
+      "title_body_type": "Body Type",
+      "title_languages": "Languages",
+      "title_housing_type": "Housing Type",
+      "title_living_condition": "Living Condition",
+      "title_social_condition": "Social Condition",
+      "title_religious_level": "Religious Level",
+      "title_prayer_frequency": "Prayer Frequency",
+      "title_quran_reading": "Quran Reading Level",
+      "title_covering_level": "Covering Level",
+      "title_beard_practice": "Beard Practice",
+      "title_looking_for_wife": "Looking For Which Wife",
+      "title_accepted_positions": "Accepted Wife Positions",
+      "title_weight_range": "Weight Range (kg)"
+    }
+  }
+  ,
+  "tabs": {
+    "home": "Home",
+    "requests": "Requests",
+    "meet": "Meet",
+    "message": "Message",
+    "profile": "Profile"
+  }
+  ,
+  "badges": {
+    "new": "new"
+  }
 }

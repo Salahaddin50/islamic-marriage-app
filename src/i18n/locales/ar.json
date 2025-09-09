@@ -208,6 +208,158 @@
       }
     }
   },
+  "home": {
+    "filters": {
+      "select_country": "اختر الدولة",
+      "select_city": "اختر المدينة",
+      "reset": "إعادة الضبط",
+      "apply": "تطبيق",
+      "title_country": "الدولة",
+      "title_city": "المدينة",
+      "title_age": "العمر",
+      "title_height": "نطاق الطول (سم)",
+      "title_education": "المستوى التعليمي",
+      "title_work": "حالة العمل",
+      "filters_active_count": "{{count}}",
+      "education_options": {
+        "high_school": "الثانوية العامة",
+        "some_college": "بعض الكلية",
+        "associate_degree": "درجة الزمالة",
+        "bachelors_degree": "درجة البكالوريوس",
+        "masters_degree": "درجة الماجستير",
+        "doctorate": "الدكتوراه",
+        "trade_school": "مدرسة مهنية",
+        "other": "أخرى"
+      },
+      "work_options": {
+        "working": "يعمل",
+        "not_working": "لا يعمل"
+      },
+      "eye_color_options": {
+        "brown": "بني",
+        "black": "أسود",
+        "hazel": "عسلي",
+        "green": "أخضر",
+        "blue": "أزرق",
+        "gray": "رمادي",
+        "amber": "عنبري"
+      },
+      "hair_color_options": {
+        "black": "أسود",
+        "dark_brown": "بني داكن",
+        "brown": "بني",
+        "light_brown": "بني فاتح",
+        "blonde": "أشقر",
+        "red": "أحمر",
+        "gray": "رمادي",
+        "white": "أبيض"
+      },
+      "skin_tone_options": {
+        "very_fair": "فاتح جداً",
+        "fair": "فاتح",
+        "medium": "متوسط",
+        "olive": "زيتوني",
+        "dark": "داكن",
+        "very_dark": "داكن جداً"
+      },
+      "body_type_options": {
+        "slim": "نحيف",
+        "athletic": "رياضي",
+        "average": "متوسط",
+        "curvy": "منحني",
+        "muscular": "عضلي"
+      },
+      "language_options": {
+        "arabic": "العربية",
+        "english": "الإنجليزية",
+        "turkish": "التركية",
+        "russian": "الروسية",
+        "spanish": "الإسبانية",
+        "french": "الفرنسية",
+        "urdu": "الأردية"
+      },
+      "housing_options": {
+        "own_house": "منزل ملك",
+        "rent_apartment": "شقة مستأجرة",
+        "family_home": "منزل العائلة",
+        "shared_accommodation": "سكن مشترك",
+        "other": "أخرى"
+      },
+      "living_condition_options": {
+        "living_with_parents": "يعيش مع الوالدين",
+        "living_alone": "يعيش وحيداً",
+        "living_with_children": "يعيش مع الأطفال"
+      },
+      "social_condition_options": {
+        "sufficient": "كافي",
+        "rich": "غني",
+        "very_rich": "غني جداً"
+      },
+      "religious_level_options": {
+        "very_religious": "متدين جداً",
+        "religious": "متدين",
+        "moderately_religious": "متدين بشكل معتدل",
+        "somewhat_religious": "متدين نوعاً ما",
+        "not_very_religious": "غير متدين كثيراً"
+      },
+      "prayer_frequency_options": {
+        "5_times_daily": "5 مرات يومياً",
+        "regularly": "بانتظام",
+        "sometimes": "أحياناً",
+        "rarely": "نادراً",
+        "never": "أبداً"
+      },
+      "quran_reading_options": {
+        "memorized_significant_portions": "حفظ أجزاء كبيرة",
+        "read_fluently": "يقرأ بطلاقة",
+        "read_with_help": "يقرأ بمساعدة",
+        "learning_to_read": "يتعلم القراءة",
+        "cannot_read_arabic": "لا يستطيع قراءة العربية"
+      },
+      "covering_level_options": {
+        "will_cover": "ستتحجب",
+        "hijab": "حجاب",
+        "niqab": "نقاب"
+      },
+      "beard_practice_options": {
+        "full_beard": "لحية كاملة",
+        "trimmed_beard": "لحية مهذبة",
+        "mustache_only": "شارب فقط",
+        "clean_shaven": "حليق"
+      },
+      "wife_number_options": {
+        "2": "الزوجة الثانية",
+        "3": "الزوجة الثالثة",
+        "4": "الزوجة الرابعة"
+      },
+      "title_eye_color": "لون العين",
+      "title_hair_color": "لون الشعر",
+      "title_skin_tone": "لون البشرة",
+      "title_body_type": "نوع الجسم",
+      "title_languages": "اللغات",
+      "title_housing_type": "نوع السكن",
+      "title_living_condition": "حالة المعيشة",
+      "title_social_condition": "الحالة الاجتماعية",
+      "title_religious_level": "المستوى الديني",
+      "title_prayer_frequency": "تكرار الصلاة",
+      "title_quran_reading": "مستوى قراءة القرآن",
+      "title_covering_level": "مستوى الحجاب",
+      "title_beard_practice": "ممارسة اللحية",
+      "title_looking_for_wife": "يبحث عن أي زوجة",
+      "title_accepted_positions": "المناصب المقبولة كزوجة",
+      "title_weight_range": "نطاق الوزن (كغ)"
+    }
+  },
+  "tabs": {
+    "home": "الرئيسية",
+    "requests": "الطلبات",
+    "meet": "المقابلات",
+    "message": "الرسائل",
+    "profile": "الملف الشخصي"
+  },
+  "badges": {
+    "new": "جديد"
+  },
   "onboarding2": {
     "title": "متوافق بالكامل مع الشريعة",
     "subtitle": "مُطابق",

@@ -22,6 +22,7 @@ import { imageCache } from '@/utils/imageCache';
 import { useNotifications } from '@/src/contexts/NotificationContext';
 import DesktopMobileNotice from '@/components/DesktopMobileNotice';
 import { OptimizedProfilesService } from '@/src/services/optimized-profiles.service';
+import { useLanguage } from '@/src/contexts/LanguageContext';
 
 // Cached profile image to prevent reloading
 let cachedProfileImageUrl: string | null = null;
@@ -267,6 +268,7 @@ const Storage = {
 };
 
 const HomeScreen = () => {
+  const { t } = useLanguage();
   // Temporarily silence console noise on this screen
   useEffect(() => {
     const originalLog = console.log;
@@ -450,6 +452,103 @@ const HomeScreen = () => {
   const skinToneOptions = ['Very Fair', 'Fair', 'Medium', 'Olive', 'Dark', 'Very Dark'];
   const bodyTypeOptions = ['Slim', 'Athletic', 'Average', 'Curvy', 'Muscular'];
   const educationOptions = ['High School', 'Some College', 'Associate Degree', 'Bachelor\'s Degree', 'Master\'s Degree', 'Doctorate', 'Trade School', 'Other'];
+  
+  // Helper function to get education translation key
+  const getEducationTranslationKey = (option: string) => {
+    const keyMap: { [key: string]: string } = {
+      'High School': 'high_school',
+      'Some College': 'some_college',
+      'Associate Degree': 'associate_degree',
+      'Bachelor\'s Degree': 'bachelors_degree',
+      'Master\'s Degree': 'masters_degree',
+      'Doctorate': 'doctorate',
+      'Trade School': 'trade_school',
+      'Other': 'other'
+    };
+    return keyMap[option] || option.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  };
+  
+  // Helper function to get work status translation key
+  const getWorkStatusTranslationKey = (option: string) => {
+    return option; // 'working' and 'not_working' are already clean keys
+  };
+
+  // Helper functions for all filter options
+  const getEyeColorTranslationKey = (option: string) => {
+    return option.toLowerCase().replace(/\s+/g, '_');
+  };
+
+  const getHairColorTranslationKey = (option: string) => {
+    return option.toLowerCase().replace(/\s+/g, '_');
+  };
+
+  const getSkinToneTranslationKey = (option: string) => {
+    return option.toLowerCase().replace(/\s+/g, '_');
+  };
+
+  const getBodyTypeTranslationKey = (option: string) => {
+    return option.toLowerCase().replace(/\s+/g, '_');
+  };
+
+  const getLanguageTranslationKey = (option: string) => {
+    return option.toLowerCase().replace(/\s+/g, '_');
+  };
+
+  const getHousingTranslationKey = (option: string) => {
+    return option.toLowerCase().replace(/\s+/g, '_');
+  };
+
+  const getLivingConditionTranslationKey = (option: string) => {
+    return option; // Already in snake_case
+  };
+
+  const getSocialConditionTranslationKey = (option: string) => {
+    return option; // Already in snake_case
+  };
+
+  const getReligiousLevelTranslationKey = (option: string) => {
+    return option.toLowerCase().replace(/\s+/g, '_');
+  };
+
+  const getPrayerFrequencyTranslationKey = (option: string) => {
+    const keyMap: { [key: string]: string } = {
+      '5 Times Daily': '5_times_daily',
+      'Regularly': 'regularly',
+      'Sometimes': 'sometimes',
+      'Rarely': 'rarely',
+      'Never': 'never'
+    };
+    return keyMap[option] || option.toLowerCase().replace(/\s+/g, '_');
+  };
+
+  const getQuranReadingTranslationKey = (option: string) => {
+    const keyMap: { [key: string]: string } = {
+      'Memorized Significant Portions': 'memorized_significant_portions',
+      'Read Fluently': 'read_fluently',
+      'Read with Help': 'read_with_help',
+      'Learning to Read': 'learning_to_read',
+      'Cannot Read Arabic': 'cannot_read_arabic'
+    };
+    return keyMap[option] || option.toLowerCase().replace(/\s+/g, '_');
+  };
+
+  const getCoveringLevelTranslationKey = (option: string) => {
+    return option; // Already in snake_case
+  };
+
+  const getBeardPracticeTranslationKey = (option: string) => {
+    const keyMap: { [key: string]: string } = {
+      'Full Beard': 'full_beard',
+      'Trimmed Beard': 'trimmed_beard',
+      'Mustache Only': 'mustache_only',
+      'Clean Shaven': 'clean_shaven'
+    };
+    return keyMap[option] || option.toLowerCase().replace(/\s+/g, '_');
+  };
+
+  const getWifeNumberTranslationKey = (option: string) => {
+    return option; // Numbers are already clean
+  };
   const languageOptions = ['Arabic', 'English', 'Turkish', 'Russian', 'Spanish', 'French', 'Urdu'];
   const housingOptions = ['Own House', 'Rent Apartment', 'Family Home', 'Shared Accommodation', 'Other'];
   const livingConditionOptions = ['living_with_parents', 'living_alone', 'living_with_children'];
@@ -1453,7 +1552,7 @@ const HomeScreen = () => {
             )}
             {!filterLoading && getActiveFiltersCount() > 0 && (
               <View style={styles.filterBadge}>
-                <Text style={styles.filterBadgeText}>{getActiveFiltersCount()}</Text>
+                <Text style={styles.filterBadgeText}>{t('home.filters.filters_active_count', { count: getActiveFiltersCount() })}</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -1580,11 +1679,11 @@ const HomeScreen = () => {
               {/* Country first */}
               <Text style={[styles.subtitle, {
                 color: COLORS.greyscale900,
-              }]}>Country</Text>
+              }]}>{t('home.filters.title_country')}</Text>
               <SearchableDropdown
                 data={countriesData.map(country => ({ label: country.name, value: country.name }))}
                 onSelect={(item: any) => handleCountrySelect(item.value)}
-                placeholder="Select Country"
+                placeholder={t('home.filters.select_country')}
                 selectedValue={selectedCountry}
               />
               
@@ -1593,11 +1692,11 @@ const HomeScreen = () => {
                   <Text style={[styles.subtitle, {
                     color: COLORS.greyscale900,
                     marginTop: 16,
-                  }]}>City</Text>
+                  }]}>{t('home.filters.title_city')}</Text>
                   <SearchableDropdown
                     data={availableCities.map(city => ({ label: city, value: city }))}
                     onSelect={(item: any) => handleCitySelect(item.value)}
-                    placeholder="Select City"
+                    placeholder={t('home.filters.select_city')}
                     selectedValue={selectedCity}
                   />
                 </>
@@ -1606,7 +1705,7 @@ const HomeScreen = () => {
               {/* Age after location */}
               <Text style={[styles.subtitle, {
                 color: COLORS.greyscale900,
-              }]}>Age</Text>
+              }]}>{t('home.filters.title_age')}</Text>
               <MultiSlider
                 values={ageRange}
                 sliderLength={SIZES.width - 32}
@@ -1628,7 +1727,7 @@ const HomeScreen = () => {
               <Text style={[styles.subtitle, {
                 color: COLORS.greyscale900,
                 marginTop: 16,
-              }]}>Height Range (cm)</Text>
+              }]}>{t('home.filters.title_height')}</Text>
               <MultiSlider
                 values={heightRange}
                 sliderLength={SIZES.width - 32}
@@ -1649,7 +1748,7 @@ const HomeScreen = () => {
               <Text style={[styles.subtitle, {
                 color: COLORS.greyscale900,
                 marginTop: 16,
-              }]}>Weight Range (kg)</Text>
+              }]}>{t('home.filters.title_weight_range')}</Text>
               <MultiSlider
                 values={weightRange}
                 sliderLength={SIZES.width - 32}
@@ -1667,17 +1766,19 @@ const HomeScreen = () => {
                 customMarker={(e) => <CustomMarker {...e} />}
               />
 
-              <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Eye Color</Text>
+              <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_eye_color')}</Text>
               <View style={styles.horizontalMultiSelect}>
                 {eyeColorOptions.map((option: string) => {
                   const selected = selectedEyeColor.includes(option);
+                  const translationKey = getEyeColorTranslationKey(option);
+                  const translatedLabel = t(`home.filters.eye_color_options.${translationKey}`) || option;
                   return (
                     <TouchableOpacity
                       key={option}
                       style={[styles.optionChip, selected && styles.optionChipSelected]}
                       onPress={() => toggleSelection(option, selectedEyeColor, setSelectedEyeColor)}
                     >
-                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{formatEnumLabel(option)}</Text>
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -1686,17 +1787,19 @@ const HomeScreen = () => {
               <Text style={[styles.subtitle, {
                 color: COLORS.greyscale900,
                 marginTop: 16,
-              }]}>Hair Color</Text>
+              }]}>{t('home.filters.title_hair_color')}</Text>
               <View style={styles.horizontalMultiSelect}>
                 {hairColorOptions.map((option: string) => {
                   const selected = selectedHairColor.includes(option);
+                  const translationKey = getHairColorTranslationKey(option);
+                  const translatedLabel = t(`home.filters.hair_color_options.${translationKey}`) || option;
                   return (
                     <TouchableOpacity
                       key={option}
                       style={[styles.optionChip, selected && styles.optionChipSelected]}
                       onPress={() => toggleSelection(option, selectedHairColor, setSelectedHairColor)}
                     >
-                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{formatEnumLabel(option)}</Text>
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -1705,17 +1808,19 @@ const HomeScreen = () => {
               <Text style={[styles.subtitle, {
                 color: COLORS.greyscale900,
                 marginTop: 16,
-              }]}>Skin Tone</Text>
+              }]}>{t('home.filters.title_skin_tone')}</Text>
               <View style={styles.horizontalMultiSelect}>
                 {skinToneOptions.map((option: string) => {
                   const selected = selectedSkinTone.includes(option);
+                  const translationKey = getSkinToneTranslationKey(option);
+                  const translatedLabel = t(`home.filters.skin_tone_options.${translationKey}`) || option;
                   return (
                     <TouchableOpacity
                       key={option}
                       style={[styles.optionChip, selected && styles.optionChipSelected]}
                       onPress={() => toggleSelection(option, selectedSkinTone, setSelectedSkinTone)}
                     >
-                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{formatEnumLabel(option)}</Text>
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -1724,17 +1829,19 @@ const HomeScreen = () => {
               <Text style={[styles.subtitle, {
                 color: COLORS.greyscale900,
                 marginTop: 16,
-              }]}>Body Type</Text>
+              }]}>{t('home.filters.title_body_type')}</Text>
               <View style={styles.horizontalMultiSelect}>
                 {bodyTypeOptions.map((option: string) => {
                   const selected = selectedBodyType.includes(option);
+                  const translationKey = getBodyTypeTranslationKey(option);
+                  const translatedLabel = t(`home.filters.body_type_options.${translationKey}`) || option;
                   return (
                     <TouchableOpacity
                       key={option}
                       style={[styles.optionChip, selected && styles.optionChipSelected]}
                       onPress={() => toggleSelection(option, selectedBodyType, setSelectedBodyType)}
                     >
-                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{formatEnumLabel(option)}</Text>
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -1743,83 +1850,92 @@ const HomeScreen = () => {
               <Text style={[styles.subtitle, {
                 color: COLORS.greyscale900,
                 marginTop: 16,
-              }]}>Education Level</Text>
+              }]}>{t('home.filters.title_education')}</Text>
               <View style={styles.horizontalMultiSelect}>
                 {educationOptions.map((option: string) => {
                   const selected = selectedEducation.includes(option);
+                  const translationKey = getEducationTranslationKey(option);
+                  const translatedLabel = t(`home.filters.education_options.${translationKey}`) || option;
                   return (
                     <TouchableOpacity
                       key={option}
                       style={[styles.optionChip, selected && styles.optionChipSelected]}
                       onPress={() => toggleSelection(option, selectedEducation, setSelectedEducation)}
                     >
-                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                     </TouchableOpacity>
                   );
                 })}
               </View>
 
               {/* Languages */}
-              <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Languages</Text>
+              <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_languages')}</Text>
               <View style={styles.horizontalMultiSelect}>
                 {languageOptions.map((option: string) => {
                   const selected = selectedLanguages.includes(option);
+                  const translationKey = getLanguageTranslationKey(option);
+                  const translatedLabel = t(`home.filters.language_options.${translationKey}`) || option;
                   return (
                     <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedLanguages, setSelectedLanguages)}>
-                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                     </TouchableOpacity>
                   );
                 })}
               </View>
 
               {/* Housing Type */}
-              <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Housing Type</Text>
+              <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_housing_type')}</Text>
               <View style={styles.horizontalMultiSelect}>
                 {housingOptions.map((option: string) => {
                   const selected = selectedHousingType.includes(option);
+                  const translationKey = getHousingTranslationKey(option);
+                  const translatedLabel = t(`home.filters.housing_options.${translationKey}`) || option;
                   return (
                     <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedHousingType, setSelectedHousingType)}>
-                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                     </TouchableOpacity>
                   );
                 })}
               </View>
 
               {/* Living Condition / Social / Work are gender-specific – still selectable here, but applied conditionally in query */}
-              <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Living Condition</Text>
+              <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_living_condition')}</Text>
               <View style={styles.horizontalMultiSelect}>
                 {livingConditionOptions.map((option: string) => {
-                  const label = formatLabel(option);
+                  const translationKey = getLivingConditionTranslationKey(option);
+                  const translatedLabel = t(`home.filters.living_condition_options.${translationKey}`) || formatLabel(option);
                   const selected = selectedLivingCondition.includes(option);
                   return (
                     <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedLivingCondition, setSelectedLivingCondition)}>
-                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{label}</Text>
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                     </TouchableOpacity>
                   );
                 })}
               </View>
 
-              <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Social Condition</Text>
+              <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_social_condition')}</Text>
               <View style={styles.horizontalMultiSelect}>
                 {socialConditionOptions.map((option: string) => {
-                  const label = formatLabel(option);
+                  const translationKey = getSocialConditionTranslationKey(option);
+                  const translatedLabel = t(`home.filters.social_condition_options.${translationKey}`) || formatLabel(option);
                   const selected = selectedSocialCondition.includes(option);
                   return (
                     <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedSocialCondition, setSelectedSocialCondition)}>
-                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{label}</Text>
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                     </TouchableOpacity>
                   );
                 })}
               </View>
 
-              <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Work Status</Text>
+              <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_work')}</Text>
               <View style={styles.horizontalMultiSelect}>
                 {workStatusOptions.map((option: string) => {
-                  const label = formatLabel(option);
+                  const translationKey = getWorkStatusTranslationKey(option);
+                  const translatedLabel = t(`home.filters.work_options.${translationKey}`) || formatLabel(option);
                   const selected = selectedWorkStatus.includes(option);
                   return (
                     <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedWorkStatus, setSelectedWorkStatus)}>
-                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{label}</Text>
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -1828,13 +1944,15 @@ const HomeScreen = () => {
               <Text style={[styles.subtitle, {
                 color: COLORS.greyscale900,
                 marginTop: 16,
-              }]}>Religious Level</Text>
+              }]}>{t('home.filters.title_religious_level')}</Text>
               <View style={styles.horizontalMultiSelect}>
                 {religiousLevelOptions.map((option: string) => {
                   const selected = selectedReligiousLevel.includes(option);
+                  const translationKey = getReligiousLevelTranslationKey(option);
+                  const translatedLabel = t(`home.filters.religious_level_options.${translationKey}`) || option;
                   return (
                     <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedReligiousLevel, setSelectedReligiousLevel)}>
-                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -1843,13 +1961,15 @@ const HomeScreen = () => {
               <Text style={[styles.subtitle, {
                 color: COLORS.greyscale900,
                 marginTop: 16,
-              }]}>Prayer Frequency</Text>
+              }]}>{t('home.filters.title_prayer_frequency')}</Text>
               <View style={styles.horizontalMultiSelect}>
                 {prayerFrequencyOptions.map((option: string) => {
                   const selected = selectedPrayerFrequency.includes(option);
+                  const translationKey = getPrayerFrequencyTranslationKey(option);
+                  const translatedLabel = t(`home.filters.prayer_frequency_options.${translationKey}`) || option;
                   return (
                     <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedPrayerFrequency, setSelectedPrayerFrequency)}>
-                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -1859,13 +1979,15 @@ const HomeScreen = () => {
               <Text style={[styles.subtitle, {
                 color: COLORS.greyscale900,
                 marginTop: 16,
-              }]}>Quran Reading Level</Text>
+              }]}>{t('home.filters.title_quran_reading')}</Text>
               <View style={styles.horizontalMultiSelect}>
                 {quranReadingOptions.map((option: string) => {
                   const selected = selectedQuranReading.includes(option);
+                  const translationKey = getQuranReadingTranslationKey(option);
+                  const translatedLabel = t(`home.filters.quran_reading_options.${translationKey}`) || option;
                   return (
                     <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedQuranReading, setSelectedQuranReading)}>
-                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -1874,13 +1996,15 @@ const HomeScreen = () => {
               {/* Gender-specific: Covering Level or Beard Practice */}
               {oppositeGender === 'female' && (
                 <>
-                  <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Covering Level</Text>
+                  <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_covering_level')}</Text>
                   <View style={styles.horizontalMultiSelect}>
                     {coveringLevelOptions.map((option: string) => {
                       const selected = selectedCoveringLevel.includes(option);
+                      const translationKey = getCoveringLevelTranslationKey(option);
+                      const translatedLabel = t(`home.filters.covering_level_options.${translationKey}`) || formatLabel(option);
                       return (
                         <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedCoveringLevel, setSelectedCoveringLevel)}>
-                          <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{formatLabel(option)}</Text>
+                          <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                         </TouchableOpacity>
                       );
                     })}
@@ -1889,13 +2013,15 @@ const HomeScreen = () => {
               )}
               {oppositeGender === 'male' && (
                 <>
-                  <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Beard Practice</Text>
+                  <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_beard_practice')}</Text>
                   <View style={styles.horizontalMultiSelect}>
                     {beardPracticeOptions.map((option: string) => {
                       const selected = selectedBeardPractice.includes(option);
+                      const translationKey = getBeardPracticeTranslationKey(option);
+                      const translatedLabel = t(`home.filters.beard_practice_options.${translationKey}`) || option;
                       return (
                         <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedBeardPractice, setSelectedBeardPractice)}>
-                          <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                          <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                         </TouchableOpacity>
                       );
                     })}
@@ -1906,13 +2032,15 @@ const HomeScreen = () => {
               {/* Male Seeking Wife Preferences (show when filtering male profiles) */}
               {oppositeGender === 'male' && (
                 <>
-                  <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Looking For Which Wife</Text>
+                  <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_looking_for_wife')}</Text>
                   <View style={styles.horizontalMultiSelect}>
                     {acceptedWifeOptions.map((option: string) => {
                       const selected = selectedSeekingWifeNumber.includes(option);
+                      const translationKey = getWifeNumberTranslationKey(option);
+                      const translatedLabel = t(`home.filters.wife_number_options.${translationKey}`) || option;
                       return (
                         <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedSeekingWifeNumber, setSelectedSeekingWifeNumber)}>
-                          <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                          <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                         </TouchableOpacity>
                       );
                     })}
@@ -1923,13 +2051,15 @@ const HomeScreen = () => {
               {/* Female Accepted Wife Positions (show when filtering female profiles) */}
               {oppositeGender === 'female' && (
                 <>
-                  <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Accept To Be Which Wife</Text>
+                  <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_accepted_positions')}</Text>
                   <View style={styles.horizontalMultiSelect}>
                     {acceptedWifeOptions.map((option: string) => {
                       const selected = selectedAcceptedWifePositions.includes(option);
+                      const translationKey = getWifeNumberTranslationKey(option);
+                      const translatedLabel = t(`home.filters.wife_number_options.${translationKey}`) || option;
                       return (
                         <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedAcceptedWifePositions, setSelectedAcceptedWifePositions)}>
-                          <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                          <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                         </TouchableOpacity>
                       );
                     })}
@@ -1943,7 +2073,7 @@ const HomeScreen = () => {
 
             <View style={styles.bottomContainer}>
               <Button
-                title="Reset"
+                title={t('home.filters.reset')}
                 style={[styles.cancelButton, filterLoading && { opacity: 0.7 }]}
                 textColor={COLORS.primary}
                 disabled={filterLoading}
@@ -1957,7 +2087,7 @@ const HomeScreen = () => {
                 }}
               />
               <Button
-                title="Apply"
+                title={t('home.filters.apply')}
                 filled
                 style={[styles.logoutButton, filterLoading && { opacity: 0.7 }]}
                 disabled={filterLoading}
@@ -2107,11 +2237,11 @@ const HomeScreen = () => {
             {/* Country first */}
             <Text style={[styles.subtitle, {
               color: COLORS.greyscale900,
-            }]}>Country</Text>
+            }]}>{t('home.filters.title_country')}</Text>
             <SearchableDropdown
               data={countriesData.map(country => ({ label: country.name, value: country.name }))}
               onSelect={(item: any) => handleCountrySelect(item.value)}
-              placeholder="Select Country"
+              placeholder={t('home.filters.select_country')}
               selectedValue={selectedCountry}
             />
             
@@ -2120,11 +2250,11 @@ const HomeScreen = () => {
                 <Text style={[styles.subtitle, {
                   color: COLORS.greyscale900,
                   marginTop: 16,
-                }]}>City</Text>
+                }]}>{t('home.filters.title_city')}</Text>
                 <SearchableDropdown
                   data={availableCities.map(city => ({ label: city, value: city }))}
                   onSelect={(item: any) => handleCitySelect(item.value)}
-                  placeholder="Select City"
+                  placeholder={t('home.filters.select_city')}
                   selectedValue={selectedCity}
                 />
               </>
@@ -2133,7 +2263,7 @@ const HomeScreen = () => {
             {/* Age after location */}
             <Text style={[styles.subtitle, {
               color: COLORS.greyscale900,
-            }]}>Age</Text>
+            }]}>{t('home.filters.title_age')}</Text>
             <MultiSlider
               values={ageRange}
               sliderLength={SIZES.width - 32}
@@ -2155,7 +2285,7 @@ const HomeScreen = () => {
             <Text style={[styles.subtitle, {
               color: COLORS.greyscale900,
               marginTop: 16,
-            }]}>Height Range (cm)</Text>
+            }]}>{t('home.filters.title_height')}</Text>
             <MultiSlider
               values={heightRange}
               sliderLength={SIZES.width - 32}
@@ -2176,7 +2306,7 @@ const HomeScreen = () => {
             <Text style={[styles.subtitle, {
               color: COLORS.greyscale900,
               marginTop: 16,
-            }]}>Weight Range (kg)</Text>
+            }]}>{t('home.filters.title_weight_range')}</Text>
             <MultiSlider
               values={weightRange}
               sliderLength={SIZES.width - 32}
@@ -2194,17 +2324,19 @@ const HomeScreen = () => {
               customMarker={(e) => <CustomMarker {...e} />}
             />
 
-            <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Eye Color</Text>
+            <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_eye_color')}</Text>
             <View style={styles.horizontalMultiSelect}>
               {eyeColorOptions.map((option: string) => {
                 const selected = selectedEyeColor.includes(option);
+                const translationKey = getEyeColorTranslationKey(option);
+                const translatedLabel = t(`home.filters.eye_color_options.${translationKey}`) || option;
                 return (
                   <TouchableOpacity
                     key={option}
                     style={[styles.optionChip, selected && styles.optionChipSelected]}
                     onPress={() => toggleSelection(option, selectedEyeColor, setSelectedEyeColor)}
                   >
-                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{formatEnumLabel(option)}</Text>
+                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -2213,17 +2345,19 @@ const HomeScreen = () => {
             <Text style={[styles.subtitle, {
               color: COLORS.greyscale900,
               marginTop: 16,
-            }]}>Hair Color</Text>
+            }]}>{t('home.filters.title_hair_color')}</Text>
             <View style={styles.horizontalMultiSelect}>
               {hairColorOptions.map((option: string) => {
                 const selected = selectedHairColor.includes(option);
+                const translationKey = getHairColorTranslationKey(option);
+                const translatedLabel = t(`home.filters.hair_color_options.${translationKey}`) || option;
                 return (
                   <TouchableOpacity
                     key={option}
                     style={[styles.optionChip, selected && styles.optionChipSelected]}
                     onPress={() => toggleSelection(option, selectedHairColor, setSelectedHairColor)}
                   >
-                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{formatEnumLabel(option)}</Text>
+                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -2232,17 +2366,19 @@ const HomeScreen = () => {
             <Text style={[styles.subtitle, {
               color: COLORS.greyscale900,
               marginTop: 16,
-            }]}>Skin Tone</Text>
+            }]}>{t('home.filters.title_skin_tone')}</Text>
             <View style={styles.horizontalMultiSelect}>
               {skinToneOptions.map((option: string) => {
                 const selected = selectedSkinTone.includes(option);
+                const translationKey = getSkinToneTranslationKey(option);
+                const translatedLabel = t(`home.filters.skin_tone_options.${translationKey}`) || option;
                 return (
                   <TouchableOpacity
                     key={option}
                     style={[styles.optionChip, selected && styles.optionChipSelected]}
                     onPress={() => toggleSelection(option, selectedSkinTone, setSelectedSkinTone)}
                   >
-                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{formatEnumLabel(option)}</Text>
+                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -2251,17 +2387,19 @@ const HomeScreen = () => {
             <Text style={[styles.subtitle, {
               color: COLORS.greyscale900,
               marginTop: 16,
-            }]}>Body Type</Text>
+            }]}>{t('home.filters.title_body_type')}</Text>
             <View style={styles.horizontalMultiSelect}>
               {bodyTypeOptions.map((option: string) => {
                 const selected = selectedBodyType.includes(option);
+                const translationKey = getBodyTypeTranslationKey(option);
+                const translatedLabel = t(`home.filters.body_type_options.${translationKey}`) || option;
                 return (
                   <TouchableOpacity
                     key={option}
                     style={[styles.optionChip, selected && styles.optionChipSelected]}
                     onPress={() => toggleSelection(option, selectedBodyType, setSelectedBodyType)}
                   >
-                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{formatEnumLabel(option)}</Text>
+                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -2270,83 +2408,92 @@ const HomeScreen = () => {
             <Text style={[styles.subtitle, {
               color: COLORS.greyscale900,
               marginTop: 16,
-            }]}>Education Level</Text>
+            }]}>{t('home.filters.title_education')}</Text>
             <View style={styles.horizontalMultiSelect}>
               {educationOptions.map((option: string) => {
                 const selected = selectedEducation.includes(option);
+                const translationKey = getEducationTranslationKey(option);
+                const translatedLabel = t(`home.filters.education_options.${translationKey}`) || option;
                 return (
                   <TouchableOpacity
                     key={option}
                     style={[styles.optionChip, selected && styles.optionChipSelected]}
                     onPress={() => toggleSelection(option, selectedEducation, setSelectedEducation)}
                   >
-                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
 
             {/* Languages */}
-            <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Languages</Text>
+            <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_languages')}</Text>
             <View style={styles.horizontalMultiSelect}>
               {languageOptions.map((option: string) => {
                 const selected = selectedLanguages.includes(option);
+                const translationKey = getLanguageTranslationKey(option);
+                const translatedLabel = t(`home.filters.language_options.${translationKey}`) || option;
                 return (
                   <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedLanguages, setSelectedLanguages)}>
-                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
 
             {/* Housing Type */}
-            <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Housing Type</Text>
+            <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_housing_type')}</Text>
             <View style={styles.horizontalMultiSelect}>
               {housingOptions.map((option: string) => {
                 const selected = selectedHousingType.includes(option);
+                const translationKey = getHousingTranslationKey(option);
+                const translatedLabel = t(`home.filters.housing_options.${translationKey}`) || option;
                 return (
                   <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedHousingType, setSelectedHousingType)}>
-                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
 
             {/* Living Condition / Social / Work are gender-specific – still selectable here, but applied conditionally in query */}
-            <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Living Condition</Text>
+            <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_living_condition')}</Text>
             <View style={styles.horizontalMultiSelect}>
               {livingConditionOptions.map((option: string) => {
-                const label = formatLabel(option);
+                const translationKey = getLivingConditionTranslationKey(option);
+                const translatedLabel = t(`home.filters.living_condition_options.${translationKey}`) || formatLabel(option);
                 const selected = selectedLivingCondition.includes(option);
                 return (
                   <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedLivingCondition, setSelectedLivingCondition)}>
-                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{label}</Text>
+                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
 
-            <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Social Condition</Text>
+            <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_social_condition')}</Text>
             <View style={styles.horizontalMultiSelect}>
               {socialConditionOptions.map((option: string) => {
-                const label = formatLabel(option);
+                const translationKey = getSocialConditionTranslationKey(option);
+                const translatedLabel = t(`home.filters.social_condition_options.${translationKey}`) || formatLabel(option);
                 const selected = selectedSocialCondition.includes(option);
                 return (
                   <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedSocialCondition, setSelectedSocialCondition)}>
-                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{label}</Text>
+                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
 
-            <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Work Status</Text>
+            <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_work')}</Text>
             <View style={styles.horizontalMultiSelect}>
               {workStatusOptions.map((option: string) => {
-                const label = formatLabel(option);
+                const translationKey = getWorkStatusTranslationKey(option);
+                const translatedLabel = t(`home.filters.work_options.${translationKey}`) || formatLabel(option);
                 const selected = selectedWorkStatus.includes(option);
                 return (
                   <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedWorkStatus, setSelectedWorkStatus)}>
-                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{label}</Text>
+                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -2355,13 +2502,15 @@ const HomeScreen = () => {
             <Text style={[styles.subtitle, {
               color: COLORS.greyscale900,
               marginTop: 16,
-            }]}>Religious Level</Text>
+            }]}>{t('home.filters.title_religious_level')}</Text>
             <View style={styles.horizontalMultiSelect}>
               {religiousLevelOptions.map((option: string) => {
                 const selected = selectedReligiousLevel.includes(option);
+                const translationKey = getReligiousLevelTranslationKey(option);
+                const translatedLabel = t(`home.filters.religious_level_options.${translationKey}`) || option;
                 return (
                   <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedReligiousLevel, setSelectedReligiousLevel)}>
-                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -2370,13 +2519,15 @@ const HomeScreen = () => {
             <Text style={[styles.subtitle, {
               color: COLORS.greyscale900,
               marginTop: 16,
-            }]}>Prayer Frequency</Text>
+            }]}>{t('home.filters.title_prayer_frequency')}</Text>
             <View style={styles.horizontalMultiSelect}>
               {prayerFrequencyOptions.map((option: string) => {
                 const selected = selectedPrayerFrequency.includes(option);
+                const translationKey = getPrayerFrequencyTranslationKey(option);
+                const translatedLabel = t(`home.filters.prayer_frequency_options.${translationKey}`) || option;
                 return (
                   <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedPrayerFrequency, setSelectedPrayerFrequency)}>
-                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -2386,13 +2537,15 @@ const HomeScreen = () => {
             <Text style={[styles.subtitle, {
               color: COLORS.greyscale900,
               marginTop: 16,
-            }]}>Quran Reading Level</Text>
+            }]}>{t('home.filters.title_quran_reading')}</Text>
             <View style={styles.horizontalMultiSelect}>
               {quranReadingOptions.map((option: string) => {
                 const selected = selectedQuranReading.includes(option);
+                const translationKey = getQuranReadingTranslationKey(option);
+                const translatedLabel = t(`home.filters.quran_reading_options.${translationKey}`) || option;
                 return (
                   <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedQuranReading, setSelectedQuranReading)}>
-                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -2401,13 +2554,15 @@ const HomeScreen = () => {
             {/* Gender-specific: Covering Level or Beard Practice */}
             {oppositeGender === 'female' && (
               <>
-                <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Covering Level</Text>
+                <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_covering_level')}</Text>
                 <View style={styles.horizontalMultiSelect}>
                   {coveringLevelOptions.map((option: string) => {
                     const selected = selectedCoveringLevel.includes(option);
+                    const translationKey = getCoveringLevelTranslationKey(option);
+                    const translatedLabel = t(`home.filters.covering_level_options.${translationKey}`) || formatLabel(option);
                     return (
                       <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedCoveringLevel, setSelectedCoveringLevel)}>
-                        <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{formatLabel(option)}</Text>
+                        <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                       </TouchableOpacity>
                     );
                   })}
@@ -2416,13 +2571,15 @@ const HomeScreen = () => {
             )}
             {oppositeGender === 'male' && (
               <>
-                <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Beard Practice</Text>
+                <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_beard_practice')}</Text>
                 <View style={styles.horizontalMultiSelect}>
                   {beardPracticeOptions.map((option: string) => {
                     const selected = selectedBeardPractice.includes(option);
+                    const translationKey = getBeardPracticeTranslationKey(option);
+                    const translatedLabel = t(`home.filters.beard_practice_options.${translationKey}`) || option;
                     return (
                       <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedBeardPractice, setSelectedBeardPractice)}>
-                        <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                        <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                       </TouchableOpacity>
                     );
                   })}
@@ -2433,13 +2590,15 @@ const HomeScreen = () => {
             {/* Male Seeking Wife Preferences (show when filtering male profiles) */}
             {oppositeGender === 'male' && (
               <>
-                <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Looking For Which Wife</Text>
+                <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_looking_for_wife')}</Text>
                 <View style={styles.horizontalMultiSelect}>
                   {acceptedWifeOptions.map((option: string) => {
                     const selected = selectedSeekingWifeNumber.includes(option);
+                    const translationKey = getWifeNumberTranslationKey(option);
+                    const translatedLabel = t(`home.filters.wife_number_options.${translationKey}`) || option;
                     return (
                       <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedSeekingWifeNumber, setSelectedSeekingWifeNumber)}>
-                        <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                        <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                       </TouchableOpacity>
                     );
                   })}
@@ -2450,13 +2609,15 @@ const HomeScreen = () => {
             {/* Female Accepted Wife Positions (show when filtering female profiles) */}
             {oppositeGender === 'female' && (
               <>
-                <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>Accept To Be Which Wife</Text>
+                <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_accepted_positions')}</Text>
                 <View style={styles.horizontalMultiSelect}>
                   {acceptedWifeOptions.map((option: string) => {
                     const selected = selectedAcceptedWifePositions.includes(option);
+                    const translationKey = getWifeNumberTranslationKey(option);
+                    const translatedLabel = t(`home.filters.wife_number_options.${translationKey}`) || option;
                     return (
                       <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedAcceptedWifePositions, setSelectedAcceptedWifePositions)}>
-                        <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{option}</Text>
+                        <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
                       </TouchableOpacity>
                     );
                   })}
@@ -2470,7 +2631,7 @@ const HomeScreen = () => {
 
           <View style={styles.bottomContainer}>
             <Button
-              title="Reset"
+              title={t('home.filters.reset')}
               style={[styles.cancelButton, filterLoading && { opacity: 0.7 }]}
               textColor={COLORS.primary}
               disabled={filterLoading}
@@ -2484,7 +2645,7 @@ const HomeScreen = () => {
               }}
             />
             <Button
-              title="Apply"
+              title={t('home.filters.apply')}
               filled
                 style={[styles.logoutButton, filterLoading && { opacity: 0.7 }]}
                 disabled={filterLoading}
