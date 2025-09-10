@@ -33,6 +33,8 @@ interface RenderLabelProps {
     focused: boolean;
 }
 
+const toKey = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+
 const faqsRoute = () => {
     const { t } = useTranslation();
     const [selectedKeywords, setSelectedKeywords] = useState<any>([]);
@@ -57,6 +59,9 @@ const faqsRoute = () => {
     };
 
     const KeywordItem: React.FC<KeywordItemProps> = ({ item, onPress, selected }) => {
+        const key = `help_center.keywords.${toKey(item.name)}`;
+        const translated = t(key);
+        const display = translated === key ? item.name : translated;
         return (
             <TouchableOpacity style={{
                 paddingHorizontal: 14,
@@ -70,7 +75,7 @@ const faqsRoute = () => {
                 backgroundColor: selected ? COLORS.primary : "transparent",
             }} onPress={() => onPress(item.id)}>
                 <Text style={{ color: selected ? COLORS.white : COLORS.primary }}>
-                    {item.name}
+                    {display}
                 </Text>
             </TouchableOpacity>
         );
@@ -143,31 +148,39 @@ const faqsRoute = () => {
                     .filter((faq) =>
                         faq.question.toLowerCase().includes(searchText.toLowerCase())
                     )
-                    .map((faq, index) => (
-                        <View key={index} style={[styles.faqContainer, {
-                            backgroundColor: COLORS.grayscale100,
-                        }]}>
-                            <TouchableOpacity
-                                onPress={() => toggleExpand(index)}
-                                activeOpacity={0.8}>
-                                <View style={styles.questionContainer}>
-                                    <Text style={[styles.question, {
-                                        color: COLORS.black,
-                                    }]}>{faq.question}</Text>
-                                    <Text style={[styles.icon, {
-                                        color: COLORS.black,
-                                    }]}>
-                                        {expanded === index ? '-' : '+'}
-                                    </Text>
-                                </View>
-                            </TouchableOpacity>
-                            {expanded === index && (
-                                <Text style={[styles.answer, {
-                                    color: COLORS.gray2
-                                }]}>{faq.answer}</Text>
-                            )}
-                        </View>
-                    ))}
+                    .map((faq, index) => {
+                        const faqKey = `help_center.faqs.${toKey(faq.question)}`;
+                        const q = t(`${faqKey}.question`);
+                        const a = t(`${faqKey}.answer`);
+                        const displayQ = q === `${faqKey}.question` ? faq.question : q;
+                        const displayA = a === `${faqKey}.answer` ? faq.answer : a;
+                        return (
+                            <View key={index} style={[styles.faqContainer, {
+                                backgroundColor: COLORS.grayscale100,
+                            }]}>
+                                <TouchableOpacity
+                                    onPress={() => toggleExpand(index)}
+                                    activeOpacity={0.8}>
+                                    <View style={styles.questionContainer}>
+                                        <Text style={[styles.question, {
+                                            color: COLORS.black,
+                                        }]}>{displayQ}</Text>
+                                        <Text style={[styles.icon, {
+                                            color: COLORS.black,
+                                        }]}
+                                        >
+                                            {expanded === index ? '-' : '+'}
+                                        </Text>
+                                    </View>
+                                </TouchableOpacity>
+                                {expanded === index && (
+                                    <Text style={[styles.answer, {
+                                        color: COLORS.gray2
+                                    }]}>{displayA}</Text>
+                                )}
+                            </View>
+                        );
+                    })}
             </ScrollView>
         </View>
     );

@@ -798,6 +798,92 @@
     "search_placeholder": "Search",
     "contact_us": "Contact Us",
     "whatsapp": "WhatsApp",
-    "support_email_subject": "Support request"
+    "support_email_subject": "Support request",
+    "keywords": {
+      "getting_started": "Getting Started",
+      "islamic_features": "Islamic Features",
+      "video_meetings": "Video Meetings",
+      "finding_partners": "Finding Partners",
+      "privacy_safety": "Privacy & Safety",
+      "account": "Account"
+    },
+    "faqs": {
+      "how_do_i_create_my_profile": {
+        "question": "How do I create my profile?",
+        "answer": "Sign up with your email, complete the registration process including your Islamic preferences, upload photos, and verify your account. The setup includes personal details, religious practices, and marriage intentions."
+      },
+      "what_makes_this_app_different_from_other_dating_apps": {
+        "question": "What makes this app different from other dating apps?",
+        "answer": "Zawajplus is specifically designed for halal partner search with complete privacy protection. Users can stay private while looking for a halal partner, with photos and videos kept secure until requested. We focus on serious marriage intentions with family involvement."
+      },
+      "can_i_stay_private_while_using_the_app": {
+        "question": "Can I stay private while using the app?",
+        "answer": "Yes, absolutely! You can maintain complete privacy while searching for a halal partner. Your personal information and media are protected, and you control what information is shared and when."
+      },
+      "how_does_polygamy_support_work_for_men": {
+        "question": "How does polygamy support work for men?",
+        "answer": "Men can specify the number of wives they are looking for: 2nd wife, 3rd wife, or 4th wife. This helps women understand the marriage position being offered and make informed decisions according to Islamic principles."
+      },
+      "what_options_do_women_have_regarding_polygamy": {
+        "question": "What options do women have regarding polygamy?",
+        "answer": "Women can choose to accept polygamy and specify which marriage positions they would consider (1st, 2nd, 3rd, or 4th wife). This ensures clear understanding of the marriage arrangement from the beginning."
+      },
+      "what_islamic_preferences_can_i_set": {
+        "question": "What Islamic preferences can I set?",
+        "answer": "You can specify your prayer frequency, Quran reading habits, hijab preferences, halal diet adherence, and religious practice level. These help in finding compatible partners who share similar Islamic values and practices."
+      },
+      "how_are_photos_and_videos_handled": {
+        "question": "How are photos and videos handled?",
+        "answer": "All photos and videos are kept private and secure. They will only be opened and shared based on your specific request. This ensures Islamic modesty principles are maintained while allowing meaningful connections."
+      },
+      "how_do_video_meetings_work": {
+        "question": "How do video meetings work?",
+        "answer": "Users can arrange video calls on an agreed time window. Once both parties agree on a suitable time, a secure video meeting can be scheduled. This allows face-to-face interaction in a controlled, respectful environment."
+      },
+      "can_i_schedule_video_meetings_in_advance": {
+        "question": "Can I schedule video meetings in advance?",
+        "answer": "Yes! You can propose a time window that works for you, and the other person can agree to the timing. This ensures both parties are prepared and available for meaningful conversation."
+      },
+      "who_can_participate_in_video_meetings": {
+        "question": "Who can participate in video meetings?",
+        "answer": "Video meetings can include family members or guardians as appropriate according to Islamic guidelines. This ensures proper supervision and family involvement in the marriage process."
+      },
+      "how_do_i_find_potential_partners": {
+        "question": "How do I find potential partners?",
+        "answer": "You can filter profiles based on your preferences, select profiles that interest you, send requests to connect, and arrange meetings. Our system helps you find compatible partners while maintaining Islamic principles."
+      },
+      "what_happens_after_i_send_a_connection_request": {
+        "question": "What happens after I send a connection request?",
+        "answer": "The other person will receive your request and can choose to accept or decline. If accepted, you can begin communicating and potentially arrange a video meeting to get to know each other better."
+      },
+      "how_are_profiles_verified": {
+        "question": "How are profiles verified?",
+        "answer": "Our dedicated agents carefully verify all profiles to ensure authenticity. We check identity documents, verify photos, and confirm the information provided to maintain a trustworthy community."
+      },
+      "are_families_informed_about_meetings": {
+        "question": "Are families informed about meetings?",
+        "answer": "Yes, our agents ensure that families of brides are properly informed before any meetings take place. This maintains Islamic traditions of family involvement and ensures appropriate supervision."
+      },
+      "how_do_you_ensure_user_safety": {
+        "question": "How do you ensure user safety?",
+        "answer": "We implement profile verification by our agents, secure data storage, family notification systems, and provide Islamic interaction guidelines. All activities are monitored to maintain a safe, halal environment."
+      },
+      "can_i_control_who_sees_my_information": {
+        "question": "Can I control who sees my information?",
+        "answer": "Yes, you have complete control over your privacy. Your photos, videos, and personal details remain private until you specifically choose to share them with someone you're interested in connecting with."
+      },
+      "can_i_edit_my_preferences_after_registration": {
+        "question": "Can I edit my preferences after registration?",
+        "answer": "Yes, you can update your Islamic preferences, marriage intentions, and other profile details anytime through your profile settings. This allows you to refine your search as your preferences evolve."
+      },
+      "what_if_i_want_to_change_my_polygamy_preferences": {
+        "question": "What if I want to change my polygamy preferences?",
+        "answer": "You can modify your marriage intention preferences at any time. For men, you can change which wife number you're seeking (2nd, 3rd, 4th). For women, you can adjust which positions you would consider."
+      },
+      "how_do_i_delete_my_account": {
+        "question": "How do I delete my account?",
+        "answer": "Contact our support team through the Contact Us section. We will help you delete your account and all associated data while ensuring all privacy regulations are followed and any ongoing connections are handled appropriately."
+      }
+    }
   }
 }
