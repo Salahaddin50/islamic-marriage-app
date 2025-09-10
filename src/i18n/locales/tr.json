@@ -10,6 +10,119 @@
     "back": "Geri",
     "continue": "Devam Et"
   },
+  "onboarding2": {
+    "title": "Tamamen Şeriat",
+    "subtitle": "UYUMLU",
+    "description": "Platformumuzun her yönü Şeriat hukuku ve İslami evlilik ilkelerini sıkı bir şekilde takip eder."
+  },
+  "onboarding3": {
+    "title": "Doğrulanmış",
+    "subtitle": "PROFİLLER",
+    "description": "Tüm kadın profilleri ekibimiz tarafından doğrulanır ve Veliler uygun şekilde bilgilendirilir."
+  },
+  "onboarding4": {
+    "title": "Ciddi",
+    "subtitle": "NİYETLER",
+    "description": "Bu platform, her iletişimin evlilik amaçlı olduğu ciddi kişiler için özel olarak tasarlanmıştır."
+  },
+  "welcome_page": {
+    "title": "Esselamü Aleyküm",
+    "subtitle": "Çok eşliliğin mübarek Sünnetini yaşamak isteyenler için özel bir platform. Tüm kadın profilleri doğrulanmış ve tam şeffaflık için Veliler bilgilendirilmiştir.",
+    "continue_with_google": "Google ile Devam Et",
+    "continue_with_email": "E-posta ile Devam Et",
+    "already_have_account": "Zaten hesabınız var mı?",
+    "log_in": "Giriş Yap",
+    "terms_privacy": "Devam ederek Hizmet Şartlarımızı ve Gizlilik Politikamızı kabul etmiş olursunuz"
+  },
+  "auth": {
+    "login": {
+      "title": "Tekrar Hoş Geldiniz",
+      "subtitle": "Hesabınıza giriş yapın",
+      "email_placeholder": "E-posta Adresi",
+      "password_placeholder": "Şifre",
+      "forgot_password": "Şifrenizi mi Unuttunuz?",
+      "sign_in": "Giriş Yap",
+      "already_have_account": "Zaten hesabınız var mı?",
+      "dont_have_account": "Hesabınız yok mu?",
+      "sign_up": "Kayıt Ol",
+      "or_continue_with": "Veya şununla devam edin",
+      "google": "Google",
+      "remember_me": "Beni hatırla"
+    },
+    "signup": {
+      "title": "Hesap Oluştur",
+      "subtitle": "Mükemmel eşlerini bulan binlerce Müslümana katılın",
+      "first_name_placeholder": "Ad",
+      "last_name_placeholder": "Soyad",
+      "email_placeholder": "E-posta Adresi",
+      "password_placeholder": "Şifre",
+      "confirm_password_placeholder": "Şifreyi Onayla",
+      "create_account": "Hesap Oluştur",
+      "already_have_account": "Zaten hesabınız var mı?",
+      "sign_in": "Giriş Yap",
+      "or_continue_with": "Veya şununla devam edin",
+      "google": "Google",
+      "agree_terms": "Hizmet Şartlarını ve Gizlilik Politikasını kabul ediyorum"
+    },
+    "forgot_password": {
+      "methods": {
+        "title": "Şifremi Unuttum",
+        "subtitle": "Şifrenizi sıfırlamak için hangi iletişim bilgilerini kullanmamızı istediğinizi seçin",
+        "via_sms": "SMS ile:",
+        "via_email": "E-posta ile:",
+        "continue": "Devam Et",
+        "soon": "Yakında etkinleştirilecek"
+      },
+      "email": {
+        "title": "Şifremi Unuttum",
+        "subtitle": "E-posta adresinizi girin, şifrenizi sıfırlamak için size bir bağlantı göndereceğiz",
+        "email_placeholder": "E-posta Adresi",
+        "send_link": "Sıfırlama Bağlantısı Gönder",
+        "back_to_login": "Girişe Dön",
+        "check_email": "E-postanızı kontrol edin",
+        "sent_instructions": "Şifre sıfırlama talimatlarını e-posta adresinize gönderdik.",
+        "didnt_receive": "E-postayı almadınız mı?",
+        "resend": "Tekrar Gönder"
+      },
+      "phone": {
+        "title": "Şifremi Unuttum",
+        "subtitle": "Telefon numaranızı girin, size doğrulama kodu göndereceğiz",
+        "phone_placeholder": "Telefon Numarası",
+        "send_code": "Kod Gönder",
+        "back_to_login": "Girişe Dön"
+      }
+    },
+    "otp_verification": {
+      "title": "OTP Doğrulama",
+      "subtitle": "Size gönderdiğimiz doğrulama kodunu girin",
+      "verify": "Doğrula",
+      "didnt_receive": "Kodu almadınız mı?",
+      "resend": "Tekrar Gönder",
+      "code_expires": "Kod süresi biter"
+    },
+    "create_new_password": {
+      "header_title": "Yeni Şifre Oluştur",
+      "title": "Yeni Şifrenizi Oluşturun",
+      "subtitle": "Yeni şifreniz önceki şifrenizden farklı olmalıdır",
+      "new_password_placeholder": "Yeni Şifre",
+      "confirm_new_password_placeholder": "Yeni Şifreyi Onayla",
+      "requirements_title": "Şifre şunları içermelidir:",
+      "requirement_8_chars": "• En az 8 karakter",
+      "requirement_upper": "• Bir büyük harf",
+      "requirement_lower": "• Bir küçük harf",
+      "requirement_number": "• Bir rakam",
+      "requirement_special": "• Bir özel karakter (@$!%*?&)",
+      "strength_label": "Şifre Gücü:",
+      "strength_weak": "Zayıf",
+      "strength_medium": "Orta",
+      "strength_strong": "Güçlü",
+      "resetting": "Şifre Sıfırlanıyor...",
+      "reset_button": "Şifreyi Sıfırla",
+      "modal_title": "Tebrikler!",
+      "modal_subtitle": "Şifreniz başarıyla sıfırlandı! Artık yeni şifrenizle giriş yapabilirsiniz.",
+      "continue_to_login": "Girişe Devam Et"
+    }
+  },
   "common": {
     "loading": "Yükleniyor...",
     "error": "Hata",
@@ -22,6 +135,809 @@
     "close": "Kapat",
     "ok": "Tamam",
     "yes": "Evet",
-    "no": "Hayır"
+    "no": "Hayır",
+    "language": "Dil"
+  },
+  "profile_setup": {
+    "progress": "Adım {{current}} / {{total}}",
+    "continue": "Devam Et",
+    "fill_later": "Sonra Doldur",
+    "basic_title": "Temel Bilgiler",
+    "basic_subtitle": "Sizi daha iyi tanıyalım",
+    "first_name_placeholder": "Ad *",
+    "last_name_placeholder": "Soyad",
+    "about_me_label": "Hakkımda",
+    "about_me_placeholder": "Kendiniz, ilgi alanlarınız ve aradıklarınız hakkında biraz paylaşın...",
+    "phone_code_placeholder": "Telefon Kodu Seçin *",
+    "search_phone_code": "Ülke kodu ara...",
+    "mobile_number_placeholder": "Cep Telefonu Numarası *",
+    "dob_placeholder": "Doğum Tarihi *",
+    "country_placeholder": "Ülke Seçin *",
+    "search_country": "Ülke ara...",
+    "city_placeholder": "Şehir Seçin *",
+    "city_placeholder_disabled": "Önce Ülke Seçin",
+    "search_city": "Şehir ara...",
+    "gender_label": "Cinsiyet *",
+    "male": "Erkek",
+    "female": "Kadın",
+    "commitments_title": "İslami Taahhüt (Gerekli) *",
+    "commitment_sunnah": "Bu sitenin Çok Eşlilik Sünneti için olduğunu anlıyorum",
+    "commitment_halal": "Allah'a yemin ederim ki ciddiyim ve sadece helal arıyorum",
+    "commitment_fair_male": "Allah'a yemin ederim ki yeni eşime adil olmayı niyetliyorum",
+    "commitment_fair_female": "Allah'a yemin ederim ki kocam için dindar bir eş olmayı niyetliyorum",
+    "physical_title": "Fiziksel Detaylar",
+    "physical_subtitle": "Başkalarının nasıl göründüğünüzü bilmesine yardımcı olun",
+    "height_placeholder": "Boy (cm) *",
+    "weight_placeholder": "Kilo (kg) *",
+    "eye_color": "Göz Rengi",
+    "hair_color": "Saç Rengi",
+    "skin_color": "Ten Rengi",
+    "body_type": "Vücut Tipi",
+    "lifestyle_title": "Yaşam Tarzı ve İş",
+    "lifestyle_subtitle": "Hayatınız ve kariyeriniz hakkında bize anlatın",
+    "education_level": "Eğitim Seviyesi",
+    "languages_spoken": "Konuşulan Diller",
+    "languages_note": "Birden fazla dil seçebilirsiniz",
+    "occupation_placeholder": "Meslek/İş *",
+    "income_placeholder": "Aylık Gelir (İsteğe Bağlı)",
+    "social_condition": "Sosyal Durum",
+    "work_status": "İş Durumu",
+    "housing_type": "Konut Tipi",
+    "living_condition": "Yaşam Durumu",
+    "religious_title": "Dini Bağlılık",
+    "religious_subtitle": "İslami uygulamalarınızı ve inançlarınızı paylaşın",
+    "religious_level": "Dini Seviye",
+    "prayer_frequency": "Namaz Sıklığı",
+    "quran_level": "Kuran Okuma Seviyesi",
+    "covering_level": "Örtünme Seviyesi",
+    "beard_practice": "Sakal Uygulaması",
+    "media_title": "Fotoğraf ve Videolar",
+    "media_subtitle": "En az 3 fotoğraf ekleyin. Videolar isteğe bağlıdır.",
+    "my_photos": "Fotoğraflarım ({{count}})",
+    "add_photo": "Fotoğraf Ekle",
+    "uploading": "Yükleniyor...",
+    "need_three_photos": "Devam etmek için en az 3 fotoğraf ekleyin.",
+    "my_videos": "Videolarım ({{count}})",
+    "add_video": "Video Ekle",
+    "polygamy_title": "Evlilik Niyetleri",
+    "polygamy_subtitle_male": "Hangi eş numarasını arıyorsunuz?",
+    "polygamy_subtitle_female": "Çok eşli bir evlilikte hangi pozisyonları kabul edersiniz?",
+    "looking_for_which_wife": "Hangi eş arıyor? *",
+    "positions_accept": "Hangi pozisyonları kabul edersiniz? *",
+    "positions_note": "Rahat edeceğiniz birden fazla pozisyon seçebilirsiniz.",
+    "second_wife": "2. Eş",
+    "third_wife": "3. Eş",
+    "fourth_wife": "4. Eş",
+    "currently_have": "Şu anda {{count}} eş{{plural}}",
+    "accept_being": "{{position}} olmayı kabul et",
+    "complete_registration": "Kaydı Tamamla",
+    "completing_registration": "Kayıt Tamamlanıyor...",
+    "profile_complete_title": "Profil Tamamlandı!",
+    "profile_complete_body": "Profiliniz başarıyla kuruldu. Zawajplus'a hoş geldiniz!",
+    "start_browsing": "Gezinmeye Başla",
+    "options": {
+      "eye_color": {
+        "brown": "Kahverengi",
+        "black": "Siyah",
+        "hazel": "Ela",
+        "green": "Yeşil",
+        "blue": "Mavi",
+        "gray": "Gri",
+        "amber": "Kehribar",
+        "other": "Diğer"
+      },
+      "hair_color": {
+        "black": "Siyah",
+        "dark_brown": "Koyu Kahverengi",
+        "brown": "Kahverengi",
+        "light_brown": "Açık Kahverengi",
+        "blonde": "Sarı",
+        "red": "Kızıl",
+        "gray": "Gri",
+        "white": "Beyaz",
+        "other": "Diğer"
+      },
+      "skin_color": {
+        "very_fair": "Çok Açık",
+        "fair": "Açık",
+        "medium": "Orta",
+        "olive": "Zeytin",
+        "brown": "Kahverengi",
+        "dark_brown": "Koyu Kahverengi",
+        "very_dark": "Çok Koyu",
+        "dark": "Koyu"
+      },
+      "body_type": {
+        "slim": "İnce",
+        "average": "Ortalama",
+        "athletic": "Atletik",
+        "heavy_set": "Kilolu",
+        "curvy": "Kıvrımlı",
+        "plus_size": "Büyük Beden",
+        "muscular": "Kaslı"
+      },
+      "education": {
+        "high_school": "Lise",
+        "some_college": "Üniversite (Yarım)",
+        "bachelor": "Lisans",
+        "master": "Yüksek Lisans",
+        "phd": "Doktora",
+        "islamic": "İslami Çalışmalar",
+        "certification": "Mesleki Sertifika",
+        "associate_degree": "Ön Lisans",
+        "doctorate": "Doktora",
+        "trade_school": "Meslek Okulu",
+        "other": "Diğer"
+      },
+      "languages": {
+        "arabic": "Arapça",
+        "english": "İngilizce",
+        "turkish": "Türkçe",
+        "russian": "Rusça",
+        "spanish": "İspanyolca",
+        "french": "Fransızca",
+        "urdu": "Urduca"
+      },
+      "housing": {
+        "rent_apartment": "Kiralık Daire",
+        "rent_house": "Kiralık Ev",
+        "own_apartment": "Kendi Dairesi",
+        "own_house": "Kendi Evi",
+        "family_home": "Aile Evi",
+        "shared": "Ortak Konut",
+        "other": "Diğer"
+      },
+      "living": {
+        "with_parents": "Anne Baba ile Yaşıyor",
+        "alone": "Yalnız Yaşıyor",
+        "with_children": "Çocukları ile Yaşıyor"
+      },
+      "social_condition": {
+        "sufficient": "Yeterli",
+        "rich": "Zengin",
+        "very_rich": "Çok Zengin"
+      },
+      "covering": {
+        "will_cover": "Örtünecek",
+        "hijab": "Başörtüsü",
+        "niqab": "Peçe"
+      },
+      "work_status": {
+        "not_working": "Çalışmıyor",
+        "working": "Çalışıyor"
+      },
+      "religious_level": {
+        "very_religious": "Çok Dindar",
+        "religious": "Dindar",
+        "moderate": "Orta Derece Dindar",
+        "somewhat": "Biraz Dindar",
+        "learning": "Öğreniyor",
+        "not_very_religious": "Çok Dindar Değil"
+      },
+      "prayer_frequency": {
+        "all_5": "Günde 5 Vakit Namaz",
+        "most": "Çoğu Namaz",
+        "some": "Bazı Namazlar",
+        "friday": "Sadece Cuma",
+        "occasionally": "Ara Sıra",
+        "learning": "Namaz Öğreniyor",
+        "never": "Hiçbir Zaman"
+      },
+      "quran": {
+        "memorized": "Önemli Bölümleri Ezberlemiş",
+        "fluent": "Akıcı Okuyor",
+        "with_help": "Yardımla Okuyor",
+        "learning": "Okumayı Öğreniyor",
+        "cannot_read": "Arapça Okuyamıyor"
+      },
+      "beard": {
+        "full": "Tam Sakal",
+        "trimmed": "Kırpılmış Sakal",
+        "mustache": "Sadece Bıyık",
+        "clean": "Temiz Tıraşlı"
+      }
+    }
+  },
+  "home": {
+    "filters": {
+      "select_country": "Ülke Seç",
+      "select_city": "Şehir Seç",
+      "reset": "Sıfırla",
+      "apply": "Uygula",
+      "title_country": "Ülke",
+      "title_city": "Şehir",
+      "title_age": "Yaş",
+      "title_height": "Boy Aralığı (cm)",
+      "title_education": "Eğitim Seviyesi",
+      "title_work": "İş Durumu",
+      "filters_active_count": "{{count}}",
+      "education_options": {
+        "high_school": "Lise",
+        "some_college": "Üniversite (Yarım)",
+        "associate_degree": "Ön Lisans",
+        "bachelors_degree": "Lisans",
+        "masters_degree": "Yüksek Lisans",
+        "doctorate": "Doktora",
+        "trade_school": "Meslek Okulu",
+        "other": "Diğer"
+      },
+      "work_options": {
+        "working": "Çalışıyor",
+        "not_working": "Çalışmıyor"
+      },
+      "eye_color_options": {
+        "brown": "Kahverengi",
+        "black": "Siyah",
+        "hazel": "Ela",
+        "green": "Yeşil",
+        "blue": "Mavi",
+        "gray": "Gri",
+        "amber": "Kehribar"
+      },
+      "hair_color_options": {
+        "black": "Siyah",
+        "dark_brown": "Koyu Kahverengi",
+        "brown": "Kahverengi",
+        "light_brown": "Açık Kahverengi",
+        "blonde": "Sarı",
+        "red": "Kızıl",
+        "gray": "Gri",
+        "white": "Beyaz"
+      },
+      "skin_tone_options": {
+        "very_fair": "Çok Açık",
+        "fair": "Açık",
+        "medium": "Orta",
+        "olive": "Zeytin",
+        "dark": "Koyu",
+        "very_dark": "Çok Koyu"
+      },
+      "body_type_options": {
+        "slim": "İnce",
+        "athletic": "Atletik",
+        "average": "Ortalama",
+        "curvy": "Kıvrımlı",
+        "muscular": "Kaslı"
+      },
+      "language_options": {
+        "arabic": "Arapça",
+        "english": "İngilizce",
+        "turkish": "Türkçe",
+        "russian": "Rusça",
+        "spanish": "İspanyolca",
+        "french": "Fransızca",
+        "urdu": "Urduca"
+      },
+      "housing_options": {
+        "own_house": "Kendi Evi",
+        "rent_apartment": "Kiralık Daire",
+        "family_home": "Aile Evi",
+        "shared_accommodation": "Ortak Konut",
+        "other": "Diğer"
+      },
+      "living_condition_options": {
+        "living_with_parents": "Anne Baba ile Yaşıyor",
+        "living_alone": "Yalnız Yaşıyor",
+        "living_with_children": "Çocukları ile Yaşıyor"
+      },
+      "social_condition_options": {
+        "sufficient": "Yeterli",
+        "rich": "Zengin",
+        "very_rich": "Çok Zengin"
+      },
+      "religious_level_options": {
+        "very_religious": "Çok Dindar",
+        "religious": "Dindar",
+        "moderately_religious": "Orta Derece Dindar",
+        "somewhat_religious": "Biraz Dindar",
+        "not_very_religious": "Çok Dindar Değil"
+      },
+      "prayer_frequency_options": {
+        "5_times_daily": "Günde 5 Kez",
+        "regularly": "Düzenli",
+        "sometimes": "Bazen",
+        "rarely": "Nadiren",
+        "never": "Hiçbir Zaman"
+      },
+      "quran_reading_options": {
+        "memorized_significant_portions": "Önemli Bölümleri Ezberlemiş",
+        "read_fluently": "Akıcı Okuyor",
+        "read_with_help": "Yardımla Okuyor",
+        "learning_to_read": "Okumayı Öğreniyor",
+        "cannot_read_arabic": "Arapça Okuyamıyor"
+      },
+      "covering_level_options": {
+        "will_cover": "Örtünecek",
+        "hijab": "Başörtüsü",
+        "niqab": "Peçe"
+      },
+      "beard_practice_options": {
+        "full_beard": "Tam Sakal",
+        "trimmed_beard": "Kırpılmış Sakal",
+        "mustache_only": "Sadece Bıyık",
+        "clean_shaven": "Temiz Tıraşlı"
+      },
+      "wife_number_options": {
+        "2": "2. Eş",
+        "3": "3. Eş",
+        "4": "4. Eş"
+      },
+      "title_eye_color": "Göz Rengi",
+      "title_hair_color": "Saç Rengi",
+      "title_skin_tone": "Ten Rengi",
+      "title_body_type": "Vücut Tipi",
+      "title_languages": "Diller",
+      "title_housing_type": "Konut Tipi",
+      "title_living_condition": "Yaşam Durumu",
+      "title_social_condition": "Sosyal Durum",
+      "title_religious_level": "Dini Seviye",
+      "title_prayer_frequency": "Namaz Sıklığı",
+      "title_quran_reading": "Kuran Okuma Seviyesi",
+      "title_covering_level": "Örtünme Seviyesi",
+      "title_beard_practice": "Sakal Uygulaması",
+      "title_looking_for_wife": "Hangi Eş Arıyor",
+      "title_accepted_positions": "Kabul Edilen Eş Pozisyonları",
+      "title_weight_range": "Kilo Aralığı (kg)"
+    }
+  },
+  "tabs": {
+    "home": "Ev",
+    "requests": "Talepler",
+    "meet": "Görüş",
+    "message": "Mesaj",
+    "profile": "Profil"
+  },
+  "badges": {
+    "new": "yeni"
+  },
+  "interests": {
+    "member": "Üye",
+    "header_photo_requests": "Fotoğraf Talepleri",
+    "tabs": {
+      "received_with_count": "Alınan ({{count}})",
+      "sent_with_count": "Gönderilen ({{count}})",
+      "approved_with_count": "Onaylanan ({{count}})"
+    },
+    "empty": {
+      "received": "Alınan ilgi yok",
+      "sent": "Gönderilen ilgi yok",
+      "approved": "Onaylanan ilgi yok"
+    },
+    "actions": {
+      "accept": "Kabul Et",
+      "reject": "Reddet",
+      "withdraw": "Geri Çek",
+      "cancel": "İptal"
+    },
+    "modal": {
+      "photo_request": "fotoğraf talebi",
+      "video_meet_request": "video görüşme talebi",
+      "accept_title": "{{type}} Kabul Et",
+      "accept_about_to": "{{type}}'yi kabul etmek üzeresiniz",
+      "accept_confirm_header": "Bu talebi kabul ederek şunları onaylıyorsunuz:",
+      "point_review_profile": "{{name}}'in profilini iyice incelediğiniz",
+      "point_consider_marriage": "Bu kullanıcı ile evliliği gerçekten düşündüğünüz",
+      "point_serious_intentions": "Niyetleriniz konusunda ciddi olduğunuz",
+      "oath_text": "Allah'a yemin ederim ki ciddiyim ve kabul ediyorum",
+      "cancel": "İptal",
+      "accept_request": "Talebi Kabul Et"
+    }
+  },
+  "meet_requests": {
+    "header_title": "Görüşme Talepleri",
+    "tabs": {
+      "received_with_count": "Alınan ({{count}})",
+      "sent_with_count": "Gönderilen ({{count}})",
+      "approved_with_count": "Onaylanan ({{count}})"
+    },
+    "empty": {
+      "received": "Alınan görüşme talebi yok",
+      "sent": "Gönderilen görüşme talebi yok",
+      "approved": "Onaylanan görüşme talebi yok"
+    },
+    "actions": {
+      "accept": "Kabul Et",
+      "reject": "Reddet",
+      "withdraw": "Geri Çek",
+      "cancel": "İptal",
+      "call": "Ara"
+    },
+    "meeting_not_active_title": "Toplantı henüz aktif değil",
+    "meeting_not_active_body": "Katılım linki planlanan saatten 10 dakika önce aktif olacak.",
+    "join": "Katıl",
+    "call_now": "Şimdi Ara",
+    "incoming_call": "Gelen video araması...",
+    "calling": "Arıyor...",
+    "enable_sound": "sesi etkinleştir",
+    "close": "Kapat",
+    "call_info": {
+      "title": "Video Arama Erişimi",
+      "scheduled_for": "Planlandığı saat",
+      "available_window": "Video arama planlanan saatten 60 dakika önce ve sonra kullanılabilir",
+      "can_call_now": "Şimdi arayabilirsiniz",
+      "window_ended": "Video arama penceresi sona erdi. Lütfen bu arama talebini iptal edin ve profil sayfasından yeni talep gönderin",
+      "not_yet_available": "Video arama henüz mevcut değil"
+    }
+  },
+  "messages": {
+    "header_title": "Mesajlar",
+    "tabs": {
+      "received_with_count": "Alınan ({{count}})",
+      "sent_with_count": "Gönderilen ({{count}})",
+      "approved_with_count": "Onaylanan ({{count}})"
+    },
+    "empty": {
+      "received": "Alınan sohbet talebi yok",
+      "sent": "Gönderilen sohbet talebi yok",
+      "approved": "Onaylanan sohbet talebi yok"
+    },
+    "actions": {
+      "accept": "Kabul Et",
+      "reject": "Reddet",
+      "withdraw": "Geri Çek",
+      "whatsapp": "WhatsApp"
+    },
+    "no_number": "Numara yok",
+    "accept_modal": {
+      "title": "Sohbet Talebini Kabul Et",
+      "oath_text": "Kabul ederek Allah'a yemin edersiniz ki kişi ile video görüşme yaptınız ve evliliği daha fazla tartışmayı niyetliyorsunuz.",
+      "yes_i_swear": "Evet, yemin ederim",
+      "cancel": "İptal"
+    }
+  },
+  "profile_page": {
+    "header_title": "Profil",
+    "visibility": { "public": "Herkese Açık", "private": "Özel" },
+    "items": {
+      "my_membership": "Üyeliğim",
+      "my_photos_videos": "Fotoğraf ve Videolarım",
+      "personal_details": "Kişisel Detaylar",
+      "edit_profile": "Profili Düzenle",
+      "language": "Dil",
+      "privacy_policy": "Gizlilik Politikası",
+      "help_center": "Yardım Merkezi",
+      "polygamy_reminder": "Çok Eşlilik Sünneti Hatırlatması",
+      "invite_friends": "Arkadaş Davet Et",
+      "logout": "Çıkış Yap"
+    },
+    "share_invite": "Zawajplus'ta bana katıl",
+    "logout": {
+      "title": "Çıkış Yap",
+      "confirm": "Çıkış yapmak istediğinizden emin misiniz?",
+      "yes_logout": "Evet, Çıkış Yap"
+    }
+  },
+  "language_page": {
+    "title": "Dil ve Bölge",
+    "languages": "Diller"
+  },
+  "personal_details": {
+    "title": "Kişisel Detaylar",
+    "loading": "Kişisel detaylar yükleniyor...",
+    "load_error": "Kişisel detaylar yüklenemedi",
+    "no_profile_data": "Profil verisi bulunamadı",
+    "update_success": "Kişisel detaylar başarıyla güncellendi!",
+    "update_error": "Kişisel detaylar güncellenemedi",
+    "update_error_retry": "Kişisel detaylar güncellenemedi. Lütfen tekrar deneyin.",
+    "about_me": "Hakkımda",
+    "about_subtitle": "Başkalarına kendinizden bahsedin",
+    "about_placeholder": "Kendiniz, ilgi alanlarınız ve aradıklarınız hakkında biraz paylaşın...",
+    "physical_title": "Fiziksel Detaylar",
+    "physical_subtitle": "Fiziksel özellikleriniz hakkında bize anlatın",
+    "height_placeholder": "Boy (cm)",
+    "weight_placeholder": "Kilo (kg)",
+    "lifestyle_title": "Yaşam Tarzı ve İş",
+    "lifestyle_subtitle": "Hayatınız ve kariyeriniz hakkında bize anlatın",
+    "occupation_placeholder": "Meslek/İş *",
+    "income_placeholder": "Aylık Gelir (İsteğe Bağlı)",
+    "occupation_optional": "Meslek (İsteğe Bağlı)",
+    "updating": "Güncelleniyor...",
+    "update_button": "Kişisel Detayları Güncelle"
+  },
+  "match_details": {
+    "photos_videos": "Fotoğraf ve Videolar",
+    "about_me": "Hakkımda",
+    "no_info_provided": "Bilgi sağlanmamış",
+    "physical_details": "Fiziksel Detaylar",
+    "height": "Boy",
+    "weight": "Kilo",
+    "eye_color": "Göz Rengi",
+    "hair_color": "Saç Rengi",
+    "skin_tone": "Ten Rengi",
+    "body_type": "Vücut Tipi",
+    "lifestyle_work": "Yaşam Tarzı ve İş",
+    "education_level": "Eğitim Seviyesi",
+    "languages_spoken": "Konuşulan Diller",
+    "occupation": "Meslek",
+    "monthly_income": "Aylık Gelir",
+    "social_condition": "Sosyal Durum",
+    "work_status": "İş Durumu",
+    "housing_type": "Konut Tipi",
+    "living_condition": "Yaşam Durumu",
+    "religious_commitment": "Dini Bağlılık",
+    "religious_level": "Dini Seviye",
+    "prayer_frequency": "Namaz Sıklığı",
+    "quran_reading_level": "Kuran Okuma Seviyesi",
+    "covering_level": "Örtünme Seviyesi",
+    "beard_practice": "Sakal Uygulaması",
+    "marriage_intentions": "Evlilik Niyetleri",
+    "looking_for_wife": "Hangi eş arıyor",
+    "accepted_wife_positions": "Kabul edilen eş pozisyonları",
+    "first_wife": "1. Eş",
+    "second_wife": "2. Eş",
+    "third_wife": "3. Eş",
+    "fourth_wife": "4. Eş",
+    "not_specified": "Belirtilmemiş",
+    "user_not_found": "Kullanıcı bulunamadı",
+    "go_back": "Geri Dön",
+    "try_different_user": "Farklı Kullanıcı Dene",
+    "close": "Kapat",
+    "approved": "Onaylandı",
+    "requested": "Talep Edildi",
+    "ask_photo": "Fotoğraf İste",
+    "video_meet": "Video görüşme",
+    "message": "Mesaj",
+    "photo_request_process": "Fotoğraf Talep Süreci",
+    "step_1_photo": "Bu kişiye fotoğraf talebi gönderirsiniz",
+    "step_2_photo": "\"Talepler\" sayfasında bildirim alırlar",
+    "step_3_photo": "Talebinizi onaylarlarsa, fotoğraflarını bulanıklaştırılmamış olarak görürsünüz",
+    "step_4_photo": "Onaylanan talepleri görmek için \"Talepler\" sayfasını kontrol edin",
+    "step_5_photo": "Onaylandıktan sonra video görüşmeleri talep edebilirsiniz",
+    "cancel": "İptal",
+    "send": "Gönder",
+    "video_meet_info": "Video Görüşme Bilgisi",
+    "step_1_video": "Önce kullanıcının fotoğraflarını talep etmek için Fotoğraf İste'ye tıklayın.",
+    "step_2_video": "Fotoğraf talebinizi kabul ettiğinde (profilinizi beğendiğinde), Video Görüşme aktif olacak.",
+    "ok": "Tamam",
+    "video_meet_process": "Video Görüşme Süreci",
+    "step_1_meet": "Bu kişi ile video görüşme planlarsınız",
+    "step_2_meet": "\"Görüş\" sayfasında bildirim alırlar",
+    "step_3_meet": "Onaylarlarsa, güvenli bir video görüşme linki oluşturulur",
+    "step_4_meet": "Onaylanan görüşmelerinizi görmek için \"Görüş\" sayfasını kontrol edin",
+    "step_5_meet": "Planlanan saatte görüşmeye katılın (60 dakika önce mevcut)",
+    "schedule": "Planla",
+    "schedule_video_meet": "Video Görüşme Planla",
+    "select_time": "Saat seç",
+    "please_select_date_time": "Lütfen tarih ve saat seçin",
+    "invalid_date": "Geçersiz tarih",
+    "select_today_future": "Lütfen bugün veya gelecek bir tarih seçin.",
+    "enter_date_time": "Lütfen tarih ve saat girin",
+    "request_submitted": "Talep gönderildi ve onay bekliyor.",
+    "upgrade_required": "Yükseltme Gerekli",
+    "need_premium": "Video görüşme ayarlamak için paketinizi Premium'a yükseltmeniz gerekiyor",
+    "upgrade": "Yükselt",
+    "chat_request_process": "Sohbet Talep Süreci",
+    "need_meeting_first": "Önce Video Görüşme'ye tıklayarak bir görüşme ayarlamanız ve onay beklemeniz gerekiyor.",
+    "chat_after_meeting": "Sohbet video görüşmeden bir saat sonra aktif olacak.",
+    "meeting_time": "Görüşme saati",
+    "swear_had_meeting": "Allah'a yemin edersiniz ki kişi ile video görüşme yaptınız ve sohbet talep ederek nikah için ilerlemek istiyorsunuz.",
+    "see_whatsapp": "Kullanıcı talebinizi kabul ederse, Mesajlar sayfasında kullanıcının WhatsApp numarasını göreceksiniz.",
+    "swear_for_nikah": "Allah'a yemin edersiniz ki kişi ile zaten video görüşme yaptınız ve onunla mesajlaşma talep ederek evlilik niyetindesiniz.",
+    "see_whatsapp_messages": "Kullanıcı kabul ederse Mesajlar sayfasında kullanıcının WhatsApp numarasını göreceksiniz.",
+    "yes_i_swear": "Evet, yemin ederim",
+    "request": "Talep Et",
+    "chat_request_sent": "Talebiniz gönderildi. Güncellemeleri görmek için Mesajları kontrol edin."
+  },
+  "edit_profile": {
+    "title": "Profili Düzenle",
+    "loading": "Profil yükleniyor...",
+    "load_error": "Profil verileri yüklenemedi",
+    "update_success": "Profil başarıyla güncellendi!",
+    "update_error": "Profil güncellenemedi",
+    "update_error_retry": "Profil güncellenemedi. Lütfen tekrar deneyin.",
+    "user_placeholder": "Kullanıcı",
+    "first_name_placeholder": "Ad *",
+    "last_name_placeholder": "Soyad",
+    "select_phone_code": "Telefon Kodu Seç",
+    "search_country_code": "Ülke kodu ara...",
+    "mobile_placeholder": "Cep Telefonu Numarası",
+    "dob_placeholder": "Doğum Tarihi *",
+    "gender_placeholder": "Cinsiyet Seç *",
+    "search_gender": "Cinsiyet ara...",
+    "select_country": "Ülke Seç",
+    "search_country": "Ülke ara...",
+    "select_city": "Şehir Seç",
+    "select_country_first": "Önce Ülke Seçin",
+    "search_city": "Şehir ara...",
+    "occupation_placeholder": "Meslek",
+    "about_me_label": "Hakkımda",
+    "about_placeholder": "Kendinizden bahsedin...",
+    "first_name_required": "Ad gereklidir",
+    "gender_required": "Cinsiyet gereklidir",
+    "dob_required": "Doğum tarihi gereklidir",
+    "phone_code_required": "Cep telefonu numarası verildiğinde telefon kodu gereklidir",
+    "updating": "Güncelleniyor...",
+    "update_button": "Profili Güncelle"
+  },
+  "privacy_policy": {
+    "title": "Gizlilik Politikası",
+    "section1_title": "1. Topladığımız Veri Türleri",
+    "section1_intro": "Aşağıdaki veri türlerini toplayabiliriz:",
+    "section1_personal": "Kişisel Bilgiler: Bu, hesap kaydı sırasında veya hizmetlerimizi kullanırken sağlanan adınız, e-posta adresiniz ve diğer iletişim detaylarınızı içerir ancak bunlarla sınırlı değildir.",
+    "section1_usage": "Kullanım Bilgileri: IP adresleri, cihaz bilgileri ve tarama geçmişi dahil olmak üzere hizmetlerimizle nasıl etkileşim kurduğunuza dair bilgiler toplayabiliriz.",
+    "section1_cookies": "Çerezler ve Benzer Teknolojiler: Deneyiminizi geliştirmek ve tercihleriniz hakkında bilgi toplamak için çerezler ve benzer teknolojiler kullanırız.",
+    "section2_title": "2. Kişisel Verilerinizin Kullanımı",
+    "section2_intro": "Kişisel verilerinizi aşağıdaki amaçlar için kullanabiliriz:",
+    "section2_delivery": "Hizmet Sunumu: Kişiselleştirilmiş içerik ve özellikler dahil olmak üzere hizmetlerimizi sağlamak ve sürdürmek için.",
+    "section2_comms": "İletişim: Sizinle iletişim kurmak, sorularınızı yanıtlamak ve hizmetlerimiz hakkında önemli bilgiler sağlamak için.",
+    "section2_analytics": "Analitik: Kullanım desenlerini analiz etmek, hizmetlerimizi geliştirmek ve kullanıcı tercihlerine göre içeriği özelleştirmek için.",
+    "section3_title": "3. Kişisel Verilerinizin Açıklanması",
+    "section3_intro": "Kişisel verilerinizi aşağıdaki durumlarda açıklayabiliriz:",
+    "section3_legal": "Yasal Yükümlülükler: Yasal taleplere veya mahkeme kararlarına yanıt vermek gibi yasal yükümlülüklere uymak için.",
+    "section3_third_parties": "Üçüncü Taraf Hizmet Sağlayıcıları: Hizmetlerimizi sunmamızda bize yardımcı olan üçüncü taraf hizmet sağlayıcılarıyla gizlilik anlaşmaları kapsamında bilgilerinizi paylaşabiliriz.",
+    "section3_business": "İş İşlemleri: Birleşme, satın alma veya varlıklarımızın tamamının veya bir kısmının satışı durumunda, kişisel verileriniz işlemin bir parçası olarak transfer edilebilir."
+  },
+  "reminder_page": {
+    "title": "Çok Eşlilik Sünneti Hatırlatması",
+    "section_ayat_title": "Kur'an'dan Ayet",
+    "ayat_quote": "\"...o halde kadınlardan hoşunuza gidenlerden ikişer, üçer, dörder alın. Eğer adaletsizlik etmekten korkarsanız, o zaman [sadece] bir tane...\" (An-Nisa 4:3)",
+    "ayat_note": "Eşler arasında adalet, caizliğin açık bir şartıdır.",
+    "section_hadith_title": "Sahih Hadisler",
+    "hadith_1": "Peygamber (sav) şöyle buyurdu: \"Sizin en hayırlınız ailelerine en iyi davrananlarınızdır ve ben aileme en iyi davranandır.\" (Tirmizi)",
+    "hadith_2": "Peygamber (sav) şöyle buyurdu: \"Allah'tan korkun ve çocuklarınız (ve aileniz) arasında adaletli olun.\" (Buhari ve Müslim)",
+    "hadith_note": "İyilik, adalet ve hakları korumak bağlayıcı görevlerdir.",
+    "section_scholars_title": "Alimlerin Beyanları",
+    "scholars_1": "Çok eşlilik, nafaka, zaman, konut ve adil muamele konularında katı adalet şartıyla caizdir. Adaletin sağlanamayacağından korkuluyorsa, tek evlilik daha güvenlidir.",
+    "scholars_2": "Adalet kalpteki eşitliği içermez, ancak dışsal hak ve sorumluluklar konusunda adaleti gerektirir.",
+    "scholars_3": "Çok eşliliğe girmek ciddi bir anlaşmadır. Adaleti sağlayamamak büyük günah ve dünyevi ve ruhani zararın sebebidir.",
+    "section_adab_title": "Adab (Görgü Kuralları) ve Sorumluluklar",
+    "adab_1": "- Harcama, konut ve zaman konularında adaleti eşit şekilde koruyun.",
+    "adab_2": "- Her eşin mahremiyetini ve onurunu koruyun; zarar ve karşılaştırmadan kaçının.",
+    "adab_3": "- Başından itibaren doğru, sorumlu ve şeffaf olun.",
+    "adab_4": "- Aileleri uygun şekilde dahil edin ve velayet protokollerini onurlandırın.",
+    "adab_5": "- Helal bir evlilik için niyetleri saf tutun ve Allah'ın rızasını arayın."
+  },
+  "help_center": {
+    "header_title": "Yardım Merkezi",
+    "tab_faq": "SSS",
+    "tab_contact": "Bizimle İletişime Geçin",
+    "search_placeholder": "Ara",
+    "contact_us": "Bizimle İletişime Geçin",
+    "whatsapp": "WhatsApp",
+    "support_email_subject": "Destek talebi",
+    "keywords": {
+      "getting_started": "Başlarken",
+      "islamic_features": "İslami Özellikler",
+      "video_meetings": "Video Görüşmeleri",
+      "finding_partners": "Partner Bulma",
+      "privacy_safety": "Gizlilik ve Güvenlik",
+      "account": "Hesap"
+    },
+    "faqs": {
+      "how_do_i_create_my_profile": {
+        "question": "Profilimi nasıl oluştururum?",
+        "answer": "E-postanızla kaydolun, İslami tercihleriniz dahil kayıt sürecini tamamlayın, fotoğraf yükleyin ve hesabınızı doğrulayın. Kurulum kişisel detayları, dini uygulamaları ve evlilik niyetlerini içerir."
+      },
+      "what_makes_this_app_different_from_other_dating_apps": {
+        "question": "Bu uygulamayı diğer tanışma uygulamalarından farklı kılan nedir?",
+        "answer": "Zawajplus özellikle tam gizlilik koruması ile helal partner arama için tasarlanmıştır. Kullanıcılar helal partner ararken gizli kalabilir, fotoğraf ve videolar talep edilene kadar güvenli tutulur. Aile katılımı ile ciddi evlilik niyetlerine odaklanırız."
+      },
+      "can_i_stay_private_while_using_the_app": {
+        "question": "Uygulamayı kullanırken gizli kalabilir miyim?",
+        "answer": "Evet, kesinlikle! Helal partner ararken tam gizliliği koruyabilirsiniz. Kişisel bilgileriniz ve medyanız korunur, hangi bilgilerin ne zaman paylaşılacağını siz kontrol edersiniz."
+      },
+      "how_does_polygamy_support_work_for_men": {
+        "question": "Erkekler için çok eşlilik desteği nasıl çalışır?",
+        "answer": "Erkekler aradıkları eş sayısını belirtebilir: 2. eş, 3. eş veya 4. eş. Bu, kadınların sunulan evlilik pozisyonunu anlamalarına ve İslami ilkelere göre bilinçli kararlar vermelerine yardımcı olur."
+      },
+      "what_options_do_women_have_regarding_polygamy": {
+        "question": "Kadınların çok eşlilik konusunda hangi seçenekleri var?",
+        "answer": "Kadınlar çok eşliliği kabul etmeyi seçebilir ve hangi evlilik pozisyonlarını değerlendireceklerini belirtebilir (1., 2., 3. veya 4. eş). Bu, baştan evlilik düzeninin net anlaşılmasını sağlar."
+      },
+      "what_islamic_preferences_can_i_set": {
+        "question": "Hangi İslami tercihleri ayarlayabilirim?",
+        "answer": "Namaz sıklığınızı, Kuran okuma alışkanlıklarınızı, başörtüsü tercihlerinizi, helal diyet uyumunuzu ve dini uygulama seviyenizi belirtebilirsiniz. Bunlar benzer İslami değer ve uygulamaları paylaşan uyumlu partnerlerin bulunmasına yardımcı olur."
+      },
+      "how_are_photos_and_videos_handled": {
+        "question": "Fotoğraf ve videolar nasıl işlenir?",
+        "answer": "Tüm fotoğraf ve videolar özel ve güvenli tutulur. Sadece özel talebiniz üzerine açılır ve paylaşılır. Bu, anlamlı bağlantılara izin verirken İslami tevazu ilkelerinin korunmasını sağlar."
+      },
+      "how_do_video_meetings_work": {
+        "question": "Video görüşmeleri nasıl çalışır?",
+        "answer": "Kullanıcılar üzerinde anlaşılan bir zaman diliminde video aramaları ayarlayabilir. Her iki taraf da uygun bir zamanda anlaştıktan sonra güvenli bir video görüşmesi planlanabilir. Bu, kontrollü, saygılı bir ortamda yüz yüze etkileşime izin verir."
+      },
+      "can_i_schedule_video_meetings_in_advance": {
+        "question": "Video görüşmelerini önceden planlayabilir miyim?",
+        "answer": "Evet! Size uygun bir zaman dilimi önerebilirsiniz ve diğer kişi zamanlamayı kabul edebilir. Bu, her iki tarafın da anlamlı konuşma için hazır ve müsait olmasını sağlar."
+      },
+      "who_can_participate_in_video_meetings": {
+        "question": "Video görüşmelerine kimler katılabilir?",
+        "answer": "Video görüşmelerine İslami kılavuzlara uygun olarak aile üyeleri veya veliler katılabilir. Bu, evlilik sürecinde uygun gözetim ve aile katılımını sağlar."
+      },
+      "how_do_i_find_potential_partners": {
+        "question": "Potansiyel partnerleri nasıl bulurum?",
+        "answer": "Tercihlerinize göre profilleri filtreleyebilir, sizi ilgilendiren profilleri seçebilir, bağlantı kurma talepleri gönderebilir ve görüşmeler ayarlayabilirsiniz. Sistemimiz İslami ilkeleri korurken uyumlu partnerlerin bulunmasına yardımcı olur."
+      },
+      "what_happens_after_i_send_a_connection_request": {
+        "question": "Bağlantı talebi gönderdikten sonra ne olur?",
+        "answer": "Diğer kişi talebinizi alacak ve kabul etmeyi veya reddetmeyi seçebilecek. Kabul edilirse, iletişim kurmaya başlayabilir ve birbirinizi daha iyi tanımak için potansiyel olarak bir video görüşmesi ayarlayabilirsiniz."
+      },
+      "how_are_profiles_verified": {
+        "question": "Profiller nasıl doğrulanır?",
+        "answer": "Özel ajanlarımız özgünlüğü sağlamak için tüm profilleri dikkatli bir şekilde doğrular. Kimlik belgelerini kontrol eder, fotoğrafları doğrular ve güvenilir bir topluluk sürdürmek için verilen bilgileri onaylarız."
+      },
+      "are_families_informed_about_meetings": {
+        "question": "Aileler görüşmeler hakkında bilgilendirilir mi?",
+        "answer": "Evet, ajanlarımız herhangi bir görüşme gerçekleşmeden önce gelin ailelerinin uygun şekilde bilgilendirilmesini sağlar. Bu, aile katılımının İslami geleneklerini korur ve uygun gözetim sağlar."
+      },
+      "how_do_you_ensure_user_safety": {
+        "question": "Kullanıcı güvenliğini nasıl sağlıyorsunuz?",
+        "answer": "Ajanlarımız tarafından profil doğrulama, güvenli veri depolama, aile bildirim sistemleri uygular ve İslami etkileşim kılavuzları sağlarız. Güvenli, helal bir ortam sürdürmek için tüm faaliyetler izlenir."
+      },
+      "can_i_control_who_sees_my_information": {
+        "question": "Bilgilerimi kimin gördüğünü kontrol edebilir miyim?",
+        "answer": "Evet, gizliliğiniz üzerinde tam kontrolünüz var. Fotoğraflarınız, videolarınız ve kişisel detaylarınız, özellikle bağlantı kurmakla ilgilendiğiniz biriyle paylaşmayı seçene kadar özel kalır."
+      },
+      "can_i_edit_my_preferences_after_registration": {
+        "question": "Kayıt olduktan sonra tercihlerimi düzenleyebilir miyim?",
+        "answer": "Evet, İslami tercihlerinizi, evlilik niyetlerinizi ve diğer profil detaylarını profil ayarlarınızdan istediğiniz zaman güncelleyebilirsiniz. Bu, tercihleriniz geliştikçe aramanızı iyileştirmenize olanak tanır."
+      },
+      "what_if_i_want_to_change_my_polygamy_preferences": {
+        "question": "Çok eşlilik tercihlerimi değiştirmek istersem ne olur?",
+        "answer": "Evlilik niyeti tercihlerinizi istediğiniz zaman değiştirebilirsiniz. Erkekler için hangi eş numarasını aradığınızı değiştirebilirsiniz (2., 3., 4.). Kadınlar için hangi pozisyonları değerlendireceğinizi ayarlayabilirsiniz."
+      },
+      "how_do_i_delete_my_account": {
+        "question": "Hesabımı nasıl silerim?",
+        "answer": "Bizimle İletişime Geçin bölümünden destek ekibimizle iletişime geçin. Hesabınızı ve tüm ilgili verileri silmenizde yardımcı olacağız, tüm gizlilik düzenlemelerinin takip edilmesini ve devam eden bağlantıların uygun şekilde ele alınmasını sağlayacağız."
+      }
+    }
+  },
+  "membership": {
+    "header_title": "Üyeliğim",
+    "tabs": {
+      "packages": "Paketler",
+      "payments": "Ödeme Kaydı",
+      "contact": "Bizimle iletişime geçin"
+    },
+    "packages": {
+      "current": "Mevcut",
+      "pending": "Beklemede",
+      "complain": "Şikayet",
+      "lifetime": "Yaşam Boyu"
+    },
+    "packages_tab": {
+      "title": "Paketinizi Seçin",
+      "subtitle": "Tüm paketler yaşam boyu aboneliklerdir",
+      "get_full_support": "Tam Destek Alın",
+      "pay_difference": "Farkı ödeyin ${{amount}}",
+      "proceed_payment": "Ödeme için ilerleyin ${{amount}}"
+    },
+    "payments_tab": {
+      "title": "Ödeme Geçmişi",
+      "subtitle": "İşlem kayıtlarınız",
+      "empty": "Ödeme kaydı bulunamadı"
+    },
+    "contact_tab": {
+      "need_payment_help": "Ödeme Yardımına İhtiyacınız Var mı?",
+      "message": "Ödeme ile devam edemiyor musunuz? Tam desteğimizi almak için bizimle iletişime geçin. Ödeme destek ekibimiz size yardımcı olmaya hazır.",
+      "features": {
+        "instant_support": "Anında WhatsApp Desteği",
+        "issue_resolution": "Ödeme Sorunu Çözümü",
+        "professional_assistance": "Profesyonel Yardım"
+      },
+      "contact_payment_support": "Ödeme Desteğiyle İletişime Geçin",
+      "note": "7/24 Mevcut • Dakikalar içinde yanıt"
+    },
+    "complaint_modal": {
+      "title": "Şikayet Gönder",
+      "describe": "Ödemenizle ilgili sorunu açıklayın:",
+      "placeholder": "Mesajınızı yazın...",
+      "cancel": "İptal",
+      "submit": "Gönder"
+    },
+    "alerts": {
+      "not_found_title": "Bulunamadı",
+      "not_found_body": "Şikayetinizi eklemek için bu paket için ödeme bulunamadı.",
+      "submitted_title": "Gönderildi",
+      "submitted_body": "Şikayetiniz gönderildi, doğrulayacağız ve size döneceğiz",
+      "error_title": "Hata",
+      "submit_error": "Şikayet gönderme başarısız.",
+      "whatsapp_error": "WhatsApp açılamadı.",
+      "checkout_error": "Ödeme başlatma başarısız."
+    },
+    "support": {
+      "profile_support_text": "Esselamü Aleyküm, tam desteğe ihtiyacım var.",
+      "payment_support_text": "Esselamü Aleyküm, ödeme ile devam edemiyorum. Lütfen bana yardım edin."
+    }
   }
 }

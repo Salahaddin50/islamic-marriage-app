@@ -1,0 +1,943 @@
+{
+  "onboarding": {
+    "welcome_greeting": "Assalamu Aleykoum",
+    "welcome_title": "Bienvenue sur Zawajplus",
+    "welcome_description": "La seule plateforme islamique dédiée exclusivement aux mariages polygames suivant les principes coraniques.",
+    "get_started": "Commencer",
+    "skip_to_login": "Passer à la connexion",
+    "next": "Suivant",
+    "skip": "Passer",
+    "back": "Retour",
+    "continue": "Continuer"
+  },
+  "onboarding2": {
+    "title": "Entièrement Shariah",
+    "subtitle": "CONFORME",
+    "description": "Chaque aspect de notre plateforme suit strictement la loi de la Shariah et les principes du mariage islamique."
+  },
+  "onboarding3": {
+    "title": "Profils",
+    "subtitle": "VÉRIFIÉS",
+    "description": "Tous les profils féminins sont vérifiés par notre équipe et les Walis sont correctement informés."
+  },
+  "onboarding4": {
+    "title": "Intentions",
+    "subtitle": "SÉRIEUSES",
+    "description": "Cette plateforme est exclusivement pour les personnes sérieuses où chaque communication vise le mariage."
+  },
+  "welcome_page": {
+    "title": "Assalamu Aleykoum",
+    "subtitle": "Une plateforme dédiée à ceux qui cherchent à vivre la Sunnah bénie de la polygamie. Tous les profils féminins sont vérifiés et les Walis sont notifiés pour une transparence complète.",
+    "continue_with_google": "Continuer avec Google",
+    "continue_with_email": "Continuer avec l'email",
+    "already_have_account": "Vous avez déjà un compte ?",
+    "log_in": "Se connecter",
+    "terms_privacy": "En continuant, vous acceptez nos Conditions d'utilisation et notre Politique de confidentialité"
+  },
+  "auth": {
+    "login": {
+      "title": "Bon retour",
+      "subtitle": "Connectez-vous à votre compte",
+      "email_placeholder": "Adresse email",
+      "password_placeholder": "Mot de passe",
+      "forgot_password": "Mot de passe oublié ?",
+      "sign_in": "Se connecter",
+      "already_have_account": "Vous avez déjà un compte ?",
+      "dont_have_account": "Vous n'avez pas de compte ?",
+      "sign_up": "S'inscrire",
+      "or_continue_with": "Ou continuer avec",
+      "google": "Google",
+      "remember_me": "Se souvenir de moi"
+    },
+    "signup": {
+      "title": "Créer un compte",
+      "subtitle": "Rejoignez des milliers de musulmans trouvant leur partenaire parfait",
+      "first_name_placeholder": "Prénom",
+      "last_name_placeholder": "Nom de famille",
+      "email_placeholder": "Adresse email",
+      "password_placeholder": "Mot de passe",
+      "confirm_password_placeholder": "Confirmer le mot de passe",
+      "create_account": "Créer un compte",
+      "already_have_account": "Vous avez déjà un compte ?",
+      "sign_in": "Se connecter",
+      "or_continue_with": "Ou continuer avec",
+      "google": "Google",
+      "agree_terms": "J'accepte les Conditions d'utilisation et la Politique de confidentialité"
+    },
+    "forgot_password": {
+      "methods": {
+        "title": "Mot de passe oublié",
+        "subtitle": "Sélectionnez les coordonnées que nous devons utiliser pour réinitialiser votre mot de passe",
+        "via_sms": "par SMS :",
+        "via_email": "par Email :",
+        "continue": "Continuer",
+        "soon": "Sera activé bientôt"
+      },
+      "email": {
+        "title": "Mot de passe oublié",
+        "subtitle": "Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe",
+        "email_placeholder": "Adresse email",
+        "send_link": "Envoyer le lien de réinitialisation",
+        "back_to_login": "Retour à la connexion",
+        "check_email": "Vérifiez votre email",
+        "sent_instructions": "Nous avons envoyé les instructions de réinitialisation du mot de passe à votre adresse email.",
+        "didnt_receive": "Vous n'avez pas reçu l'email ?",
+        "resend": "Renvoyer"
+      },
+      "phone": {
+        "title": "Mot de passe oublié",
+        "subtitle": "Entrez votre numéro de téléphone et nous vous enverrons un code de vérification",
+        "phone_placeholder": "Numéro de téléphone",
+        "send_code": "Envoyer le code",
+        "back_to_login": "Retour à la connexion"
+      }
+    },
+    "otp_verification": {
+      "title": "Vérification OTP",
+      "subtitle": "Entrez le code de vérification que nous avons envoyé à",
+      "verify": "Vérifier",
+      "didnt_receive": "Vous n'avez pas reçu le code ?",
+      "resend": "Renvoyer",
+      "code_expires": "Le code expire dans"
+    },
+    "create_new_password": {
+      "header_title": "Créer un nouveau mot de passe",
+      "title": "Créez votre nouveau mot de passe",
+      "subtitle": "Votre nouveau mot de passe doit être différent de votre mot de passe précédent",
+      "new_password_placeholder": "Nouveau mot de passe",
+      "confirm_new_password_placeholder": "Confirmer le nouveau mot de passe",
+      "requirements_title": "Le mot de passe doit contenir :",
+      "requirement_8_chars": "• Au moins 8 caractères",
+      "requirement_upper": "• Une lettre majuscule",
+      "requirement_lower": "• Une lettre minuscule",
+      "requirement_number": "• Un chiffre",
+      "requirement_special": "• Un caractère spécial (@$!%*?&)",
+      "strength_label": "Force du mot de passe :",
+      "strength_weak": "Faible",
+      "strength_medium": "Moyen",
+      "strength_strong": "Fort",
+      "resetting": "Réinitialisation du mot de passe...",
+      "reset_button": "Réinitialiser le mot de passe",
+      "modal_title": "Félicitations !",
+      "modal_subtitle": "Votre mot de passe a été réinitialisé avec succès ! Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
+      "continue_to_login": "Continuer vers la connexion"
+    }
+  },
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "done": "Terminé",
+    "close": "Fermer",
+    "ok": "OK",
+    "yes": "Oui",
+    "no": "Non",
+    "language": "Langue"
+  },
+  "profile_setup": {
+    "progress": "Étape {{current}} sur {{total}}",
+    "continue": "Continuer",
+    "fill_later": "Remplir plus tard",
+    "basic_title": "Informations de base",
+    "basic_subtitle": "Apprenons à mieux vous connaître",
+    "first_name_placeholder": "Prénom *",
+    "last_name_placeholder": "Nom de famille",
+    "about_me_label": "À propos de moi",
+    "about_me_placeholder": "Partagez un peu sur vous, vos intérêts et ce que vous recherchez...",
+    "phone_code_placeholder": "Sélectionner le code téléphonique *",
+    "search_phone_code": "Rechercher le code pays...",
+    "mobile_number_placeholder": "Numéro de portable *",
+    "dob_placeholder": "Date de naissance *",
+    "country_placeholder": "Sélectionner le pays *",
+    "search_country": "Rechercher un pays...",
+    "city_placeholder": "Sélectionner la ville *",
+    "city_placeholder_disabled": "Sélectionnez d'abord le pays",
+    "search_city": "Rechercher une ville...",
+    "gender_label": "Genre *",
+    "male": "Homme",
+    "female": "Femme",
+    "commitments_title": "Engagement islamique (Obligatoire) *",
+    "commitment_sunnah": "Je comprends que ce site est pour la Sunnah de la polygamie",
+    "commitment_halal": "Je jure par Allah que je suis sérieux et ne cherche que le halal",
+    "commitment_fair_male": "Je jure par Allah que j'ai l'intention d'être équitable envers ma nouvelle épouse",
+    "commitment_fair_female": "Je jure par Allah que j'ai l'intention d'être une épouse pieuse pour mon mari",
+    "physical_title": "Détails physiques",
+    "physical_subtitle": "Aidez les autres à savoir à quoi vous ressemblez",
+    "height_placeholder": "Taille (cm) *",
+    "weight_placeholder": "Poids (kg) *",
+    "eye_color": "Couleur des yeux",
+    "hair_color": "Couleur des cheveux",
+    "skin_color": "Couleur de peau",
+    "body_type": "Type de corps",
+    "lifestyle_title": "Style de vie et travail",
+    "lifestyle_subtitle": "Parlez-nous de votre vie et de votre carrière",
+    "education_level": "Niveau d'éducation",
+    "languages_spoken": "Langues parlées",
+    "languages_note": "Vous pouvez sélectionner plusieurs langues",
+    "occupation_placeholder": "Profession/Travail *",
+    "income_placeholder": "Revenu mensuel (Optionnel)",
+    "social_condition": "Condition sociale",
+    "work_status": "Statut professionnel",
+    "housing_type": "Type de logement",
+    "living_condition": "Condition de vie",
+    "religious_title": "Engagement religieux",
+    "religious_subtitle": "Partagez vos pratiques et croyances islamiques",
+    "religious_level": "Niveau religieux",
+    "prayer_frequency": "Fréquence de prière",
+    "quran_level": "Niveau de lecture du Coran",
+    "covering_level": "Niveau de couverture",
+    "beard_practice": "Pratique de la barbe",
+    "media_title": "Photos et vidéos",
+    "media_subtitle": "Ajoutez au moins 3 photos. Les vidéos sont optionnelles.",
+    "my_photos": "Mes photos ({{count}})",
+    "add_photo": "Ajouter une photo",
+    "uploading": "Téléchargement...",
+    "need_three_photos": "Ajoutez au moins 3 photos pour continuer.",
+    "my_videos": "Mes vidéos ({{count}})",
+    "add_video": "Ajouter une vidéo",
+    "polygamy_title": "Intentions de mariage",
+    "polygamy_subtitle_male": "Quelle épouse numéro recherchez-vous ?",
+    "polygamy_subtitle_female": "Quelles positions accepteriez-vous dans un mariage polygame ?",
+    "looking_for_which_wife": "Recherche quelle épouse ? *",
+    "positions_accept": "Quelles positions accepteriez-vous ? *",
+    "positions_note": "Vous pouvez sélectionner plusieurs positions avec lesquelles vous seriez à l'aise.",
+    "second_wife": "2ème épouse",
+    "third_wife": "3ème épouse",
+    "fourth_wife": "4ème épouse",
+    "currently_have": "Actuellement {{count}} épouse{{plural}}",
+    "accept_being": "Accepter d'être la {{position}}",
+    "complete_registration": "Terminer l'inscription",
+    "completing_registration": "Finalisation de l'inscription...",
+    "profile_complete_title": "Profil terminé !",
+    "profile_complete_body": "Votre profil a été configuré avec succès. Bienvenue sur Zawajplus !",
+    "start_browsing": "Commencer à naviguer",
+    "options": {
+      "eye_color": {
+        "brown": "Marron",
+        "black": "Noir",
+        "hazel": "Noisette",
+        "green": "Vert",
+        "blue": "Bleu",
+        "gray": "Gris",
+        "amber": "Ambré",
+        "other": "Autre"
+      },
+      "hair_color": {
+        "black": "Noir",
+        "dark_brown": "Brun foncé",
+        "brown": "Brun",
+        "light_brown": "Brun clair",
+        "blonde": "Blond",
+        "red": "Roux",
+        "gray": "Gris",
+        "white": "Blanc",
+        "other": "Autre"
+      },
+      "skin_color": {
+        "very_fair": "Très clair",
+        "fair": "Clair",
+        "medium": "Moyen",
+        "olive": "Olive",
+        "brown": "Brun",
+        "dark_brown": "Brun foncé",
+        "very_dark": "Très foncé",
+        "dark": "Foncé"
+      },
+      "body_type": {
+        "slim": "Mince",
+        "average": "Moyen",
+        "athletic": "Athlétique",
+        "heavy_set": "Corpulent",
+        "curvy": "Pulpeux",
+        "plus_size": "Grande taille",
+        "muscular": "Musclé"
+      },
+      "education": {
+        "high_school": "Lycée",
+        "some_college": "Études universitaires partielles",
+        "bachelor": "Licence",
+        "master": "Master",
+        "phd": "Doctorat",
+        "islamic": "Études islamiques",
+        "certification": "Certification professionnelle",
+        "associate_degree": "Diplôme d'associé",
+        "doctorate": "Doctorat",
+        "trade_school": "École de métiers",
+        "other": "Autre"
+      },
+      "languages": {
+        "arabic": "Arabe",
+        "english": "Anglais",
+        "turkish": "Turc",
+        "russian": "Russe",
+        "spanish": "Espagnol",
+        "french": "Français",
+        "urdu": "Ourdou"
+      },
+      "housing": {
+        "rent_apartment": "Appartement en location",
+        "rent_house": "Maison en location",
+        "own_apartment": "Appartement en propriété",
+        "own_house": "Maison en propriété",
+        "family_home": "Maison familiale",
+        "shared": "Logement partagé",
+        "other": "Autre"
+      },
+      "living": {
+        "with_parents": "Vivant avec les parents",
+        "alone": "Vivant seul",
+        "with_children": "Vivant avec des enfants"
+      },
+      "social_condition": {
+        "sufficient": "Suffisant",
+        "rich": "Riche",
+        "very_rich": "Très riche"
+      },
+      "covering": {
+        "will_cover": "Se couvrira",
+        "hijab": "Hijab",
+        "niqab": "Niqab"
+      },
+      "work_status": {
+        "not_working": "Ne travaille pas",
+        "working": "Travaille"
+      },
+      "religious_level": {
+        "very_religious": "Très religieux",
+        "religious": "Religieux",
+        "moderate": "Modérément religieux",
+        "somewhat": "Quelque peu religieux",
+        "learning": "Apprenant",
+        "not_very_religious": "Pas très religieux"
+      },
+      "prayer_frequency": {
+        "all_5": "Les 5 prières quotidiennes",
+        "most": "La plupart des prières",
+        "some": "Quelques prières",
+        "friday": "Vendredi seulement",
+        "occasionally": "Occasionnellement",
+        "learning": "Apprend à prier",
+        "never": "Jamais"
+      },
+      "quran": {
+        "memorized": "Mémorisé des portions importantes",
+        "fluent": "Lit couramment",
+        "with_help": "Lit avec aide",
+        "learning": "Apprend à lire",
+        "cannot_read": "Ne peut pas lire l'arabe"
+      },
+      "beard": {
+        "full": "Barbe complète",
+        "trimmed": "Barbe taillée",
+        "mustache": "Moustache seulement",
+        "clean": "Rasé de près"
+      }
+    }
+  },
+  "home": {
+    "filters": {
+      "select_country": "Sélectionner le pays",
+      "select_city": "Sélectionner la ville",
+      "reset": "Réinitialiser",
+      "apply": "Appliquer",
+      "title_country": "Pays",
+      "title_city": "Ville",
+      "title_age": "Âge",
+      "title_height": "Plage de taille (cm)",
+      "title_education": "Niveau d'éducation",
+      "title_work": "Statut professionnel",
+      "filters_active_count": "{{count}}",
+      "education_options": {
+        "high_school": "Lycée",
+        "some_college": "Études universitaires partielles",
+        "associate_degree": "Diplôme d'associé",
+        "bachelors_degree": "Licence",
+        "masters_degree": "Master",
+        "doctorate": "Doctorat",
+        "trade_school": "École de métiers",
+        "other": "Autre"
+      },
+      "work_options": {
+        "working": "Travaille",
+        "not_working": "Ne travaille pas"
+      },
+      "eye_color_options": {
+        "brown": "Marron",
+        "black": "Noir",
+        "hazel": "Noisette",
+        "green": "Vert",
+        "blue": "Bleu",
+        "gray": "Gris",
+        "amber": "Ambré"
+      },
+      "hair_color_options": {
+        "black": "Noir",
+        "dark_brown": "Brun foncé",
+        "brown": "Brun",
+        "light_brown": "Brun clair",
+        "blonde": "Blond",
+        "red": "Roux",
+        "gray": "Gris",
+        "white": "Blanc"
+      },
+      "skin_tone_options": {
+        "very_fair": "Très clair",
+        "fair": "Clair",
+        "medium": "Moyen",
+        "olive": "Olive",
+        "dark": "Foncé",
+        "very_dark": "Très foncé"
+      },
+      "body_type_options": {
+        "slim": "Mince",
+        "athletic": "Athlétique",
+        "average": "Moyen",
+        "curvy": "Pulpeux",
+        "muscular": "Musclé"
+      },
+      "language_options": {
+        "arabic": "Arabe",
+        "english": "Anglais",
+        "turkish": "Turc",
+        "russian": "Russe",
+        "spanish": "Espagnol",
+        "french": "Français",
+        "urdu": "Ourdou"
+      },
+      "housing_options": {
+        "own_house": "Maison en propriété",
+        "rent_apartment": "Appartement en location",
+        "family_home": "Maison familiale",
+        "shared_accommodation": "Logement partagé",
+        "other": "Autre"
+      },
+      "living_condition_options": {
+        "living_with_parents": "Vivant avec les parents",
+        "living_alone": "Vivant seul",
+        "living_with_children": "Vivant avec des enfants"
+      },
+      "social_condition_options": {
+        "sufficient": "Suffisant",
+        "rich": "Riche",
+        "very_rich": "Très riche"
+      },
+      "religious_level_options": {
+        "very_religious": "Très religieux",
+        "religious": "Religieux",
+        "moderately_religious": "Modérément religieux",
+        "somewhat_religious": "Quelque peu religieux",
+        "not_very_religious": "Pas très religieux"
+      },
+      "prayer_frequency_options": {
+        "5_times_daily": "5 fois par jour",
+        "regularly": "Régulièrement",
+        "sometimes": "Parfois",
+        "rarely": "Rarement",
+        "never": "Jamais"
+      },
+      "quran_reading_options": {
+        "memorized_significant_portions": "Mémorisé des portions importantes",
+        "read_fluently": "Lit couramment",
+        "read_with_help": "Lit avec aide",
+        "learning_to_read": "Apprend à lire",
+        "cannot_read_arabic": "Ne peut pas lire l'arabe"
+      },
+      "covering_level_options": {
+        "will_cover": "Se couvrira",
+        "hijab": "Hijab",
+        "niqab": "Niqab"
+      },
+      "beard_practice_options": {
+        "full_beard": "Barbe complète",
+        "trimmed_beard": "Barbe taillée",
+        "mustache_only": "Moustache seulement",
+        "clean_shaven": "Rasé de près"
+      },
+      "wife_number_options": {
+        "2": "2ème épouse",
+        "3": "3ème épouse",
+        "4": "4ème épouse"
+      },
+      "title_eye_color": "Couleur des yeux",
+      "title_hair_color": "Couleur des cheveux",
+      "title_skin_tone": "Teint de peau",
+      "title_body_type": "Type de corps",
+      "title_languages": "Langues",
+      "title_housing_type": "Type de logement",
+      "title_living_condition": "Condition de vie",
+      "title_social_condition": "Condition sociale",
+      "title_religious_level": "Niveau religieux",
+      "title_prayer_frequency": "Fréquence de prière",
+      "title_quran_reading": "Niveau de lecture du Coran",
+      "title_covering_level": "Niveau de couverture",
+      "title_beard_practice": "Pratique de la barbe",
+      "title_looking_for_wife": "Recherche quelle épouse",
+      "title_accepted_positions": "Positions d'épouse acceptées",
+      "title_weight_range": "Plage de poids (kg)"
+    }
+  },
+  "tabs": {
+    "home": "Accueil",
+    "requests": "Demandes",
+    "meet": "Rencontrer",
+    "message": "Message",
+    "profile": "Profil"
+  },
+  "badges": {
+    "new": "nouveau"
+  },
+  "interests": {
+    "member": "Membre",
+    "header_photo_requests": "Demandes de photos",
+    "tabs": {
+      "received_with_count": "Reçues ({{count}})",
+      "sent_with_count": "Envoyées ({{count}})",
+      "approved_with_count": "Approuvées ({{count}})"
+    },
+    "empty": {
+      "received": "Aucun intérêt reçu",
+      "sent": "Aucun intérêt envoyé",
+      "approved": "Aucun intérêt approuvé"
+    },
+    "actions": {
+      "accept": "Accepter",
+      "reject": "Rejeter",
+      "withdraw": "Retirer",
+      "cancel": "Annuler"
+    },
+    "modal": {
+      "photo_request": "demande de photo",
+      "video_meet_request": "demande de rencontre vidéo",
+      "accept_title": "Accepter {{type}}",
+      "accept_about_to": "Vous êtes sur le point d'accepter la {{type}} de",
+      "accept_confirm_header": "En acceptant cette demande, vous confirmez que :",
+      "point_review_profile": "Vous avez examiné le profil de {{name}} attentivement",
+      "point_consider_marriage": "Vous envisagez effectivement le mariage avec cet utilisateur",
+      "point_serious_intentions": "Vous êtes sérieux concernant vos intentions",
+      "oath_text": "Je jure par Allah que je suis sérieux et j'accepte",
+      "cancel": "Annuler",
+      "accept_request": "Accepter la demande"
+    }
+  },
+  "meet_requests": {
+    "header_title": "Demandes de rencontre",
+    "tabs": {
+      "received_with_count": "Reçues ({{count}})",
+      "sent_with_count": "Envoyées ({{count}})",
+      "approved_with_count": "Approuvées ({{count}})"
+    },
+    "empty": {
+      "received": "Aucune demande de rencontre reçue",
+      "sent": "Aucune demande de rencontre envoyée",
+      "approved": "Aucune demande de rencontre approuvée"
+    },
+    "actions": {
+      "accept": "Accepter",
+      "reject": "Rejeter",
+      "withdraw": "Retirer",
+      "cancel": "Annuler",
+      "call": "Appeler"
+    },
+    "meeting_not_active_title": "Réunion pas encore active",
+    "meeting_not_active_body": "Le lien de participation sera actif 10 minutes avant l'heure prévue.",
+    "join": "Rejoindre",
+    "call_now": "Appeler maintenant",
+    "incoming_call": "Appel vidéo entrant...",
+    "calling": "Appel en cours...",
+    "enable_sound": "activer le son",
+    "close": "Fermer",
+    "call_info": {
+      "title": "Accès à l'appel vidéo",
+      "scheduled_for": "Prévu pour",
+      "available_window": "L'appel vidéo est disponible 60 minutes avant et après l'heure prévue",
+      "can_call_now": "Vous pouvez appeler maintenant",
+      "window_ended": "La fenêtre d'appel vidéo s'est terminée. Veuillez annuler cette demande d'appel et envoyer une nouvelle demande depuis la page du profil",
+      "not_yet_available": "L'appel vidéo n'est pas encore disponible"
+    }
+  },
+  "messages": {
+    "header_title": "Messages",
+    "tabs": {
+      "received_with_count": "Reçus ({{count}})",
+      "sent_with_count": "Envoyés ({{count}})",
+      "approved_with_count": "Approuvés ({{count}})"
+    },
+    "empty": {
+      "received": "Aucune demande de chat reçue",
+      "sent": "Aucune demande de chat envoyée",
+      "approved": "Aucune demande de chat approuvée"
+    },
+    "actions": {
+      "accept": "Accepter",
+      "reject": "Rejeter",
+      "withdraw": "Retirer",
+      "whatsapp": "WhatsApp"
+    },
+    "no_number": "Aucun numéro",
+    "accept_modal": {
+      "title": "Accepter la demande de chat",
+      "oath_text": "En acceptant, vous jurez par Allah que vous avez eu une rencontre vidéo avec la personne et que vous avez l'intention de discuter davantage du mariage.",
+      "yes_i_swear": "Oui, je le jure",
+      "cancel": "Annuler"
+    }
+  },
+  "profile_page": {
+    "header_title": "Profil",
+    "visibility": { "public": "Public", "private": "Privé" },
+    "items": {
+      "my_membership": "Mon abonnement",
+      "my_photos_videos": "Mes photos et vidéos",
+      "personal_details": "Détails personnels",
+      "edit_profile": "Modifier le profil",
+      "language": "Langue",
+      "privacy_policy": "Politique de confidentialité",
+      "help_center": "Centre d'aide",
+      "polygamy_reminder": "Rappel sur la Sunnah de la polygamie",
+      "invite_friends": "Inviter des amis",
+      "logout": "Se déconnecter"
+    },
+    "share_invite": "Rejoignez-moi sur Zawajplus",
+    "logout": {
+      "title": "Se déconnecter",
+      "confirm": "Êtes-vous sûr de vouloir vous déconnecter ?",
+      "yes_logout": "Oui, se déconnecter"
+    }
+  },
+  "language_page": {
+    "title": "Langue et région",
+    "languages": "Langues"
+  },
+  "personal_details": {
+    "title": "Détails personnels",
+    "loading": "Chargement des détails personnels...",
+    "load_error": "Échec du chargement des détails personnels",
+    "no_profile_data": "Aucune donnée de profil trouvée",
+    "update_success": "Détails personnels mis à jour avec succès !",
+    "update_error": "Échec de la mise à jour des détails personnels",
+    "update_error_retry": "Échec de la mise à jour des détails personnels. Veuillez réessayer.",
+    "about_me": "À propos de moi",
+    "about_subtitle": "Parlez aux autres de vous",
+    "about_placeholder": "Partagez un peu sur vous, vos intérêts et ce que vous recherchez...",
+    "physical_title": "Détails physiques",
+    "physical_subtitle": "Parlez-nous de vos caractéristiques physiques",
+    "height_placeholder": "Taille (cm)",
+    "weight_placeholder": "Poids (kg)",
+    "lifestyle_title": "Style de vie et travail",
+    "lifestyle_subtitle": "Parlez-nous de votre vie et de votre carrière",
+    "occupation_placeholder": "Profession/Travail *",
+    "income_placeholder": "Revenu mensuel (Optionnel)",
+    "occupation_optional": "Profession (Optionnel)",
+    "updating": "Mise à jour...",
+    "update_button": "Mettre à jour les détails personnels"
+  },
+  "match_details": {
+    "photos_videos": "Photos et vidéos",
+    "about_me": "À propos de moi",
+    "no_info_provided": "Aucune information fournie",
+    "physical_details": "Détails physiques",
+    "height": "Taille",
+    "weight": "Poids",
+    "eye_color": "Couleur des yeux",
+    "hair_color": "Couleur des cheveux",
+    "skin_tone": "Teint de peau",
+    "body_type": "Type de corps",
+    "lifestyle_work": "Style de vie et travail",
+    "education_level": "Niveau d'éducation",
+    "languages_spoken": "Langues parlées",
+    "occupation": "Profession",
+    "monthly_income": "Revenu mensuel",
+    "social_condition": "Condition sociale",
+    "work_status": "Statut professionnel",
+    "housing_type": "Type de logement",
+    "living_condition": "Condition de vie",
+    "religious_commitment": "Engagement religieux",
+    "religious_level": "Niveau religieux",
+    "prayer_frequency": "Fréquence de prière",
+    "quran_reading_level": "Niveau de lecture du Coran",
+    "covering_level": "Niveau de couverture",
+    "beard_practice": "Pratique de la barbe",
+    "marriage_intentions": "Intentions de mariage",
+    "looking_for_wife": "Recherche quelle épouse",
+    "accepted_wife_positions": "Positions d'épouse acceptées",
+    "first_wife": "1ère épouse",
+    "second_wife": "2ème épouse",
+    "third_wife": "3ème épouse",
+    "fourth_wife": "4ème épouse",
+    "not_specified": "Non spécifié",
+    "user_not_found": "Utilisateur non trouvé",
+    "go_back": "Retour",
+    "try_different_user": "Essayer un autre utilisateur",
+    "close": "Fermer",
+    "approved": "Approuvé",
+    "requested": "Demandé",
+    "ask_photo": "Demander une photo",
+    "video_meet": "Rencontre vidéo",
+    "message": "Message",
+    "photo_request_process": "Processus de demande de photo",
+    "step_1_photo": "Vous envoyez une demande de photo à cette personne",
+    "step_2_photo": "Elle reçoit une notification dans sa page \"Demandes\"",
+    "step_3_photo": "Si elle approuve votre demande, vous verrez ses photos non floutées",
+    "step_4_photo": "Vérifiez la page \"Demandes\" pour voir les demandes approuvées",
+    "step_5_photo": "Une fois approuvée, vous pouvez demander des rencontres vidéo",
+    "cancel": "Annuler",
+    "send": "Envoyer",
+    "video_meet_info": "Info rencontre vidéo",
+    "step_1_video": "Cliquez d'abord sur Demander une photo pour demander les photos de l'utilisateur.",
+    "step_2_video": "Une fois qu'elle accepte votre demande de photo (aime votre profil), la rencontre vidéo sera active.",
+    "ok": "OK",
+    "video_meet_process": "Processus de rencontre vidéo",
+    "step_1_meet": "Vous planifiez une rencontre vidéo avec cette personne",
+    "step_2_meet": "Elle reçoit une notification dans sa page \"Rencontre\"",
+    "step_3_meet": "Si elle approuve, un lien de rencontre vidéo sécurisé est créé",
+    "step_4_meet": "Vérifiez la page \"Rencontre\" pour voir vos rencontres approuvées",
+    "step_5_meet": "Rejoignez la rencontre à l'heure prévue (disponible 60 minutes avant)",
+    "schedule": "Planifier",
+    "schedule_video_meet": "Planifier une rencontre vidéo",
+    "select_time": "Sélectionner l'heure",
+    "please_select_date_time": "Veuillez sélectionner la date et l'heure",
+    "invalid_date": "Date invalide",
+    "select_today_future": "Veuillez sélectionner aujourd'hui ou une date future.",
+    "enter_date_time": "Veuillez entrer la date et l'heure",
+    "request_submitted": "Demande soumise et en attente d'approbation.",
+    "upgrade_required": "Mise à niveau requise",
+    "need_premium": "Vous devez mettre à niveau votre forfait vers Premium pour organiser une rencontre vidéo",
+    "upgrade": "Mettre à niveau",
+    "chat_request_process": "Processus de demande de chat",
+    "need_meeting_first": "Vous devez d'abord organiser une rencontre en cliquant sur Rencontre vidéo et attendre l'approbation.",
+    "chat_after_meeting": "Le chat sera actif une heure après la rencontre vidéo.",
+    "meeting_time": "Heure de rencontre",
+    "swear_had_meeting": "Vous jurez par Allah que vous avez eu une rencontre vidéo avec la personne et voulez procéder au nikah en demandant un chat.",
+    "see_whatsapp": "Si l'utilisateur accepte votre demande, vous verrez le numéro WhatsApp de l'utilisateur dans la page Messages.",
+    "swear_for_nikah": "Vous jurez par Allah que vous avez déjà eu une rencontre vidéo avec la personne et que vous avez l'intention de vous marier en demandant à échanger des messages avec elle.",
+    "see_whatsapp_messages": "Si l'utilisateur accepte, vous verrez le numéro WhatsApp de l'utilisateur dans la page Messages.",
+    "yes_i_swear": "Oui, je le jure",
+    "request": "Demander",
+    "chat_request_sent": "Votre demande a été envoyée. Vérifiez Messages pour voir les mises à jour."
+  },
+  "edit_profile": {
+    "title": "Modifier le profil",
+    "loading": "Chargement du profil...",
+    "load_error": "Échec du chargement des données du profil",
+    "update_success": "Profil mis à jour avec succès !",
+    "update_error": "Échec de la mise à jour du profil",
+    "update_error_retry": "Échec de la mise à jour du profil. Veuillez réessayer.",
+    "user_placeholder": "Utilisateur",
+    "first_name_placeholder": "Prénom *",
+    "last_name_placeholder": "Nom de famille",
+    "select_phone_code": "Sélectionner le code téléphonique",
+    "search_country_code": "Rechercher le code pays...",
+    "mobile_placeholder": "Numéro de portable",
+    "dob_placeholder": "Date de naissance *",
+    "gender_placeholder": "Sélectionner le genre *",
+    "search_gender": "Rechercher le genre...",
+    "select_country": "Sélectionner le pays",
+    "search_country": "Rechercher un pays...",
+    "select_city": "Sélectionner la ville",
+    "select_country_first": "Sélectionnez d'abord le pays",
+    "search_city": "Rechercher une ville...",
+    "occupation_placeholder": "Profession",
+    "about_me_label": "À propos de moi",
+    "about_placeholder": "Parlez-nous de vous...",
+    "first_name_required": "Le prénom est requis",
+    "gender_required": "Le genre est requis",
+    "dob_required": "La date de naissance est requise",
+    "phone_code_required": "Le code téléphonique est requis lorsqu'un numéro de portable est fourni",
+    "updating": "Mise à jour...",
+    "update_button": "Mettre à jour le profil"
+  },
+  "privacy_policy": {
+    "title": "Politique de confidentialité",
+    "section1_title": "1. Types de données que nous collectons",
+    "section1_intro": "Nous pouvons collecter les types de données suivants :",
+    "section1_personal": "Informations personnelles : Cela inclut, sans s'y limiter, votre nom, adresse email et autres coordonnées fournies lors de l'inscription au compte ou de l'utilisation de nos services.",
+    "section1_usage": "Informations d'utilisation : Nous pouvons collecter des informations sur la façon dont vous interagissez avec nos services, y compris, mais sans s'y limiter, les adresses IP, les informations sur l'appareil et l'historique de navigation.",
+    "section1_cookies": "Cookies et technologies similaires : Nous utilisons des cookies et des technologies similaires pour améliorer votre expérience et recueillir des informations sur vos préférences.",
+    "section2_title": "2. Utilisation de vos données personnelles",
+    "section2_intro": "Nous pouvons utiliser vos données personnelles aux fins suivantes :",
+    "section2_delivery": "Prestation de services : Pour fournir et maintenir nos services, y compris le contenu et les fonctionnalités personnalisés.",
+    "section2_comms": "Communication : Pour communiquer avec vous, répondre à vos demandes et fournir des informations importantes sur nos services.",
+    "section2_analytics": "Analyses : Pour analyser les modèles d'utilisation, améliorer nos services et personnaliser le contenu en fonction des préférences des utilisateurs.",
+    "section3_title": "3. Divulgation de vos données personnelles",
+    "section3_intro": "Nous pouvons divulguer vos données personnelles dans les situations suivantes :",
+    "section3_legal": "Obligations légales : Pour se conformer aux obligations légales, telles que répondre aux demandes légales ou aux ordonnances du tribunal.",
+    "section3_third_parties": "Prestataires de services tiers : Nous pouvons partager vos informations avec des prestataires de services tiers qui nous aident à fournir nos services, sous réserve d'accords de confidentialité.",
+    "section3_business": "Transactions commerciales : En cas de fusion, d'acquisition ou de vente de tout ou partie de nos actifs, vos données personnelles peuvent être transférées dans le cadre de la transaction."
+  },
+  "reminder_page": {
+    "title": "Rappel sur la Sunnah de la polygamie",
+    "section_ayat_title": "Verset du Coran",
+    "ayat_quote": "\"...alors épousez ce qui vous plaît parmi les femmes, deux, trois ou quatre. Mais si vous craignez de ne pas être équitables, alors [épousez] une seule...\" (An-Nisa 4:3)",
+    "ayat_note": "La justice entre les épouses est une condition explicite de permissibilité.",
+    "section_hadith_title": "Hadiths authentiques",
+    "hadith_1": "Le Prophète (ﷺ) a dit : \"Les meilleurs d'entre vous sont ceux qui sont les meilleurs envers leurs familles, et je suis le meilleur d'entre vous envers ma famille.\" (Tirmidhi)",
+    "hadith_2": "Le Prophète (ﷺ) a dit : \"Craignez Allah et soyez justes envers vos enfants (et votre famille).\" (Bukhari et Muslim)",
+    "hadith_note": "La bonté, la justice et le maintien des droits sont des devoirs contraignants.",
+    "section_scholars_title": "Déclarations des savants",
+    "scholars_1": "La polygynie est permise avec la condition stricte de justice dans l'entretien, le temps, le logement et le traitement équitable. Si l'on craint que la justice ne soit pas respectée, un seul mariage est plus sûr.",
+    "scholars_2": "La justice n'inclut pas l'égalité dans le cœur, mais elle exige l'équité dans les droits et responsabilités extérieurs.",
+    "scholars_3": "Entrer dans la polygynie est une alliance sérieuse. Ne pas maintenir la justice est un péché majeur et une cause de dommages mondains et spirituels.",
+    "section_adab_title": "Adab (Étiquettes) et responsabilités",
+    "adab_1": "- Maintenir la justice également dans les dépenses, le logement et le temps.",
+    "adab_2": "- Maintenir l'intimité et la dignité de chaque épouse ; éviter les préjudices et les comparaisons.",
+    "adab_3": "- Être véridique, responsable et transparent dès le début.",
+    "adab_4": "- Impliquer les familles de manière appropriée et honorer les protocoles de tutelle.",
+    "adab_5": "- Garder les intentions pures pour un mariage halal et rechercher la satisfaction d'Allah."
+  },
+  "help_center": {
+    "header_title": "Centre d'aide",
+    "tab_faq": "FAQ",
+    "tab_contact": "Nous contacter",
+    "search_placeholder": "Rechercher",
+    "contact_us": "Nous contacter",
+    "whatsapp": "WhatsApp",
+    "support_email_subject": "Demande de support",
+    "keywords": {
+      "getting_started": "Commencer",
+      "islamic_features": "Fonctionnalités islamiques",
+      "video_meetings": "Rencontres vidéo",
+      "finding_partners": "Trouver des partenaires",
+      "privacy_safety": "Confidentialité et sécurité",
+      "account": "Compte"
+    },
+    "faqs": {
+      "how_do_i_create_my_profile": {
+        "question": "Comment créer mon profil ?",
+        "answer": "Inscrivez-vous avec votre email, complétez le processus d'inscription incluant vos préférences islamiques, téléchargez des photos et vérifiez votre compte. La configuration inclut les détails personnels, les pratiques religieuses et les intentions de mariage."
+      },
+      "what_makes_this_app_different_from_other_dating_apps": {
+        "question": "Qu'est-ce qui rend cette application différente des autres applications de rencontres ?",
+        "answer": "Zawajplus est spécifiquement conçu pour la recherche de partenaire halal avec une protection complète de la vie privée. Les utilisateurs peuvent rester privés tout en cherchant un partenaire halal, avec des photos et vidéos gardées sécurisées jusqu'à ce qu'elles soient demandées. Nous nous concentrons sur les intentions sérieuses de mariage avec l'implication de la famille."
+      },
+      "can_i_stay_private_while_using_the_app": {
+        "question": "Puis-je rester privé en utilisant l'application ?",
+        "answer": "Oui, absolument ! Vous pouvez maintenir une confidentialité complète tout en cherchant un partenaire halal. Vos informations personnelles et médias sont protégés, et vous contrôlez quelles informations sont partagées et quand."
+      },
+      "how_does_polygamy_support_work_for_men": {
+        "question": "Comment fonctionne le support de polygamie pour les hommes ?",
+        "answer": "Les hommes peuvent spécifier le nombre d'épouses qu'ils recherchent : 2ème épouse, 3ème épouse ou 4ème épouse. Cela aide les femmes à comprendre la position de mariage offerte et à prendre des décisions éclairées selon les principes islamiques."
+      },
+      "what_options_do_women_have_regarding_polygamy": {
+        "question": "Quelles options ont les femmes concernant la polygamie ?",
+        "answer": "Les femmes peuvent choisir d'accepter la polygamie et spécifier quelles positions de mariage elles considéreraient (1ère, 2ème, 3ème ou 4ème épouse). Cela assure une compréhension claire de l'arrangement de mariage dès le début."
+      },
+      "what_islamic_preferences_can_i_set": {
+        "question": "Quelles préférences islamiques puis-je définir ?",
+        "answer": "Vous pouvez spécifier votre fréquence de prière, habitudes de lecture du Coran, préférences de hijab, adhésion au régime halal et niveau de pratique religieuse. Celles-ci aident à trouver des partenaires compatibles qui partagent des valeurs et pratiques islamiques similaires."
+      },
+      "how_are_photos_and_videos_handled": {
+        "question": "Comment les photos et vidéos sont-elles gérées ?",
+        "answer": "Toutes les photos et vidéos sont gardées privées et sécurisées. Elles ne seront ouvertes et partagées que sur votre demande spécifique. Cela assure que les principes de modestie islamique sont maintenus tout en permettant des connexions significatives."
+      },
+      "how_do_video_meetings_work": {
+        "question": "Comment fonctionnent les rencontres vidéo ?",
+        "answer": "Les utilisateurs peuvent organiser des appels vidéo sur une fenêtre de temps convenue. Une fois que les deux parties s'accordent sur un moment approprié, une rencontre vidéo sécurisée peut être planifiée. Cela permet une interaction face à face dans un environnement contrôlé et respectueux."
+      },
+      "can_i_schedule_video_meetings_in_advance": {
+        "question": "Puis-je planifier des rencontres vidéo à l'avance ?",
+        "answer": "Oui ! Vous pouvez proposer une fenêtre de temps qui vous convient, et l'autre personne peut accepter le timing. Cela assure que les deux parties sont préparées et disponibles pour une conversation significative."
+      },
+      "who_can_participate_in_video_meetings": {
+        "question": "Qui peut participer aux rencontres vidéo ?",
+        "answer": "Les rencontres vidéo peuvent inclure des membres de la famille ou des tuteurs selon les directives islamiques appropriées. Cela assure une supervision appropriée et l'implication de la famille dans le processus de mariage."
+      },
+      "how_do_i_find_potential_partners": {
+        "question": "Comment trouver des partenaires potentiels ?",
+        "answer": "Vous pouvez filtrer les profils selon vos préférences, sélectionner les profils qui vous intéressent, envoyer des demandes de connexion et organiser des rencontres. Notre système vous aide à trouver des partenaires compatibles tout en maintenant les principes islamiques."
+      },
+      "what_happens_after_i_send_a_connection_request": {
+        "question": "Que se passe-t-il après avoir envoyé une demande de connexion ?",
+        "answer": "L'autre personne recevra votre demande et pourra choisir d'accepter ou de refuser. Si acceptée, vous pouvez commencer à communiquer et potentiellement organiser une rencontre vidéo pour mieux vous connaître."
+      },
+      "how_are_profiles_verified": {
+        "question": "Comment les profils sont-ils vérifiés ?",
+        "answer": "Nos agents dédiés vérifient soigneusement tous les profils pour assurer l'authenticité. Nous vérifions les documents d'identité, vérifions les photos et confirmons les informations fournies pour maintenir une communauté digne de confiance."
+      },
+      "are_families_informed_about_meetings": {
+        "question": "Les familles sont-elles informées des rencontres ?",
+        "answer": "Oui, nos agents s'assurent que les familles des mariées sont correctement informées avant que toute rencontre ait lieu. Cela maintient les traditions islamiques d'implication familiale et assure une supervision appropriée."
+      },
+      "how_do_you_ensure_user_safety": {
+        "question": "Comment assurez-vous la sécurité des utilisateurs ?",
+        "answer": "Nous implémentons la vérification de profil par nos agents, le stockage sécurisé des données, les systèmes de notification familiale et fournissons des directives d'interaction islamique. Toutes les activités sont surveillées pour maintenir un environnement sûr et halal."
+      },
+      "can_i_control_who_sees_my_information": {
+        "question": "Puis-je contrôler qui voit mes informations ?",
+        "answer": "Oui, vous avez un contrôle complet sur votre vie privée. Vos photos, vidéos et détails personnels restent privés jusqu'à ce que vous choisissiez spécifiquement de les partager avec quelqu'un avec qui vous êtes intéressé à vous connecter."
+      },
+      "can_i_edit_my_preferences_after_registration": {
+        "question": "Puis-je modifier mes préférences après l'inscription ?",
+        "answer": "Oui, vous pouvez mettre à jour vos préférences islamiques, intentions de mariage et autres détails de profil à tout moment via vos paramètres de profil. Cela vous permet d'affiner votre recherche au fur et à mesure que vos préférences évoluent."
+      },
+      "what_if_i_want_to_change_my_polygamy_preferences": {
+        "question": "Que faire si je veux changer mes préférences de polygamie ?",
+        "answer": "Vous pouvez modifier vos préférences d'intention de mariage à tout moment. Pour les hommes, vous pouvez changer quel numéro d'épouse vous recherchez (2ème, 3ème, 4ème). Pour les femmes, vous pouvez ajuster quelles positions vous considéreriez."
+      },
+      "how_do_i_delete_my_account": {
+        "question": "Comment supprimer mon compte ?",
+        "answer": "Contactez notre équipe de support via la section Nous contacter. Nous vous aiderons à supprimer votre compte et toutes les données associées tout en nous assurant que toutes les réglementations de confidentialité sont suivies et que toutes les connexions en cours sont gérées de manière appropriée."
+      }
+    }
+  },
+  "membership": {
+    "header_title": "Mon abonnement",
+    "tabs": {
+      "packages": "Forfaits",
+      "payments": "Historique des paiements",
+      "contact": "Nous contacter"
+    },
+    "packages": {
+      "current": "Actuel",
+      "pending": "En attente",
+      "complain": "Se plaindre",
+      "lifetime": "À vie"
+    },
+    "packages_tab": {
+      "title": "Choisissez votre forfait",
+      "subtitle": "Tous les forfaits sont des abonnements à vie",
+      "get_full_support": "Obtenir un support complet",
+      "pay_difference": "Payer la différence ${{amount}}",
+      "proceed_payment": "Procéder au paiement ${{amount}}"
+    },
+    "payments_tab": {
+      "title": "Historique des paiements",
+      "subtitle": "Vos enregistrements de transactions",
+      "empty": "Aucun enregistrement de paiement trouvé"
+    },
+    "contact_tab": {
+      "need_payment_help": "Besoin d'aide pour le paiement ?",
+      "message": "Vous ne pouvez pas procéder au paiement ? Veuillez nous contacter pour obtenir notre support complet. Notre équipe de support paiement est prête à vous aider.",
+      "features": {
+        "instant_support": "Support WhatsApp instantané",
+        "issue_resolution": "Résolution des problèmes de paiement",
+        "professional_assistance": "Assistance professionnelle"
+      },
+      "contact_payment_support": "Contacter le support paiement",
+      "note": "Disponible 24/7 • Réponse en quelques minutes"
+    },
+    "complaint_modal": {
+      "title": "Soumettre une plainte",
+      "describe": "Décrivez le problème avec votre paiement :",
+      "placeholder": "Tapez votre message...",
+      "cancel": "Annuler",
+      "submit": "Soumettre"
+    },
+    "alerts": {
+      "not_found_title": "Non trouvé",
+      "not_found_body": "Aucun paiement trouvé pour ce forfait pour attacher votre plainte.",
+      "submitted_title": "Soumis",
+      "submitted_body": "Votre plainte a été soumise, nous vérifierons et reviendrons vers vous",
+      "error_title": "Erreur",
+      "submit_error": "Échec de la soumission de la plainte.",
+      "whatsapp_error": "Impossible d'ouvrir WhatsApp.",
+      "checkout_error": "Échec du démarrage du checkout."
+    },
+    "support": {
+      "profile_support_text": "Assalamu Alaikum, j'ai besoin d'un support complet.",
+      "payment_support_text": "Assalamu Alaikum, je ne peux pas procéder au paiement. Veuillez m'aider."
+    }
+  }
+}

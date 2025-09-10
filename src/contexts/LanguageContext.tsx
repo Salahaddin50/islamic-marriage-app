@@ -39,17 +39,24 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   }, [currentLanguage]);
 
   useEffect(() => {
-    // Listen for language changes
+    // Listen for language changes and normalize the language code
     const handleLanguageChange = (lng: string) => {
-      setCurrentLanguage(lng);
+      const normalizedLng = getCurrentLanguage(); // This will normalize the language code
+      setCurrentLanguage(normalizedLng);
     };
 
     i18n.on('languageChanged', handleLanguageChange);
 
+    // Also update immediately if i18n language is different from our state
+    const currentI18nLang = getCurrentLanguage();
+    if (currentI18nLang !== currentLanguage) {
+      setCurrentLanguage(currentI18nLang);
+    }
+
     return () => {
       i18n.off('languageChanged', handleLanguageChange);
     };
-  }, [i18n]);
+  }, [i18n, currentLanguage]);
 
   const handleChangeLanguage = async (languageCode: string) => {
     try {

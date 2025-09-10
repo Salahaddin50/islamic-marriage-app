@@ -637,7 +637,8 @@
     "close": "إغلاق",
     "ok": "موافق",
     "yes": "نعم",
-    "no": "لا"
+    "no": "لا",
+    "language": "اللغة"
   },
   "match_details": {
     "photos_videos": "الصور والفيديوهات",

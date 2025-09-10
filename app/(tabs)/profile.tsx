@@ -247,7 +247,12 @@ const Profile = () => {
             <Text style={[styles.settingsName, { color: COLORS.greyscale900 }]}>{t('profile_page.items.language')}</Text>
           </View>
           <View style={styles.rightContainer}>
-            <Text style={[styles.rightLanguage, { color: COLORS.greyscale900 }]}>{i18n.language === 'ar' ? 'العربية' : 'English'}</Text>
+            <Text style={[styles.rightLanguage, { color: COLORS.greyscale900 }]}>
+              {i18n.language === 'ar' ? 'العربية' : 
+               i18n.language === 'ru' ? 'Русский' : 
+               i18n.language === 'tr' ? 'Türkçe' : 
+               i18n.language === 'fr' ? 'Français' : 'English'}
+            </Text>
             <Image
               source={icons.arrowRight}
               contentFit='contain'

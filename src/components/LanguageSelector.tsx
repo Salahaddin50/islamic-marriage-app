@@ -19,18 +19,13 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   style, 
   showLabel = true 
 }) => {
-  const { currentLanguage, supportedLanguages, changeLanguage } = useLanguage();
+  const { currentLanguage, supportedLanguages, changeLanguage, t } = useLanguage();
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  // Language code display mapping
-  const getLanguageCode = (code: string) => {
-    const codeMap: { [key: string]: string } = {
-      'en': 'En',
-      'ru': 'Ru', 
-      'ar': 'Ar',
-      'tr': 'Tr'
-    };
-    return codeMap[code] || 'En';
+  // Get native language name
+  const getCurrentLanguageName = (code: string) => {
+    const currentLang = supportedLanguages.find(lang => lang.code === code);
+    return currentLang?.nativeName || 'English';
   };
 
   const handleLanguageSelect = async (languageCode: string) => {
@@ -59,7 +54,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
     <View style={[styles.container, style]}>
       <View style={styles.languageRow}>
         <View style={styles.globeContainer}>
-          <Text style={styles.languageLabel}>Language</Text>
+          <Text style={styles.languageLabel}>{t('common.language') || 'Language'}</Text>
         </View>
         <TouchableOpacity
           style={styles.selector}
@@ -68,7 +63,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
           <View style={styles.selectorContent}>
             <View style={styles.currentLanguage}>
               <Text style={styles.currentLanguageText}>
-                {getLanguageCode(currentLanguage)}
+                {getCurrentLanguageName(currentLanguage)}
               </Text>
             </View>
           </View>
@@ -84,7 +79,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Languages</Text>
+              <Text style={styles.modalTitle}>{t('language_page.languages') || 'Languages'}</Text>
               <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => setIsModalVisible(false)}
@@ -133,11 +128,11 @@ const styles = StyleSheet.create({
   selector: {
     backgroundColor: COLORS.white,
     borderRadius: 8,
-    paddingHorizontal: getResponsiveSpacing(6),
+    paddingHorizontal: getResponsiveSpacing(8),
     paddingVertical: getResponsiveSpacing(6),
     borderWidth: 1,
     borderColor: COLORS.grayscale200,
-    width: 40,
+    minWidth: 80,
   },
   selectorContent: {
     flexDirection: 'column',

@@ -297,8 +297,6 @@ const Membership = () => {
                     const baseFeatures: string[] = Array.isArray(pkg.features) ? pkg.features : [];
                     const translatedFeatures = featuresByType[featureTypeKey] && featuresByType[featureTypeKey].length > 0 ? featuresByType[featureTypeKey] : baseFeatures;
                     
-                    console.log(`Package "${pkg.name}" (${typeVal}) -> using features from "${featureTypeKey}": ${translatedFeatures.length} features`);
-                    
                     let nt = pkg.name_translations;
                     if (typeof nt === 'string') {
                         try { nt = JSON.parse(nt); } catch {}

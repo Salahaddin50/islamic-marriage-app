@@ -135,7 +135,8 @@
     "close": "Close",
     "ok": "OK",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "language": "Language"
   }
   ,
   "profile_setup": {

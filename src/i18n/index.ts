@@ -14,6 +14,7 @@ import en from './locales/en.json';
 import ru from './locales/ru.json';
 import ar from './locales/ar.json';
 import tr from './locales/tr.json';
+import fr from './locales/fr.json';
 
 // Language storage key
 const LANGUAGE_KEY = 'user_language';
@@ -36,7 +37,7 @@ const languageDetector = {
       const languageCode = deviceLocale.split('-')[0];
       
       // Check if we support this language, otherwise default to English
-      const supportedLanguages = ['en', 'ru', 'ar', 'tr'];
+      const supportedLanguages = ['en', 'ru', 'ar', 'tr', 'fr'];
       const selectedLanguage = supportedLanguages.includes(languageCode) ? languageCode : 'en';
       
       callback(selectedLanguage);
@@ -66,6 +67,7 @@ i18next
       ru: { translation: ru },
       ar: { translation: ar },
       tr: { translation: tr },
+      fr: { translation: fr },
     },
     fallbackLng: 'en',
     debug: __DEV__,
@@ -90,7 +92,12 @@ export const changeLanguage = async (languageCode: string) => {
 };
 
 // Helper function to get current language
-export const getCurrentLanguage = () => i18next.language || 'en';
+export const getCurrentLanguage = () => {
+  const raw = i18next.language || 'en';
+  const base = (raw || 'en').toLowerCase().split('-')[0];
+  const supported = ['en', 'ru', 'ar', 'tr', 'fr'];
+  return supported.includes(base) ? base : 'en';
+};
 
 // Helper function to get supported languages
 export const getSupportedLanguages = () => [
@@ -98,4 +105,5 @@ export const getSupportedLanguages = () => [
   { code: 'ru', name: 'Russian', nativeName: 'Русский' },
   { code: 'ar', name: 'Arabic', nativeName: 'العربية' },
   { code: 'tr', name: 'Turkish', nativeName: 'Türkçe' },
+  { code: 'fr', name: 'French', nativeName: 'Français' },
 ];
