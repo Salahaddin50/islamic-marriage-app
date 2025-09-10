@@ -976,15 +976,68 @@
                 'Are you sure you want to delete this profile? This action cannot be undone.',
                 async () => {
                     try {
-                        // Always use real data
-                        
-                        // Real mode
-                        const { error } = await window.supabaseClient
+                        const extractKey = (url) => {
+                            try {
+                                if (!url) return null;
+                                const u = new URL(url);
+                                const path = (u.pathname || '').replace(/^\//, '');
+                                return path || null;
+                            } catch { return null; }
+                        };
+
+                        // 1) Get user_id for this profile
+                        const { data: profileRow, error: profileErr } = await window.supabaseClient
+                            .from('user_profiles')
+                            .select('user_id')
+                            .eq('id', profileId)
+                            .single();
+                        if (profileErr) throw profileErr;
+                        const userId = profileRow?.user_id;
+
+                        // 2) Collect media keys for storage deletion
+                        let mediaKeys = [];
+                        if (userId) {
+                            const { data: mediaRows } = await window.supabaseClient
+                                .from('media_references')
+                                .select('external_url, thumbnail_url')
+                                .eq('user_id', userId);
+                            if (Array.isArray(mediaRows)) {
+                                const keys = [];
+                                for (const m of mediaRows) {
+                                    const k1 = extractKey(m.external_url);
+                                    const k2 = extractKey(m.thumbnail_url);
+                                    if (k1) keys.push(k1);
+                                    if (k2) keys.push(k2);
+                                }
+                                mediaKeys = Array.from(new Set(keys));
+                            }
+                        }
+
+                        // 3) Invoke Edge Function to delete from DigitalOcean Spaces
+                        if (mediaKeys.length > 0) {
+                            try {
+                                await window.supabaseClient.functions.invoke('delete-user-media', {
+                                    body: { keys: mediaKeys }
+                                });
+                            } catch (e) {
+                                console.warn('Storage delete invoke failed (will continue):', e);
+                            }
+                        }
+
+                        // 4) Delete media references from DB
+                        if (userId) {
+                            await window.supabaseClient
+                                .from('media_references')
+                                .delete()
+                                .eq('user_id', userId);
+                        }
+
+                        // 5) Delete profile row
+                        const { error: delErr } = await window.supabaseClient
                             .from('user_profiles')
                             .delete()
                             .eq('id', profileId);
-
-                        if (error) throw error;
+                        if (delErr) throw delErr;
 
                         showNotification('Profile deleted successfully', 'success');
                         loadProfiles();
