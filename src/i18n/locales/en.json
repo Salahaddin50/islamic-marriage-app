@@ -482,6 +482,17 @@
       "title_accepted_positions": "Accepted Wife Positions",
       "title_weight_range": "Weight Range (kg)"
     }
+    ,
+    "crown_menu": {
+      "package_names": {
+        "premium": "Premium",
+        "vip_premium": "VIP Premium",
+        "golden_premium": "Golden Premium"
+      },
+      "no_package": "No Package",
+      "upgrade": "Upgrade",
+      "max_level": "Max Level"
+    }
   }
   ,
   "tabs": {
@@ -490,6 +501,66 @@
     "meet": "Meet",
     "message": "Message",
     "profile": "Profile"
+  }
+  ,
+  "notifications": {
+    "title": "Notifications",
+    "loading": "Loading notifications...",
+    "empty": {
+      "title": "No notifications yet",
+      "description": "You'll see notifications about interests, meet requests, and messages here."
+    },
+    "badge_new": "New",
+    "types": {
+      "photo_request": {
+        "title": "Photo Request",
+        "message": "{{name}}, {{age}} requests your photo"
+      },
+      "photo_shared": {
+        "title": "Photos Shared",
+        "message": "{{name}}, {{age}} has shared photos with you"
+      },
+      "video_call_request": {
+        "title": "Video Call Request",
+        "message": "{{name}}, {{age}} requests a video call"
+      },
+      "video_call_approved": {
+        "title": "Video Call Approved",
+        "message": "{{name}}, {{age}} approved your video call request"
+      },
+      "whatsapp_request": {
+        "title": "WhatsApp Request",
+        "message": "{{name}}, {{age}} requests your whatsapp number"
+      },
+      "whatsapp_shared": {
+        "title": "WhatsApp Shared",
+        "message": "{{name}}, {{age}} has shared whatsapp number"
+      },
+      "interest_received": {
+        "title": "Interest Received",
+        "message": "{{name}}, {{age}} showed interest in you"
+      },
+      "interest_accepted": {
+        "title": "Interest Accepted",
+        "message": "{{name}}, {{age}} accepted your interest"
+      },
+      "meet_request_received": {
+        "title": "Meet Request",
+        "message": "{{name}}, {{age}} wants to meet you"
+      },
+      "meet_request_accepted": {
+        "title": "Meet Request Accepted",
+        "message": "{{name}}, {{age}} accepted your meet request"
+      },
+      "message_received": {
+        "title": "New Message",
+        "message": "{{name}}: {{preview}}"
+      },
+      "profile_approved": {
+        "title": "Profile Approved! 🎉",
+        "message": "Congratulations! Your profile has been approved and is now visible to other users. Start exploring and connecting with people!"
+      }
+    }
   }
   ,
   "badges": {

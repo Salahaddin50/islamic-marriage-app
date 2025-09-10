@@ -490,6 +490,29 @@
   "badges": {
     "new": "nouveau"
   },
+  "notifications": {
+    "title": "Notifications",
+    "loading": "Chargement des notifications...",
+    "empty": {
+      "title": "Aucune notification pour le moment",
+      "description": "Vous verrez ici les notifications concernant les intérêts, les demandes de rendez‑vous et les messages."
+    },
+    "badge_new": "Nouveau",
+    "types": {
+      "photo_request": { "title": "Demande de photo", "message": "{{name}}, {{age}} demande votre photo" },
+      "photo_shared": { "title": "Photos partagées", "message": "{{name}}, {{age}} a partagé des photos avec vous" },
+      "video_call_request": { "title": "Demande d'appel vidéo", "message": "{{name}}, {{age}} demande un appel vidéo" },
+      "video_call_approved": { "title": "Appel vidéo approuvé", "message": "{{name}}, {{age}} a approuvé votre demande d'appel vidéo" },
+      "whatsapp_request": { "title": "Demande WhatsApp", "message": "{{name}}, {{age}} demande votre numéro WhatsApp" },
+      "whatsapp_shared": { "title": "Numéro WhatsApp partagé", "message": "{{name}}, {{age}} a partagé son numéro WhatsApp" },
+      "interest_received": { "title": "Intérêt reçu", "message": "{{name}}, {{age}} a montré de l'intérêt pour vous" },
+      "interest_accepted": { "title": "Intérêt accepté", "message": "{{name}}, {{age}} a accepté votre intérêt" },
+      "meet_request_received": { "title": "Demande de rencontre", "message": "{{name}}, {{age}} veut vous rencontrer" },
+      "meet_request_accepted": { "title": "Demande de rencontre acceptée", "message": "{{name}}, {{age}} a accepté votre demande de rencontre" },
+      "message_received": { "title": "Nouveau message", "message": "{{name}} : {{preview}}" },
+      "profile_approved": { "title": "Profil approuvé ! 🎉", "message": "Félicitations ! Votre profil a été approuvé et est maintenant visible par les autres utilisateurs. Commencez à explorer et à vous connecter !" }
+    }
+  },
   "interests": {
     "member": "Membre",
     "header_photo_requests": "Demandes de photos",
@@ -938,6 +961,17 @@
     "support": {
       "profile_support_text": "Assalamu Alaikum, j'ai besoin d'un support complet.",
       "payment_support_text": "Assalamu Alaikum, je ne peux pas procéder au paiement. Veuillez m'aider."
+    }
+    ,
+    "crown_menu": {
+      "package_names": {
+        "premium": "Premium",
+        "vip_premium": "VIP Premium",
+        "golden_premium": "Premium Or"
+      },
+      "no_package": "Aucun forfait",
+      "upgrade": "Mettre à niveau",
+      "max_level": "Niveau maximal"
     }
   }
 }

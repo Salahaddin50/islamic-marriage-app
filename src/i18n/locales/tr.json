@@ -490,6 +490,29 @@
   "badges": {
     "new": "yeni"
   },
+  "notifications": {
+    "title": "Bildirimler",
+    "loading": "Bildirimler yükleniyor...",
+    "empty": {
+      "title": "Henüz bildirim yok",
+      "description": "Burada ilgi, görüşme talepleri ve mesajlarla ilgili bildirimleri göreceksiniz."
+    },
+    "badge_new": "Yeni",
+    "types": {
+      "photo_request": { "title": "Fotoğraf İsteği", "message": "{{name}}, {{age}} fotoğrafını istiyor" },
+      "photo_shared": { "title": "Fotoğraflar Paylaşıldı", "message": "{{name}}, {{age}} seninle fotoğraf paylaştı" },
+      "video_call_request": { "title": "Görüntülü Arama İsteği", "message": "{{name}}, {{age}} görüntülü arama istiyor" },
+      "video_call_approved": { "title": "Görüntülü Arama Onaylandı", "message": "{{name}}, {{age}} görüntülü arama isteğini onayladı" },
+      "whatsapp_request": { "title": "WhatsApp İsteği", "message": "{{name}}, {{age}} WhatsApp numaranı istiyor" },
+      "whatsapp_shared": { "title": "WhatsApp Paylaşıldı", "message": "{{name}}, {{age}} WhatsApp numarasını paylaştı" },
+      "interest_received": { "title": "İlgi Alındı", "message": "{{name}}, {{age}} sana ilgi gösterdi" },
+      "interest_accepted": { "title": "İlgi Kabul Edildi", "message": "{{name}}, {{age}} ilgini kabul etti" },
+      "meet_request_received": { "title": "Görüşme Talebi", "message": "{{name}}, {{age}} seninle görüşmek istiyor" },
+      "meet_request_accepted": { "title": "Görüşme Talebi Kabul Edildi", "message": "{{name}}, {{age}} görüşme talebini kabul etti" },
+      "message_received": { "title": "Yeni Mesaj", "message": "{{name}}: {{preview}}" },
+      "profile_approved": { "title": "Profil Onaylandı! 🎉", "message": "Tebrikler! Profilin onaylandı ve artık diğer kullanıcılara görünür. Keşfetmeye ve bağlantı kurmaya başla!" }
+    }
+  },
   "interests": {
     "member": "Üye",
     "header_photo_requests": "Fotoğraf Talepleri",
@@ -938,6 +961,17 @@
     "support": {
       "profile_support_text": "Esselamü Aleyküm, tam desteğe ihtiyacım var.",
       "payment_support_text": "Esselamü Aleyküm, ödeme ile devam edemiyorum. Lütfen bana yardım edin."
+    }
+    ,
+    "crown_menu": {
+      "package_names": {
+        "premium": "Premium",
+        "vip_premium": "VIP Premium",
+        "golden_premium": "Altın Premium"
+      },
+      "no_package": "Paket Yok",
+      "upgrade": "Yükselt",
+      "max_level": "En Üst Seviye"
     }
   }
 }

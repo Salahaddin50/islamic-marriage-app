@@ -955,9 +955,14 @@
 
         async function approveProfile(profileId) {
             try {
-                // Always use real data
-                
-                // Real mode
+                // Get the profile to find the user_id
+                const profile = profiles.find(p => p.id === profileId);
+                if (!profile) {
+                    showNotification('Profile not found', 'error');
+                    return;
+                }
+
+                // Update profile approval status
                 const { data, error } = await window.supabaseClient
                     .from('user_profiles')
                     .update({ admin_approved: true })
@@ -975,7 +980,40 @@
                     return;
                 }
 
-                showNotification('Profile approved successfully', 'success');
+                // Send notification to the user
+                try {
+                    console.log('Sending notification for user:', profile.user_id);
+                    
+                    const notificationPayload = {
+                        user_id: profile.user_id,
+                        type: 'profile_approved',
+                        title: 'Profile Approved! 🎉',
+                        message: 'Congratulations! Your profile has been approved and is now visible to other users. Start exploring and connecting with people!'
+                    };
+                    
+                    console.log('Notification payload:', notificationPayload);
+                    
+                    const notificationResponse = await window.supabaseClient.functions.invoke('admin-send-notification', {
+                        body: JSON.stringify(notificationPayload),
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    console.log('Notification response:', notificationResponse);
+
+                    if (notificationResponse.error) {
+                        console.warn('Failed to send notification:', notificationResponse.error);
+                        // Don't fail the approval if notification fails
+                    } else {
+                        console.log('Notification sent successfully:', notificationResponse.data);
+                    }
+                } catch (notificationError) {
+                    console.warn('Notification error:', notificationError);
+                    // Don't fail the approval if notification fails
+                }
+
+                showNotification('Profile approved successfully and user notified', 'success');
                 const idx = profiles.findIndex(p => p.id === profileId);
                 if (idx !== -1) {
                     profiles[idx].admin_approved = true;

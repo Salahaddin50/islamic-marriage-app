@@ -3,6 +3,7 @@ import React from 'react';
 import { COLORS, SIZES, icons } from '@/constants';
 import { Image } from 'expo-image';
 import { getTimeAgo } from '@/utils/date';
+import { useLanguage } from '@/src/contexts/LanguageContext';
 
 type NotificationCardProps = {
   title: string;
@@ -31,6 +32,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
   onDelete,
   onUserPress
 }) => {
+  const { t } = useLanguage();
   const getIcon = (type: NotificationCardProps['type']) => {
     switch (type) {
       case 'Security':
@@ -121,7 +123,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
         <View style={styles.rightContainer}>
           {isNew && (
             <View style={styles.headerRightContainer}>
-              <Text style={styles.headerText}>New</Text>
+              <Text style={styles.headerText}>{t('notifications.badge_new') || t('badges.new')}</Text>
             </View>
           )}
           {onDelete && (

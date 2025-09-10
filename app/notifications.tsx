@@ -8,11 +8,13 @@ import NotificationCard from '@/components/NotificationCard';
 import { useNavigation, router } from 'expo-router';
 import { NavigationProp } from '@react-navigation/native';
 import { useNotifications } from '@/src/contexts/NotificationContext';
+import { useLanguage } from '@/src/contexts/LanguageContext';
 import { NotificationsService } from '@/src/services/notifications';
 
 // Notifications Screen
 const Notifications = () => {
     const navigation = useNavigation<NavigationProp<any>>();
+    const { t } = useLanguage();
     const { 
         notifications, 
         unreadCount, 
@@ -58,7 +60,7 @@ const Notifications = () => {
                         />
                     </TouchableOpacity>
                     <Image source={icons.notificationBell} contentFit='contain' style={[styles.headerLogo, {tintColor: COLORS.primary}]} />
-                    <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>Notifications</Text>
+                    <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>{t('notifications.title')}</Text>
                 </View>
                 <View style={styles.headerRight}>
                     <TouchableOpacity
@@ -97,12 +99,81 @@ const Notifications = () => {
                 contentFit='contain'
                 style={styles.emptyIcon}
             />
-            <Text style={styles.emptyTitle}>No notifications yet</Text>
-            <Text style={styles.emptyDescription}>
-                You'll see notifications about interests, meet requests, and messages here.
-            </Text>
+            <Text style={styles.emptyTitle}>{t('notifications.empty.title')}</Text>
+            <Text style={styles.emptyDescription}>{t('notifications.empty.description')}</Text>
         </View>
     );
+
+    // Localize known notification types regardless of stored English text
+    const getLocalizedContent = (item: any): { title: string; message: string } => {
+        const name = item.sender_name || '';
+        const age = item.sender_age || '';
+        const preview = item?.metadata?.preview || '';
+        switch (item.type) {
+            case 'photo_request':
+                return { 
+                    title: t('notifications.types.photo_request.title'), 
+                    message: t('notifications.types.photo_request.message', { name, age })
+                };
+            case 'photo_shared':
+                return {
+                    title: t('notifications.types.photo_shared.title'),
+                    message: t('notifications.types.photo_shared.message', { name, age })
+                };
+            case 'video_call_request':
+                return {
+                    title: t('notifications.types.video_call_request.title'),
+                    message: t('notifications.types.video_call_request.message', { name, age })
+                };
+            case 'video_call_approved':
+                return {
+                    title: t('notifications.types.video_call_approved.title'),
+                    message: t('notifications.types.video_call_approved.message', { name, age })
+                };
+            case 'whatsapp_request':
+                return {
+                    title: t('notifications.types.whatsapp_request.title'),
+                    message: t('notifications.types.whatsapp_request.message', { name, age })
+                };
+            case 'whatsapp_shared':
+                return {
+                    title: t('notifications.types.whatsapp_shared.title'),
+                    message: t('notifications.types.whatsapp_shared.message', { name, age })
+                };
+            case 'interest_received':
+                return {
+                    title: t('notifications.types.interest_received.title'),
+                    message: t('notifications.types.interest_received.message', { name, age })
+                };
+            case 'interest_accepted':
+                return {
+                    title: t('notifications.types.interest_accepted.title'),
+                    message: t('notifications.types.interest_accepted.message', { name, age })
+                };
+            case 'meet_request_received':
+                return {
+                    title: t('notifications.types.meet_request_received.title'),
+                    message: t('notifications.types.meet_request_received.message', { name, age })
+                };
+            case 'meet_request_accepted':
+                return {
+                    title: t('notifications.types.meet_request_accepted.title'),
+                    message: t('notifications.types.meet_request_accepted.message', { name, age })
+                };
+            case 'message_received':
+                return {
+                    title: t('notifications.types.message_received.title'),
+                    message: t('notifications.types.message_received.message', { name, preview })
+                };
+            case 'profile_approved':
+                return {
+                    title: t('notifications.types.profile_approved.title'),
+                    message: t('notifications.types.profile_approved.message')
+                };
+            default:
+                return { title: item.title, message: item.message };
+        }
+    };
 
     const getNavigationTarget = (type: string) => {
         switch (type) {
@@ -120,6 +191,8 @@ const Notifications = () => {
             case 'whatsapp_shared':
             case 'message_received':
                 return '/(tabs)/chats';
+            case 'profile_approved':
+                return '/(tabs)/profile'; // Navigate to profile tab to see approved profile
             default:
                 return null;
         }
@@ -141,10 +214,12 @@ const Notifications = () => {
         router.push(`/matchdetails?userId=${userId}`);
     };
 
-    const renderNotification = ({ item, index }: { item: any, index: number }) => (
+    const renderNotification = ({ item, index }: { item: any, index: number }) => {
+        const localized = getLocalizedContent(item);
+        return (
         <NotificationCard
-            title={item.title}
-            description={item.message}
+            title={localized.title}
+            description={localized.message}
             date={item.created_at}
             time={new Date(item.created_at).toLocaleTimeString([], { 
                 hour: '2-digit', 
@@ -158,7 +233,8 @@ const Notifications = () => {
             onDelete={() => deleteNotification(item.id)}
             onUserPress={handleUserPress}
         />
-    );
+        );
+    };
 
 
 
@@ -169,7 +245,7 @@ const Notifications = () => {
                 {isLoading ? (
                     <View style={styles.loadingContainer}>
                         <ActivityIndicator size="large" color={COLORS.primary} />
-                        <Text style={styles.loadingText}>Loading notifications...</Text>
+                        <Text style={styles.loadingText}>{t('notifications.loading')}</Text>
                     </View>
                 ) : (
                     <FlatList

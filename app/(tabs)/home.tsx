@@ -2689,11 +2689,9 @@ const HomeScreen = () => {
                 style={[styles.crownMenuIcon, { tintColor: crownColor }]}
               />
               <Text style={styles.crownMenuPackage}>
-                {currentPackage ? (
-                  currentPackage === 'premium' ? 'Premium' : 
-                  currentPackage === 'vip_premium' ? 'VIP Premium' : 
-                  currentPackage === 'golden_premium' ? 'Golden Premium' : 'Premium'
-                ) : 'No Package'}
+                {currentPackage 
+                  ? t(`home.crown_menu.package_names.${currentPackage}`)
+                  : t('home.crown_menu.no_package')}
               </Text>
             </View>
             
@@ -2714,7 +2712,9 @@ const HomeScreen = () => {
                 styles.upgradeButtonText,
                 currentPackage === 'golden_premium' && styles.upgradeButtonTextDisabled
               ]}>
-                {currentPackage === 'golden_premium' ? 'Max Level' : 'Upgrade'}
+                {currentPackage === 'golden_premium' 
+                  ? t('home.crown_menu.max_level') 
+                  : t('home.crown_menu.upgrade')}
               </Text>
             </TouchableOpacity>
           </View>

@@ -11,7 +11,8 @@ export type NotificationType =
   | 'interest_accepted'
   | 'meet_request_received'
   | 'meet_request_accepted'
-  | 'message_received';
+  | 'message_received'
+  | 'profile_approved';
 
 export interface NotificationRecord {
   id: string;
@@ -264,6 +265,18 @@ export const NotificationsService = {
       title: 'New Message',
       message: `${senderName}: ${messagePreview.length > 50 ? messagePreview.substring(0, 50) + '...' : messagePreview}`,
       metadata: { preview: messagePreview }
+    });
+  },
+
+  async createProfileApproved(receiverId: string): Promise<NotificationRecord> {
+    return this.create({
+      user_id: receiverId,
+      sender_id: 'admin', // Admin system sender
+      sender_name: 'Admin Team',
+      sender_age: undefined,
+      type: 'profile_approved',
+      title: 'Profile Approved! 🎉',
+      message: 'Congratulations! Your profile has been approved and is now visible to other users. Start exploring and connecting with people!'
     });
   },
 
