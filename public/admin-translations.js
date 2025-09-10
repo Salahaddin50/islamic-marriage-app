@@ -25,6 +25,9 @@ const translationData = {
                     matches_today: "Matches Today",
                     meet_today: "Meet Today"
                 },
+                buttons: {
+                    refresh: "Refresh"
+                },
                 charts: {
                     user_growth: "User Growth",
                     user_demographics: "User Demographics",
@@ -46,17 +49,54 @@ const translationData = {
                     pending_approvals: "Pending Approvals"
                 }
             },
+            // Dashboard-specific labels/messages
+            dashboard_extra: {
+                labels: {
+                    gender: "Gender",
+                    admin: "Admin",
+                    registered: "Registered"
+                },
+                activity: {
+                    new_user_registered: "New user registered",
+                    loading_recent: "Loading recent activity...",
+                    no_recent: "No recent activity"
+                },
+                approvals: {
+                    loading: "Loading pending approvals...",
+                    empty: "No pending approvals"
+                },
+                time: {
+                    just_now: "Just now",
+                    minutes_ago: "{count} minutes ago",
+                    hours_ago: "{count} hours ago",
+                    days_ago: "{count} days ago"
+                }
+            },
             profiles: {
                 female_title: "Female Profiles",
                 male_title: "Male Profiles",
+                messages: {
+                    loading_female: "Loading female profiles...",
+                    loading_male: "Loading male profiles..."
+                },
                 filters: {
+                    search_label: "Search",
                     search_placeholder: "Search by name, email, location...",
-                    status_all: "All Status",
+                    status_label: "Approval Status",
+                    status_all: "All Statuses",
                     status_pending: "Pending",
                     status_approved: "Approved",
                     status_rejected: "Rejected",
                     age_range: "Age Range",
-                    location: "Location",
+                    country_label: "Country",
+                    all_countries: "All Countries",
+                    all_ages: "All Ages",
+                    date_joined_label: "Date Joined",
+                    all_time: "All Time",
+                    today: "Today",
+                    week: "This Week",
+                    month: "This Month",
+                    year: "This Year",
                     apply_filters: "Apply Filters",
                     clear_filters: "Clear Filters"
                 },
@@ -64,7 +104,8 @@ const translationData = {
                     approve: "Approve",
                     reject: "Reject",
                     delete: "Delete",
-                    view_media: "View Media",
+                    view_media: "Media",
+                    view: "View",
                     bulk_approve: "Bulk Approve",
                     bulk_reject: "Bulk Reject",
                     export: "Export"
@@ -80,9 +121,48 @@ const translationData = {
                     age: "Age",
                     location: "Location",
                     joined: "Joined",
+                    city: "City",
+                    country: "Country",
                     status: "Status",
                     photos: "Photos",
                     videos: "Videos"
+                },
+                modal: {
+                    sections: {
+                        personal_information: "Personal Information",
+                        education_work: "Education & Work",
+                        living_situation: "Living Situation",
+                        contact_languages: "Contact & Languages",
+                        about: "About",
+                        account_info: "Account Info"
+                    },
+                    labels: {
+                        age: "Age",
+                        gender: "Gender",
+                        country: "Country",
+                        city: "City",
+                        height: "Height",
+                        weight: "Weight",
+                        eye_color: "Eye Color",
+                        hair_color: "Hair Color",
+                        skin_tone: "Skin Tone",
+                        body_type: "Body Type",
+                        education: "Education",
+                        occupation: "Occupation",
+                        work_status: "Work Status",
+                        housing: "Housing",
+                        living_condition: "Living Condition",
+                        phone: "Phone",
+                        languages: "Languages",
+                        about_text: "About",
+                        public_profile: "Public Profile",
+                        approval: "Approval",
+                        joined: "Joined",
+                        last_updated: "Last Updated"
+                    },
+                    buttons: {
+                        close: "Close"
+                    }
                 }
             },
             interests: {
@@ -228,6 +308,7 @@ const translationData = {
                     update_status_failed: "Failed to update status"
                 }
             },
+            // Common labels usable across pages
             common: {
                 loading: "Loading...",
                 no_data: "No data available",
@@ -241,7 +322,25 @@ const translationData = {
                 filter: "Filter",
                 export: "Export",
                 select_all: "Select All",
-                selected_count: "{{count}} selected"
+                selected_count: "{{count}} selected",
+                yes: "Yes",
+                no: "No",
+                not_specified: "Not specified",
+                cm: "cm",
+                kg: "kg"
+            },
+            // Profile option dictionaries used to translate values in profile modals
+            profile_options: {
+                gender: { male: "Male", female: "Female" },
+                eye_color: { brown: "Brown", black: "Black", hazel: "Hazel", green: "Green", blue: "Blue", gray: "Gray", amber: "Amber", other: "Other" },
+                hair_color: { black: "Black", dark_brown: "Dark Brown", brown: "Brown", light_brown: "Light Brown", blonde: "Blonde", red: "Red", gray: "Gray", white: "White", other: "Other" },
+                skin_tone: { very_fair: "Very Fair", fair: "Fair", medium: "Medium", olive: "Olive", brown: "Brown", dark_brown: "Dark Brown", very_dark: "Very Dark", dark: "Dark" },
+                body_type: { slim: "Slim", athletic: "Athletic", average: "Average", curvy: "Curvy", muscular: "Muscular", heavy_set: "Heavy Set", plus_size: "Plus Size" },
+                education: { high_school: "High School", some_college: "Some College", associate_degree: "Associate Degree", bachelor: "Bachelor's Degree", master: "Master's Degree", phd: "PhD/Doctorate", islamic: "Islamic Studies", certification: "Professional Certification", trade_school: "Trade School", other: "Other" },
+                work_status: { working: "Working", not_working: "Not Working" },
+                housing: { own_house: "Own House", own_apartment: "Own Apartment", rent_apartment: "Rent Apartment", rent_house: "Rent House", family_home: "Family Home", shared: "Shared Accommodation", shared_accommodation: "Shared Accommodation", other: "Other" },
+                living: { with_parents: "Living with Parents", alone: "Living Alone", with_children: "Living with Children" },
+                languages: { arabic: "Arabic", english: "English", turkish: "Turkish", russian: "Russian", spanish: "Spanish", french: "French", urdu: "Urdu" }
             }
         }
     },
@@ -266,6 +365,9 @@ const translationData = {
                     matches_today: "المطابقات اليوم",
                     meet_today: "المقابلات اليوم"
                 },
+                buttons: {
+                    refresh: "تحديث"
+                },
                 charts: {
                     user_growth: "نمو المستخدمين",
                     user_demographics: "التركيبة السكانية للمستخدمين",
@@ -287,17 +389,54 @@ const translationData = {
                     pending_approvals: "الموافقات المعلقة"
                 }
             },
+            // Dashboard-specific labels/messages
+            dashboard_extra: {
+                labels: {
+                    gender: "الجنس",
+                    admin: "مشرف",
+                    registered: "تم التسجيل"
+                },
+                activity: {
+                    new_user_registered: "تسجيل مستخدم جديد",
+                    loading_recent: "جارٍ تحميل النشاط الأخير...",
+                    no_recent: "لا يوجد نشاط حديث"
+                },
+                approvals: {
+                    loading: "جارٍ تحميل الموافقات المعلقة...",
+                    empty: "لا توجد موافقات معلقة"
+                },
+                time: {
+                    just_now: "الآن",
+                    minutes_ago: "قبل {count} دقيقة",
+                    hours_ago: "قبل {count} ساعة",
+                    days_ago: "قبل {count} يوم"
+                }
+            },
             profiles: {
                 female_title: "الملفات النسائية",
                 male_title: "الملفات الرجالية",
+                messages: {
+                    loading_female: "جارٍ تحميل الملفات النسائية...",
+                    loading_male: "جارٍ تحميل الملفات الرجالية..."
+                },
                 filters: {
+                    search_label: "بحث",
                     search_placeholder: "البحث بالاسم، البريد الإلكتروني، الموقع...",
+                    status_label: "حالة الموافقة",
                     status_all: "جميع الحالات",
                     status_pending: "قيد المراجعة",
                     status_approved: "مقبول",
                     status_rejected: "مرفوض",
                     age_range: "الفئة العمرية",
-                    location: "الموقع",
+                    country_label: "الدولة",
+                    all_countries: "كل الدول",
+                    all_ages: "كل الأعمار",
+                    date_joined_label: "تاريخ الانضمام",
+                    all_time: "كل الوقت",
+                    today: "اليوم",
+                    week: "هذا الأسبوع",
+                    month: "هذا الشهر",
+                    year: "هذه السنة",
                     apply_filters: "تطبيق المرشحات",
                     clear_filters: "مسح المرشحات"
                 },
@@ -305,7 +444,8 @@ const translationData = {
                     approve: "قبول",
                     reject: "رفض",
                     delete: "حذف",
-                    view_media: "عرض الوسائط",
+                    view_media: "الوسائط",
+                    view: "عرض",
                     bulk_approve: "قبول جماعي",
                     bulk_reject: "رفض جماعي",
                     export: "تصدير"
@@ -321,9 +461,48 @@ const translationData = {
                     age: "العمر",
                     location: "الموقع",
                     joined: "تاريخ الانضمام",
+                    city: "المدينة",
+                    country: "الدولة",
                     status: "الحالة",
                     photos: "الصور",
                     videos: "الفيديوهات"
+                },
+                modal: {
+                    sections: {
+                        personal_information: "المعلومات الشخصية",
+                        education_work: "التعليم والعمل",
+                        living_situation: "ظروف السكن",
+                        contact_languages: "التواصل واللغات",
+                        about: "نبذة",
+                        account_info: "معلومات الحساب"
+                    },
+                    labels: {
+                        age: "العمر",
+                        gender: "الجنس",
+                        country: "الدولة",
+                        city: "المدينة",
+                        height: "الطول",
+                        weight: "الوزن",
+                        eye_color: "لون العين",
+                        hair_color: "لون الشعر",
+                        skin_tone: "لون البشرة",
+                        body_type: "نوع الجسم",
+                        education: "التعليم",
+                        occupation: "المهنة",
+                        work_status: "حالة العمل",
+                        housing: "السكن",
+                        living_condition: "حالة المعيشة",
+                        phone: "الهاتف",
+                        languages: "اللغات",
+                        about_text: "نبذة",
+                        public_profile: "الملف العام",
+                        approval: "الموافقة",
+                        joined: "تاريخ الانضمام",
+                        last_updated: "آخر تحديث"
+                    },
+                    buttons: {
+                        close: "إغلاق"
+                    }
                 }
             },
             interests: {
@@ -469,6 +648,7 @@ const translationData = {
                     update_status_failed: "تعذر تحديث الحالة"
                 }
             },
+            // Common labels usable across pages
             common: {
                 loading: "جارٍ التحميل...",
                 no_data: "لا توجد بيانات متاحة",
@@ -482,7 +662,25 @@ const translationData = {
                 filter: "تصفية",
                 export: "تصدير",
                 select_all: "تحديد الكل",
-                selected_count: "{{count}} محدد"
+                selected_count: "{{count}} محدد",
+                yes: "نعم",
+                no: "لا",
+                not_specified: "غير محدد",
+                cm: "سم",
+                kg: "كغ"
+            },
+            // Profile option dictionaries used to translate values in profile modals
+            profile_options: {
+                gender: { male: "ذكر", female: "أنثى" },
+                eye_color: { brown: "بني", black: "أسود", hazel: "عسلي", green: "أخضر", blue: "أزرق", gray: "رمادي", amber: "كهرماني", other: "أخرى" },
+                hair_color: { black: "أسود", dark_brown: "بني داكن", brown: "بني", light_brown: "بني فاتح", blonde: "أشقر", red: "أحمر", gray: "رمادي", white: "أبيض", other: "أخرى" },
+                skin_tone: { very_fair: "فاتح جدًا", fair: "فاتح", medium: "متوسط", olive: "قمحي", brown: "بني", dark_brown: "بني داكن", very_dark: "داكن جدًا", dark: "داكن" },
+                body_type: { slim: "نحيف", athletic: "رياضي", average: "متوسط", curvy: "منحني", muscular: "عضلي", heavy_set: "ثقيل البنية", plus_size: "مقاس كبير" },
+                education: { high_school: "ثانوي", some_college: "درس جامعيًا جزئيًا", associate_degree: "درجة الزمالة", bachelor: "بكالوريوس", master: "ماجستير", phd: "دكتوراه", islamic: "دراسات إسلامية", certification: "شهادة مهنية", trade_school: "مدرسة مهنية", other: "أخرى" },
+                work_status: { working: "يعمل", not_working: "لا يعمل" },
+                housing: { own_house: "منزل ملك", own_apartment: "شقة ملك", rent_apartment: "شقة مستأجرة", rent_house: "منزل مستأجر", family_home: "منزل العائلة", shared: "سكن مشترك", shared_accommodation: "سكن مشترك", other: "أخرى" },
+                living: { with_parents: "يعيش مع الوالدين", alone: "يعيش وحيداً", with_children: "يعيش مع الأطفال" },
+                languages: { arabic: "العربية", english: "الإنجليزية", turkish: "التركية", russian: "الروسية", spanish: "الإسبانية", french: "الفرنسية", urdu: "الأردية" }
             }
         }
     }

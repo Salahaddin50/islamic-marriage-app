@@ -42,7 +42,7 @@
                 </li>
                 <li class="nav-item">
                     <a href="/admin-interests.html" class="nav-link">
-                        <i class="fas fa-tags"></i>
+                        <i class="fas fa-heart"></i>
                         <span data-translate="admin.navigation.interests">Interests</span>
                     </a>
                 </li>
@@ -105,8 +105,8 @@
                 <div class="top-bar-right">
                     <div class="admin-info">
                         <div class="admin-details">
-                            <span class="admin-name" id="adminName">Loading...</span>
-                            <span class="admin-role" id="adminRole">Admin</span>
+                            <span class="admin-name" id="adminName" data-translate="admin.common.loading">Loading...</span>
+                            <span class="admin-role" id="adminRole" data-translate="admin.dashboard_extra.labels.admin">Admin</span>
                         </div>
                         <div class="admin-avatar">
                             <i class="fas fa-user-circle"></i>
@@ -179,17 +179,17 @@
                 <div class="charts-grid">
                     <div class="chart-card">
                         <div class="chart-header">
-                            <h3>User Growth</h3>
+                            <h3 data-translate="admin.dashboard.charts.user_growth">User Growth</h3>
                             <div class="chart-controls">
                                 <select class="gender-filter" data-target="users">
-                                    <option value="">All</option>
-                                    <option value="male">Males</option>
-                                    <option value="female">Females</option>
+                                    <option value="" data-translate="admin.dashboard.filters.all">All</option>
+                                    <option value="male" data-translate="admin.dashboard.filters.males">Males</option>
+                                    <option value="female" data-translate="admin.dashboard.filters.females">Females</option>
                                 </select>
-                                <button class="chart-btn active" data-period="7">7 Days</button>
-                                <button class="chart-btn" data-period="30">30 Days</button>
-                                <button class="chart-btn" data-period="90">90 Days</button>
-                                <button class="chart-btn" data-period="all">All Time</button>
+                                <button class="chart-btn active" data-period="7" data-translate="admin.dashboard.filters.7_days">7 Days</button>
+                                <button class="chart-btn" data-period="30" data-translate="admin.dashboard.filters.30_days">30 Days</button>
+                                <button class="chart-btn" data-period="90" data-translate="admin.dashboard.filters.90_days">90 Days</button>
+                                <button class="chart-btn" data-period="all" data-translate="admin.dashboard.filters.all_time">All Time</button>
                             </div>
                         </div>
                         <div class="chart-container">
@@ -199,7 +199,7 @@
 
                     <div class="chart-card">
                         <div class="chart-header">
-                            <h3>User Demographics</h3>
+                            <h3 data-translate="admin.dashboard.charts.user_demographics">User Demographics</h3>
                         </div>
                         <div class="chart-container">
                             <canvas id="demographicsChart"></canvas>
@@ -208,17 +208,17 @@
 
                     <div class="chart-card">
                         <div class="chart-header">
-                            <h3>Subscriptions</h3>
+                            <h3 data-translate="admin.dashboard.charts.subscriptions">Subscriptions</h3>
                             <div class="chart-controls">
                                 <select class="gender-filter" data-target="subs">
-                                    <option value="">All</option>
-                                    <option value="male">Males</option>
-                                    <option value="female">Females</option>
+                                    <option value="" data-translate="admin.dashboard.filters.all">All</option>
+                                    <option value="male" data-translate="admin.dashboard.filters.males">Males</option>
+                                    <option value="female" data-translate="admin.dashboard.filters.females">Females</option>
                                 </select>
-                                <button class="chart-btn active" data-period="7" data-target="subs">7 Days</button>
-                                <button class="chart-btn" data-period="30" data-target="subs">30 Days</button>
-                                <button class="chart-btn" data-period="90" data-target="subs">90 Days</button>
-                                <button class="chart-btn" data-period="all" data-target="subs">All Time</button>
+                                <button class="chart-btn active" data-period="7" data-target="subs" data-translate="admin.dashboard.filters.7_days">7 Days</button>
+                                <button class="chart-btn" data-period="30" data-target="subs" data-translate="admin.dashboard.filters.30_days">30 Days</button>
+                                <button class="chart-btn" data-period="90" data-target="subs" data-translate="admin.dashboard.filters.90_days">90 Days</button>
+                                <button class="chart-btn" data-period="all" data-target="subs" data-translate="admin.dashboard.filters.all_time">All Time</button>
                             </div>
                         </div>
                         <div class="chart-container">
@@ -228,17 +228,17 @@
 
                     <div class="chart-card">
                         <div class="chart-header">
-                            <h3>Accepted Interests</h3>
+                            <h3 data-translate="admin.dashboard.charts.accepted_interests">Accepted Interests</h3>
                             <div class="chart-controls">
                                 <select class="gender-filter" data-target="interests">
-                                    <option value="">All</option>
-                                    <option value="male">Males</option>
-                                    <option value="female">Females</option>
+                                    <option value="" data-translate="admin.dashboard.filters.all">All</option>
+                                    <option value="male" data-translate="admin.dashboard.filters.males">Males</option>
+                                    <option value="female" data-translate="admin.dashboard.filters.females">Females</option>
                                 </select>
-                                <button class="chart-btn active" data-period="7" data-target="interests">7 Days</button>
-                                <button class="chart-btn" data-period="30" data-target="interests">30 Days</button>
-                                <button class="chart-btn" data-period="90" data-target="interests">90 Days</button>
-                                <button class="chart-btn" data-period="all" data-target="interests">All Time</button>
+                                <button class="chart-btn active" data-period="7" data-target="interests" data-translate="admin.dashboard.filters.7_days">7 Days</button>
+                                <button class="chart-btn" data-period="30" data-target="interests" data-translate="admin.dashboard.filters.30_days">30 Days</button>
+                                <button class="chart-btn" data-period="90" data-target="interests" data-translate="admin.dashboard.filters.90_days">90 Days</button>
+                                <button class="chart-btn" data-period="all" data-target="interests" data-translate="admin.dashboard.filters.all_time">All Time</button>
                             </div>
                         </div>
                         <div class="chart-container">
@@ -248,17 +248,17 @@
 
                     <div class="chart-card">
                         <div class="chart-header">
-                            <h3>Accepted Meet Requests</h3>
+                            <h3 data-translate="admin.dashboard.charts.accepted_meet_requests">Accepted Meet Requests</h3>
                             <div class="chart-controls">
                                 <select class="gender-filter" data-target="meets">
-                                    <option value="">All</option>
-                                    <option value="male">Males</option>
-                                    <option value="female">Females</option>
+                                    <option value="" data-translate="admin.dashboard.filters.all">All</option>
+                                    <option value="male" data-translate="admin.dashboard.filters.males">Males</option>
+                                    <option value="female" data-translate="admin.dashboard.filters.females">Females</option>
                                 </select>
-                                <button class="chart-btn active" data-period="7" data-target="meets">7 Days</button>
-                                <button class="chart-btn" data-period="30" data-target="meets">30 Days</button>
-                                <button class="chart-btn" data-period="90" data-target="meets">90 Days</button>
-                                <button class="chart-btn" data-period="all" data-target="meets">All Time</button>
+                                <button class="chart-btn active" data-period="7" data-target="meets" data-translate="admin.dashboard.filters.7_days">7 Days</button>
+                                <button class="chart-btn" data-period="30" data-target="meets" data-translate="admin.dashboard.filters.30_days">30 Days</button>
+                                <button class="chart-btn" data-period="90" data-target="meets" data-translate="admin.dashboard.filters.90_days">90 Days</button>
+                                <button class="chart-btn" data-period="all" data-target="meets" data-translate="admin.dashboard.filters.all_time">All Time</button>
                             </div>
                         </div>
                         <div class="chart-container">
@@ -270,17 +270,17 @@
                 <!-- Recent Activity -->
                 <div class="activity-section">
                     <div class="section-header">
-                        <h3>Recent Activity</h3>
+                        <h3 data-translate="admin.dashboard.sections.recent_activity">Recent Activity</h3>
                         <button class="refresh-btn" onclick="loadRecentActivity()">
                             <i class="fas fa-sync-alt"></i>
-                            Refresh
+                            <span data-translate="admin.dashboard.buttons.refresh">Refresh</span>
                         </button>
                     </div>
                     
                     <div class="activity-list" id="activityList">
                         <div class="loading-state">
                             <i class="fas fa-spinner fa-spin"></i>
-                            Loading recent activity...
+                            <span data-translate="admin.dashboard_extra.activity.loading_recent">Loading recent activity...</span>
                         </div>
                     </div>
                 </div>
@@ -288,14 +288,14 @@
                 <!-- Pending Approvals -->
                 <div class="approvals-section">
                     <div class="section-header">
-                        <h3>Pending Approvals</h3>
+                        <h3 data-translate="admin.dashboard.sections.pending_approvals">Pending Approvals</h3>
                         <span class="approval-count" id="approvalCount">0</span>
                         <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
-                            <label for="approvalsGenderFilter" style="font-size:12px; color:#6b7280;">Gender</label>
+                            <label for="approvalsGenderFilter" style="font-size:12px; color:#6b7280;" data-translate="admin.dashboard_extra.labels.gender">Gender</label>
                             <select id="approvalsGenderFilter" class="filter-select" style="padding:4px 8px; font-size:12px;">
-                                <option value="">All</option>
-                                <option value="male">Males</option>
-                                <option value="female">Females</option>
+                                <option value="" data-translate="admin.dashboard.filters.all">All</option>
+                                <option value="male" data-translate="admin.dashboard.filters.males">Males</option>
+                                <option value="female" data-translate="admin.dashboard.filters.females">Females</option>
                             </select>
                         </div>
                     </div>
@@ -303,7 +303,7 @@
                     <div class="approvals-list" id="approvalsList">
                         <div class="loading-state">
                             <i class="fas fa-spinner fa-spin"></i>
-                            Loading pending approvals...
+                            <span data-translate="admin.dashboard_extra.approvals.loading">Loading pending approvals...</span>
                         </div>
                     </div>
                 </div>

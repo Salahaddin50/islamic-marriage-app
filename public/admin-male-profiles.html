@@ -402,7 +402,7 @@
                 </li>
                 <li class="nav-item">
                     <a href="/admin-interests.html" class="nav-link">
-                        <i class="fas fa-tags"></i>
+                        <i class="fas fa-heart"></i>
                         <span data-translate="admin.navigation.interests">Interests</span>
                     </a>
                 </li>
@@ -460,7 +460,7 @@
                     <button class="sidebar-toggle" onclick="toggleSidebar()">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <h1 class="page-title">Male Profiles <span id="profilesCount">(0)</span></h1>
+                    <h1 class="page-title"><span data-translate="admin.profiles.male_title">Male Profiles</span> <span id="profilesCount">(0)</span></h1>
                 </div>
                 <div class="top-bar-right">
                     <div class="admin-info">
@@ -481,47 +481,47 @@
                 <div class="filters-section">
                     <div class="filters-grid">
                         <div class="filter-group">
-                            <label class="filter-label">Search</label>
+                            <label class="filter-label" data-translate="admin.profiles.filters.search_label">Search</label>
                             <input 
                                 type="text" 
                                 id="searchInput" 
                                 class="filter-input" 
-                                placeholder="Search by name, location, occupation..."
+                                placeholder="Search by name, location, occupation..." data-translate-placeholder="admin.profiles.filters.search_placeholder"
                                 oninput="handleSearch()"
                             >
                         </div>
                         <div class="filter-group">
-                            <label class="filter-label">Status</label>
+                            <label class="filter-label" data-translate="admin.profiles.filters.status_label">Status</label>
                             <select id="approvalFilter" class="filter-select" onchange="handleFilter()">
-                                <option value="">All</option>
-                                <option value="approved">Approved</option>
-                                <option value="rejected">Denied</option>
-                                <option value="pending">Pending</option>
+                                <option value="" data-translate="admin.dashboard.filters.all">All</option>
+                                <option value="approved" data-translate="admin.profiles.status.approved">Approved</option>
+                                <option value="rejected" data-translate="admin.profiles.status.rejected">Rejected</option>
+                                <option value="pending" data-translate="admin.profiles.status.pending">Pending</option>
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label class="filter-label">Joining Date</label>
+                            <label class="filter-label" data-translate="admin.profiles.filters.date_joined_label">Joining Date</label>
                             <select id="dateFilter" class="filter-select" onchange="handleFilter()">
-                                <option value="">All</option>
-                                <option value="today">Today</option>
-                                <option value="week">Last Week</option>
-                                <option value="month">Last Month</option>
+                                <option value="" data-translate="admin.profiles.filters.all_time">All Time</option>
+                                <option value="today" data-translate="admin.profiles.filters.today">Today</option>
+                                <option value="week" data-translate="admin.profiles.filters.week">This Week</option>
+                                <option value="month" data-translate="admin.profiles.filters.month">This Month</option>
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label class="filter-label">Country</label>
+                            <label class="filter-label" data-translate="admin.profiles.filters.country_label">Country</label>
                             <select id="countryFilter" class="filter-select" onchange="handleFilter()">
-                                <option value="">All Countries</option>
+                                <option value="" data-translate="admin.profiles.filters.all_countries">All Countries</option>
                             </select>
                         </div>
                         <div class="filter-group">
                             <label class="filter-label">Package</label>
                             <select id="packageFilter" class="filter-select" onchange="handleFilter()">
-                                <option value="">All</option>
-                                <option value="free">Free</option>
-                                <option value="premium">Premium</option>
-                                <option value="vip">VIP Premium</option>
-                                <option value="golden">Golden Premium</option>
+                                <option value="" data-translate="admin.dashboard.filters.all">All</option>
+                                <option value="free" data-translate="admin.packages.filters.free">Free</option>
+                                <option value="premium" data-translate="admin.packages.filters.premium">Premium</option>
+                                <option value="vip" data-translate="admin.packages.filters.vip">VIP Premium</option>
+                                <option value="golden" data-translate="admin.packages.filters.golden">Golden Premium</option>
                             </select>
                         </div>
                         
@@ -529,11 +529,11 @@
                     <div class="filters-actions">
                         <button class="btn btn-secondary" onclick="clearFilters()">
                             <i class="fas fa-times"></i>
-                            Clear Filters
+                            <span data-translate="admin.profiles.filters.clear_filters">Clear Filters</span>
                         </button>
                         <button class="btn btn-primary" onclick="exportProfiles()">
                             <i class="fas fa-download"></i>
-                            Export Data
+                            <span data-translate="admin.profiles.actions.export">Export</span>
                         </button>
                     </div>
                 </div>
@@ -542,7 +542,7 @@
                 <div id="profilesContainer" class="profiles-grid">
                     <div class="loading-state">
                         <i class="fas fa-spinner fa-spin"></i>
-                        <p>Loading male profiles...</p>
+                        <p data-translate="admin.profiles.messages.loading_male">Loading male profiles...</p>
                     </div>
                 </div>
 
@@ -731,10 +731,10 @@
                                 ${profile.first_name} ${profile.last_name} ${getPackageCrown(profile.package_type)}
                             </div>
                             <div class="profile-meta">
-                                <span>Age: ${calculateAge(profile.date_of_birth) || 'N/A'}</span>
-                                <span>Country: ${profile.country || 'N/A'}</span>
-                                <span>City: ${profile.city || 'N/A'}</span>
-                                <span>Joined: ${formatDate(profile.created_at)}</span>
+                                <span>${translateText('admin.profiles.fields.age')}: ${calculateAge(profile.date_of_birth) || 'N/A'}</span>
+                                <span>${translateText('admin.profiles.fields.country')}: ${profile.country || 'N/A'}</span>
+                                <span>${translateText('admin.profiles.fields.city')}: ${profile.city || 'N/A'}</span>
+                                <span>${translateText('admin.profiles.fields.joined')}: ${formatDate(profile.created_at)}</span>
                             </div>
                             <div class="contact-links">
                                 ${getWhatsAppLink(profile)}
@@ -745,7 +745,7 @@
                             ${getApprovalStatus(profile.admin_approved)}
                             <button class="btn btn-secondary btn-sm" onclick="viewProfile('${profile.id}')">
                                 <i class="fas fa-eye"></i>
-                                View
+                                ${translateText('admin.profiles.actions.view')}
                             </button>
                         </div>
                     </div>
@@ -755,19 +755,19 @@
                     <div class="profile-actions" style="margin-top: 16px; gap: 8px;">
                         <button class="btn btn-primary btn-sm" onclick="approveProfile('${profile.id}')">
                             <i class="fas fa-check"></i>
-                            Approve
+                            ${translateText('admin.profiles.actions.approve')}
                         </button>
                         <button class="btn btn-danger btn-sm" onclick="rejectProfile('${profile.id}')">
                             <i class="fas fa-times"></i>
-                            Reject
+                            ${translateText('admin.profiles.actions.reject')}
                         </button>
                         <button class="btn btn-secondary btn-sm" onclick="viewMedia('${profile.id}')">
                             <i class="fas fa-images"></i>
-                            Media
+                            ${translateText('admin.profiles.actions.view_media')}
                         </button>
                         <button class="btn btn-danger btn-sm" onclick="deleteProfile('${profile.id}')">
                             <i class="fas fa-trash"></i>
-                            Delete
+                            ${translateText('admin.profiles.actions.delete')}
                         </button>
                     </div>
                 </div>
@@ -807,11 +807,11 @@
 
         function getApprovalStatus(status) {
             if (status === true) {
-                return '<span class="approval-status approved"><i class="fas fa-check"></i> Approved</span>';
+                return `<span class="approval-status approved"><i class="fas fa-check"></i> ${translateText('admin.profiles.status.approved')}</span>`;
             } else if (status === false) {
-                return '<span class="approval-status rejected"><i class="fas fa-times"></i> Rejected</span>';
+                return `<span class="approval-status rejected"><i class="fas fa-times"></i> ${translateText('admin.profiles.status.rejected')}</span>`;
             } else {
-                return '<span class="approval-status pending"><i class="fas fa-clock"></i> Pending</span>';
+                return `<span class="approval-status pending"><i class="fas fa-clock"></i> ${translateText('admin.profiles.status.pending')}</span>`;
             }
         }
 
@@ -996,6 +996,53 @@
             );
         }
 
+        // Helpers to translate option values similar to matchdetails.tsx
+        function normalizeEnumValue(value) {
+            if (!value) return '';
+            return String(value).trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
+        }
+
+        function formatEnumValue(value) {
+            if (!value) return '';
+            const s = String(value).replace(/_/g, ' ').trim();
+            return s.charAt(0).toUpperCase() + s.slice(1);
+        }
+
+        // Synonyms to map display strings to canonical keys used in translation tables
+        const optionSynonyms = {
+            education: {
+                bachelor_s_degree: 'bachelor',
+                bachelors_degree: 'bachelor',
+                master_s_degree: 'master',
+                masters_degree: 'master',
+                phd_doctorate: 'phd'
+            },
+            living: {
+                living_with_parents: 'with_parents',
+                living_with_children: 'with_children',
+                living_alone: 'alone'
+            }
+        };
+
+        function translateOption(category, value) {
+            if (!value) return translateText('admin.common.not_specified');
+            let key = normalizeEnumValue(value);
+            if (optionSynonyms[category] && optionSynonyms[category][key]) {
+                key = optionSynonyms[category][key];
+            }
+            const path = `admin.profile_options.${category}.${key}`;
+            const translated = translateText(path);
+            return translated === path ? formatEnumValue(value) : translated;
+        }
+
+        function translateLanguages(langs) {
+            if (!langs) return translateText('admin.common.not_specified');
+            if (Array.isArray(langs) && langs.length > 0) {
+                return langs.map(l => translateOption('languages', l)).join(', ');
+            }
+            return translateOption('languages', langs);
+        }
+
         async function viewProfile(profileId) {
             try {
                 const { data: p, error } = await window.supabaseClient
@@ -1016,7 +1063,7 @@
                     return;
                 }
 
-                const languages = Array.isArray(p.languages_spoken) ? p.languages_spoken.join(', ') : (p.languages_spoken || 'Not specified');
+                const languages = translateLanguages(p.languages_spoken);
                 const ageVal = calculateAge(p.date_of_birth);
 
                 const modal = document.createElement('div');
@@ -1033,58 +1080,58 @@
                             <div class="modal-body">
                                 <div class="profile-sections">
                                     <div class="profile-section">
-                                        <h4>Personal Information</h4>
+                                        <h4>${translateText('admin.profiles.modal.sections.personal_information')}</h4>
                                         <div class="info-grid">
-                                            <div class="info-item"><label>Age:</label><span>${typeof ageVal === 'number' ? ageVal : 'N/A'}</span></div>
-                                            <div class="info-item"><label>Gender:</label><span>${p.gender || 'Not specified'}</span></div>
-                                            <div class="info-item"><label>Country:</label><span>${p.country || 'Not specified'}</span></div>
-                                            <div class="info-item"><label>City:</label><span>${p.city || 'Not specified'}</span></div>
-                                            <div class="info-item"><label>Height:</label><span>${p.height_cm ? p.height_cm + ' cm' : 'Not specified'}</span></div>
-                                            <div class="info-item"><label>Weight:</label><span>${p.weight_kg ? p.weight_kg + ' kg' : 'Not specified'}</span></div>
-                                            <div class="info-item"><label>Eye Color:</label><span>${p.eye_color || 'Not specified'}</span></div>
-                                            <div class="info-item"><label>Hair Color:</label><span>${p.hair_color || 'Not specified'}</span></div>
-                                            <div class="info-item"><label>Skin Tone:</label><span>${p.skin_tone || 'Not specified'}</span></div>
-                                            <div class="info-item"><label>Body Type:</label><span>${p.body_type || 'Not specified'}</span></div>
+                                            <div class="info-item"><label>${translateText('admin.profiles.modal.labels.age')}:</label><span>${typeof ageVal === 'number' ? ageVal : 'N/A'}</span></div>
+                                            <div class="info-item"><label>${translateText('admin.profiles.modal.labels.gender')}:</label><span>${p.gender ? translateOption('gender', p.gender) : translateText('admin.common.not_specified')}</span></div>
+                                            <div class="info-item"><label>${translateText('admin.profiles.modal.labels.country')}:</label><span>${p.country || translateText('admin.common.not_specified')}</span></div>
+                                            <div class="info-item"><label>${translateText('admin.profiles.modal.labels.city')}:</label><span>${p.city || translateText('admin.common.not_specified')}</span></div>
+                                            <div class="info-item"><label>${translateText('admin.profiles.modal.labels.height')}:</label><span>${p.height_cm ? (p.height_cm + ' ' + translateText('admin.common.cm')) : translateText('admin.common.not_specified')}</span></div>
+                                            <div class="info-item"><label>${translateText('admin.profiles.modal.labels.weight')}:</label><span>${p.weight_kg ? (p.weight_kg + ' ' + translateText('admin.common.kg')) : translateText('admin.common.not_specified')}</span></div>
+                                            <div class="info-item"><label>${translateText('admin.profiles.modal.labels.eye_color')}:</label><span>${p.eye_color ? translateOption('eye_color', p.eye_color) : translateText('admin.common.not_specified')}</span></div>
+                                            <div class="info-item"><label>${translateText('admin.profiles.modal.labels.hair_color')}:</label><span>${p.hair_color ? translateOption('hair_color', p.hair_color) : translateText('admin.common.not_specified')}</span></div>
+                                            <div class="info-item"><label>${translateText('admin.profiles.modal.labels.skin_tone')}:</label><span>${p.skin_tone ? translateOption('skin_tone', p.skin_tone) : translateText('admin.common.not_specified')}</span></div>
+                                            <div class="info-item"><label>${translateText('admin.profiles.modal.labels.body_type')}:</label><span>${p.body_type ? translateOption('body_type', p.body_type) : translateText('admin.common.not_specified')}</span></div>
                                         </div>
                                     </div>
 
                                     <div class="profile-section">
-                                        <h4>Education & Work</h4>
+                                        <h4>${translateText('admin.profiles.modal.sections.education_work')}</h4>
                                         <div class="info-grid">
-                                            <div class="info-item"><label>Education:</label><span>${p.education_level || 'Not specified'}</span></div>
-                                            <div class="info-item"><label>Occupation:</label><span>${p.occupation || 'Not specified'}</span></div>
-                                            <div class="info-item"><label>Work Status:</label><span>${p.work_status || 'Not specified'}</span></div>
+                                            <div class="info-item"><label>${translateText('admin.profiles.modal.labels.education')}:</label><span>${p.education_level ? translateOption('education', p.education_level) : translateText('admin.common.not_specified')}</span></div>
+                                            <div class="info-item"><label>${translateText('admin.profiles.modal.labels.occupation')}:</label><span>${p.occupation || translateText('admin.common.not_specified')}</span></div>
+                                            <div class="info-item"><label>${translateText('admin.profiles.modal.labels.work_status')}:</label><span>${p.work_status ? translateOption('work_status', p.work_status) : translateText('admin.common.not_specified')}</span></div>
                                         </div>
                                     </div>
 
                                     <div class="profile-section">
-                                        <h4>Living Situation</h4>
+                                        <h4>${translateText('admin.profiles.modal.sections.living_situation')}</h4>
                                         <div class="info-grid">
-                                            <div class="info-item"><label>Housing:</label><span>${p.housing_type || 'Not specified'}</span></div>
-                                            <div class="info-item"><label>Living Condition:</label><span>${p.living_condition || 'Not specified'}</span></div>
+                                            <div class="info-item"><label>${translateText('admin.profiles.modal.labels.housing')}:</label><span>${p.housing_type ? translateOption('housing', p.housing_type) : translateText('admin.common.not_specified')}</span></div>
+                                            <div class="info-item"><label>${translateText('admin.profiles.modal.labels.living_condition')}:</label><span>${p.living_condition ? translateOption('living', p.living_condition) : translateText('admin.common.not_specified')}</span></div>
                                         </div>
                                     </div>
 
                                     <div class="profile-section">
-                                        <h4>Contact & Languages</h4>
+                                        <h4>${translateText('admin.profiles.modal.sections.contact_languages')}</h4>
                                         <div class="info-grid">
-                                            <div class="info-item"><label>Phone:</label><span>${(p.phone_code || '') + (p.mobile_number || '') || 'Not provided'}</span></div>
-                                            <div class="info-item"><label>Languages:</label><span>${languages}</span></div>
+                                            <div class="info-item"><label>${translateText('admin.profiles.modal.labels.phone')}:</label><span>${((p.phone_code || '') + (p.mobile_number || '')).trim() || translateText('admin.common.not_specified')}</span></div>
+                                            <div class="info-item"><label>${translateText('admin.profiles.modal.labels.languages')}:</label><span>${languages}</span></div>
                                         </div>
                                     </div>
 
                                     <div class="profile-section">
-                                        <h4>About</h4>
-                                        <p>${p.about_me || 'No description provided'}</p>
+                                        <h4>${translateText('admin.profiles.modal.sections.about')}</h4>
+                                        <p>${p.about_me || translateText('admin.common.not_specified')}</p>
                                     </div>
 
                                     <div class="profile-section">
-                                        <h4>Account Info</h4>
+                                        <h4>${translateText('admin.profiles.modal.sections.account_info')}</h4>
                                         <div class="info-grid">
-                                            <div class="info-item"><label>Public Profile:</label><span>${p.is_public ? 'Yes' : 'No'}</span></div>
-                                            <div class="info-item"><label>Approval:</label><span>${p.admin_approved === true ? 'Approved' : p.admin_approved === false ? 'Rejected' : 'Pending'}</span></div>
-                                            <div class="info-item"><label>Joined:</label><span>${formatDateTime(p.created_at)}</span></div>
-                                            <div class="info-item"><label>Last Updated:</label><span>${formatDateTime(p.updated_at)}</span></div>
+                                            <div class="info-item"><label>${translateText('admin.profiles.modal.labels.public_profile')}:</label><span>${p.is_public ? translateText('admin.common.yes') : translateText('admin.common.no')}</span></div>
+                                            <div class="info-item"><label>${translateText('admin.profiles.modal.labels.approval')}:</label><span>${p.admin_approved === true ? translateText('admin.profiles.status.approved') : (p.admin_approved === false ? translateText('admin.profiles.status.rejected') : translateText('admin.profiles.status.pending'))}</span></div>
+                                            <div class="info-item"><label>${translateText('admin.profiles.modal.labels.joined')}:</label><span>${formatDateTime(p.created_at)}</span></div>
+                                            <div class="info-item"><label>${translateText('admin.profiles.modal.labels.last_updated')}:</label><span>${formatDateTime(p.updated_at)}</span></div>
                                         </div>
                                     </div>
                                 </div>
@@ -1093,14 +1140,14 @@
                                 ${p.admin_approved === null ? `
                                     <button class="btn btn-primary" onclick="approveProfile('${p.id}'); this.closest('.modal-overlay').remove();">
                                         <i class="fas fa-check"></i>
-                                        Approve
+                                        ${translateText('admin.profiles.actions.approve')}
                                     </button>
                                     <button class="btn btn-danger" onclick="rejectProfile('${p.id}'); this.closest('.modal-overlay').remove();">
                                         <i class="fas fa-times"></i>
-                                        Reject
+                                        ${translateText('admin.profiles.actions.reject')}
                                     </button>
                                 ` : ''}
-                                <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Close</button>
+                                <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">${translateText('admin.profiles.modal.buttons.close')}</button>
                             </div>
                         </div>
                     </div>`;
