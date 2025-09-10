@@ -435,7 +435,10 @@ const MatchDetails = () => {
     living: {
       living_alone: 'alone',
       with_parents: 'with_parents',
-      with_children: 'with_children'
+      with_children: 'with_children',
+      // Extra normalizations for common phrasings stored in DB
+      living_with_parents: 'with_parents',
+      living_with_children: 'with_children'
     },
     quran: {
       memorized_significant_portions: 'memorized',
@@ -447,6 +450,13 @@ const MatchDetails = () => {
     prayer_frequency: {
       most_prayers: 'most',
       all_5: 'all_5',
+      // Extra normalizations for numeric phrasing
+      five_times_daily: 'all_5',
+      _5_times_daily: 'all_5',
+      '5_times_daily': 'all_5',
+      all_5_daily_prayers: 'all_5',
+      all_five_daily_prayers: 'all_5',
+      five_daily_prayers: 'all_5',
       friday_only: 'friday',
       occasionally: 'occasionally',
       learning: 'learning'

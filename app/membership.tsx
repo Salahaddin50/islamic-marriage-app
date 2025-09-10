@@ -239,9 +239,9 @@ const Membership = () => {
             // Fetch packages and features in parallel
             const [pkgRes, featRes] = await Promise.all([
                 supabase
-                    .from('packages')
-                    .select('*')
-                    .eq('is_active', true)
+                .from('packages')
+                .select('*')
+                .eq('is_active', true)
                     .order('sort_order'),
                 supabase
                     .from('package_features')
@@ -309,11 +309,11 @@ const Membership = () => {
                     }
                     
                     return {
-                        id: pkg.package_id,
+                    id: pkg.package_id,
                         type: pkg.package_type,
                         name: localizedName,
-                        price: Number(pkg.price),
-                        crownColor: pkg.crown_color,
+                    price: Number(pkg.price),
+                    crownColor: pkg.crown_color,
                         features: translatedFeatures,
                         isLifetime: pkg.is_lifetime || true,
                     } as Package;
@@ -642,11 +642,11 @@ const Membership = () => {
                     />
                 </View>
                 
-                <Text style={[styles.contactTitle, { color: COLORS.greyscale900 }]}> 
+                <Text style={[styles.contactTitle, { color: COLORS.greyscale900 }]}>
                     {t('membership.contact_tab.need_payment_help')}
                 </Text>
                 
-                <Text style={[styles.contactMessage, { color: COLORS.grayscale700 }]}> 
+                <Text style={[styles.contactMessage, { color: COLORS.grayscale700 }]}>
                     {t('membership.contact_tab.message')}
                 </Text>
                 
@@ -704,8 +704,8 @@ const Membership = () => {
 
 
     return (
-        <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}> 
-            <View style={[styles.container, { backgroundColor: COLORS.white }]}> 
+        <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
+            <View style={[styles.container, { backgroundColor: COLORS.white }]}>
                 <Header 
                     title={t('membership.header_title')} 
                     fallbackRoute="/(tabs)/profile" 
