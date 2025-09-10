@@ -127,6 +127,10 @@ export const useVirtualizedProfiles = (options: UseVirtualizedProfilesOptions = 
       
       if (oppositeGender.current) {
         query = query.eq('gender', oppositeGender.current);
+        // Additional rule: male users should not see unapproved female profiles
+        if (oppositeGender.current === 'female') {
+          query = query.eq('admin_approved', true);
+        }
       }
 
       // Only show public profiles on home feed

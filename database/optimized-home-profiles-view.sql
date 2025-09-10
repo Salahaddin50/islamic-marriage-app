@@ -34,6 +34,7 @@ SELECT
   up.islamic_questionnaire,
   up.created_at,
   up.is_public,
+  up.admin_approved,
   
   -- Pre-computed age (major performance boost)
   EXTRACT(YEAR FROM AGE(up.date_of_birth)) AS age,

@@ -970,6 +970,10 @@ const HomeScreen = () => {
         });
         setOppositeGender(og);
         query = query.eq('gender', og);
+        // Additional rule: male users should not see unapproved female profiles
+        if (currentUserGender?.toLowerCase() === 'male' && og === 'female') {
+          query = query.eq('admin_approved', true);
+        }
       } else {
         console.log('❌ No current user gender found');
       }
@@ -1669,7 +1673,7 @@ const HomeScreen = () => {
               }]}>Filter</Text>
               {typeof totalPublicCount === 'number' && (
                 <View style={[styles.totalBadge, { marginLeft: 8 }]}>
-                  <Text style={styles.totalBadgeText}>{totalPublicCount} profiles</Text>
+                  <Text style={styles.totalBadgeText}>{t('home.badges.total_profiles', { count: totalPublicCount })}</Text>
                 </View>
               )}
             </View>
@@ -2168,7 +2172,7 @@ const HomeScreen = () => {
           {typeof totalPublicCount === 'number' && (
             <View style={styles.totalBadgeContainer} pointerEvents="none">
               <View style={styles.totalBadge}>
-                <Text style={styles.totalBadgeText}>{totalPublicCount} profiles</Text>
+                <Text style={styles.totalBadgeText}>{t('home.badges.total_profiles', { count: totalPublicCount })}</Text>
               </View>
             </View>
           )}
@@ -2227,7 +2231,7 @@ const HomeScreen = () => {
             }]}>Filter</Text>
             {typeof totalPublicCount === 'number' && (
               <View style={[styles.totalBadge, { marginLeft: 8, alignSelf: 'flex-end' }]}>
-                <Text style={styles.totalBadgeText}>{totalPublicCount} profiles</Text>
+                <Text style={styles.totalBadgeText}>{t('home.badges.total_profiles', { count: totalPublicCount })}</Text>
               </View>
             )}
           </View>

@@ -339,6 +339,9 @@
     }
   },
   "home": {
+    "badges": {
+      "total_profiles": "{{count}} profils"
+    },
     "filters": {
       "select_country": "Sélectionner le pays",
       "select_city": "Sélectionner la ville",

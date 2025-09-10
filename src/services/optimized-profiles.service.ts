@@ -74,6 +74,10 @@ export class OptimizedProfilesService {
       if (currentUserGender) {
         const oppositeGender = currentUserGender.toLowerCase() === 'male' ? 'female' : 'male';
         query = query.eq('gender', oppositeGender);
+        // Additional rule: male users should not see unapproved female profiles
+        if (oppositeGender === 'female') {
+          query = query.eq('admin_approved', true);
+        }
       }
 
       // Apply location filters
@@ -207,6 +211,10 @@ export class OptimizedProfilesService {
       if (currentUserGender) {
         const oppositeGender = currentUserGender.toLowerCase() === 'male' ? 'female' : 'male';
         baseQuery = baseQuery.eq('gender', oppositeGender);
+        // Additional rule: male users should not see unapproved female profiles
+        if (oppositeGender === 'female') {
+          baseQuery = baseQuery.eq('admin_approved', true);
+        }
       }
 
       // Apply basic filters
@@ -304,6 +312,10 @@ export class OptimizedProfilesService {
       if (currentUserGender) {
         const oppositeGender = currentUserGender.toLowerCase() === 'male' ? 'female' : 'male';
         query = query.eq('gender', oppositeGender);
+        // Additional rule: male users should not count unapproved female profiles
+        if (oppositeGender === 'female') {
+          query = query.eq('admin_approved', true);
+        }
       }
 
       // Location filters

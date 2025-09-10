@@ -339,6 +339,9 @@
     }
   },
   "home": {
+    "badges": {
+      "total_profiles": "{{count}} профилей"
+    },
     "filters": {
       "select_country": "Выберите страну",
       "select_city": "Выберите город",

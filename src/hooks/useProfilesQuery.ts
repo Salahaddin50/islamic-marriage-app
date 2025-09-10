@@ -102,6 +102,10 @@ async function fetchProfiles(
     if (currentUserGender) {
       const oppositeGender = currentUserGender.toLowerCase() === 'male' ? 'female' : 'male';
       query = query.eq('gender', oppositeGender);
+      // Additional rule: male users should not see unapproved female profiles
+      if (oppositeGender === 'female') {
+        query = query.eq('admin_approved', true);
+      }
     }
 
     // Apply location filters

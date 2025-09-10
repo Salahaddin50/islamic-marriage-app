@@ -339,6 +339,9 @@
     }
   },
   "home": {
+    "badges": {
+      "total_profiles": "{{count}} profil"
+    },
     "filters": {
       "select_country": "Ülke Seç",
       "select_city": "Şehir Seç",
