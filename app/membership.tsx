@@ -13,9 +13,11 @@ import { NavigationProp } from '@react-navigation/native';
 import { supabase } from '@/src/config/supabase';
 import { getResponsiveSpacing } from '../utils/responsive';
 import { SupportTeamService } from '../src/services/support-team.service';
+import { useTranslation } from 'react-i18next';
 
 interface Package {
     id: string;
+    type?: string;
     name: string;
     price: number;
     originalPrice?: number;
@@ -37,16 +39,25 @@ interface PaymentRecord {
 }
 
 const Membership = () => {
+    const { t, i18n } = useTranslation();
     const navigation = useNavigation<NavigationProp<any>>();
     const params = useLocalSearchParams();
     const layout = useWindowDimensions();
     
     const [index, setIndex] = useState(0);
-    const [routes] = useState([
-        { key: 'packages', title: 'Packages' },
-        { key: 'payments', title: 'Payment Record' },
-        { key: 'contact', title: 'Contact us' },
+    const [routes, setRoutes] = useState([
+        { key: 'packages', title: t('membership.tabs.packages') },
+        { key: 'payments', title: t('membership.tabs.payments') },
+        { key: 'contact', title: t('membership.tabs.contact') },
     ]);
+
+    useEffect(() => {
+        setRoutes([
+            { key: 'packages', title: t('membership.tabs.packages') },
+            { key: 'payments', title: t('membership.tabs.payments') },
+            { key: 'contact', title: t('membership.tabs.contact') },
+        ]);
+    }, [t]);
     
     const [packages, setPackages] = useState<Package[]>([]);
     const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
@@ -108,7 +119,7 @@ const Membership = () => {
 
             if (!targetRow?.id) {
                 setShowComplaintModal(false);
-                Alert.alert('Not Found', 'No payment found for this package to attach your complaint.');
+                Alert.alert(t('membership.alerts.not_found_title'), t('membership.alerts.not_found_body'));
                 return;
             }
 
@@ -131,12 +142,12 @@ const Membership = () => {
             setComplaintText('');
             setComplaintForPackage(null);
             loadPaymentRecords();
-            Alert.alert('Submitted', 'Your complaint has been submitted, we will verify and return to you');
+            Alert.alert(t('membership.alerts.submitted_title'), t('membership.alerts.submitted_body'));
             setShowSuccessToast(true);
             setTimeout(() => setShowSuccessToast(false), 2500);
         } catch (e) {
             setShowComplaintModal(false);
-            Alert.alert('Error', 'Failed to submit complaint.');
+            Alert.alert(t('membership.alerts.error_title'), t('membership.alerts.submit_error'));
         }
     };
 
@@ -144,7 +155,7 @@ const Membership = () => {
         try {
             // Use Profile Support (m) phone from database, fallback to hardcoded
             const phone = profileSupportMalePhone || '966503531437';
-            const text = encodeURIComponent('Assalamu Alaikum, I need full support.');
+            const text = encodeURIComponent(t('membership.support.profile_support_text'));
             const whatsappUrl = `whatsapp://send?phone=${phone}&text=${text}`;
             const webUrl = `https://wa.me/${phone}?text=${text}`;
             // Try native scheme first
@@ -155,7 +166,7 @@ const Membership = () => {
                 await Linking.openURL(webUrl);
             }
         } catch (e) {
-            Alert.alert('Error', 'Unable to open WhatsApp.');
+            Alert.alert(t('membership.alerts.error_title'), t('membership.alerts.whatsapp_error'));
         }
     };
 
@@ -163,7 +174,7 @@ const Membership = () => {
         try {
             // Use Payment Support phone from database, fallback to hardcoded
             const phone = paymentSupportPhone || '966503531437';
-            const text = encodeURIComponent('Assalamu Alaikum, I cannot proceed with payment. Please help me.');
+            const text = encodeURIComponent(t('membership.support.payment_support_text'));
             const whatsappUrl = `whatsapp://send?phone=${phone}&text=${text}`;
             const webUrl = `https://wa.me/${phone}?text=${text}`;
             // Try native scheme first
@@ -174,7 +185,7 @@ const Membership = () => {
                 await Linking.openURL(webUrl);
             }
         } catch (e) {
-            Alert.alert('Error', 'Unable to open WhatsApp.');
+            Alert.alert(t('membership.alerts.error_title'), t('membership.alerts.whatsapp_error'));
         }
     };
 
@@ -193,6 +204,11 @@ const Membership = () => {
         loadPaymentRecords();
         loadSupportPhones();
     }, []);
+
+    // Reload packages/features when language changes
+    useEffect(() => {
+        loadPackages();
+    }, [i18n.language]);
 
     const refreshMembershipPage = async () => {
         try {
@@ -217,23 +233,93 @@ const Membership = () => {
 
     const loadPackages = async () => {
         try {
-            const { data, error } = await supabase
-                .from('packages')
-                .select('*')
-                .eq('is_active', true)
-                .order('sort_order');
+            const rawLang = typeof i18n?.language === 'string' ? i18n.language : 'en';
+            const lang = (rawLang || 'en').toLowerCase().split('-')[0];
+            
+            // Fetch packages and features in parallel
+            const [pkgRes, featRes] = await Promise.all([
+                supabase
+                    .from('packages')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('sort_order'),
+                supabase
+                    .from('package_features')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('sort_order')
+            ]);
 
-            if (error) throw error;
+            if (pkgRes.error) throw pkgRes.error;
+            if (featRes.error) {
+                // If features table not present, proceed with packages only
+                console.log('package_features not available or query failed:', featRes.error?.message);
+            }
 
-            if (data) {
-                const formattedPackages: Package[] = data.map(pkg => ({
-                    id: pkg.package_id,
-                    name: pkg.name,
-                    price: Number(pkg.price),
-                    crownColor: pkg.crown_color,
-                    features: Array.isArray(pkg.features) ? pkg.features : [],
-                    isLifetime: pkg.is_lifetime || true
-                }));
+            const featuresByType: Record<string, string[]> = {};
+            const featuresRows: any[] = Array.isArray(featRes.data) ? featRes.data : [];
+            
+            for (const row of featuresRows) {
+                const typeKey = row.package_type || row.package || row.type;
+                if (!typeKey) continue;
+                
+                let ft = row.feature_translations;
+                if (typeof ft === 'string') {
+                    try { ft = JSON.parse(ft); } catch {}
+                }
+                
+                // Better translation resolution with fallbacks
+                let translatedName = row.feature_name; // Default fallback
+                if (ft && typeof ft === 'object') {
+                    translatedName = ft[lang] || ft['en'] || row.feature_name;
+                }
+                
+                if (!featuresByType[typeKey]) featuresByType[typeKey] = [];
+                if (translatedName) featuresByType[typeKey].push(`${translatedName}`);
+            }
+
+            if (pkgRes.data) {
+                const formattedPackages: Package[] = pkgRes.data.map((pkg: any) => {
+                    // Try multiple ways to match package type with features
+                    const typeVal = pkg.package_type || pkg.type || pkg.id || pkg.package_id;
+                    const pkgName = (pkg.name || '').toLowerCase();
+                    
+                    // Map package names to feature types
+                    let featureTypeKey = typeVal;
+                    if (pkgName.includes('golden') && pkgName.includes('premium')) {
+                        featureTypeKey = 'golden_premium';
+                    } else if (pkgName.includes('vip') && pkgName.includes('premium')) {
+                        featureTypeKey = 'vip_premium';
+                    } else if (pkgName.includes('premium')) {
+                        featureTypeKey = 'premium';
+                    }
+                    
+                    const baseFeatures: string[] = Array.isArray(pkg.features) ? pkg.features : [];
+                    const translatedFeatures = featuresByType[featureTypeKey] && featuresByType[featureTypeKey].length > 0 ? featuresByType[featureTypeKey] : baseFeatures;
+                    
+                    console.log(`Package "${pkg.name}" (${typeVal}) -> using features from "${featureTypeKey}": ${translatedFeatures.length} features`);
+                    
+                    let nt = pkg.name_translations;
+                    if (typeof nt === 'string') {
+                        try { nt = JSON.parse(nt); } catch {}
+                    }
+                    
+                    // Better package name translation resolution
+                    let localizedName = pkg.name; // Default fallback
+                    if (nt && typeof nt === 'object') {
+                        localizedName = nt[lang] || nt['en'] || pkg.name;
+                    }
+                    
+                    return {
+                        id: pkg.package_id,
+                        type: pkg.package_type,
+                        name: localizedName,
+                        price: Number(pkg.price),
+                        crownColor: pkg.crown_color,
+                        features: translatedFeatures,
+                        isLifetime: pkg.is_lifetime || true,
+                    } as Package;
+                });
                 setPackages(formattedPackages);
             }
         } catch (error) {
@@ -394,7 +480,7 @@ const Membership = () => {
             // Use secure server-side validation - only pass package ID
             router.push(`/checkout/paypal?package_id=${encodeURIComponent(pkg.id)}`);
         } catch (error) {
-            Alert.alert('Error', 'Failed to start checkout.');
+            Alert.alert(t('membership.alerts.error_title'), t('membership.alerts.checkout_error'));
         }
     };
 
@@ -438,16 +524,16 @@ const Membership = () => {
                     </Text>
                     {isCurrentUI && (
                         <View style={styles.currentBadge}>
-                            <Text style={styles.currentBadgeText}>Current</Text>
+                            <Text style={styles.currentBadgeText}>{t('membership.packages.current')}</Text>
                         </View>
                     )}
                     {!isCurrentUI && isPending && (
                         <View style={styles.pendingBadgeRow}>
                             <View style={styles.pendingBadge}>
-                                <Text style={styles.pendingBadgeText}>Pending</Text>
+                                <Text style={styles.pendingBadgeText}>{t('membership.packages.pending')}</Text>
                             </View>
                             <TouchableOpacity onPress={() => openComplaint(pkg.id)} style={styles.pendingActionButton}>
-                                <Text style={styles.pendingActionText}>Complain</Text>
+                                <Text style={styles.pendingActionText}>{t('membership.packages.complain')}</Text>
                             </TouchableOpacity>
                         </View>
                     )}
@@ -461,7 +547,7 @@ const Membership = () => {
                         ${pkg.price}
                     </Text>
                     <Text style={[styles.priceLabel, { color: COLORS.grayscale700 }]}>
-                        Lifetime
+                        {t('membership.packages.lifetime')}
                     </Text>
                 </View>
 
@@ -510,16 +596,16 @@ const Membership = () => {
         <ScrollView style={styles.tabContent} contentContainerStyle={styles.tabContentContainer} showsVerticalScrollIndicator={false}>
             <View style={styles.tabHeader}>
                 <Text style={[styles.tabTitle, { color: COLORS.greyscale900 }] }>
-                    Choose Your Package
+                    {t('membership.packages_tab.title')}
                 </Text>
                 <Text style={[styles.tabSubtitle, { color: COLORS.grayscale700 }] }>
-                    All packages are lifetime subscriptions
+                    {t('membership.packages_tab.subtitle')}
                 </Text>
             </View>
             {packages.map(renderPackage)}
             {(currentFromPayments === 'vip_premium' || currentFromPayments === 'golden_premium') && (
                 <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
-                    <Button title="Get Full Support" filled onPress={openSupport} style={styles.bigButtonPurple} />
+                    <Button title={t('membership.packages_tab.get_full_support')} filled onPress={openSupport} style={styles.bigButtonPurple} />
                 </View>
             )}
         </ScrollView>
@@ -529,10 +615,10 @@ const Membership = () => {
         <ScrollView style={styles.tabContent} contentContainerStyle={styles.tabContentContainer} showsVerticalScrollIndicator={false}>
             <View style={styles.tabHeader}>
                 <Text style={[styles.tabTitle, { color: COLORS.greyscale900 }] }>
-                    Payment History
+                    {t('membership.payments_tab.title')}
                 </Text>
                 <Text style={[styles.tabSubtitle, { color: COLORS.grayscale700 }] }>
-                    Your transaction records
+                    {t('membership.payments_tab.subtitle')}
                 </Text>
             </View>
             {paymentRecords.length > 0 ? (
@@ -540,7 +626,7 @@ const Membership = () => {
             ) : (
                 <View style={styles.emptyState}>
                     <Text style={[styles.emptyText, { color: COLORS.grayscale700 }] }>
-                        No payment records found
+                        {t('membership.payments_tab.empty')}
                     </Text>
                 </View>
             )}
@@ -558,45 +644,44 @@ const Membership = () => {
                     />
                 </View>
                 
-                <Text style={[styles.contactTitle, { color: COLORS.greyscale900 }]}>
-                    Need Payment Help?
+                <Text style={[styles.contactTitle, { color: COLORS.greyscale900 }]}> 
+                    {t('membership.contact_tab.need_payment_help')}
                 </Text>
                 
-                <Text style={[styles.contactMessage, { color: COLORS.grayscale700 }]}>
-                    You cannot proceed with payment? Please contact us to get our full support. Our payment support team is ready to assist you.
+                <Text style={[styles.contactMessage, { color: COLORS.grayscale700 }]}> 
+                    {t('membership.contact_tab.message')}
                 </Text>
                 
                 <View style={styles.contactFeatures}>
                     <View style={styles.contactFeature}>
-                        <Image source={icons.checkCircle} contentFit="contain" style={styles.featureIcon} />
-                        <Text style={[styles.featureText, { color: COLORS.grayscale700 }]}>
-                            Instant WhatsApp Support
+                        <Image source={icons.check} contentFit="contain" style={styles.featureIcon} />
+                        <Text style={[styles.contactFeatureText, { color: COLORS.grayscale700 }]}> 
+                            {t('membership.contact_tab.features.instant_support')}
                         </Text>
                     </View>
                     <View style={styles.contactFeature}>
-                        <Image source={icons.checkCircle} contentFit="contain" style={styles.featureIcon} />
-                        <Text style={[styles.featureText, { color: COLORS.grayscale700 }]}>
-                            Payment Issue Resolution
+                        <Image source={icons.check} contentFit="contain" style={styles.featureIcon} />
+                        <Text style={[styles.contactFeatureText, { color: COLORS.grayscale700 }]}> 
+                            {t('membership.contact_tab.features.issue_resolution')}
                         </Text>
                     </View>
                     <View style={styles.contactFeature}>
-                        <Image source={icons.checkCircle} contentFit="contain" style={styles.featureIcon} />
-                        <Text style={[styles.featureText, { color: COLORS.grayscale700 }]}>
-                            Professional Assistance
+                        <Image source={icons.check} contentFit="contain" style={styles.featureIcon} />
+                        <Text style={[styles.contactFeatureText, { color: COLORS.grayscale700 }]}> 
+                            {t('membership.contact_tab.features.professional_assistance')}
                         </Text>
                     </View>
                 </View>
 
                 <Button 
-                    title="Contact Payment Support" 
+                    title={t('membership.contact_tab.contact_payment_support')} 
                     filled 
                     onPress={openPaymentSupport}
                     style={styles.contactButton}
-                    icon={icons.whatsapp}
                 />
                 
-                <Text style={[styles.contactNote, { color: COLORS.grayscale600 }]}>
-                    Available 24/7 • Response within minutes
+                <Text style={[styles.contactNote, { color: COLORS.greyscale600 }]}> 
+                    {t('membership.contact_tab.note')}
                 </Text>
             </View>
         </ScrollView>
@@ -621,10 +706,10 @@ const Membership = () => {
 
 
     return (
-        <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}>
-            <View style={[styles.container, { backgroundColor: COLORS.white }]}>
+        <SafeAreaView style={[styles.area, { backgroundColor: COLORS.white }]}> 
+            <View style={[styles.container, { backgroundColor: COLORS.white }]}> 
                 <Header 
-                    title="My Membership" 
+                    title={t('membership.header_title')} 
                     fallbackRoute="/(tabs)/profile" 
                     rightIcon={icons.refresh}
                     onRightPress={refreshMembershipPage}
@@ -651,7 +736,7 @@ const Membership = () => {
                     if (selectedIsCurrentUI || isDowngrade || isPending) return null;
                     const isUpgrade = baselinePrice > 0 && selectedPackage.price > baselinePrice;
                     const amount = isUpgrade ? (selectedPackage.price - baselinePrice) : selectedPackage.price;
-                    const label = isUpgrade ? `Pay the difference $${amount}` : `Proceed for Payment $${amount}`;
+                    const label = isUpgrade ? t('membership.packages_tab.pay_difference', { amount }) : t('membership.packages_tab.proceed_payment', { amount });
                     return (
                         <View style={styles.fabButtonWrapper}>
                             <Button title={label} filled onPress={() => processPackagePurchase(selectedPackage)} style={styles.bigButton} />
@@ -668,34 +753,32 @@ const Membership = () => {
                 >
                     <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' }}>
                         <View style={{ width: Math.min(420, SIZES.width - 32), backgroundColor: COLORS.white, borderRadius: 12, padding: 16 }}>
-                            <Text style={{ fontFamily: 'bold', fontSize: 18, color: COLORS.greyscale900, marginBottom: 10 }}>Submit a Complaint</Text>
-                            <Text style={{ fontFamily: 'medium', fontSize: 14, color: COLORS.grayscale700, marginBottom: 8 }}>Describe the issue with your payment:</Text>
+                            <Text style={{ fontFamily: 'bold', fontSize: 18, color: COLORS.greyscale900, marginBottom: 10 }}>{t('membership.complaint_modal.title')}</Text>
+                            <Text style={{ fontFamily: 'medium', fontSize: 14, color: COLORS.grayscale700, marginBottom: 8 }}>{t('membership.complaint_modal.describe')}</Text>
                             <TextInput
                                 value={complaintText}
                                 onChangeText={setComplaintText}
                                 multiline
-                                placeholder="Type your message..."
+                                placeholder={t('membership.complaint_modal.placeholder')}
                                 placeholderTextColor={COLORS.grayscale700}
                                 style={{ minHeight: 100, borderWidth: 1, borderColor: COLORS.grayscale200, borderRadius: 8, padding: 10, color: COLORS.greyscale900 }}
                             />
                             <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 12, gap: 10 }}>
                                 <TouchableOpacity onPress={() => setShowComplaintModal(false)} style={{ paddingHorizontal: 14, paddingVertical: 10, borderRadius: 8, backgroundColor: COLORS.tansparentPrimary, borderWidth: 1, borderColor: COLORS.primary }}>
-                                    <Text style={{ color: COLORS.primary, fontFamily: 'bold' }}>Cancel</Text>
+                                    <Text style={{ color: COLORS.primary, fontFamily: 'bold' }}>{t('membership.complaint_modal.cancel')}</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity onPress={submitComplaint} style={{ paddingHorizontal: 14, paddingVertical: 10, borderRadius: 8, backgroundColor: COLORS.primary }}>
-                                    <Text style={{ color: COLORS.white, fontFamily: 'bold' }}>Submit</Text>
+                                    <Text style={{ color: COLORS.white, fontFamily: 'bold' }}>{t('membership.complaint_modal.submit')}</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
                     </View>
                 </Modal>
 
-                {/* Support button moved inside PackagesTab */}
-
                 {/* Success Toast */}
                 {showSuccessToast && (
                     <View style={{ position: 'absolute', left: 16, right: 16, bottom: 80, backgroundColor: COLORS.primary, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 10, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.18, shadowRadius: 3, elevation: 5 }}>
-                        <Text style={{ color: COLORS.white, fontFamily: 'bold', textAlign: 'center' }}>Your complaint has been submitted, we will verify and return to you</Text>
+                        <Text style={{ color: COLORS.white, fontFamily: 'bold', textAlign: 'center' }}>{t('membership.alerts.submitted_body')}</Text>
                     </View>
                 )}
 
@@ -1039,7 +1122,7 @@ const styles = StyleSheet.create({
         tintColor: COLORS.primary,
         marginRight: getResponsiveSpacing(12),
     },
-    featureText: {
+    contactFeatureText: {
         fontSize: 14,
         fontFamily: 'medium',
         flex: 1,

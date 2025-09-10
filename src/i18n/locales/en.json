@@ -885,5 +885,63 @@
         "answer": "Contact our support team through the Contact Us section. We will help you delete your account and all associated data while ensuring all privacy regulations are followed and any ongoing connections are handled appropriately."
       }
     }
+  },
+  "membership": {
+    "header_title": "My Membership",
+    "tabs": {
+      "packages": "Packages",
+      "payments": "Payment Record",
+      "contact": "Contact us"
+    },
+    "packages": {
+      "current": "Current",
+      "pending": "Pending",
+      "complain": "Complain",
+      "lifetime": "Lifetime"
+    },
+    "packages_tab": {
+      "title": "Choose Your Package",
+      "subtitle": "All packages are lifetime subscriptions",
+      "get_full_support": "Get Full Support",
+      "pay_difference": "Pay the difference ${{amount}}",
+      "proceed_payment": "Proceed for Payment ${{amount}}"
+    },
+    "payments_tab": {
+      "title": "Payment History",
+      "subtitle": "Your transaction records",
+      "empty": "No payment records found"
+    },
+    "contact_tab": {
+      "need_payment_help": "Need Payment Help?",
+      "message": "You cannot proceed with payment? Please contact us to get our full support. Our payment support team is ready to assist you.",
+      "features": {
+        "instant_support": "Instant WhatsApp Support",
+        "issue_resolution": "Payment Issue Resolution",
+        "professional_assistance": "Professional Assistance"
+      },
+      "contact_payment_support": "Contact Payment Support",
+      "note": "Available 24/7 • Response within minutes"
+    },
+    "complaint_modal": {
+      "title": "Submit a Complaint",
+      "describe": "Describe the issue with your payment:",
+      "placeholder": "Type your message...",
+      "cancel": "Cancel",
+      "submit": "Submit"
+    },
+    "alerts": {
+      "not_found_title": "Not Found",
+      "not_found_body": "No payment found for this package to attach your complaint.",
+      "submitted_title": "Submitted",
+      "submitted_body": "Your complaint has been submitted, we will verify and return to you",
+      "error_title": "Error",
+      "submit_error": "Failed to submit complaint.",
+      "whatsapp_error": "Unable to open WhatsApp.",
+      "checkout_error": "Failed to start checkout."
+    },
+    "support": {
+      "profile_support_text": "Assalamu Alaikum, I need full support.",
+      "payment_support_text": "Assalamu Alaikum, I cannot proceed with payment. Please help me."
+    }
   }
 }

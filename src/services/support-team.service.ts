@@ -1,4 +1,4 @@
-import { supabase } from '../config';
+import { supabase } from '../config/supabase';
 
 export interface SupportTeamMember {
   id: string;

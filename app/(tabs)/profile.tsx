@@ -79,9 +79,6 @@ const Profile = () => {
             contentFit='contain'
             style={styles.logo}
           />
-          <Text style={[styles.headerTitle, {
-            color: COLORS.greyscale900
-          }]}>${''}</Text>
           <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>{t('profile_page.header_title')}</Text>
         </View>
         <View style={styles.headerRight}>
@@ -102,11 +99,11 @@ const Profile = () => {
               } catch {}
             }}
             trackColor={{
-              false: COLORS.grayscale400,
-              true: COLORS.primary
+              false: COLORS.grayscale200,
+              true: COLORS.grayscale400
             }}
-            thumbColor={COLORS.white} // Inactive thumb color
-            ios_backgroundColor={COLORS.grayscale400} // iOS track background for inactive state
+            thumbColor={COLORS.white}
+            ios_backgroundColor={COLORS.grayscale200}
             style={styles.profileSwitch}
           />
         </View>

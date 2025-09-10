@@ -899,5 +899,63 @@
         "answer": "تواصل مع فريق الدعم عبر قسم اتصل بنا. سنساعدك على حذف حسابك وجميع بياناتك مع الالتزام بأنظمة الخصوصية ومعالجة أي ارتباطات قائمة بطريقة مناسبة."
       }
     }
+  },
+  "membership": {
+    "header_title": "اشتراكي",
+    "tabs": {
+      "packages": "الباقات",
+      "payments": "سجل الدفع",
+      "contact": "اتصل بنا"
+    },
+    "packages": {
+      "current": "الحالية",
+      "pending": "قيد المراجعة",
+      "complain": "تقديم شكوى",
+      "lifetime": "مدى الحياة"
+    },
+    "packages_tab": {
+      "title": "اختر باقتك",
+      "subtitle": "كل الباقات باشتراك مدى الحياة",
+      "get_full_support": "احصل على دعم كامل",
+      "pay_difference": "ادفع الفرق ${{amount}}",
+      "proceed_payment": "المتابعة للدفع ${{amount}}"
+    },
+    "payments_tab": {
+      "title": "سجل الدفعات",
+      "subtitle": "سجلات معاملاتك",
+      "empty": "لا توجد سجلات دفع"
+    },
+    "contact_tab": {
+      "need_payment_help": "تحتاج مساعدة في الدفع؟",
+      "message": "لا يمكنك إتمام الدفع؟ تواصل معنا لتحصل على دعمنا الكامل. فريق دعم الدفع جاهز لمساعدتك.",
+      "features": {
+        "instant_support": "دعم واتساب فوري",
+        "issue_resolution": "حل مشاكل الدفع",
+        "professional_assistance": "مساعدة احترافية"
+      },
+      "contact_payment_support": "التواصل مع دعم الدفع",
+      "note": "متاح 24/7 • استجابة خلال دقائق"
+    },
+    "complaint_modal": {
+      "title": "تقديم شكوى",
+      "describe": "صف المشكلة المتعلقة بدفعك:",
+      "placeholder": "اكتب رسالتك...",
+      "cancel": "إلغاء",
+      "submit": "إرسال"
+    },
+    "alerts": {
+      "not_found_title": "غير موجود",
+      "not_found_body": "لا يوجد دفع مرتبط بهذه الباقة لإرفاق الشكوى.",
+      "submitted_title": "تم الإرسال",
+      "submitted_body": "تم تقديم شكواك، سنقوم بالتحقق والرد عليك",
+      "error_title": "خطأ",
+      "submit_error": "تعذر إرسال الشكوى.",
+      "whatsapp_error": "تعذر فتح واتساب.",
+      "checkout_error": "تعذر بدء عملية الدفع."
+    },
+    "support": {
+      "profile_support_text": "السلام عليكم، أحتاج دعماً كاملاً.",
+      "payment_support_text": "السلام عليكم، لا أستطيع إتمام الدفع. أرجو المساعدة."
+    }
   }
 }
