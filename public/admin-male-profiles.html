@@ -894,18 +894,63 @@
             return age;
         }
 
-        function openAvatarFullscreen(url, alt) {
+        function openAvatarFullscreen(url, alt, mediaType = 'photo') {
             const overlay = document.createElement('div');
-            overlay.className = 'image-modal-overlay';
+            overlay.className = 'fullscreen-media-overlay';
+            
+            // Determine if it's a video based on URL or mediaType
+            const isVideo = mediaType === 'Video' || mediaType === 'video' || 
+                           url.includes('.mp4') || url.includes('.mov') || url.includes('.webm') || url.includes('.avi');
+            
             overlay.innerHTML = `
-                <div class="image-modal-content" onclick="this.parentNode.remove()">
-                    <img src="${url}" alt="${alt}">
+                <div class="fullscreen-media-container">
+                    <div class="fullscreen-header">
+                        <button class="fullscreen-close" onclick="this.closest('.fullscreen-media-overlay').remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="fullscreen-content">
+                        ${isVideo ? `
+                            <video controls autoplay preload="metadata" class="fullscreen-video">
+                                <source src="${url}" type="video/mp4">
+                                <source src="${url}" type="video/webm">
+                                <source src="${url}" type="video/mov">
+                                Your browser does not support the video tag.
+                            </video>
+                        ` : `
+                            <img src="${url}" alt="${alt}" class="fullscreen-image">
+                        `}
+                    </div>
+                    <div class="fullscreen-footer">
+                        <span class="media-info">${alt}</span>
+                    </div>
                 </div>
             `;
+            
             overlay.onclick = function(e) {
-                if (e.target === overlay) overlay.remove();
+                if (e.target === overlay || e.target.classList.contains('fullscreen-media-container')) {
+                    // Pause video if it's playing
+                    const video = overlay.querySelector('video');
+                    if (video) video.pause();
+                    overlay.remove();
+                }
             };
+            
+            // Handle escape key
+            const handleEscape = (e) => {
+                if (e.key === 'Escape') {
+                    const video = overlay.querySelector('video');
+                    if (video) video.pause();
+                    overlay.remove();
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            };
+            document.addEventListener('keydown', handleEscape);
+            
             document.body.appendChild(overlay);
+            
+            // Focus on the overlay for keyboard navigation
+            overlay.focus();
         }
 
         async function approveProfile(profileId) {
@@ -973,18 +1018,9 @@
 
         function deleteProfile(profileId) {
             confirmAction(
-                'Are you sure you want to delete this profile? This action cannot be undone.',
+                'Are you sure you want to delete this profile and all associated media? This action cannot be undone.',
                 async () => {
                     try {
-                        const extractKey = (url) => {
-                            try {
-                                if (!url) return null;
-                                const u = new URL(url);
-                                const path = (u.pathname || '').replace(/^\//, '');
-                                return path || null;
-                            } catch { return null; }
-                        };
-
                         // 1) Get user_id for this profile
                         const { data: profileRow, error: profileErr } = await window.supabaseClient
                             .from('user_profiles')
@@ -994,12 +1030,42 @@
                         if (profileErr) throw profileErr;
                         const userId = profileRow?.user_id;
 
-                        // Delete profile row only via RPC to bypass RLS issues safely
+                        // 2) Get all media for this user
+                        const { data: mediaList, error: mediaErr } = await window.supabaseClient
+                            .from('media_references')
+                            .select('id')
+                            .eq('user_id', userId);
+                        if (mediaErr) throw mediaErr;
+
+                        // 3) Delete all media (storage + DB) using admin function
+                        if (mediaList && mediaList.length > 0) {
+                            showNotification(`Deleting ${mediaList.length} media files...`, 'info');
+                            
+                            for (const media of mediaList) {
+                                try {
+                                    const resp = await window.supabaseClient.functions.invoke('admin-delete-media', { 
+                                        body: { mediaId: media.id } 
+                                    });
+                                    if (resp?.error) {
+                                        console.warn(`Failed to delete media ${media.id}:`, resp.error);
+                                    } else {
+                                        const payload = resp?.data || {};
+                                        if (!payload.success) {
+                                            console.warn(`Failed to delete media ${media.id}:`, payload.error);
+                                        }
+                                    }
+                                } catch (e) {
+                                    console.warn(`Error deleting media ${media.id}:`, e);
+                                }
+                            }
+                        }
+
+                        // 4) Delete profile row via RPC to bypass RLS issues safely
                         const { error: delErr } = await window.supabaseClient
                             .rpc('admin_delete_user_profile', { in_profile_id: profileId });
                         if (delErr) throw delErr;
 
-                        showNotification('Profile deleted successfully', 'success');
+                        showNotification('Profile and all media deleted successfully', 'success');
                         loadProfiles();
                     } catch (error) {
                         console.error('Error deleting profile:', error);
@@ -1210,7 +1276,7 @@
                                 <div id="media-photos" class="media-grid">
                                     ${photos.map(p => `
                                         <div class="media-card">
-                                            <img src="${p.external_url}" alt="photo" onclick="openAvatarFullscreen('${p.external_url}','Photo')" />
+                                            <img src="${p.external_url}" alt="Photo" onclick="openAvatarFullscreen('${p.external_url}','Photo', 'photo')" loading="lazy" />
                                             <button class="media-delete" onclick="deleteMedia('${p.id}', '${profileId}')"><i class="fas fa-trash"></i></button>
                                         </div>
                                     `).join('')}
@@ -1218,8 +1284,12 @@
                                 <div id="media-videos" class="media-grid" style="display:none;">
                                     ${videos.map(v => `
                                         <div class="media-card">
-                                            <img src="${v.thumbnail_url || ''}" alt="video" onerror="this.src='';" onclick="openAvatarFullscreen('${v.external_url}','Video')" />
-                                            <div class="play-badge">Video</div>
+                                            <img src="${v.thumbnail_url || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjZjNmNGY2Ii8+Cjxwb2x5Z29uIHBvaW50cz0iNzUsNjAgMTI1LDEwMCA3NSwxNDAiIGZpbGw9IiM2YjczODAiLz4KPC9zdmc+'}" 
+                                                 alt="Video thumbnail" 
+                                                 onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjZjNmNGY2Ii8+Cjxwb2x5Z29uIHBvaW50cz0iNzUsNjAgMTI1LDEwMCA3NSwxNDAiIGZpbGw9IiM2YjczODAiLz4KPC9zdmc+'" 
+                                                 onclick="openAvatarFullscreen('${v.external_url}','Video', 'video')" 
+                                                 loading="lazy" />
+                                            <div class="play-badge"><i class="fas fa-play"></i></div>
                                             <button class="media-delete" onclick="deleteMedia('${v.id}', '${profileId}')"><i class="fas fa-trash"></i></button>
                                         </div>
                                     `).join('')}
@@ -1272,23 +1342,19 @@
                     if (k1) keys.push(k1);
                     if (k2) keys.push(k2);
 
-                    // 3) Delete from storage first (if keys found)
-                    if (keys.length > 0) {
-                        const resp = await window.supabaseClient.functions.invoke('delete-user-media', { body: { keys } });
-                        if (resp?.error) throw resp.error;
-                        const payload = resp?.data || {};
-                        // If any errors returned per-key, log but continue
-                        if (Array.isArray(payload.errors) && payload.errors.length) {
-                            console.warn('Storage delete partial errors:', payload.errors);
-                        }
+                    // 3) Delete from storage and DB using admin function
+                    const resp = await window.supabaseClient.functions.invoke('admin-delete-media', { 
+                        body: { mediaId } 
+                    });
+                    if (resp?.error) throw resp.error;
+                    const payload = resp?.data || {};
+                    if (!payload.success) {
+                        throw new Error(payload.error || 'Delete failed');
                     }
-
-                    // 4) Delete DB row
-                    const { error: dbErr } = await window.supabaseClient
-                        .from('media_references')
-                        .delete()
-                        .eq('id', mediaId);
-                    if (dbErr) throw dbErr;
+                    // If any storage errors returned, log but continue since DB was deleted
+                    if (Array.isArray(payload.errors) && payload.errors.length) {
+                        console.warn('Storage delete partial errors:', payload.errors);
+                    }
 
                     showNotification('Media deleted', 'success');
                     const modal = document.querySelector('.modal-overlay');
