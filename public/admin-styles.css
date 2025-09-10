@@ -853,6 +853,17 @@ body {
         margin-left: 0;
     }
     
+    /* RTL mobile: hide sidebar to the right and reset right margin */
+    [dir="rtl"] .sidebar {
+        transform: translateX(100%);
+    }
+    [dir="rtl"] .sidebar.open {
+        transform: translateX(0);
+    }
+    [dir="rtl"] .main-content {
+        margin-right: 0;
+    }
+    
     .sidebar-toggle {
         display: block;
     }
