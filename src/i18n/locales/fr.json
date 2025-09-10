@@ -661,6 +661,9 @@
     "update_button": "Mettre à jour les détails personnels"
   },
   "match_details": {
+    "profile_under_review_title": "Profil en cours d'examen",
+    "profile_under_review_message": "Votre profil est en cours d'examen. Les demandes fonctionneront après approbation. Vous serez notifié une fois approuvé (vérifiez les notifications).",
+    "noted": "C'est noté",
     "photos_videos": "Photos et vidéos",
     "about_me": "À propos de moi",
     "no_info_provided": "Aucune information fournie",

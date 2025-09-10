@@ -714,6 +714,9 @@
     "update_button": "Update Personal Details"
   },
   "match_details": {
+    "profile_under_review_title": "Profile Under Review",
+    "profile_under_review_message": "Your profile is under review. Requests work only after approval. You will be notified once approved (check notifications).",
+    "noted": "Noted",
     "photos_videos": "Photos & Videos",
     "about_me": "About Me",
     "no_info_provided": "No information provided",

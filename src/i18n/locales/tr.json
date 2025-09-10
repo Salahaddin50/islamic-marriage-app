@@ -661,6 +661,9 @@
     "update_button": "Kişisel Detayları Güncelle"
   },
   "match_details": {
+    "profile_under_review_title": "Profil İncelemede",
+    "profile_under_review_message": "Profiliniz incelemede. Talepler yalnızca onaydan sonra çalışır. Onaylandığında bilgilendirileceksiniz (bildirimleri kontrol edin).",
+    "noted": "Anlaşıldı",
     "photos_videos": "Fotoğraf ve Videolar",
     "about_me": "Hakkımda",
     "no_info_provided": "Bilgi sağlanmamış",

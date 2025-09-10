@@ -118,6 +118,7 @@ const MatchDetails = () => {
   const [showVideoMeetInfoModal, setShowVideoMeetInfoModal] = useState(false);
   const [showVideoPreconditionModal, setShowVideoPreconditionModal] = useState(false);
   const [showChatInfoModal, setShowChatInfoModal] = useState(false);
+  const [showUnderReviewModal, setShowUnderReviewModal] = useState(false);
   const [chatOathConfirmed, setChatOathConfirmed] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [scheduledAt, setScheduledAt] = useState<string>('');
@@ -383,7 +384,7 @@ const MatchDetails = () => {
 
         const { data: profile, error } = await supabase
           .from('user_profiles')
-          .select('country')
+          .select('country, gender, admin_approved')
           .eq('user_id', user.id)
           .maybeSingle();
 
@@ -1182,6 +1183,27 @@ const MatchDetails = () => {
           ]}
           disabled={(interestStatus === 'pending' && isInterestSender) || (interestStatus === 'accepted')}
           onPress={async () => {
+            // Block unapproved female users from sending requests
+            try {
+              let cu = currentUserProfile as any;
+              if (!cu) {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                  const { data: profile } = await supabase
+                    .from('user_profiles')
+                    .select('gender, admin_approved')
+                    .eq('user_id', user.id)
+                    .single();
+                  cu = profile as any;
+                  if (profile) setCurrentUserProfile(profile as any);
+                }
+              }
+              if (cu?.gender?.toLowerCase() === 'female' && cu?.admin_approved !== true) {
+                setShowUnderReviewModal(true);
+                return;
+              }
+            } catch {}
+
             // First, show the photo request info modal
             if (interestStatus === 'none') {
               setShowPhotoRequestInfoModal(true);
@@ -1324,6 +1346,27 @@ const MatchDetails = () => {
                 onPress={async () => {
                   setShowPhotoRequestInfoModal(false);
                   try {
+                    // Block unapproved female users from sending requests
+                    try {
+                      const { data: { user } } = await supabase.auth.getUser();
+                      if (user) {
+                        let cu = currentUserProfile as any;
+                        if (!cu) {
+                          const { data: profile } = await supabase
+                            .from('user_profiles')
+                            .select('gender, admin_approved')
+                            .eq('user_id', user.id)
+                            .single();
+                          cu = profile as any;
+                          if (profile) setCurrentUserProfile(profile as any);
+                        }
+                        if (cu?.gender?.toLowerCase() === 'female' && cu?.admin_approved !== true) {
+                          setShowUnderReviewModal(true);
+                          return;
+                        }
+                      }
+                    } catch {}
+
                     const res = await InterestsService.sendInterest(userId);
                     setInterestStatus('pending');
                     setIsInterestSender(true);
@@ -1335,6 +1378,33 @@ const MatchDetails = () => {
               >
                 <Image source={icons.heart2} contentFit="contain" style={{ width: 18, height: 18, tintColor: COLORS.white, marginRight: 8 }} />
                 <Text style={styles.infoButtonText}>{t('match_details.send')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Under Review Modal */}
+      <Modal
+        visible={showUnderReviewModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowUnderReviewModal(false)}
+      >
+        <View style={styles.fullscreenContainer}>
+          <View style={[styles.modalCard, { maxWidth: 360 }]}> 
+            <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 12, textAlign: 'center', color: COLORS.primary }]}>
+              {t('match_details.profile_under_review_title')}
+            </Text>
+            <Text style={[styles.infoStepText, { textAlign: 'center', marginBottom: 20 }]}>
+              {t('match_details.profile_under_review_message')}
+            </Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8 }}>
+              <TouchableOpacity 
+                style={[styles.infoButton, styles.confirmButton, { width: '100%' }]} 
+                onPress={() => setShowUnderReviewModal(false)}
+              >
+                <Text style={styles.infoButtonText}>{t('match_details.noted')}</Text>
               </TouchableOpacity>
             </View>
           </View>

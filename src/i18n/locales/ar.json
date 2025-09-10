@@ -703,6 +703,9 @@
     "language": "اللغة"
   },
   "match_details": {
+    "profile_under_review_title": "الملف قيد المراجعة",
+    "profile_under_review_message": "ملفك قيد المراجعة. ستعمل الطلبات بعد الموافقة. سيتم إخطارك عند الموافقة (تحقق من الإشعارات).",
+    "noted": "تم الاستلام",
     "photos_videos": "الصور والفيديوهات",
     "about_me": "نبذة عني",
     "no_info_provided": "لا توجد معلومات",
