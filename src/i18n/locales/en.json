@@ -940,9 +940,153 @@
       "whatsapp_error": "Unable to open WhatsApp.",
       "checkout_error": "Failed to start checkout."
     },
-    "support": {
-      "profile_support_text": "Assalamu Alaikum, I need full support.",
-      "payment_support_text": "Assalamu Alaikum, I cannot proceed with payment. Please help me."
+  "support": {
+    "profile_support_text": "Assalamu Alaikum, I need full support.",
+    "payment_support_text": "Assalamu Alaikum, I cannot proceed with payment. Please help me."
+  },
+  "admin": {
+    "login": {
+      "title": "Zawajplus Admin",
+      "subtitle": "Administrative Dashboard",
+      "email_label": "Email Address",
+      "email_placeholder": "Enter your email address",
+      "password_label": "Password",
+      "password_placeholder": "Enter your password",
+      "sign_in_button": "Sign In to Admin Panel",
+      "signing_in": "Signing In...",
+      "invalid_credentials": "Invalid email or password",
+      "login_failed": "Login failed. Please try again."
+    },
+    "navigation": {
+      "dashboard": "Dashboard",
+      "female_profiles": "Female Profiles",
+      "male_profiles": "Male Profiles", 
+      "interests": "Interests",
+      "meet_requests": "Meet Requests",
+      "packages": "Packages",
+      "admin_management": "Admin Management",
+      "logout": "Logout"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "stats": {
+        "total_users": "Total Users",
+        "new_users_today": "New Users Today",
+        "active_subscriptions": "Active Subscriptions",
+        "matches_today": "Matches Today",
+        "meet_today": "Meet Today"
+      },
+      "charts": {
+        "user_growth": "User Growth",
+        "user_demographics": "User Demographics",
+        "subscriptions": "Subscriptions",
+        "accepted_interests": "Accepted Interests",
+        "accepted_meet_requests": "Accepted Meet Requests"
+      },
+      "filters": {
+        "all": "All",
+        "males": "Males",
+        "females": "Females",
+        "7_days": "7 Days",
+        "30_days": "30 Days",
+        "90_days": "90 Days",
+        "all_time": "All Time"
+      },
+      "sections": {
+        "recent_activity": "Recent Activity",
+        "pending_approvals": "Pending Approvals"
+      }
+    },
+    "profiles": {
+      "female_title": "Female Profiles",
+      "male_title": "Male Profiles",
+      "filters": {
+        "search_placeholder": "Search by name, email, location...",
+        "status_all": "All Status",
+        "status_pending": "Pending",
+        "status_approved": "Approved", 
+        "status_rejected": "Rejected",
+        "age_range": "Age Range",
+        "location": "Location",
+        "apply_filters": "Apply Filters",
+        "clear_filters": "Clear Filters"
+      },
+      "actions": {
+        "approve": "Approve",
+        "reject": "Reject", 
+        "delete": "Delete",
+        "view_media": "View Media",
+        "bulk_approve": "Bulk Approve",
+        "bulk_reject": "Bulk Reject",
+        "export": "Export"
+      },
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "fields": {
+        "name": "Name",
+        "email": "Email",
+        "age": "Age",
+        "location": "Location",
+        "joined": "Joined",
+        "status": "Status",
+        "photos": "Photos",
+        "videos": "Videos"
+      },
+      "media_modal": {
+        "title": "User Media",
+        "photos_tab": "Photos",
+        "videos_tab": "Videos",
+        "close": "Close",
+        "delete_media": "Delete Media"
+      }
+    },
+    "interests": {
+      "title": "Interests",
+      "table": {
+        "sender": "Sender",
+        "receiver": "Receiver", 
+        "status": "Status",
+        "created": "Created"
+      }
+    },
+    "meet_requests": {
+      "title": "Meet Requests",
+      "table": {
+        "sender": "Sender",
+        "receiver": "Receiver",
+        "status": "Status", 
+        "scheduled": "Scheduled",
+        "created": "Created"
+      }
+    },
+    "packages": {
+      "title": "Packages",
+      "table": {
+        "user": "User",
+        "package": "Package",
+        "amount": "Amount",
+        "status": "Status",
+        "created": "Created"
+      }
+    },
+    "common": {
+      "loading": "Loading...",
+      "no_data": "No data available",
+      "error": "Error loading data",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "save": "Save",
+      "edit": "Edit",
+      "delete": "Delete",
+      "search": "Search",
+      "filter": "Filter",
+      "export": "Export",
+      "select_all": "Select All",
+      "selected_count": "{{count}} selected"
     }
   }
+}
 }

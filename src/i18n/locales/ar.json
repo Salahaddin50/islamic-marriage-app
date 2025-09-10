@@ -957,6 +957,150 @@
     "support": {
       "profile_support_text": "السلام عليكم، أحتاج دعماً كاملاً.",
       "payment_support_text": "السلام عليكم، لا أستطيع إتمام الدفع. أرجو المساعدة."
+    },
+    "admin": {
+      "login": {
+        "title": "إدارة زواج بلس",
+        "subtitle": "لوحة التحكم الإدارية",
+        "email_label": "عنوان البريد الإلكتروني",
+        "email_placeholder": "أدخل عنوان بريدك الإلكتروني",
+        "password_label": "كلمة المرور",
+        "password_placeholder": "أدخل كلمة المرور",
+        "sign_in_button": "تسجيل الدخول إلى لوحة الإدارة",
+        "signing_in": "جارٍ تسجيل الدخول...",
+        "invalid_credentials": "بريد إلكتروني أو كلمة مرور غير صحيحة",
+        "login_failed": "فشل تسجيل الدخول. يرجى المحاولة مرة أخرى."
+      },
+      "navigation": {
+        "dashboard": "لوحة التحكم",
+        "female_profiles": "الملفات النسائية",
+        "male_profiles": "الملفات الرجالية",
+        "interests": "الاهتمامات",
+        "meet_requests": "طلبات المقابلة",
+        "packages": "الباقات",
+        "admin_management": "إدارة المديرين",
+        "logout": "تسجيل الخروج"
+      },
+      "dashboard": {
+        "title": "لوحة التحكم",
+        "stats": {
+          "total_users": "إجمالي المستخدمين",
+          "new_users_today": "المستخدمون الجدد اليوم",
+          "active_subscriptions": "الاشتراكات النشطة",
+          "matches_today": "المطابقات اليوم",
+          "meet_today": "المقابلات اليوم"
+        },
+        "charts": {
+          "user_growth": "نمو المستخدمين",
+          "user_demographics": "التركيبة السكانية للمستخدمين",
+          "subscriptions": "الاشتراكات",
+          "accepted_interests": "الاهتمامات المقبولة",
+          "accepted_meet_requests": "طلبات المقابلة المقبولة"
+        },
+        "filters": {
+          "all": "الكل",
+          "males": "الذكور",
+          "females": "الإناث",
+          "7_days": "7 أيام",
+          "30_days": "30 يوماً",
+          "90_days": "90 يوماً",
+          "all_time": "كل الوقت"
+        },
+        "sections": {
+          "recent_activity": "النشاط الأخير",
+          "pending_approvals": "الموافقات المعلقة"
+        }
+      },
+      "profiles": {
+        "female_title": "الملفات النسائية",
+        "male_title": "الملفات الرجالية",
+        "filters": {
+          "search_placeholder": "البحث بالاسم، البريد الإلكتروني، الموقع...",
+          "status_all": "جميع الحالات",
+          "status_pending": "قيد المراجعة",
+          "status_approved": "مقبول",
+          "status_rejected": "مرفوض",
+          "age_range": "الفئة العمرية",
+          "location": "الموقع",
+          "apply_filters": "تطبيق المرشحات",
+          "clear_filters": "مسح المرشحات"
+        },
+        "actions": {
+          "approve": "قبول",
+          "reject": "رفض",
+          "delete": "حذف",
+          "view_media": "عرض الوسائط",
+          "bulk_approve": "قبول جماعي",
+          "bulk_reject": "رفض جماعي",
+          "export": "تصدير"
+        },
+        "status": {
+          "pending": "قيد المراجعة",
+          "approved": "مقبول",
+          "rejected": "مرفوض"
+        },
+        "fields": {
+          "name": "الاسم",
+          "email": "البريد الإلكتروني",
+          "age": "العمر",
+          "location": "الموقع",
+          "joined": "تاريخ الانضمام",
+          "status": "الحالة",
+          "photos": "الصور",
+          "videos": "الفيديوهات"
+        },
+        "media_modal": {
+          "title": "وسائط المستخدم",
+          "photos_tab": "الصور",
+          "videos_tab": "الفيديوهات",
+          "close": "إغلاق",
+          "delete_media": "حذف الوسائط"
+        }
+      },
+      "interests": {
+        "title": "الاهتمامات",
+        "table": {
+          "sender": "المرسل",
+          "receiver": "المستقبل",
+          "status": "الحالة",
+          "created": "تاريخ الإنشاء"
+        }
+      },
+      "meet_requests": {
+        "title": "طلبات المقابلة",
+        "table": {
+          "sender": "المرسل",
+          "receiver": "المستقبل",
+          "status": "الحالة",
+          "scheduled": "موعد المقابلة",
+          "created": "تاريخ الإنشاء"
+        }
+      },
+      "packages": {
+        "title": "الباقات",
+        "table": {
+          "user": "المستخدم",
+          "package": "الباقة",
+          "amount": "المبلغ",
+          "status": "الحالة",
+          "created": "تاريخ الإنشاء"
+        }
+      },
+      "common": {
+        "loading": "جارٍ التحميل...",
+        "no_data": "لا توجد بيانات متاحة",
+        "error": "خطأ في تحميل البيانات",
+        "confirm": "تأكيد",
+        "cancel": "إلغاء",
+        "save": "حفظ",
+        "edit": "تعديل",
+        "delete": "حذف",
+        "search": "بحث",
+        "filter": "تصفية",
+        "export": "تصدير",
+        "select_all": "تحديد الكل",
+        "selected_count": "{{count}} محدد"
+      }
     }
   }
 }

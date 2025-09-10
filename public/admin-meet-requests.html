@@ -6,6 +6,7 @@
     <title>Meet Requests - Zawajplus Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="admin-translations.js"></script>
     <link rel="stylesheet" href="admin-styles.css">
     <style>
         .filters-inline { display:flex; gap:12px; flex-wrap:wrap; }
@@ -31,15 +32,34 @@
                 </div>
             </div>
             <ul class="nav-menu">
-                <li class="nav-item"><a href="/admin-dashboard.html" class="nav-link"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
-                <li class="nav-item"><a href="/admin-female-profiles.html" class="nav-link"><i class="fas fa-female"></i><span>Female Profiles</span></a></li>
-                <li class="nav-item"><a href="/admin-male-profiles.html" class="nav-link"><i class="fas fa-male"></i><span>Male Profiles</span></a></li>
-                <li class="nav-item"><a href="/admin-interests.html" class="nav-link"><i class="fas fa-tags"></i><span>Interests</span></a></li>
-                <li class="nav-item active"><a href="/admin-meet-requests.html" class="nav-link"><i class="fas fa-video"></i><span>Meet Requests</span></a></li>
-                <li class="nav-item"><a href="/admin-packages.html" class="nav-link"><i class="fas fa-box"></i><span>Packages</span></a></li>
+                <li class="nav-item"><a href="/admin-dashboard.html" class="nav-link"><i class="fas fa-tachometer-alt"></i><span data-translate="admin.navigation.dashboard">Dashboard</span></a></li>
+                <li class="nav-item"><a href="/admin-female-profiles.html" class="nav-link"><i class="fas fa-female"></i><span data-translate="admin.navigation.female_profiles">Female Profiles</span></a></li>
+                <li class="nav-item"><a href="/admin-male-profiles.html" class="nav-link"><i class="fas fa-male"></i><span data-translate="admin.navigation.male_profiles">Male Profiles</span></a></li>
+                <li class="nav-item"><a href="/admin-interests.html" class="nav-link"><i class="fas fa-tags"></i><span data-translate="admin.navigation.interests">Interests</span></a></li>
+                <li class="nav-item active"><a href="/admin-meet-requests.html" class="nav-link"><i class="fas fa-video"></i><span data-translate="admin.navigation.meet_requests">Meet Requests</span></a></li>
+                <li class="nav-item"><a href="/admin-packages.html" class="nav-link"><i class="fas fa-box"></i><span data-translate="admin.navigation.packages">Packages</span></a></li>
             </ul>
+
+            <!-- Language Selector in Sidebar -->
+            <div class="sidebar-language-selector">
+                <div class="language-dropdown">
+                    <button type="button" class="language-btn" onclick="toggleLanguageMenu()">
+                        <span id="currentLanguage">English</span>
+                        <i class="fas fa-chevron-down" style="font-size: 10px;"></i>
+                    </button>
+                    <div class="language-menu" id="languageMenu">
+                        <div class="language-option active" data-lang="en" onclick="changeLanguage('en')">
+                            <span>English</span>
+                        </div>
+                        <div class="language-option" data-lang="ar" onclick="changeLanguage('ar')">
+                            <span>العربية</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="sidebar-footer">
-                <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
+                <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i><span data-translate="admin.navigation.logout">Logout</span></button>
             </div>
         </nav>
 
@@ -47,7 +67,7 @@
             <header class="top-bar">
                 <div class="top-bar-left">
                     <button class="sidebar-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-                    <h1 class="page-title">Meet Requests</h1>
+                    <h1 class="page-title" data-translate="admin.meet_requests.title">Meet Requests</h1>
                 </div>
                 <div class="top-bar-right">
                     <div class="admin-info">
@@ -64,78 +84,78 @@
                 <div class="filters-section">
                     <div class="filters-inline">
                         <div class="filter-group" style="flex:1; min-width:260px;">
-                            <label class="filter-label">Search</label>
-                            <input type="text" id="searchInput" class="filter-input" placeholder="Search by sender, receiver, email..." oninput="handleSearch()" />
+                            <label class="filter-label" data-translate="admin.meet_requests.filters.search_label">Search</label>
+                            <input type="text" id="searchInput" class="filter-input" placeholder="Search by sender, receiver, email..." data-translate-placeholder="admin.meet_requests.filters.search_placeholder" oninput="handleSearch()" />
                         </div>
                         <div class="filter-group">
-                            <label class="filter-label">Status</label>
+                            <label class="filter-label" data-translate="admin.meet_requests.filters.status_label">Status</label>
                             <select id="statusFilter" class="filter-select" onchange="applyFilters()">
-                                <option value="">All</option>
-                                <option value="accepted">Accepted</option>
-                                <option value="rejected">Rejected</option>
-                                <option value="pending">Pending</option>
+                                <option value="" data-translate="admin.meet_requests.filters.all">All</option>
+                                <option value="accepted" data-translate="admin.meet_requests.status.accepted">Accepted</option>
+                                <option value="rejected" data-translate="admin.meet_requests.status.rejected">Rejected</option>
+                                <option value="pending" data-translate="admin.meet_requests.status.pending">Pending</option>
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label class="filter-label">Time</label>
+                            <label class="filter-label" data-translate="admin.meet_requests.filters.time_label">Time</label>
                             <select id="timeFilter" class="filter-select" onchange="applyFilters()">
-                                <option value="all">All Time</option>
-                                <option value="today">Today</option>
-                                <option value="7">Last 7 Days</option>
-                                <option value="30">Last 30 Days</option>
+                                <option value="all" data-translate="admin.meet_requests.filters.all_time">All Time</option>
+                                <option value="today" data-translate="admin.meet_requests.filters.today">Today</option>
+                                <option value="7" data-translate="admin.meet_requests.filters.last_7_days">Last 7 Days</option>
+                                <option value="30" data-translate="admin.meet_requests.filters.last_30_days">Last 30 Days</option>
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label class="filter-label">Scheduled</label>
+                            <label class="filter-label" data-translate="admin.meet_requests.filters.scheduled_label">Scheduled</label>
                             <select id="scheduledFilter" class="filter-select" onchange="applyFilters()">
-                                <option value="">Any</option>
-                                <option value="today">Today</option>
-                                <option value="yesterday">Yesterday</option>
-                                <option value="week">This Week</option>
+                                <option value="" data-translate="admin.meet_requests.filters.scheduled_any">Any</option>
+                                <option value="today" data-translate="admin.meet_requests.filters.scheduled_today">Today</option>
+                                <option value="yesterday" data-translate="admin.meet_requests.filters.scheduled_yesterday">Yesterday</option>
+                                <option value="week" data-translate="admin.meet_requests.filters.scheduled_week">This Week</option>
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label class="filter-label">Sender Gender</label>
+                            <label class="filter-label" data-translate="admin.meet_requests.filters.sender_gender">Sender Gender</label>
                             <select id="senderGenderFilter" class="filter-select" onchange="applyFilters()">
-                                <option value="">All</option>
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
+                                <option value="" data-translate="admin.meet_requests.filters.all">All</option>
+                                <option value="male" data-translate="admin.meet_requests.filters.male">Male</option>
+                                <option value="female" data-translate="admin.meet_requests.filters.female">Female</option>
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label class="filter-label">Receiver Gender</label>
+                            <label class="filter-label" data-translate="admin.meet_requests.filters.receiver_gender">Receiver Gender</label>
                             <select id="receiverGenderFilter" class="filter-select" onchange="applyFilters()">
-                                <option value="">All</option>
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
+                                <option value="" data-translate="admin.meet_requests.filters.all">All</option>
+                                <option value="male" data-translate="admin.meet_requests.filters.male">Male</option>
+                                <option value="female" data-translate="admin.meet_requests.filters.female">Female</option>
                             </select>
                         </div>
                     </div>
                     <div class="filters-actions">
-                        <button class="btn btn-secondary btn-sm" onclick="resetFilters()"><i class="fas fa-eraser"></i> Reset Filters</button>
+                        <button class="btn btn-secondary btn-sm" onclick="resetFilters()"><i class="fas fa-eraser"></i> <span data-translate="admin.meet_requests.buttons.reset_filters">Reset Filters</span></button>
                     </div>
                 </div>
 
                 <div class="data-table">
                     <div class="table-header">
-                        <div class="table-title">Meet Requests <span id="recordsCount"></span></div>
+                        <div class="table-title"><span data-translate="admin.meet_requests.title">Meet Requests</span> <span id="recordsCount"></span></div>
                         <div class="table-actions">
-                            <button class="btn btn-secondary btn-sm" onclick="reload()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                            <button class="btn btn-secondary btn-sm" onclick="reload()"><i class="fas fa-sync-alt"></i> <span data-translate="admin.meet_requests.buttons.refresh">Refresh</span></button>
                         </div>
                     </div>
                     <div style="overflow-x:auto;">
                         <table class="table" id="meetTable">
                             <thead>
                                 <tr>
-                                    <th>Sender</th>
-                                    <th>Receiver</th>
-                                    <th>Status</th>
-                                    <th>Scheduled</th>
-                                    <th>Created</th>
+                                    <th data-translate="admin.meet_requests.table.sender">Sender</th>
+                                    <th data-translate="admin.meet_requests.table.receiver">Receiver</th>
+                                    <th data-translate="admin.meet_requests.table.status">Status</th>
+                                    <th data-translate="admin.meet_requests.table.scheduled">Scheduled</th>
+                                    <th data-translate="admin.meet_requests.table.created">Created</th>
                                 </tr>
                             </thead>
                             <tbody id="meetTbody">
-                                <tr><td colspan="5">Loading...</td></tr>
+                                <tr><td colspan="5">${translateText('admin.meet_requests.messages.loading')}</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -194,7 +214,7 @@
                 applyFilters();
             }catch(e){
                 console.error('Load meet_requests error:', e);
-                tbody.innerHTML = '<tr><td colspan="4">Failed to load records.</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="4">${translateText('admin.meet_requests.messages.failed_to_load_records')}</td></tr>`;
             }
         }
 
@@ -281,7 +301,7 @@
         function renderTable(){
             const tbody = document.getElementById('meetTbody');
             if (!filtered.length){
-                tbody.innerHTML = '<tr><td colspan="4">No records found</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="4">${translateText('admin.meet_requests.messages.no_records')}</td></tr>`;
                 document.getElementById('recordsCount').textContent = '(0)';
                 document.getElementById('paginationContainer').innerHTML = '';
                 return;
@@ -318,11 +338,11 @@
                         </td>
                         <td class="table-actions-inline">
                             <div style="display:flex; align-items:center; gap:8px;">
-                                <span class="status-badge ${statusClass}">${status}</span>
+                                <span class="status-badge ${statusClass}">${translateText(`admin.meet_requests.status.${status}`)}</span>
                                 <select onchange="updateMeetStatus('${r.id}', this.value)">
-                                    <option value="accepted" ${status==='accepted'?'selected':''}>Accepted</option>
-                                    <option value="rejected" ${status==='rejected'?'selected':''}>Rejected</option>
-                                    <option value="pending" ${status==='pending'?'selected':''}>Pending</option>
+                                    <option value="accepted" ${status==='accepted'?'selected':''}>${translateText('admin.meet_requests.status.accepted')}</option>
+                                    <option value="rejected" ${status==='rejected'?'selected':''}>${translateText('admin.meet_requests.status.rejected')}</option>
+                                    <option value="pending" ${status==='pending'?'selected':''}>${translateText('admin.meet_requests.status.pending')}</option>
                                 </select>
                             </div>
                         </td>

@@ -6,6 +6,7 @@
     <title>Packages - Zawajplus Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="admin-translations.js"></script>
     <link rel="stylesheet" href="admin-styles.css">
     <style>
         .table-actions-inline select {
@@ -47,45 +48,63 @@
                 <li class="nav-item">
                     <a href="/admin-dashboard.html" class="nav-link">
                         <i class="fas fa-tachometer-alt"></i>
-                        <span>Dashboard</span>
+                        <span data-translate="admin.navigation.dashboard">Dashboard</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="/admin-female-profiles.html" class="nav-link">
                         <i class="fas fa-female"></i>
-                        <span>Female Profiles</span>
+                        <span data-translate="admin.navigation.female_profiles">Female Profiles</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="/admin-male-profiles.html" class="nav-link">
                         <i class="fas fa-male"></i>
-                        <span>Male Profiles</span>
+                        <span data-translate="admin.navigation.male_profiles">Male Profiles</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="/admin-interests.html" class="nav-link">
                         <i class="fas fa-tags"></i>
-                        <span>Interests</span>
+                        <span data-translate="admin.navigation.interests">Interests</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="/admin-meet-requests.html" class="nav-link">
                         <i class="fas fa-video"></i>
-                        <span>Meet Requests</span>
+                        <span data-translate="admin.navigation.meet_requests">Meet Requests</span>
                     </a>
                 </li>
                 <li class="nav-item active">
                     <a href="/admin-packages.html" class="nav-link">
                         <i class="fas fa-box"></i>
-                        <span>Packages</span>
+                        <span data-translate="admin.navigation.packages">Packages</span>
                     </a>
                 </li>
             </ul>
             
+            <!-- Language Selector in Sidebar -->
+            <div class="sidebar-language-selector">
+                <div class="language-dropdown">
+                    <button type="button" class="language-btn" onclick="toggleLanguageMenu()">
+                        <span id="currentLanguage">English</span>
+                        <i class="fas fa-chevron-down" style="font-size: 10px;"></i>
+                    </button>
+                    <div class="language-menu" id="languageMenu">
+                        <div class="language-option active" data-lang="en" onclick="changeLanguage('en')">
+                            <span>English</span>
+                        </div>
+                        <div class="language-option" data-lang="ar" onclick="changeLanguage('ar')">
+                            <span>العربية</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <div class="sidebar-footer">
                 <button class="logout-btn" onclick="logout()">
                     <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
+                    <span data-translate="admin.navigation.logout">Logout</span>
                 </button>
             </div>
         </nav>
@@ -98,7 +117,7 @@
                     <button class="sidebar-toggle" onclick="toggleSidebar()">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <h1 class="page-title">Packages</h1>
+                    <h1 class="page-title" data-translate="admin.packages.title">Packages</h1>
                 </div>
                 <div class="top-bar-right">
                     <div class="admin-info">
@@ -117,69 +136,69 @@
                 <div class="filters-section">
                     <div class="filters-inline">
                         <div class="filter-group" style="flex:1; min-width:260px;">
-                            <label class="filter-label">Search</label>
-                            <input type="text" id="searchInput" class="filter-input" placeholder="Search by user, package, status, email..." oninput="handleSearch()" />
+                            <label class="filter-label" data-translate="admin.packages.filters.search_label">Search</label>
+                            <input type="text" id="searchInput" class="filter-input" placeholder="Search by user, package, status, email..." data-translate-placeholder="admin.packages.filters.search_placeholder" oninput="handleSearch()" />
                         </div>
                         <div class="filter-group">
-                            <label class="filter-label">Payment Status</label>
+                            <label class="filter-label" data-translate="admin.packages.filters.status_label">Payment Status</label>
                             <select id="statusFilter" class="filter-select" onchange="applyFilters()">
-                                <option value="">All</option>
-                                <option value="completed">Completed</option>
-                                <option value="pending">Pending</option>
-                                <option value="failed">Failed</option>
-                                <option value="refunded">Refunded</option>
+                                <option value="" data-translate="admin.dashboard.filters.all">All</option>
+                                <option value="completed" data-translate="admin.packages.status.completed">Completed</option>
+                                <option value="pending" data-translate="admin.packages.status.pending">Pending</option>
+                                <option value="failed" data-translate="admin.packages.status.failed">Failed</option>
+                                <option value="refunded" data-translate="admin.packages.status.refunded">Refunded</option>
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label class="filter-label">Package Name</label>
+                            <label class="filter-label" data-translate="admin.packages.filters.package_label">Package Name</label>
                             <select id="packageFilter" class="filter-select" onchange="applyFilters()">
-                                <option value="">All</option>
-                                <option value="free">Free</option>
-                                <option value="premium">Premium</option>
-                                <option value="vip">VIP Premium</option>
-                                <option value="golden">Golden Premium</option>
+                                <option value="" data-translate="admin.dashboard.filters.all">All</option>
+                                <option value="free" data-translate="admin.packages.filters.free">Free</option>
+                                <option value="premium" data-translate="admin.packages.filters.premium">Premium</option>
+                                <option value="vip" data-translate="admin.packages.filters.vip">VIP Premium</option>
+                                <option value="golden" data-translate="admin.packages.filters.golden">Golden Premium</option>
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label class="filter-label">Updated</label>
+                            <label class="filter-label" data-translate="admin.packages.filters.updated_label">Updated</label>
                             <select id="updatedFilter" class="filter-select" onchange="applyFilters()">
-                                <option value="all">All Time</option>
-                                <option value="today">Today</option>
-                                <option value="7">Last 7 Days</option>
-                                <option value="30">Last 30 Days</option>
+                                <option value="all" data-translate="admin.packages.filters.all_time">All Time</option>
+                                <option value="today" data-translate="admin.packages.filters.today">Today</option>
+                                <option value="7" data-translate="admin.packages.filters.last_7_days">Last 7 Days</option>
+                                <option value="30" data-translate="admin.packages.filters.last_30_days">Last 30 Days</option>
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label class="filter-label">Complaints</label>
+                            <label class="filter-label" data-translate="admin.packages.filters.complaints_label">Complaints</label>
                             <select id="complaintsFilter" class="filter-select" onchange="applyFilters()">
-                                <option value="">All</option>
-                                <option value="yes">Yes</option>
-                                <option value="no">No</option>
+                                <option value="" data-translate="admin.dashboard.filters.all">All</option>
+                                <option value="yes" data-translate="admin.packages.filters.yes">Yes</option>
+                                <option value="no" data-translate="admin.packages.filters.no">No</option>
                             </select>
                         </div>
                     </div>
                     <div class="filters-actions">
-                        <button class="btn btn-secondary btn-sm" onclick="resetFilters()"><i class="fas fa-eraser"></i> Reset Filters</button>
+                        <button class="btn btn-secondary btn-sm" onclick="resetFilters()"><i class="fas fa-eraser"></i> <span data-translate="admin.packages.buttons.reset_filters">Reset Filters</span></button>
                     </div>
                 </div>
 
                 <div class="data-table">
                     <div class="table-header">
-                        <div class="table-title">Payment Records <span id="recordsCount"></span></div>
+                        <div class="table-title"><span data-translate="admin.packages.title">Payment Records</span> <span id="recordsCount"></span></div>
                         <div class="table-actions">
-                            <button class="btn btn-secondary btn-sm" onclick="reload()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                            <button class="btn btn-secondary btn-sm" onclick="reload()"><i class="fas fa-sync-alt"></i> <span data-translate="admin.packages.buttons.refresh">Refresh</span></button>
                         </div>
                     </div>
                     <div style="overflow-x:auto;">
                         <table class="table" id="packagesTable">
                             <thead>
                                 <tr>
-                                    <th>User</th>
-                                    <th>Package Name</th>
-                                    <th>Payment Status</th>
-                                    <th>Updated</th>
-                                    <th>Created</th>
-                                    <th>Complaints</th>
+                                    <th data-translate="admin.packages.table.user">User</th>
+                                    <th data-translate="admin.packages.filters.package_label">Package Name</th>
+                                    <th data-translate="admin.packages.filters.status_label">Payment Status</th>
+                                    <th data-translate="admin.packages.filters.updated_label">Updated</th>
+                                    <th data-translate="admin.packages.table.created">Created</th>
+                                    <th data-translate="admin.packages.filters.complaints_label">Complaints</th>
                                 </tr>
                             </thead>
                             <tbody id="packagesTbody">
@@ -208,7 +227,7 @@
 
         async function fetchRecords() {
             const tbody = document.getElementById('packagesTbody');
-            tbody.innerHTML = '<tr><td colspan="6">Loading...</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="6">${translateText('admin.packages.messages.loading')}</td></tr>`;
             try {
                 // Read payment_records
                 const { data, error } = await window.supabaseClient
@@ -232,7 +251,7 @@
             } catch (e) {
                 console.error('Load payment_records error:', e);
                 const tbody = document.getElementById('packagesTbody');
-                tbody.innerHTML = '<tr><td colspan="6">Failed to load records.</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="6">${translateText('admin.packages.messages.failed_to_load_records')}</td></tr>`;
             }
         }
 
@@ -319,7 +338,7 @@
         function renderTable(){
             const tbody = document.getElementById('packagesTbody');
             if (!filtered.length) {
-                tbody.innerHTML = '<tr><td colspan="6">No records found</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="6">${translateText('admin.packages.messages.no_records')}</td></tr>`;
                 document.getElementById('recordsCount').textContent = '(0)';
                 document.getElementById('paginationContainer').innerHTML='';
                 return;
@@ -346,20 +365,20 @@
                         </td>
                         <td class="table-actions-inline">
                             <select onchange="updatePackageType('${r.id}', this.value)">
-                                <option value="free" ${pkg==='free'?'selected':''}>Free</option>
-                                <option value="premium" ${pkg==='premium'?'selected':''}>Premium</option>
-                                <option value="vip" ${pkg==='vip'?'selected':''}>VIP Premium</option>
-                                <option value="golden" ${pkg==='golden'?'selected':''}>Golden Premium</option>
+                                <option value="free" ${pkg==='free'?'selected':''}>${translateText('admin.packages.filters.free')}</option>
+                                <option value="premium" ${pkg==='premium'?'selected':''}>${translateText('admin.packages.filters.premium')}</option>
+                                <option value="vip" ${pkg==='vip'?'selected':''}>${translateText('admin.packages.filters.vip')}</option>
+                                <option value="golden" ${pkg==='golden'?'selected':''}>${translateText('admin.packages.filters.golden')}</option>
                             </select>
                         </td>
                         <td class="table-actions-inline">
                             <div style="display:flex; align-items:center; gap:8px;">
                                 <span class="status-badge ${statusClass}">${status}</span>
                                 <select onchange="updateStatus('${r.id}', this.value)">
-                                    <option value="completed" ${status==='completed'?'selected':''}>Completed</option>
-                                    <option value="pending" ${status==='pending'?'selected':''}>Pending</option>
-                                    <option value="failed" ${status==='failed'?'selected':''}>Failed</option>
-                                    <option value="refunded" ${status==='refunded'?'selected':''}>Refunded</option>
+                                    <option value="completed" ${status==='completed'?'selected':''}>${translateText('admin.packages.status.completed')}</option>
+                                    <option value="pending" ${status==='pending'?'selected':''}>${translateText('admin.packages.status.pending')}</option>
+                                    <option value="failed" ${status==='failed'?'selected':''}>${translateText('admin.packages.status.failed')}</option>
+                                    <option value="refunded" ${status==='refunded'?'selected':''}>${translateText('admin.packages.status.refunded')}</option>
                                 </select>
                             </div>
                         </td>
@@ -419,11 +438,11 @@
                     .update({ package_type: value })
                     .eq('id', id);
                 if (error) throw error;
-                showNotification('Package updated', 'success');
+                showNotification(translateText('admin.packages.notifications.package_updated'), 'success');
                 fetchRecords();
             }catch(e){
                 console.error(e);
-                showNotification('Failed to update package', 'error');
+                showNotification(translateText('admin.packages.notifications.update_package_failed'), 'error');
                 fetchRecords();
             }
         }
@@ -435,11 +454,11 @@
                     .update({ status: statusVal })
                     .eq('id', id);
                 if (error) throw error;
-                showNotification('Status updated', 'success');
+                showNotification(translateText('admin.packages.notifications.status_updated'), 'success');
                 fetchRecords();
             }catch(e){
                 console.error(e);
-                showNotification('Failed to update status', 'error');
+                showNotification(translateText('admin.packages.notifications.update_status_failed'), 'error');
                 fetchRecords();
             }
         }

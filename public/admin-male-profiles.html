@@ -6,6 +6,7 @@
     <title>Male Profiles - Admin Panel</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="admin-translations.js"></script>
     <link rel="stylesheet" href="admin-styles.css">
     <style>
         .profile-card {
@@ -384,51 +385,69 @@
                 <li class="nav-item">
                     <a href="/admin-dashboard.html" class="nav-link">
                         <i class="fas fa-tachometer-alt"></i>
-                        <span>Dashboard</span>
+                        <span data-translate="admin.navigation.dashboard">Dashboard</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="/admin-female-profiles.html" class="nav-link">
                         <i class="fas fa-female"></i>
-                        <span>Female Profiles</span>
+                        <span data-translate="admin.navigation.female_profiles">Female Profiles</span>
                     </a>
                 </li>
                 <li class="nav-item active">
                     <a href="/admin-male-profiles.html" class="nav-link">
                         <i class="fas fa-male"></i>
-                        <span>Male Profiles</span>
+                        <span data-translate="admin.navigation.male_profiles">Male Profiles</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="/admin-interests.html" class="nav-link">
                         <i class="fas fa-tags"></i>
-                        <span>Interests</span>
+                        <span data-translate="admin.navigation.interests">Interests</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="/admin-meet-requests.html" class="nav-link">
                         <i class="fas fa-video"></i>
-                        <span>Meet Requests</span>
+                        <span data-translate="admin.navigation.meet_requests">Meet Requests</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="/admin-packages.html" class="nav-link">
                         <i class="fas fa-box"></i>
-                        <span>Packages</span>
+                        <span data-translate="admin.navigation.packages">Packages</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="/admin-management.html" class="nav-link">
                         <i class="fas fa-user-cog"></i>
-                        <span>Admin Management</span>
+                        <span data-translate="admin.navigation.admin_management">Admin Management</span>
                     </a>
                 </li>
             </ul>
             
+            <!-- Language Selector in Sidebar -->
+            <div class="sidebar-language-selector">
+                <div class="language-dropdown">
+                    <button type="button" class="language-btn" onclick="toggleLanguageMenu()">
+                        <span id="currentLanguage">English</span>
+                        <i class="fas fa-chevron-down" style="font-size: 10px;"></i>
+                    </button>
+                    <div class="language-menu" id="languageMenu">
+                        <div class="language-option active" data-lang="en" onclick="changeLanguage('en')">
+                            <span>English</span>
+                        </div>
+                        <div class="language-option" data-lang="ar" onclick="changeLanguage('ar')">
+                            <span>العربية</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <div class="sidebar-footer">
                 <button class="logout-btn" onclick="logout()">
                     <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
+                    <span data-translate="admin.navigation.logout">Logout</span>
                 </button>
             </div>
         </nav>
