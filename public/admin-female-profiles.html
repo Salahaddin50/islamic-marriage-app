@@ -976,50 +976,9 @@
 
                         const userId = profileRow?.user_id;
 
-                        // 2) Collect media keys for storage deletion
-                        let mediaKeys = [];
-                        if (userId) {
-                            const { data: mediaRows } = await window.supabaseClient
-                                .from('media_references')
-                                .select('external_url, thumbnail_url')
-                                .eq('user_id', userId);
-                            if (Array.isArray(mediaRows)) {
-                                const keys = [];
-                                for (const m of mediaRows) {
-                                    const k1 = extractKey(m.external_url);
-                                    const k2 = extractKey(m.thumbnail_url);
-                                    if (k1) keys.push(k1);
-                                    if (k2) keys.push(k2);
-                                }
-                                // De-duplicate
-                                mediaKeys = Array.from(new Set(keys));
-                            }
-                        }
-
-                        // 3) Invoke Edge Function to delete from DigitalOcean Spaces (if any keys)
-                        if (mediaKeys.length > 0) {
-                            try {
-                                await window.supabaseClient.functions.invoke('delete-user-media', {
-                                    body: { keys: mediaKeys }
-                                });
-                            } catch (e) {
-                                console.warn('Storage delete invoke failed (will continue):', e);
-                            }
-                        }
-
-                        // 4) Delete media references from DB
-                        if (userId) {
-                            await window.supabaseClient
-                                .from('media_references')
-                                .delete()
-                                .eq('user_id', userId);
-                        }
-
-                        // 5) Delete profile row
+                        // Delete profile row only via RPC to bypass RLS issues safely
                         const { error: delErr } = await window.supabaseClient
-                            .from('user_profiles')
-                            .delete()
-                            .eq('id', profileId);
+                            .rpc('admin_delete_user_profile', { in_profile_id: profileId });
                         if (delErr) throw delErr;
 
                         showNotification('Profile deleted successfully', 'success');

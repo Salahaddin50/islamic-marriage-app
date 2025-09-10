@@ -994,49 +994,9 @@
                         if (profileErr) throw profileErr;
                         const userId = profileRow?.user_id;
 
-                        // 2) Collect media keys for storage deletion
-                        let mediaKeys = [];
-                        if (userId) {
-                            const { data: mediaRows } = await window.supabaseClient
-                                .from('media_references')
-                                .select('external_url, thumbnail_url')
-                                .eq('user_id', userId);
-                            if (Array.isArray(mediaRows)) {
-                                const keys = [];
-                                for (const m of mediaRows) {
-                                    const k1 = extractKey(m.external_url);
-                                    const k2 = extractKey(m.thumbnail_url);
-                                    if (k1) keys.push(k1);
-                                    if (k2) keys.push(k2);
-                                }
-                                mediaKeys = Array.from(new Set(keys));
-                            }
-                        }
-
-                        // 3) Invoke Edge Function to delete from DigitalOcean Spaces
-                        if (mediaKeys.length > 0) {
-                            try {
-                                await window.supabaseClient.functions.invoke('delete-user-media', {
-                                    body: { keys: mediaKeys }
-                                });
-                            } catch (e) {
-                                console.warn('Storage delete invoke failed (will continue):', e);
-                            }
-                        }
-
-                        // 4) Delete media references from DB
-                        if (userId) {
-                            await window.supabaseClient
-                                .from('media_references')
-                                .delete()
-                                .eq('user_id', userId);
-                        }
-
-                        // 5) Delete profile row
+                        // Delete profile row only via RPC to bypass RLS issues safely
                         const { error: delErr } = await window.supabaseClient
-                            .from('user_profiles')
-                            .delete()
-                            .eq('id', profileId);
+                            .rpc('admin_delete_user_profile', { in_profile_id: profileId });
                         if (delErr) throw delErr;
 
                         showNotification('Profile deleted successfully', 'success');
@@ -1289,13 +1249,50 @@
         async function deleteMedia(mediaId, profileId) {
             confirmAction('Delete this media?', async () => {
                 try {
-                    const { error } = await window.supabaseClient
-                        .from('user_media')
+                    // 1) Load media row to get URLs
+                    const { data: mediaRow, error: loadErr } = await window.supabaseClient
+                        .from('media_references')
+                        .select('external_url, thumbnail_url')
+                        .eq('id', mediaId)
+                        .single();
+                    if (loadErr) throw loadErr;
+
+                    // 2) Extract DO Spaces keys from CDN URLs
+                    const extractKey = (url) => {
+                        try {
+                            if (!url) return null;
+                            const u = new URL(url);
+                            const path = (u.pathname || '').replace(/^\//, '');
+                            return path || null;
+                        } catch { return null; }
+                    };
+                    const keys = [];
+                    const k1 = extractKey(mediaRow?.external_url);
+                    const k2 = extractKey(mediaRow?.thumbnail_url);
+                    if (k1) keys.push(k1);
+                    if (k2) keys.push(k2);
+
+                    // 3) Delete from storage first (if keys found)
+                    if (keys.length > 0) {
+                        const resp = await window.supabaseClient.functions.invoke('delete-user-media', { body: { keys } });
+                        if (resp?.error) throw resp.error;
+                        const payload = resp?.data || {};
+                        // If any errors returned per-key, log but continue
+                        if (Array.isArray(payload.errors) && payload.errors.length) {
+                            console.warn('Storage delete partial errors:', payload.errors);
+                        }
+                    }
+
+                    // 4) Delete DB row
+                    const { error: dbErr } = await window.supabaseClient
+                        .from('media_references')
                         .delete()
                         .eq('id', mediaId);
-                    if (error) throw error;
+                    if (dbErr) throw dbErr;
+
                     showNotification('Media deleted', 'success');
-                    document.querySelector('.modal-overlay').remove();
+                    const modal = document.querySelector('.modal-overlay');
+                    if (modal) modal.remove();
                     viewMedia(profileId);
                 } catch (e) {
                     console.error('Delete media error:', e);
