@@ -5,7 +5,7 @@
 // ============================================================================
 
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Image, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, Image, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PageContainer from '../components/PageContainer';
 import DotsView from '../components/DotsView';
@@ -22,6 +22,7 @@ const Index = () => {
   const [progress, setProgress] = useState(0);
   const intervalRef = useRef<any>(null);
   const navigatingRef = useRef(false);
+  const isDesktopWeb = Platform.OS === 'web' && Dimensions.get('window').width >= 1024;
 
   useEffect(() => {
     const checkInitialAuth = async () => {
@@ -96,6 +97,12 @@ const Index = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <PageContainer>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ flexGrow: 1 }}
+            scrollEnabled={isDesktopWeb}
+            showsVerticalScrollIndicator={false}
+          >
           <View style={styles.contentContainer}>
             {/* Illustration Section */}
             <View style={styles.illustrationContainer}>
@@ -156,6 +163,7 @@ const Index = () => {
               </View>
             </View>
           </View>
+          </ScrollView>
         </PageContainer>
       </KeyboardAvoidingView>
     </SafeAreaView>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Image } from 'react-native';
+import { View, Text, Image, ScrollView, Platform, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PageContainer from '../components/PageContainer';
 import DotsView from '../components/DotsView';
@@ -15,6 +15,7 @@ const Onboarding3 = () => {
   const [progress, setProgress] = useState(0);
   const intervalRef = useRef<any>(null);
   const navigatingRef = useRef(false);
+  const isDesktopWeb = Platform.OS === 'web' && Dimensions.get('window').width >= 1024;
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -42,6 +43,12 @@ const Onboarding3 = () => {
       backgroundColor: COLORS.white
     }]}>
       <PageContainer>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ flexGrow: 1 }}
+          scrollEnabled={isDesktopWeb}
+          showsVerticalScrollIndicator={false}
+        >
         {/* Language Selector */}
         <View style={Onboarding1Styles.languageContainer}>
           <LanguageSelector showLabel={false} style={Onboarding1Styles.languageSelector} />
@@ -95,6 +102,7 @@ const Onboarding3 = () => {
             />
           </View>
         </View>
+        </ScrollView>
       </PageContainer>
     </SafeAreaView>
   );
