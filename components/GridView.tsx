@@ -48,7 +48,11 @@ const GridView: React.FC<GridViewProps> = ({
 }) => {
   // Memoized render function for better performance
   const renderItem = React.useCallback(({ item, index }: { item: GridItem; index: number }) => (
-    <View style={{ width: cardWidth, height: cardHeight }}>
+    <View style={{ 
+      width: cardWidth, 
+      height: cardHeight,
+      marginRight: ((index + 1) % numColumns === 0) ? 0 : spacing,
+    }}>
       <OptimizedMatchCard
         id={item.id}
         name={item.name}
@@ -64,14 +68,14 @@ const GridView: React.FC<GridViewProps> = ({
         containerStyle={{ width: '100%', height: '100%' }}
       />
     </View>
-  ), [cardWidth, cardHeight]);
+  ), [cardWidth, cardHeight, numColumns, spacing]);
 
   // Memoized key extractor
   const keyExtractor = React.useCallback((item: GridItem) => item.id, []);
 
   // Memoized column wrapper style
   const columnWrapperStyle = React.useMemo(() => ({ 
-    justifyContent: 'space-between' as const, 
+    justifyContent: 'flex-start' as const,
     marginBottom: spacing 
   }), [spacing]);
 
