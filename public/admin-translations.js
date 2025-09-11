@@ -13,6 +13,7 @@ const translationData = {
                 interests: "Interests",
                 meet_requests: "Meet Requests",
                 packages: "Packages",
+                support_team: "Support Team",
                 admin_management: "Admin Management",
                 logout: "Logout"
             },
@@ -246,6 +247,13 @@ const translationData = {
                     no_records: "No records found",
                     failed_to_load_records: "Failed to load records."
                 },
+                edit_schedule: "Edit schedule",
+                edit_schedule_title: "Edit Schedule",
+                labels: {
+                    timezone: "Time Zone",
+                    date: "Date",
+                    time: "Time"
+                },
                 status: {
                     accepted: "Accepted",
                     rejected: "Rejected",
@@ -308,6 +316,22 @@ const translationData = {
                     update_status_failed: "Failed to update status"
                 }
             },
+            support_team: {
+                title: "Support Team",
+                buttons: {
+                    refresh: "Refresh"
+                },
+                table: {
+                    role: "Role",
+                    name: "Name",
+                    mobile: "Mobile Number",
+                    email: "Email",
+                    actions: "Actions"
+                },
+                actions: {
+                    edit: "Edit"
+                }
+            },
             // Common labels usable across pages
             common: {
                 loading: "Loading...",
@@ -353,6 +377,7 @@ const translationData = {
                 interests: "الاهتمامات",
                 meet_requests: "طلبات المقابلة",
                 packages: "الباقات",
+                support_team: "فريق الدعم",
                 admin_management: "إدارة المديرين",
                 logout: "تسجيل الخروج"
             },
@@ -586,6 +611,13 @@ const translationData = {
                     no_records: "لا توجد سجلات",
                     failed_to_load_records: "تعذر تحميل السجلات."
                 },
+                edit_schedule: "تعديل الموعد",
+                edit_schedule_title: "تعديل الموعد",
+                labels: {
+                    timezone: "المنطقة الزمنية",
+                    date: "التاريخ",
+                    time: "الوقت"
+                },
                 status: {
                     accepted: "مقبول",
                     rejected: "مرفوض",
@@ -646,6 +678,22 @@ const translationData = {
                     update_package_failed: "تعذر تحديث الباقة",
                     status_updated: "تم تحديث الحالة",
                     update_status_failed: "تعذر تحديث الحالة"
+                }
+            },
+            support_team: {
+                title: "فريق الدعم",
+                buttons: {
+                    refresh: "تحديث"
+                },
+                table: {
+                    role: "الدور",
+                    name: "الاسم",
+                    mobile: "رقم الجوال",
+                    email: "البريد الإلكتروني",
+                    actions: "الإجراءات"
+                },
+                actions: {
+                    edit: "تعديل"
                 }
             },
             // Common labels usable across pages

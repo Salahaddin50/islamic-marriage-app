@@ -38,6 +38,7 @@
                 <li class="nav-item"><a href="/admin-interests.html" class="nav-link"><i class="fas fa-heart"></i><span data-translate="admin.navigation.interests">Interests</span></a></li>
                 <li class="nav-item active"><a href="/admin-meet-requests.html" class="nav-link"><i class="fas fa-video"></i><span data-translate="admin.navigation.meet_requests">Meet Requests</span></a></li>
                 <li class="nav-item"><a href="/admin-packages.html" class="nav-link"><i class="fas fa-box"></i><span data-translate="admin.navigation.packages">Packages</span></a></li>
+                <li class="nav-item"><a href="/admin-support-team.html" class="nav-link"><i class="fas fa-headset"></i><span data-translate="admin.navigation.support_team">Support Team</span></a></li>
             </ul>
 
             <!-- Language Selector in Sidebar -->
@@ -346,7 +347,7 @@
                                 </select>
                             </div>
                         </td>
-                        <td><span class="date-small">${r.scheduled_at ? formatDateTime(r.scheduled_at) : '-'}</span></td>
+                        <td><span class="date-small"><a href="javascript:void(0)" onclick="openScheduleModal('${r.id}','${r.scheduled_at || ''}')">${r.scheduled_at ? formatDateTime(r.scheduled_at) : '<em>-</em>'}</a></span></td>
                         <td><span class="date-small">${formatDateTime(r.created_at)}</span></td>
                     </tr>
                 `;
@@ -382,6 +383,201 @@
                 if (window.handleAuthIssue) window.handleAuthIssue(e);
                 showNotification('Failed to update status', 'error');
                 fetchRows();
+            }
+        }
+
+        // ================= Edit Schedule Modal =================
+        function openScheduleModal(id, iso){
+            const title = translateText('admin.meet_requests.edit_schedule_title') || 'Edit Schedule';
+            const lTz = translateText('admin.meet_requests.labels.timezone') || 'Time Zone';
+            const lDate = translateText('admin.meet_requests.labels.date') || 'Date';
+            const lTime = translateText('admin.meet_requests.labels.time') || 'Time';
+            const cancelTxt = translateText('admin.common.cancel') || 'Cancel';
+            const saveTxt = translateText('admin.common.save') || 'Save';
+
+            // Common offsets
+            const tzOptions = [
+                { v: '+00:00', n: 'UTC (+00:00)' },
+                { v: '+01:00', n: 'UTC+01:00' },
+                { v: '+02:00', n: 'UTC+02:00' },
+                { v: '+03:00', n: 'UTC+03:00 (Riyadh)' },
+                { v: '+04:00', n: 'UTC+04:00' },
+                { v: '+05:00', n: 'UTC+05:00' },
+                { v: '+05:30', n: 'UTC+05:30 (IST)' },
+                { v: '+06:00', n: 'UTC+06:00' },
+                { v: '+07:00', n: 'UTC+07:00' },
+                { v: '+08:00', n: 'UTC+08:00' },
+                { v: '+09:00', n: 'UTC+09:00' },
+                { v: '+10:00', n: 'UTC+10:00' },
+                { v: '+11:00', n: 'UTC+11:00' },
+                { v: '+12:00', n: 'UTC+12:00' },
+                { v: '-01:00', n: 'UTC-01:00' },
+                { v: '-02:00', n: 'UTC-02:00' },
+                { v: '-03:00', n: 'UTC-03:00' },
+                { v: '-04:00', n: 'UTC-04:00' },
+                { v: '-05:00', n: 'UTC-05:00' },
+                { v: '-06:00', n: 'UTC-06:00' },
+                { v: '-07:00', n: 'UTC-07:00' },
+                { v: '-08:00', n: 'UTC-08:00' },
+                { v: '-09:00', n: 'UTC-09:00' },
+                { v: '-10:00', n: 'UTC-10:00' },
+                { v: '-11:00', n: 'UTC-11:00' },
+                { v: '-12:00', n: 'UTC-12:00' }
+            ];
+
+            let currentOffset = '+00:00';
+            let initDate = '';
+            let initTime = '';
+            try{
+                if (iso){
+                    // Try to extract an offset from string if present (+HH:MM or -HH:MM)
+                    const m = String(iso).match(/([+-]\d{2}:?\d{2})$/);
+                    if (m && m[1]){
+                        const raw = m[1].replace(':','');
+                        currentOffset = m[1].includes(':') ? m[1] : (m[1].slice(0,3)+':'+m[1].slice(3));
+                    }
+                    // Convert to local parts based on offset (fallback: UTC)
+                    const d = new Date(iso);
+                    const offMin = offsetToMinutes(currentOffset);
+                    const local = new Date(d.getTime() + offMin * 60000);
+                    initDate = local.toISOString().slice(0,10);
+                    initTime = local.toISOString().slice(11,16);
+                } else {
+                    const now = new Date();
+                    initDate = now.toISOString().slice(0,10);
+                    initTime = now.toISOString().slice(11,16);
+                }
+            } catch {}
+
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+            `;
+            modal.innerHTML = `
+                <div class="modal-dialog" style="
+                    background: white;
+                    border-radius: 12px;
+                    max-width: 500px;
+                    width: 90%;
+                    max-height: 90vh;
+                    overflow-y: auto;
+                ">
+                    <div class="modal-content">
+                        <div class="modal-header" style="
+                            padding: 20px;
+                            border-bottom: 1px solid #e5e7eb;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                        ">
+                            <h3>${title}</h3>
+                            <button class="close-btn" onclick="this.closest('.modal-overlay').remove()" style="
+                                background: none;
+                                border: none;
+                                font-size: 20px;
+                                color: #6b7280;
+                                cursor: pointer;
+                            ">×</button>
+                        </div>
+                        <div class="modal-body" style="padding: 20px; display:grid; gap:16px;">
+                            <div style="display:grid; gap:6px;">
+                                <label style="font-weight: 600; color: #374151;">${lTz}</label>
+                                <select id="mr_tz" class="filter-select" style="padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px;">
+                                    ${tzOptions.map(o => `<option value="${o.v}" ${o.v===currentOffset?'selected':''}>${o.n}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div style="display:grid; gap:6px;">
+                                <label style="font-weight: 600; color: #374151;">${lDate}</label>
+                                <input id="mr_date" type="date" class="filter-input" value="${initDate}" style="padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px;">
+                            </div>
+                            <div style="display:grid; gap:6px;">
+                                <label style="font-weight: 600; color: #374151;">${lTime}</label>
+                                <input id="mr_time" type="time" class="filter-input" value="${initTime}" style="padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px;">
+                            </div>
+                        </div>
+                        <div class="modal-footer" style="
+                            padding: 20px;
+                            border-top: 1px solid #e5e7eb;
+                            display: flex;
+                            gap: 12px;
+                            justify-content: flex-end;
+                        ">
+                            <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()" style="
+                                padding: 8px 16px;
+                                border: 1px solid #d1d5db;
+                                background: white;
+                                color: #374151;
+                                border-radius: 8px;
+                                cursor: pointer;
+                            ">${cancelTxt}</button>
+                            <button class="btn btn-primary" onclick="saveSchedule('${id}', this)" style="
+                                padding: 8px 16px;
+                                background: #3b82f6;
+                                color: white;
+                                border: none;
+                                border-radius: 8px;
+                                cursor: pointer;
+                                display: flex;
+                                align-items: center;
+                                gap: 6px;
+                            "><i class="fas fa-save"></i> ${saveTxt}</button>
+                        </div>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+            
+            // Close modal when clicking outside
+            modal.onclick = function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            };
+        }
+
+        function offsetToMinutes(off){
+            // off format "+HH:MM" or "-HH:MM"
+            try{
+                const sign = off.startsWith('-') ? -1 : 1;
+                const [h,m] = off.replace('+','').replace('-','').split(':');
+                return sign * (parseInt(h||'0',10)*60 + parseInt(m||'0',10));
+            }catch{ return 0; }
+        }
+
+        async function saveSchedule(id, btn){
+            const root = btn.closest('.modal-content');
+            const tz = root.querySelector('#mr_tz')?.value || '+00:00';
+            const d = root.querySelector('#mr_date')?.value || '';
+            const t = root.querySelector('#mr_time')?.value || '';
+            if (!d || !t){ showNotification('Please select date and time', 'warning'); return; }
+            try{
+                const [yy,mm,dd] = d.split('-').map(v=>parseInt(v,10));
+                const [hh,mi] = t.split(':').map(v=>parseInt(v,10));
+                // Treat entered values as local in tz, convert to UTC
+                const offMin = offsetToMinutes(tz);
+                const localUtcMs = Date.UTC(yy, (mm||1)-1, dd||1, hh||0, mi||0, 0, 0);
+                const utcMs = localUtcMs - offMin*60000;
+                const isoUtc = new Date(utcMs).toISOString();
+                const { error } = await window.supabaseClient
+                    .from('meet_requests')
+                    .update({ scheduled_at: isoUtc })
+                    .eq('id', id);
+                if (error) throw error;
+                showNotification('Schedule updated', 'success');
+                document.querySelector('.modal-overlay')?.remove();
+                reload();
+            } catch(e){
+                console.error('Update schedule error', e);
+                showNotification('Failed to update schedule', 'error');
             }
         }
     </script>

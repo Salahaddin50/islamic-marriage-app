@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Support Team</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="admin-translations.js"></script>
+    <link rel="stylesheet" href="admin-styles.css">
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Zawajplus Admin</span>
+                </div>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/admin-dashboard.html" class="nav-link">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span data-translate="admin.navigation.dashboard">Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin-female-profiles.html" class="nav-link">
+                        <i class="fas fa-female"></i>
+                        <span data-translate="admin.navigation.female_profiles">Female Profiles</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin-male-profiles.html" class="nav-link">
+                        <i class="fas fa-male"></i>
+                        <span data-translate="admin.navigation.male_profiles">Male Profiles</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin-interests.html" class="nav-link">
+                        <i class="fas fa-heart"></i>
+                        <span data-translate="admin.navigation.interests">Interests</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin-meet-requests.html" class="nav-link">
+                        <i class="fas fa-video"></i>
+                        <span data-translate="admin.navigation.meet_requests">Meet Requests</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin-packages.html" class="nav-link">
+                        <i class="fas fa-box"></i>
+                        <span data-translate="admin.navigation.packages">Packages</span>
+                    </a>
+                </li>
+                <li class="nav-item active">
+                    <a href="/admin-support-team.html" class="nav-link">
+                        <i class="fas fa-headset"></i>
+                        <span data-translate="admin.navigation.support_team">Support Team</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin-management.html" class="nav-link">
+                        <i class="fas fa-user-cog"></i>
+                        <span data-translate="admin.navigation.admin_management">Admin Management</span>
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Language Selector in Sidebar -->
+            <div class="sidebar-language-selector">
+                <div class="language-dropdown">
+                    <button type="button" class="language-btn" onclick="toggleLanguageMenu()">
+                        <span id="currentLanguage">English</span>
+                        <i class="fas fa-chevron-down" style="font-size: 10px;"></i>
+                    </button>
+                    <div class="language-menu" id="languageMenu">
+                        <div class="language-option active" data-lang="en" onclick="changeLanguage('en')">
+                            <span>English</span>
+                        </div>
+                        <div class="language-option" data-lang="ar" onclick="changeLanguage('ar')">
+                            <span>العربية</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span data-translate="admin.navigation.logout">Logout</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <button class="sidebar-toggle" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 class="page-title" data-translate="admin.support_team.title">Support Team</h1>
+                </div>
+                <div class="top-bar-right">
+                    <div class="admin-info">
+                        <div class="admin-details">
+                            <span class="admin-name" id="adminName" data-translate="admin.common.loading">Loading...</span>
+                            <span class="admin-role" id="adminRole">Admin</span>
+                        </div>
+                        <div class="admin-avatar">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-area" id="supportTeamSection">
+                <div class="section-header">
+                    <h3 data-translate="admin.support_team.title">Support Team</h3>
+                    <button class="refresh-btn" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i>
+                        <span data-translate="admin.support_team.buttons.refresh">Refresh</span>
+                    </button>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th data-translate="admin.support_team.table.role">Role</th>
+                                <th data-translate="admin.support_team.table.name">Name</th>
+                                <th data-translate="admin.support_team.table.mobile">Mobile Number</th>
+                                <th data-translate="admin.support_team.table.email">Email</th>
+                                <th data-translate="admin.support_team.table.actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="supportTbody">
+                            <tr><td colspan="5" data-translate="admin.common.loading">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="admin-common.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAdminInfo();
+            loadSupportTeam();
+            document.getElementById('refreshBtn').addEventListener('click', loadSupportTeam);
+        });
+
+        async function loadSupportTeam(){
+            const tbody = document.getElementById('supportTbody');
+            if (!tbody) return;
+            tbody.innerHTML = `<tr><td colspan="5">${translateText('admin.common.loading')}</td></tr>`;
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('support_team')
+                    .select('id, name, role, whatsapp_number, email, is_active')
+                    .order('role');
+                if (error) throw error;
+                const rows = Array.isArray(data) ? data : [];
+                if (rows.length === 0){
+                    tbody.innerHTML = `<tr><td colspan="5">${translateText('admin.common.no_data')}</td></tr>`;
+                    return;
+                }
+                tbody.innerHTML = rows.map(r => `
+                    <tr data-id="${r.id}">
+                        <td>${escapeHtml(r.role || '')}</td>
+                        <td>
+                            <span class="view" data-field="name">${escapeHtml(r.name || '')}</span>
+                            <input class="edit-input" data-field="name" type="text" value="${escapeAttr(r.name||'')}" style="display:none; width: 100%;" />
+                        </td>
+                        <td>
+                            <span class="view" data-field="whatsapp_number">${escapeHtml(r.whatsapp_number || '')}</span>
+                            <input class="edit-input" data-field="whatsapp_number" type="text" value="${escapeAttr(r.whatsapp_number||'')}" style="display:none; width: 100%;" />
+                        </td>
+                        <td>
+                            <span class="view" data-field="email">${r.email ? `<a href=\"mailto:${escapeHtml(r.email)}\">${escapeHtml(r.email)}</a>` : '-'}</span>
+                            <input class="edit-input" data-field="email" type="email" value="${escapeAttr(r.email||'')}" style="display:none; width: 100%;" />
+                        </td>
+                        <td>
+                            <button class="btn btn-secondary btn-sm" onclick="enterEditMode('${r.id}')"><i class="fas fa-pen"></i> ${translateText('admin.support_team.actions.edit')}</button>
+                            <button class="btn btn-primary btn-sm" data-action="save" data-id="${r.id}" style="display:none;" onclick="saveRow('${r.id}')"><i class="fas fa-save"></i> ${translateText('admin.common.save')}</button>
+                            <button class="btn btn-secondary btn-sm" data-action="cancel" data-id="${r.id}" style="display:none;" onclick="cancelEdit('${r.id}')"><i class="fas fa-times"></i> ${translateText('admin.common.cancel')}</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error('Load support team error', e);
+                tbody.innerHTML = `<tr><td colspan="5">${translateText('admin.common.error')}</td></tr>`;
+            }
+        }
+
+        function escapeHtml(str){
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+        function escapeAttr(str){
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        function enterEditMode(id){
+            const tr = document.querySelector(`tr[data-id="${id}"]`);
+            if (!tr) return;
+            tr.querySelectorAll('.view').forEach(el => (el).style.display = 'none');
+            tr.querySelectorAll('.edit-input').forEach(el => (el).style.display = 'block');
+            const saveBtn = tr.querySelector('button[data-action="save"]');
+            const cancelBtn = tr.querySelector('button[data-action="cancel"]');
+            if (saveBtn) saveBtn.style.display = 'inline-flex';
+            if (cancelBtn) cancelBtn.style.display = 'inline-flex';
+        }
+
+        function cancelEdit(id){
+            const tr = document.querySelector(`tr[data-id="${id}"]`);
+            if (!tr) return;
+            tr.querySelectorAll('.view').forEach(el => (el).style.display = '');
+            tr.querySelectorAll('.edit-input').forEach(el => (el).style.display = 'none');
+            const saveBtn = tr.querySelector('button[data-action="save"]');
+            const cancelBtn = tr.querySelector('button[data-action="cancel"]');
+            if (saveBtn) saveBtn.style.display = 'none';
+            if (cancelBtn) cancelBtn.style.display = 'none';
+        }
+
+        async function saveRow(id){
+            const tr = document.querySelector(`tr[data-id="${id}"]`);
+            if (!tr) return;
+            const name = (tr.querySelector('input.edit-input[data-field="name"]')||{}).value || '';
+            const whatsapp_number = (tr.querySelector('input.edit-input[data-field="whatsapp_number"]')||{}).value || '';
+            const email = (tr.querySelector('input.edit-input[data-field="email"]')||{}).value || '';
+            try{
+                const { error } = await window.supabaseClient
+                    .from('support_team')
+                    .update({ name, whatsapp_number, email })
+                    .eq('id', id);
+                if (error) throw error;
+                showNotification('Saved', 'success');
+                await loadSupportTeam();
+            }catch(e){
+                console.error('Save support row error', e);
+                showNotification('Failed to save', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
+
+
