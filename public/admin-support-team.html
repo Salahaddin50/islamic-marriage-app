@@ -8,6 +8,41 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="admin-translations.js"></script>
     <link rel="stylesheet" href="admin-styles.css">
+    <style>
+        .table-actions-inline select {
+            padding: 4px 8px;
+            font-size: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #fff;
+        }
+        .status-badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:600; }
+        .status-active { background:#dcfce7; color:#16a34a; }
+        .status-inactive { background:#fee2e2; color:#dc2626; }
+        .email-cell .email-link { white-space:nowrap; }
+        .user-name { font-weight:600; color:#1f2937; }
+        .user-meta { color:#6b7280; font-size:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+        .role-badge { 
+            display:inline-block; 
+            padding:4px 12px; 
+            border-radius:16px; 
+            font-size:11px; 
+            font-weight:600; 
+            background:#f3f4f6; 
+            color:#374151;
+        }
+        .edit-input {
+            padding: 6px 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .edit-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+    </style>
 </head>
 <body>
     <div class="admin-layout">
@@ -119,29 +154,30 @@
                 </div>
             </header>
 
-            <div class="content-area" id="supportTeamSection">
-                <div class="section-header">
-                    <h3 data-translate="admin.support_team.title">Support Team</h3>
-                    <button class="refresh-btn" id="refreshBtn">
-                        <i class="fas fa-sync-alt"></i>
-                        <span data-translate="admin.support_team.buttons.refresh">Refresh</span>
-                    </button>
-                </div>
-                <div class="table-container">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th data-translate="admin.support_team.table.role">Role</th>
-                                <th data-translate="admin.support_team.table.name">Name</th>
-                                <th data-translate="admin.support_team.table.mobile">Mobile Number</th>
-                                <th data-translate="admin.support_team.table.email">Email</th>
-                                <th data-translate="admin.support_team.table.actions">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="supportTbody">
-                            <tr><td colspan="5" data-translate="admin.common.loading">Loading...</td></tr>
-                        </tbody>
-                    </table>
+            <div class="content-area">
+                <div class="data-table">
+                    <div class="table-header">
+                        <div class="table-title"><span data-translate="admin.support_team.title">Support Team</span> <span id="recordsCount"></span></div>
+                        <div class="table-actions">
+                            <button class="btn btn-secondary btn-sm" onclick="loadSupportTeam()"><i class="fas fa-sync-alt"></i> <span data-translate="admin.support_team.buttons.refresh">Refresh</span></button>
+                        </div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table class="table" id="supportTeamTable">
+                            <thead>
+                                <tr>
+                                    <th data-translate="admin.support_team.table.role">Role</th>
+                                    <th data-translate="admin.support_team.table.name">Name</th>
+                                    <th data-translate="admin.support_team.table.mobile">Mobile Number</th>
+                                    <th data-translate="admin.support_team.table.email">Email</th>
+                                    <th data-translate="admin.support_team.table.actions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="supportTbody">
+                                <tr><td colspan="5" data-translate="admin.common.loading">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </main>
@@ -152,7 +188,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadAdminInfo();
             loadSupportTeam();
-            document.getElementById('refreshBtn').addEventListener('click', loadSupportTeam);
         });
 
         async function loadSupportTeam(){
@@ -168,30 +203,39 @@
                 const rows = Array.isArray(data) ? data : [];
                 if (rows.length === 0){
                     tbody.innerHTML = `<tr><td colspan="5">${translateText('admin.common.no_data')}</td></tr>`;
+                    document.getElementById('recordsCount').textContent = '(0)';
                     return;
                 }
-                tbody.innerHTML = rows.map(r => `
-                    <tr data-id="${r.id}">
-                        <td>${escapeHtml(r.role || '')}</td>
-                        <td>
-                            <span class="view" data-field="name">${escapeHtml(r.name || '')}</span>
-                            <input class="edit-input" data-field="name" type="text" value="${escapeAttr(r.name||'')}" style="display:none; width: 100%;" />
-                        </td>
-                        <td>
-                            <span class="view" data-field="whatsapp_number">${escapeHtml(r.whatsapp_number || '')}</span>
-                            <input class="edit-input" data-field="whatsapp_number" type="text" value="${escapeAttr(r.whatsapp_number||'')}" style="display:none; width: 100%;" />
-                        </td>
-                        <td>
-                            <span class="view" data-field="email">${r.email ? `<a href=\"mailto:${escapeHtml(r.email)}\">${escapeHtml(r.email)}</a>` : '-'}</span>
-                            <input class="edit-input" data-field="email" type="email" value="${escapeAttr(r.email||'')}" style="display:none; width: 100%;" />
-                        </td>
-                        <td>
-                            <button class="btn btn-secondary btn-sm" onclick="enterEditMode('${r.id}')"><i class="fas fa-pen"></i> ${translateText('admin.support_team.actions.edit')}</button>
-                            <button class="btn btn-primary btn-sm" data-action="save" data-id="${r.id}" style="display:none;" onclick="saveRow('${r.id}')"><i class="fas fa-save"></i> ${translateText('admin.common.save')}</button>
-                            <button class="btn btn-secondary btn-sm" data-action="cancel" data-id="${r.id}" style="display:none;" onclick="cancelEdit('${r.id}')"><i class="fas fa-times"></i> ${translateText('admin.common.cancel')}</button>
-                        </td>
-                    </tr>
-                `).join('');
+                tbody.innerHTML = rows.map(r => {
+                    const whatsappFormatted = formatPhone('', r.whatsapp_number);
+                    return `
+                        <tr data-id="${r.id}">
+                            <td><span class="role-badge">${escapeHtml(r.role || '')}</span></td>
+                            <td class="email-cell">
+                                <div class="user-name">
+                                    <span class="view" data-field="name">${escapeHtml(r.name || '')}</span>
+                                    <input class="edit-input" data-field="name" type="text" value="${escapeAttr(r.name||'')}" style="display:none; width: 100%;" />
+                                </div>
+                            </td>
+                            <td>
+                                <div class="user-meta">
+                                    <span class="view" data-field="whatsapp_number">${whatsappFormatted ? `<a href="https://wa.me/${whatsappFormatted.replace(/\\+/g,'')}" target="_blank">${whatsappFormatted}</a>` : '-'}</span>
+                                    <input class="edit-input" data-field="whatsapp_number" type="text" value="${escapeAttr(r.whatsapp_number||'')}" style="display:none; width: 100%;" />
+                                </div>
+                            </td>
+                            <td class="email-cell">
+                                <span class="view email-link" data-field="email">${r.email ? `<a href="mailto:${escapeHtml(r.email)}">${escapeHtml(r.email)}</a>` : '-'}</span>
+                                <input class="edit-input" data-field="email" type="email" value="${escapeAttr(r.email||'')}" style="display:none; width: 100%;" />
+                            </td>
+                            <td>
+                                <button class="btn btn-secondary btn-sm" onclick="enterEditMode('${r.id}')"><i class="fas fa-pen"></i> ${translateText('admin.support_team.actions.edit')}</button>
+                                <button class="btn btn-primary btn-sm" data-action="save" data-id="${r.id}" style="display:none;" onclick="saveRow('${r.id}')"><i class="fas fa-save"></i> ${translateText('admin.common.save')}</button>
+                                <button class="btn btn-secondary btn-sm" data-action="cancel" data-id="${r.id}" style="display:none;" onclick="cancelEdit('${r.id}')"><i class="fas fa-times"></i> ${translateText('admin.common.cancel')}</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+                document.getElementById('recordsCount').textContent = `(${rows.length})`;
             } catch (e) {
                 console.error('Load support team error', e);
                 tbody.innerHTML = `<tr><td colspan="5">${translateText('admin.common.error')}</td></tr>`;
@@ -212,6 +256,14 @@
                 .replace(/"/g, '&quot;')
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;');
+        }
+
+        function digitsOnly(v){ return (v||'').toString().replace(/\D/g,''); }
+        function formatPhone(code, number){
+            const c = digitsOnly(code); let n = digitsOnly(number);
+            if (!c && !n) return '';
+            if (c){ n = n.replace(/^0+/, ''); return `+${c}${n}`; }
+            if (n.startsWith('00')) n = n.slice(2); return `+${n}`;
         }
 
         function enterEditMode(id){

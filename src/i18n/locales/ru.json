@@ -537,7 +537,7 @@
     },
     "modal": {
       "photo_request": "запрос фотографии",
-      "video_meet_request": "запрос видеовстречи",
+      "video_meet_request": "запрос видео встречи",
       "accept_title": "Принять {{type}}",
       "accept_about_to": "Вы собираетесь принять {{type}} от",
       "accept_confirm_header": "Принимая этот запрос, вы подтверждаете, что:",
