@@ -190,18 +190,23 @@ const contactUsRoute = () => {
     const { t } = useTranslation();
     const navigation = useNavigation<NavigationProp<any>>();
     const [customerSupportPhone, setCustomerSupportPhone] = useState<string | null>(null);
+    const [customerSupportEmail, setCustomerSupportEmail] = useState<string | null>(null);
 
     useEffect(() => {
         // Load customer support WhatsApp number from database
         const loadCustomerSupport = async () => {
-            const phone = await SupportTeamService.getCustomerSupportWhatsApp();
+            const [phone, email] = await Promise.all([
+                SupportTeamService.getCustomerSupportWhatsApp(),
+                SupportTeamService.getCustomerSupportEmail(),
+            ]);
             setCustomerSupportPhone(phone);
+            setCustomerSupportEmail(email);
         };
         loadCustomerSupport();
     }, []);
 
     const handleEmail = () => {
-        const email = 'asim.mammadov82@outlook.com';
+        const email = customerSupportEmail || 'asim.mammadov82@outlook.com';
         const subject = encodeURIComponent(t('help_center.support_email_subject'));
         const mailto = `mailto:${email}?subject=${subject}`;
         try {

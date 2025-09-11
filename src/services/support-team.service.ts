@@ -5,6 +5,7 @@ export interface SupportTeamMember {
   name: string;
   role: 'Project Manager' | 'Customer support' | 'Payment support' | 'Profile support (f)' | 'Profile support (m)';
   whatsapp_number: string;
+  email?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -56,6 +57,14 @@ export class SupportTeamService {
   static async getCustomerSupportWhatsApp(): Promise<string | null> {
     const member = await this.getSupportMemberByRole('Customer support');
     return member?.whatsapp_number || null;
+  }
+
+  /**
+   * Get Customer Support email
+   */
+  static async getCustomerSupportEmail(): Promise<string | null> {
+    const member = await this.getSupportMemberByRole('Customer support');
+    return member?.email || null;
   }
 
   /**
