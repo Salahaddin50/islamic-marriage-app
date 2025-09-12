@@ -39,7 +39,7 @@ function loadPayPal(clientId: string): Promise<any> {
     // Wait a moment for cleanup
     setTimeout(() => {
       const script = document.createElement('script');
-      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&components=buttons&enable-funding=card&disable-funding=paylater`;
+        script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&components=buttons&disable-funding=credit,card,paylater,venmo&locale=en_US`;
       script.async = true;
       script.onload = () => {
         // @ts-ignore
@@ -64,6 +64,16 @@ export default function PaypalCheckout() {
   const packageId = String(params?.package_id || '');
 
   useEffect(() => {
+    // Suppress PayPal SCF errors from old cached SDK
+    const originalError = console.error;
+    console.error = (...args) => {
+      const message = args[0]?.toString() || '';
+      if (message.includes('scf_') || message.includes('xo-card-fields')) {
+        return; // Suppress SCF errors
+      }
+      originalError.apply(console, args);
+    };
+
     (async () => {
       if (Platform.OS !== 'web') {
         setError('PayPal checkout is available on web only in this build.');
@@ -117,7 +127,16 @@ export default function PaypalCheckout() {
         const securePayment = await response.json();
         setPaymentData(securePayment);
 
-        // Load PayPal SDK and render buttons + card fields
+        // Redirect-only checkout to avoid Fastlane/Card Fields in unsupported regions
+        if (securePayment?.approval_url) {
+          try {
+            window.location.assign(securePayment.approval_url);
+            setLoading(false);
+            return;
+          } catch {}
+        }
+
+        // Load PayPal SDK and render buttons (fallback if redirect not possible)
         const paypal = await loadPayPal(clientId);
         if (!containerRef.current) throw new Error('Container missing');
 
@@ -219,26 +238,23 @@ export default function PaypalCheckout() {
         containerRef.current.appendChild(buttonsContainer);
         buttons.render(buttonsContainer);
 
-        // Add informational message about payment options
+        // Add informational message about PayPal-only payment
         const infoDiv = document.createElement('div');
         infoDiv.style.marginTop = '20px';
         infoDiv.style.padding = '15px';
-        infoDiv.style.backgroundColor = '#f0f8ff';
-        infoDiv.style.border = '1px solid #b3d9ff';
+        infoDiv.style.backgroundColor = '#fff3cd';
+        infoDiv.style.border = '1px solid #ffeaa7';
         infoDiv.style.borderRadius = '8px';
         infoDiv.innerHTML = `
-          <div style="margin: 0; color: #0066cc; font-size: 14px;">
+          <div style="margin: 0; color: #856404; font-size: 14px;">
             <p style="margin: 0 0 10px 0;">
-              💳 <strong>Payment Options:</strong>
+              💳 <strong>Payment Method:</strong>
             </p>
             <p style="margin: 0 0 8px 0;">
-              ✅ <strong>PayPal Account</strong> - Fast and secure
-            </p>
-            <p style="margin: 0 0 8px 0;">
-              ✅ <strong>Credit/Debit Cards</strong> - No PayPal account required
+              ✅ <strong>PayPal Account</strong> - Secure payment processing
             </p>
             <p style="margin: 0; font-size: 12px; font-style: italic;">
-              Click the button above and select "Pay with Debit or Credit Card" for guest checkout
+              Note: Direct card payments are not available in your region. PayPal account required.
             </p>
           </div>
         `;
