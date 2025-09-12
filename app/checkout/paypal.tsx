@@ -6,22 +6,49 @@ import { supabase } from '@/src/config/supabase';
 import { COLORS } from '@/constants';
 import Header from '../../components/Header';
 
-// Minimal PayPal JS SDK loader for web
+// Force fresh PayPal SDK loader for web
 function loadPayPal(clientId: string): Promise<any> {
   return new Promise((resolve, reject) => {
     if (typeof window === 'undefined') return reject(new Error('Not web'));
+    
+    // Check if PayPal is already loaded and working
     // @ts-ignore
-    if (window.paypal) return resolve((window as any).paypal);
-    const script = document.createElement('script');
-    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=USD&intent=capture`;
-    script.async = true;
-    script.onload = () => {
+    if ((window as any).paypal && (window as any).paypal.Buttons) {
       // @ts-ignore
-      if ((window as any).paypal) resolve((window as any).paypal);
-      else reject(new Error('PayPal SDK failed to load'));
-    };
-    script.onerror = () => reject(new Error('PayPal SDK script error'));
-    document.head.appendChild(script);
+      return resolve((window as any).paypal);
+    }
+    
+    // Aggressive cleanup of PayPal instances
+    // @ts-ignore
+    delete (window as any).paypal;
+    // @ts-ignore
+    delete (window as any).PAYPAL;
+    
+    // Remove ALL PayPal-related scripts and elements
+    const existingScripts = document.querySelectorAll('script[src*="paypal"]');
+    existingScripts.forEach(script => script.remove());
+    
+    // Clear any PayPal containers
+    const paypalContainers = document.querySelectorAll('[id*="paypal"], [class*="paypal"]');
+    paypalContainers.forEach(container => {
+      if (container.id !== 'paypal-buttons-container') {
+        container.remove();
+      }
+    });
+    
+    // Wait a moment for cleanup
+    setTimeout(() => {
+      const script = document.createElement('script');
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&components=buttons&enable-funding=card&disable-funding=paylater`;
+      script.async = true;
+      script.onload = () => {
+        // @ts-ignore
+        if ((window as any).paypal) resolve((window as any).paypal);
+        else reject(new Error('PayPal SDK failed to load'));
+      };
+      script.onerror = () => reject(new Error('PayPal SDK script error'));
+      document.head.appendChild(script);
+    }, 100);
   });
 }
 
@@ -44,7 +71,14 @@ export default function PaypalCheckout() {
         return;
       }
       if (!clientId) {
-        setError('Missing PayPal client ID.');
+        setError('Missing PayPal client ID. Please add EXPO_PUBLIC_PAYPAL_CLIENT_ID to your .env file.');
+        setLoading(false);
+        return;
+      }
+      
+      // Validate Client ID format
+      if (!clientId.startsWith('A') || clientId.length < 50) {
+        setError('Invalid PayPal Client ID format. Please check your EXPO_PUBLIC_PAYPAL_CLIENT_ID.');
         setLoading(false);
         return;
       }
@@ -83,12 +117,23 @@ export default function PaypalCheckout() {
         const securePayment = await response.json();
         setPaymentData(securePayment);
 
-        // Load PayPal SDK and render buttons
+        // Load PayPal SDK and render buttons + card fields
         const paypal = await loadPayPal(clientId);
         if (!containerRef.current) throw new Error('Container missing');
 
+        // Create container for PayPal buttons only
+        const buttonsContainer = document.createElement('div');
+        buttonsContainer.id = 'paypal-buttons-container';
+
         const buttons = paypal.Buttons({
-          style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' },
+          style: { 
+            layout: 'vertical', 
+            color: 'gold', 
+            shape: 'rect', 
+            label: 'pay',
+            tagline: false,
+            height: 50
+          },
           createOrder: () => {
             return securePayment.order_id;
           },
@@ -169,7 +214,35 @@ export default function PaypalCheckout() {
             })();
           },
         });
-        buttons.render(containerRef.current);
+        
+        // Render PayPal buttons
+        containerRef.current.appendChild(buttonsContainer);
+        buttons.render(buttonsContainer);
+
+        // Add informational message about payment options
+        const infoDiv = document.createElement('div');
+        infoDiv.style.marginTop = '20px';
+        infoDiv.style.padding = '15px';
+        infoDiv.style.backgroundColor = '#f0f8ff';
+        infoDiv.style.border = '1px solid #b3d9ff';
+        infoDiv.style.borderRadius = '8px';
+        infoDiv.innerHTML = `
+          <div style="margin: 0; color: #0066cc; font-size: 14px;">
+            <p style="margin: 0 0 10px 0;">
+              💳 <strong>Payment Options:</strong>
+            </p>
+            <p style="margin: 0 0 8px 0;">
+              ✅ <strong>PayPal Account</strong> - Fast and secure
+            </p>
+            <p style="margin: 0 0 8px 0;">
+              ✅ <strong>Credit/Debit Cards</strong> - No PayPal account required
+            </p>
+            <p style="margin: 0; font-size: 12px; font-style: italic;">
+              Click the button above and select "Pay with Debit or Credit Card" for guest checkout
+            </p>
+          </div>
+        `;
+        containerRef.current.appendChild(infoDiv);
 
         setLoading(false);
       } catch (e: any) {
