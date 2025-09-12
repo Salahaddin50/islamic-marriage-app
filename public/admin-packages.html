@@ -29,6 +29,9 @@
         .user-name { font-weight:600; color:#1f2937; }
         .user-meta { color:#6b7280; font-size:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
         .date-small { font-size: 11px; color:#6b7280; }
+        .btn-danger { background-color: #dc2626; color: white; border: 1px solid #dc2626; }
+        .btn-danger:hover { background-color: #b91c1c; border-color: #b91c1c; }
+        .btn-sm { padding: 4px 8px; font-size: 12px; }
     </style>
     
     
@@ -205,10 +208,11 @@
                                     <th data-translate="admin.packages.filters.updated_label">Updated</th>
                                     <th data-translate="admin.packages.table.created">Created</th>
                                     <th data-translate="admin.packages.filters.complaints_label">Complaints</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="packagesTbody">
-                                <tr><td colspan="6">Loading...</td></tr>
+                                <tr><td colspan="7">Loading...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -344,7 +348,7 @@
         function renderTable(){
             const tbody = document.getElementById('packagesTbody');
             if (!filtered.length) {
-                tbody.innerHTML = `<tr><td colspan="6">${translateText('admin.packages.messages.no_records')}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7">${translateText('admin.packages.messages.no_records')}</td></tr>`;
                 document.getElementById('recordsCount').textContent = '(0)';
                 document.getElementById('paginationContainer').innerHTML='';
                 return;
@@ -391,6 +395,11 @@
                         <td><span class="date-small">${formatDateTime(r.updated_at)}</span></td>
                         <td><span class="date-small">${formatDateTime(r.created_at)}</span></td>
                         <td>${complaintsHtml || '-'}</td>
+                        <td class="table-actions-inline">
+                            <button class="btn btn-danger btn-sm" onclick="deletePackage('${r.id}')" title="Delete Package">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
                     </tr>
                 `;
             }).join('');
@@ -466,6 +475,25 @@
                 console.error(e);
                 showNotification(translateText('admin.packages.notifications.update_status_failed'), 'error');
                 fetchRecords();
+            }
+        }
+
+        async function deletePackage(id){
+            if (!confirm('Are you sure you want to delete this package record? This action cannot be undone.')) {
+                return;
+            }
+            
+            try{
+                const { error } = await window.supabaseClient
+                    .from('payment_records')
+                    .delete()
+                    .eq('id', id);
+                if (error) throw error;
+                showNotification('Package record deleted successfully', 'success');
+                fetchRecords();
+            }catch(e){
+                console.error(e);
+                showNotification('Failed to delete package record', 'error');
             }
         }
     </script>
