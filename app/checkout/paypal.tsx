@@ -13,7 +13,7 @@ function loadPayPal(clientId: string): Promise<any> {
     // @ts-ignore
     if (window.paypal) return resolve((window as any).paypal);
     const script = document.createElement('script');
-    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=USD&intent=capture&components=buttons&enable-funding=card`;
+    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=USD&intent=capture`;
     script.async = true;
     script.onload = () => {
       // @ts-ignore
