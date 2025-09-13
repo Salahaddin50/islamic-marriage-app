@@ -18,7 +18,7 @@ import { useLanguage } from '../src/contexts/LanguageContext';
 import LanguageSelector from '../src/components/LanguageSelector';
 
 const Index = () => {
-  const { t } = useLanguage();
+  const { t, currentLanguage } = useLanguage();
   const [progress, setProgress] = useState(0);
   const intervalRef = useRef<any>(null);
   const navigatingRef = useRef(false);
@@ -127,10 +127,34 @@ const Index = () => {
             <View style={styles.bottomContainer}>
               <View style={styles.textContainer}>
                 <Text style={styles.title}>{t('onboarding.welcome_greeting')}</Text>
-                <Text style={styles.subtitle}>{t('onboarding.welcome_title')}</Text>
-                <Text style={styles.description}>
-                  {t('onboarding.welcome_description')}
-                </Text>
+                {(() => {
+                  const titleText = t('onboarding.welcome_title');
+                  const firstLine = titleText.split('\n')[0];
+                  return (
+                    <Text style={styles.subtitle}>
+                      {firstLine}
+                      {'\n'}
+                      <Text style={styles.subtitleBrand}>ZawajPlus</Text>
+                    </Text>
+                  );
+                })()}
+                {(() => {
+                  const description = t('onboarding.welcome_description');
+                  const highlightPhrase = currentLanguage === 'en' ? 'Polygamous Marriages' : '';
+                  if (highlightPhrase && description.includes(highlightPhrase)) {
+                    const parts = description.split(highlightPhrase);
+                    return (
+                      <Text style={styles.description}>
+                        {parts[0]}
+                        <Text style={styles.highlight}>{highlightPhrase}</Text>
+                        {parts.slice(1).join(highlightPhrase)}
+                      </Text>
+                    );
+                  }
+                  return (
+                    <Text style={styles.description}>{description}</Text>
+                  );
+                })()}
               </View>
 
               {/* Progress Dots */}
@@ -226,26 +250,34 @@ const styles = StyleSheet.create({
     marginBottom: getResponsiveSpacing(32),
   },
   title: {
-    fontSize: getResponsiveFontSize(28),
+    fontSize: getResponsiveFontSize(18),
     fontFamily: "semiBold",
     color: COLORS.black,
     textAlign: "center",
     marginBottom: getResponsiveSpacing(4),
   },
   subtitle: {
-    fontSize: getResponsiveFontSize(32),
+    fontSize: getResponsiveFontSize(20),
     fontFamily: "bold",
     color: COLORS.primary,
     textAlign: "center",
     marginBottom: getResponsiveSpacing(16),
   },
+  subtitleBrand: {
+    fontSize: getResponsiveFontSize(20),
+    fontFamily: "bold",
+    color: COLORS.black,
+  },
   description: {
-    fontSize: getResponsiveFontSize(16),
+    fontSize: getResponsiveFontSize(14),
     fontFamily: "regular",
     color: COLORS.gray,
     textAlign: 'center',
-    lineHeight: getResponsiveFontSize(22),
+    lineHeight: getResponsiveFontSize(20),
     paddingHorizontal: getResponsiveSpacing(8),
+  },
+  highlight: {
+    color: COLORS.primary,
   },
   dotsContainer: {
     marginBottom: getResponsiveSpacing(32),
