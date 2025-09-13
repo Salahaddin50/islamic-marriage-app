@@ -13,7 +13,7 @@ function loadPayPal(clientId: string): Promise<any> {
     // @ts-ignore
     if (window.paypal) return resolve((window as any).paypal);
     const script = document.createElement('script');
-    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=USD&intent=capture`;
+    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=USD&intent=capture&disable-funding=card,credit`;
     script.async = true;
     script.onload = () => {
       // @ts-ignore
@@ -31,6 +31,7 @@ export default function PaypalCheckout() {
   const [error, setError] = useState<string | null>(null);
   const [paymentData, setPaymentData] = useState<any>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [paypalHeight, setPaypalHeight] = useState<number>(44);
   const cancelledRef = useRef(false);
 
   const clientId = process.env.EXPO_PUBLIC_PAYPAL_CLIENT_ID || '';
@@ -202,6 +203,63 @@ export default function PaypalCheckout() {
     }
   }, [paymentData?.payment_id]);
 
+  // Keep Epoint button the same height as PayPal button
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const el = containerRef.current;
+    if (!el || typeof window === 'undefined') return;
+    const measure = () => {
+      try {
+        const rect = el.getBoundingClientRect();
+        const h = Math.max(44, Math.round(rect.height));
+        if (h && h !== paypalHeight) setPaypalHeight(h);
+      } catch {}
+    };
+    measure();
+    // Observe changes after PayPal renders/resizes
+    const RO = (window as any).ResizeObserver;
+    if (RO) {
+      const ro = new RO(() => measure());
+      ro.observe(el);
+      return () => ro.disconnect();
+    } else {
+      const id = window.setInterval(measure, 500);
+      return () => window.clearInterval(id);
+    }
+  }, [containerRef.current]);
+
+  const handleEpointPay = async () => {
+    try {
+      if (Platform.OS !== 'web') return;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setError('Please log in to continue.');
+        return;
+      }
+      const resp = await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/secure-epoint-checkout`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ package_id: packageId })
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to start Epoint checkout');
+      }
+      const json = await resp.json();
+      if (json?.redirect_url) {
+        // @ts-ignore
+        window.location.assign(json.redirect_url);
+      } else {
+        throw new Error('Epoint did not return redirect url');
+      }
+    } catch (e: any) {
+      setError(e?.message || 'Epoint failed');
+    }
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.white }}>
       <View style={{ flex: 1, padding: 16, backgroundColor: COLORS.white }}>
@@ -224,6 +282,34 @@ export default function PaypalCheckout() {
                 <Text style={{ color: 'red', marginBottom: 12 }}>{error}</Text>
               )}
               <div ref={containerRef} />
+              {/* Epoint section */}
+              <View style={{ marginTop: 20, alignItems: 'stretch' }}>
+                <div style={{ width: '100%' }}>
+                  <button onClick={handleEpointPay} style={{
+                    width: '100%',
+                    minHeight: paypalHeight,
+                    backgroundColor: '#0A2540',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 6,
+                    padding: '10px 16px',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    fontSize: 16,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8
+                  }}>
+                    <svg width="20" height="16" viewBox="0 0 24 18" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: 8 }}>
+                      <rect x="1" y="1" width="22" height="16" rx="2" stroke="#ffffff" strokeWidth="2"/>
+                      <rect x="3" y="5" width="18" height="2" fill="#ffffff"/>
+                      <rect x="3" y="11" width="6" height="2" fill="#ffffff"/>
+                    </svg>
+                    <span>Pay with Debit/Credit card (Epoint)</span>
+                  </button>
+                </div>
+              </View>
             </>
           ) : (
             <Text style={{ color: COLORS.grayscale700 }}>
