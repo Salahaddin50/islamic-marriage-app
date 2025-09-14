@@ -6,6 +6,36 @@ let translations = {};
 const translationData = {
     en: {
         admin: {
+            user_packages: {
+                title: "Packages",
+                filters: {
+                    search_label: "Search",
+                    search_placeholder: "Search by user, type, name...",
+                    package_label: "Package",
+                    active_label: "Active",
+                    lifetime_label: "Lifetime",
+                    updated_label: "Updated",
+                    all: "All",
+                    all_time: "All Time",
+                    today: "Today",
+                    last_7_days: "Last 7 Days",
+                    last_30_days: "Last 30 Days",
+                    active: "Active",
+                    inactive: "Inactive"
+                },
+                columns: {
+                    user: "User",
+                    type: "Package Type",
+                    name: "Package Name",
+                    amount: "Amount",
+                    active: "Active",
+                    lifetime: "Lifetime",
+                    expires: "Expires",
+                    updated: "Updated",
+                    actions: "Actions"
+                },
+                no_records: "No records"
+            },
             package_definitions: {
                 title: "Package Definitions",
                 packages_title: "Packages",
@@ -25,7 +55,8 @@ const translationData = {
                 male_profiles: "Male Profiles",
                 interests: "Interests",
                 meet_requests: "Meet Requests",
-                packages: "Packages",
+                packages: "Payments",
+                user_packages: "Packages",
                 support_team: "Support Team",
                 admin_management: "Admin Management",
                 package_definitions: "Package Definitions",
@@ -384,6 +415,36 @@ const translationData = {
     },
     ar: {
         admin: {
+            user_packages: {
+                title: "الباقات",
+                filters: {
+                    search_label: "بحث",
+                    search_placeholder: "ابحث بالمستخدم، النوع، الاسم...",
+                    package_label: "الباقة",
+                    active_label: "نشطة",
+                    lifetime_label: "مدى الحياة",
+                    updated_label: "آخر تحديث",
+                    all: "الكل",
+                    all_time: "كل الوقت",
+                    today: "اليوم",
+                    last_7_days: "آخر 7 أيام",
+                    last_30_days: "آخر 30 يوماً",
+                    active: "نشطة",
+                    inactive: "غير نشطة"
+                },
+                columns: {
+                    user: "المستخدم",
+                    type: "نوع الباقة",
+                    name: "اسم الباقة",
+                    amount: "المبلغ",
+                    active: "نشطة",
+                    lifetime: "مدى الحياة",
+                    expires: "تاريخ الانتهاء",
+                    updated: "آخر تحديث",
+                    actions: "الإجراءات"
+                },
+                no_records: "لا توجد سجلات"
+            },
             package_definitions: {
                 title: "تعريفات الباقات",
                 packages_title: "الباقات",
@@ -403,7 +464,8 @@ const translationData = {
                 male_profiles: "الملفات الرجالية",
                 interests: "الاهتمامات",
                 meet_requests: "طلبات المقابلة",
-                packages: "الباقات",
+                packages: "المدفوعات",
+                user_packages: "الباقات",
                 support_team: "فريق الدعم",
                 admin_management: "إدارة المديرين",
                 package_definitions: "تعريفات الباقات",

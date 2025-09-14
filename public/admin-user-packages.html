@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Packages - Zawajplus Admin</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="admin-translations.js"></script>
+  <link rel="stylesheet" href="admin-styles.css">
+  <style>
+    /* Match Payments page UI for selects/inputs */
+    .table-actions-inline select {
+      padding: 4px 8px;
+      font-size: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <nav class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo"><i class="fas fa-shield-alt"></i><span>Zawajplus Admin</span></div>
+      </div>
+      <ul class="nav-menu">
+        <li class="nav-item"><a href="/admin-dashboard.html" class="nav-link"><i class="fas fa-tachometer-alt"></i><span data-translate="admin.navigation.dashboard">Dashboard</span></a></li>
+        <li class="nav-item"><a href="/admin-female-profiles.html" class="nav-link"><i class="fas fa-female"></i><span data-translate="admin.navigation.female_profiles">Female Profiles</span></a></li>
+        <li class="nav-item"><a href="/admin-male-profiles.html" class="nav-link"><i class="fas fa-male"></i><span data-translate="admin.navigation.male_profiles">Male Profiles</span></a></li>
+        <li class="nav-item"><a href="/admin-interests.html" class="nav-link"><i class="fas fa-heart"></i><span data-translate="admin.navigation.interests">Interests</span></a></li>
+        <li class="nav-item"><a href="/admin-meet-requests.html" class="nav-link"><i class="fas fa-video"></i><span data-translate="admin.navigation.meet_requests">Meet Requests</span></a></li>
+        <li class="nav-item"><a href="/admin-packages.html" class="nav-link"><i class="fas fa-receipt"></i><span data-translate="admin.navigation.packages">Payments</span></a></li>
+        <li class="nav-item active"><a href="/admin-user-packages.html" class="nav-link"><i class="fas fa-box"></i><span data-translate="admin.navigation.user_packages">Packages</span></a></li>
+        <li class="nav-item"><a href="/admin-support-team.html" class="nav-link"><i class="fas fa-headset"></i><span data-translate="admin.navigation.support_team">Support Team</span></a></li>
+      </ul>
+      <div class="sidebar-footer">
+        <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i><span data-translate="admin.navigation.logout">Logout</span></button>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <button class="sidebar-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+          <h1 class="page-title" data-translate="admin.user_packages.title">Packages</h1>
+        </div>
+        <div class="top-bar-right">
+          <div class="admin-info">
+            <div class="admin-details"><span class="admin-name" id="adminName">Loading...</span><span class="admin-role" id="adminRole">Admin</span></div>
+            <div class="admin-avatar"><i class="fas fa-user-circle"></i></div>
+          </div>
+        </div>
+      </header>
+
+      <div class="content-area">
+        <div class="filters-section">
+          <div class="filters-inline">
+            <div class="filter-group" style="flex:1; min-width:200px;">
+              <label class="filter-label" data-translate="admin.user_packages.filters.search_label">Search</label>
+              <input type="text" id="searchInput" class="filter-input" placeholder="Search by user, type, name..." data-translate-placeholder="admin.user_packages.filters.search_placeholder" oninput="handleSearch()" />
+            </div>
+            <div class="filter-group">
+              <label class="filter-label" data-translate="admin.user_packages.filters.package_label">Package</label>
+              <select id="packageFilter" class="filter-select" onchange="applyFilters()" style="min-width:180px;">
+                <option value="" data-translate="admin.user_packages.filters.all">All</option>
+                <option value="premium">Premium</option>
+                <option value="vip_premium">VIP Premium</option>
+                <option value="golden_premium">Golden Premium</option>
+              </select>
+            </div>
+            <div class="filters-actions" style="margin-left:auto;">
+              <button class="btn btn-secondary btn-sm" onclick="resetFilters()"><i class="fas fa-eraser"></i> <span data-translate="admin.packages.buttons.reset_filters">Reset Filters</span></button>
+              <button class="btn btn-secondary btn-sm" onclick="reload()"><i class="fas fa-sync-alt"></i> <span data-translate="admin.packages.buttons.refresh">Refresh</span></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="data-table">
+          <div class="table-header">
+            <div class="table-title"><span data-translate="admin.user_packages.title">Packages</span> <span id="countSpan"></span></div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th data-translate="admin.user_packages.columns.user">User</th>
+                  <th data-translate="admin.user_packages.columns.type">Package Type</th>
+                  <th data-translate="admin.user_packages.columns.name">Package Name</th>
+                  <th data-translate="admin.user_packages.columns.amount">Amount</th>
+                  <th data-translate="admin.user_packages.columns.active">Active</th>
+                  <th data-translate="admin.user_packages.columns.lifetime">Lifetime</th>
+                  <th data-translate="admin.user_packages.columns.expires">Expires</th>
+                  <th data-translate="admin.user_packages.columns.updated">Updated</th>
+                  <th data-translate="admin.user_packages.columns.actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tbody"><tr><td colspan="9" data-translate="admin.common.loading">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="admin-common.js"></script>
+  <script>
+    let rows = [];
+    let filtered = [];
+    const userProfileById = new Map();
+    document.addEventListener('DOMContentLoaded', () => { loadAdminInfo(); fetchRows(); });
+
+    async function fetchRows(){
+      const tb = document.getElementById('tbody');
+      tb.innerHTML = '<tr><td colspan="9">Loading…</td></tr>';
+      try{
+        const { data, error } = await window.supabaseClient
+          .from('user_packages')
+          .select('id, user_id, package_type, package_name, amount_paid, is_active, is_lifetime, expires_at, updated_at, created_at')
+          .order('updated_at', { ascending: false })
+          .limit(1000);
+        if (error) throw error;
+        rows = data || [];
+        // Load names
+        const ids = Array.from(new Set((rows||[]).map(r => r.user_id).filter(Boolean)));
+        userProfileById.clear();
+        if (ids.length){
+          const { data: profs } = await window.supabaseClient
+            .from('user_profiles')
+            .select('user_id, first_name, last_name')
+            .in('user_id', ids);
+          (profs||[]).forEach(p => userProfileById.set(p.user_id, p));
+        }
+        applyFilters();
+      }catch(e){
+        console.error(e);
+        tb.innerHTML = '<tr><td colspan="9">Failed to load</td></tr>';
+      }
+    }
+
+    function reload(){ fetchRows(); }
+
+    const handleSearch = debounce(() => applyFilters(), 300);
+
+    function resetFilters(){
+      document.getElementById('searchInput').value = '';
+      document.getElementById('packageFilter').value = '';
+      document.getElementById('activeFilter').value = '';
+      document.getElementById('lifetimeFilter').value = '';
+      document.getElementById('updatedFilter').value = 'all';
+      applyFilters();
+    }
+
+    function applyFilters(){
+      const q = (document.getElementById('searchInput').value||'').toLowerCase().trim();
+      const pkg = document.getElementById('packageFilter').value;
+      const active = '';
+      const lifetime = '';
+      const start = null;
+
+      filtered = (rows||[]).filter(r => {
+        const userId = (r.user_id || '').toLowerCase();
+        const type = (r.package_type || '').toLowerCase();
+        const name = (r.package_name || '').toLowerCase();
+        const updatedAt = new Date(r.updated_at);
+
+        const matchesQ = !q || userId.includes(q) || type.includes(q) || name.includes(q);
+        const matchesPkg = !pkg || type === pkg;
+        const matchesActive = active === '' ? true : String(!!r.is_active) === (active === 'true');
+        const matchesLifetime = lifetime === '' ? true : String(!!r.is_lifetime) === (lifetime === 'true');
+        const matchesUpdated = start ? updatedAt >= start : true;
+        return matchesQ && matchesPkg && matchesActive && matchesLifetime && matchesUpdated;
+      });
+
+      renderTable();
+    }
+
+    function renderTable(){
+      const tb = document.getElementById('tbody');
+      if (!filtered.length){ tb.innerHTML = '<tr><td colspan="9" data-translate="admin.user_packages.no_records">No records</td></tr>'; updateTranslations(); return; }
+      document.getElementById('countSpan').textContent = `(${filtered.length})`;
+      tb.innerHTML = filtered.map(r => rowHtml(r)).join('');
+      updateTranslations();
+      window.fillEmailsForElements && window.fillEmailsForElements(document);
+    }
+
+    function rowHtml(r){
+      const updated = r.updated_at ? new Date(r.updated_at).toLocaleString() : '-';
+      const expires = r.expires_at ? new Date(r.expires_at).toLocaleString() : '-';
+      const checked = r.is_active ? 'checked' : '';
+      const lifetime = r.is_lifetime ? '✓' : '✗';
+      const prof = userProfileById.get(r.user_id) || {};
+      const displayName = [prof.first_name, prof.last_name].filter(Boolean).join(' ') || r.user_id;
+      const pretty = (t) => {
+        const v = String(t||'').toLowerCase();
+        if (v.includes('gold')) return 'Golden Premium';
+        if (v.includes('vip')) return 'VIP Premium';
+        if (v.includes('prem')) return 'Premium';
+        return t;
+      };
+      return `
+        <tr>
+          <td class="email-cell"><div class="user-name">${displayName}</div><div class="user-meta"><span class="email-link" data-user-id="${r.user_id}"></span></div></td>
+          <td class="table-actions-inline">
+            <select id="type-${r.id}" onchange="onTypeChange('${r.id}')">
+              <option value="premium" ${String(r.package_type||'')==='premium'?'selected':''}>Premium</option>
+              <option value="vip_premium" ${String(r.package_type||'')==='vip_premium'?'selected':''}>VIP Premium</option>
+              <option value="golden_premium" ${String(r.package_type||'')==='golden_premium'?'selected':''}>Golden Premium</option>
+            </select>
+          </td>
+          <td><span id="name-${r.id}">${escapeAttr(r.package_name||pretty(r.package_type))}</span></td>
+          <td><input class="table-input" id="amount-${r.id}" type="number" min="0" step="0.01" value="${Number(r.amount_paid||0).toFixed(2)}" /></td>
+          <td style="text-align:center"><input id="active-${r.id}" type="checkbox" ${checked} /></td>
+          <td style="text-align:center">${lifetime}</td>
+          <td><span class="date-small">${expires}</span></td>
+          <td><span class="date-small">${updated}</span></td>
+          <td>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-primary btn-sm" onclick="saveRow('${r.id}')"><i class="fas fa-save"></i> <span data-translate="admin.common.save">Save</span></button>
+              <button class="btn btn-danger btn-sm" onclick="deleteRow('${r.id}')" title="Delete Record">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+
+    async function saveRow(id){
+      const type = document.getElementById(`type-${id}`).value.trim();
+      const name = (document.getElementById(`name-${id}`).textContent||'').trim();
+      const amount = Number(document.getElementById(`amount-${id}`).value);
+      const active = document.getElementById(`active-${id}`).checked;
+      try{
+        if (!(amount >= 0)) throw new Error('Invalid amount');
+        const { error } = await window.supabaseClient
+          .from('user_packages')
+          .update({ package_type: type, package_name: name, amount_paid: amount, is_active: active, updated_at: new Date().toISOString() })
+          .eq('id', id);
+        if (error) throw error;
+        showNotification('Saved', 'success');
+        fetchRows();
+      }catch(e){
+        console.error(e);
+        showNotification('Save failed', 'error');
+      }
+    }
+
+    async function deleteRow(id){
+      confirmAction('Are you sure you want to delete this package record?', async () => {
+        try{
+          const { error } = await window.supabaseClient
+            .from('user_packages')
+            .delete()
+            .eq('id', id);
+          if (error) throw error;
+          showNotification('Payment record deleted successfully', 'success');
+          fetchRows();
+        }catch(e){
+          console.error('Error deleting record:', e);
+          showNotification('Error deleting record', 'error');
+        }
+      });
+    }
+
+    function onTypeChange(id){
+      try{
+        const sel = document.getElementById(`type-${id}`);
+        const nameEl = document.getElementById(`name-${id}`);
+        const map = { premium: 'Premium', vip_premium: 'VIP Premium', golden_premium: 'Golden Premium' };
+        const val = (sel?.value||'').toLowerCase();
+        if (nameEl) nameEl.textContent = map[val] || val;
+      }catch{}
+    }
+
+    function escapeAttr(v){ return String(v||'').replace(/"/g, '&quot;'); }
+  </script>
+</body>
+</html>
+
+

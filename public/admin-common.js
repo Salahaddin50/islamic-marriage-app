@@ -237,6 +237,100 @@ function showNotification(message, type = 'info', duration = 5000) {
     }, duration);
 }
 
+// Lightweight in-page debug console (overlay modal)
+let __debugConsoleVisible = false;
+function ensureDebugConsole() {
+    let el = document.getElementById('debugConsoleOverlay');
+    if (el) return el;
+    const overlay = document.createElement('div');
+    overlay.id = 'debugConsoleOverlay';
+    overlay.style.position = 'fixed';
+    overlay.style.inset = '0';
+    overlay.style.background = 'rgba(0,0,0,0.45)';
+    overlay.style.display = 'none';
+    overlay.style.zIndex = '10000';
+
+    const panel = document.createElement('div');
+    panel.style.position = 'absolute';
+    panel.style.right = '20px';
+    panel.style.bottom = '20px';
+    panel.style.width = 'min(90vw, 800px)';
+    panel.style.height = 'min(60vh, 480px)';
+    panel.style.background = '#0b1220';
+    panel.style.color = '#d1d5db';
+    panel.style.borderRadius = '10px';
+    panel.style.boxShadow = '0 10px 30px rgba(0,0,0,0.4)';
+    panel.style.display = 'flex';
+    panel.style.flexDirection = 'column';
+
+    const header = document.createElement('div');
+    header.style.display = 'flex';
+    header.style.justifyContent = 'space-between';
+    header.style.alignItems = 'center';
+    header.style.padding = '8px 12px';
+    header.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
+    header.innerHTML = '<strong>Debug Console</strong>';
+
+    const btns = document.createElement('div');
+    const clearBtn = document.createElement('button');
+    clearBtn.className = 'btn btn-secondary btn-sm';
+    clearBtn.textContent = 'Clear';
+    clearBtn.onclick = () => { const pre = document.getElementById('debugConsoleBody'); if (pre) pre.textContent = ''; };
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'btn btn-danger btn-sm';
+    closeBtn.textContent = 'Close';
+    closeBtn.onclick = () => toggleDebugConsole(false);
+    btns.appendChild(clearBtn); btns.appendChild(closeBtn); header.appendChild(btns);
+
+    const body = document.createElement('pre');
+    body.id = 'debugConsoleBody';
+    body.style.flex = '1';
+    body.style.margin = '0';
+    body.style.padding = '12px';
+    body.style.overflow = 'auto';
+    body.style.whiteSpace = 'pre-wrap';
+    body.style.wordBreak = 'break-word';
+
+    panel.appendChild(header);
+    panel.appendChild(body);
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+    return overlay;
+}
+
+function toggleDebugConsole(force) {
+    const overlay = ensureDebugConsole();
+    __debugConsoleVisible = force !== undefined ? !!force : !__debugConsoleVisible;
+    overlay.style.display = __debugConsoleVisible ? 'block' : 'none';
+}
+
+// Expose a helper to log both to browser console and overlay
+window.debugLog = function(...args) {
+    try {
+        console.log('[DEBUG]', ...args);
+        const overlay = ensureDebugConsole();
+        const body = document.getElementById('debugConsoleBody');
+        if (body) {
+            const line = args.map(a => {
+                try { return typeof a === 'string' ? a : JSON.stringify(a); } catch { return String(a); }
+            }).join(' ');
+            const ts = new Date().toISOString();
+            body.textContent += `\n[${ts}] ${line}`;
+            body.scrollTop = body.scrollHeight;
+        }
+    } catch {}
+}
+
+// Keyboard shortcut: Ctrl+Shift+D toggles debug console
+document.addEventListener('keydown', (e) => {
+    try {
+        if (e.ctrlKey && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+            e.preventDefault();
+            toggleDebugConsole();
+        }
+    } catch {}
+});
+
 function getNotificationIcon(type) {
     switch (type) {
         case 'success': return 'check-circle';
@@ -467,47 +561,48 @@ function handleImageUpload(file, maxSize = 5 * 1024 * 1024) { // 5MB default
 
 // Confirm dialogs
 function confirmAction(message, onConfirm, onCancel = null) {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Confirm Action</h3>
-                </div>
-                <div class="modal-body">
-                    <p>${message}</p>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" id="cancelBtn">Cancel</button>
-                    <button class="btn btn-danger" id="confirmBtn">Confirm</button>
-                </div>
-            </div>
+    // Create a centered modal (not floating under table)
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.style.position = 'fixed';
+    overlay.style.inset = '0';
+    overlay.style.background = 'rgba(0,0,0,0.4)';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.zIndex = '9999';
+
+    const dialog = document.createElement('div');
+    dialog.className = 'modal-dialog';
+    dialog.style.maxWidth = '420px';
+    dialog.style.width = '90%';
+    dialog.style.background = '#fff';
+    dialog.style.borderRadius = '12px';
+    dialog.style.boxShadow = '0 10px 30px rgba(0,0,0,0.2)';
+    dialog.innerHTML = `
+      <div class="modal-content" style="padding:16px;">
+        <div class="modal-header" style="margin-bottom:8px;">
+          <h3 style="margin:0; font-size:18px;">Confirm</h3>
         </div>
+        <div class="modal-body" style="margin-bottom:16px; color:#374151;">
+          <p style="margin:0;">${message}</p>
+        </div>
+        <div class="modal-footer" style="display:flex; gap:8px; justify-content:flex-end;">
+          <button class="btn btn-secondary" id="cancelBtn">Cancel</button>
+          <button class="btn btn-danger" id="confirmBtn">Confirm</button>
+        </div>
+      </div>
     `;
-    
-    document.body.appendChild(modal);
-    
-    const confirmBtn = modal.querySelector('#confirmBtn');
-    const cancelBtn = modal.querySelector('#cancelBtn');
-    
-    confirmBtn.onclick = () => {
-        modal.remove();
-        onConfirm();
-    };
-    
-    cancelBtn.onclick = () => {
-        modal.remove();
-        if (onCancel) onCancel();
-    };
-    
-    // Close on overlay click
-    modal.onclick = (e) => {
-        if (e.target === modal) {
-            modal.remove();
-            if (onCancel) onCancel();
-        }
-    };
+
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+
+    const confirmBtn = dialog.querySelector('#confirmBtn');
+    const cancelBtn = dialog.querySelector('#cancelBtn');
+
+    confirmBtn.onclick = () => { overlay.remove(); onConfirm(); };
+    cancelBtn.onclick = () => { overlay.remove(); onCancel && onCancel(); };
+    overlay.onclick = (e) => { if (e.target === overlay) { overlay.remove(); onCancel && onCancel(); } };
 }
 
 // Export utilities

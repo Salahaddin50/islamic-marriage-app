@@ -84,6 +84,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="/admin-user-packages.html" class="nav-link">
+                        <i class="fas fa-box-open"></i>
+                        <span data-translate="admin.navigation.user_packages">Packages</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="/admin-package-definitions.html" class="nav-link">
                         <i class="fas fa-list"></i>
                         <span data-translate="admin.navigation.package_definitions">Package Definitions</span>
@@ -131,7 +137,7 @@
                     <button class="sidebar-toggle" onclick="toggleSidebar()">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <h1 class="page-title" data-translate="admin.packages.title">Packages</h1>
+                    <h1 class="page-title" data-translate="admin.packages.title">Payments</h1>
                 </div>
                 <div class="top-bar-right">
                     <div class="admin-info">
@@ -247,7 +253,7 @@
                 // Read payment_records
                 const { data, error } = await window.supabaseClient
                     .from('payment_records')
-                    .select('id, user_id, package_type, status, updated_at, created_at, complaints')
+                    .select('id, user_id, package_type, package_name, amount, status, updated_at, created_at, complaints')
                     .order('updated_at', { ascending: false })
                     .limit(1000);
                 if (error) throw error;
@@ -348,6 +354,22 @@
             if (v.includes('vip')) return 'vip';
             if (v.includes('prem')) return 'premium';
             return v || 'free';
+        }
+
+        function enumFromPackage(value){
+            const v = String(value||'').toLowerCase();
+            if (v.includes('gold')) return 'golden_premium';
+            if (v.includes('vip')) return 'vip_premium';
+            if (v.includes('prem')) return 'premium';
+            return 'premium';
+        }
+
+        function prettyNameFromEnum(enumVal){
+            const v = String(enumVal||'').toLowerCase();
+            if (v === 'golden_premium') return 'Golden Premium';
+            if (v === 'vip_premium') return 'VIP Premium';
+            if (v === 'premium') return 'Premium';
+            return enumVal;
         }
 
         function renderTable(){
@@ -453,9 +475,12 @@
 
         async function updatePackageType(id, value){
             try{
+                // Map UI value to enum and update both type and name (same behavior as Packages section)
+                const enumVal = enumFromPackage(value);
+                const pkgName = prettyNameFromEnum(enumVal);
                 const { error } = await window.supabaseClient
                     .from('payment_records')
-                    .update({ package_type: value })
+                    .update({ package_type: enumVal, package_name: pkgName })
                     .eq('id', id);
                 if (error) throw error;
                 showNotification(translateText('admin.packages.notifications.package_updated'), 'success');
@@ -469,12 +494,91 @@
         async function updateStatus(id, value){
             try{
                 const statusVal = (value==='null')? null : value;
-                const { error } = await window.supabaseClient
+                // If not setting to completed, perform simple status update
+                if (statusVal !== 'completed') {
+                    const { error } = await window.supabaseClient
+                        .from('payment_records')
+                        .update({ status: statusVal })
+                        .eq('id', id);
+                    if (error) throw error;
+                    showNotification(translateText('admin.packages.notifications.status_updated'), 'success');
+                    return fetchRecords();
+                }
+
+                // Locate record details
+                const rec = (allRecords || []).find(r => r.id === id);
+                if (!rec) {
+                    showNotification('Record not found in view', 'error');
+                    return fetchRecords();
+                }
+
+                const userId = rec.user_id;
+                const pkgType = enumFromPackage(rec.package_type);
+                const pkgName = rec.package_name || rec.package_type;
+                const amount = Number(rec.amount || 0);
+
+                // Helper to rank packages
+                const pkgRank = (t) => {
+                    const v = String(t||'').toLowerCase();
+                    if (v.includes('gold')) return 3;
+                    if (v.includes('vip')) return 2;
+                    if (v.includes('prem')) return 1;
+                    return 0;
+                };
+
+                // Read current active package for user
+                const { data: current } = await window.supabaseClient
+                    .from('user_packages')
+                    .select('id, package_type, package_name, is_active, amount_paid')
+                    .eq('user_id', userId)
+                    .eq('is_active', true)
+                    .order('activated_at', { ascending: false })
+                    .limit(1);
+
+                const activeRow = Array.isArray(current) && current.length ? current[0] : null;
+
+                if (activeRow && pkgRank(activeRow.package_type) >= pkgRank(pkgType)) {
+                    showNotification('User already has this package or higher', 'warning');
+                    return fetchRecords();
+                }
+
+                if (activeRow) {
+                    // Overwrite existing active row instead of creating a new one
+                    const { error: upPkgErr } = await window.supabaseClient
+                        .from('user_packages')
+                        .update({
+                            package_type: pkgType,
+                            package_name: pkgName,
+                            amount_paid: amount,
+                            is_active: true,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', activeRow.id);
+                    if (upPkgErr) throw upPkgErr;
+                } else {
+                    // No active package -> insert new
+                    const { error: insErr } = await window.supabaseClient
+                        .from('user_packages')
+                        .insert({
+                            user_id: userId,
+                            package_type: pkgType,
+                            package_name: pkgName,
+                            amount_paid: amount,
+                            is_active: true,
+                            is_lifetime: true,
+                            activated_at: new Date().toISOString()
+                        });
+                    if (insErr) throw insErr;
+                }
+
+                // Mark payment completed
+                const { error: upErr } = await window.supabaseClient
                     .from('payment_records')
-                    .update({ status: statusVal })
+                    .update({ status: 'completed' })
                     .eq('id', id);
-                if (error) throw error;
-                showNotification(translateText('admin.packages.notifications.status_updated'), 'success');
+                if (upErr) throw upErr;
+
+                showNotification('Payment completed and package updated', 'success');
                 fetchRecords();
             }catch(e){
                 console.error(e);
@@ -484,22 +588,22 @@
         }
 
         async function deleteRecord(id){
-            if (!confirm('Are you sure you want to delete this payment record? This action cannot be undone.')) {
-                return;
-            }
-            
-            try{
-                const { error } = await window.supabaseClient
-                    .from('payment_records')
-                    .delete()
-                    .eq('id', id);
-                if (error) throw error;
-                showNotification('Payment record deleted successfully', 'success');
-                fetchRecords();
-            } catch(e){
-                console.error('Error deleting record:', e);
-                showNotification('Error deleting record', 'error');
-            }
+            confirmAction('Are you sure you want to delete this payment record?', async () => {
+                try{
+                    const { error } = await window.supabaseClient
+                        .from('payment_records')
+                        .delete()
+                        .eq('id', id)
+                        .select('id')
+                        .maybeSingle();
+                    if (error) throw error;
+                    showNotification('Payment record deleted successfully', 'success');
+                    fetchRecords();
+                } catch(e){
+                    console.error('Error deleting record:', e);
+                    showNotification('Error deleting record', 'error');
+                }
+            });
         }
     </script>
 </body>
