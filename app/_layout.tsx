@@ -203,6 +203,80 @@ export default function RootLayout() {
     }
   }, []);
 
+  // Web-only: deter access to DevTools/Sources without touching app logic
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+
+    const preventContextMenu = (e: Event) => {
+      e.preventDefault();
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      const key = (e.key || '').toLowerCase();
+      const isCmd = e.metaKey; // macOS
+      const isCtrl = e.ctrlKey; // Windows/Linux
+      const isShift = e.shiftKey;
+
+      // Block common DevTools shortcuts (F12, Ctrl/Cmd+Shift+I/J/C/K, Ctrl/Cmd+U)
+      const blocked =
+        key === 'f12' ||
+        ((isCtrl || isCmd) && isShift && (key === 'i' || key === 'j' || key === 'c' || key === 'k')) ||
+        ((isCtrl || isCmd) && (key === 'u'));
+
+      if (blocked) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    // Simple DevTools open detector based on window size deltas
+    let overlayEl: HTMLDivElement | null = null;
+    const showOverlay = () => {
+      if (overlayEl) return;
+      overlayEl = document.createElement('div');
+      overlayEl.id = 'devtools-block-overlay';
+      overlayEl.style.position = 'fixed';
+      overlayEl.style.inset = '0';
+      overlayEl.style.background = '#0b1324';
+      overlayEl.style.color = '#fff';
+      overlayEl.style.zIndex = '2147483647';
+      overlayEl.style.display = 'flex';
+      overlayEl.style.alignItems = 'center';
+      overlayEl.style.justifyContent = 'center';
+      overlayEl.style.textAlign = 'center';
+      overlayEl.style.padding = '24px';
+      overlayEl.innerHTML = '<div style="max-width:640px"><div style="font-size:20px;font-weight:600;margin-bottom:8px">Developer tools are disabled</div><div style="opacity:.85">For privacy protection, this page is temporarily locked while browser developer tools are open.</div></div>';
+      document.body.appendChild(overlayEl);
+      document.body.style.overflow = 'hidden';
+    };
+
+    const hideOverlay = () => {
+      if (!overlayEl) return;
+      overlayEl.remove();
+      overlayEl = null;
+      document.body.style.overflow = '';
+    };
+
+    const checkDevTools = () => {
+      const threshold = 170; // large gap implies docked DevTools
+      const widthDelta = Math.abs((window.outerWidth || 0) - (window.innerWidth || 0));
+      const heightDelta = Math.abs((window.outerHeight || 0) - (window.innerHeight || 0));
+      const isOpen = widthDelta > threshold || heightDelta > threshold;
+      if (isOpen) showOverlay(); else hideOverlay();
+    };
+
+    document.addEventListener('contextmenu', preventContextMenu);
+    window.addEventListener('keydown', onKeyDown, true);
+    const intervalId = window.setInterval(checkDevTools, 600);
+
+    return () => {
+      document.removeEventListener('contextmenu', preventContextMenu);
+      window.removeEventListener('keydown', onKeyDown, true);
+      window.clearInterval(intervalId);
+      hideOverlay();
+    };
+  }, []);
+
   if (!loaded || !assetsReady) {
     return null;
   }
