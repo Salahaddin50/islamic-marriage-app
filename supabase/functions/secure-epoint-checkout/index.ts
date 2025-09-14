@@ -52,6 +52,15 @@ serve(async (req) => {
       )
     }
 
+    // Proactively fail any stale pending records for this user to prevent duplicates
+    try {
+      await supabaseClient
+        .from('payment_records')
+        .update({ status: 'failed', notes: 'Superseded by new Epoint checkout', updated_at: new Date().toISOString() })
+        .eq('user_id', user.id)
+        .eq('status', 'pending');
+    } catch {}
+
     // Create a secure pending payment record and compute upgrade amount
     const { data: paymentData, error: paymentError } = await supabaseClient
       .rpc('create_secure_payment', {

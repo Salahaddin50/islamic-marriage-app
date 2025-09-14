@@ -34,6 +34,8 @@ export default function PaypalCheckout() {
   const [paypalHeight, setPaypalHeight] = useState<number>(44);
   const cancelledRef = useRef(false);
   const [epointRatio, setEpointRatio] = useState<number | null>(null);
+  const [epointLoading, setEpointLoading] = useState<boolean>(false);
+  const securePaymentRef = useRef<any>(null);
 
   const clientId = process.env.EXPO_PUBLIC_PAYPAL_CLIENT_ID || '';
   const packageId = String(params?.package_id || '');
@@ -57,42 +59,27 @@ export default function PaypalCheckout() {
       }
 
       try {
-        // Create secure payment via Edge Function
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          setError('Please log in to continue.');
-          setLoading(false);
-          return;
+        // Compute preview amount locally for header (server validates on createOrder)
+        const [{ data: pkg }, { data: currentPkg } ] = await Promise.all([
+          supabase.from('packages').select('name, price, epoint_currency').eq('package_id', packageId).maybeSingle(),
+          supabase.from('user_packages').select('package_type').eq('is_active', true).order('activated_at', { ascending: false }).limit(1).maybeSingle()
+        ]);
+
+        const packageName = pkg?.name || 'Package';
+        const targetPrice = Number(pkg?.price || 0);
+        const ratioVal = Number(pkg?.epoint_currency || 0);
+        const baselineType = currentPkg?.package_type || null;
+        let baselinePrice = 0;
+        if (baselineType) {
+          const { data: basePkg } = await supabase.from('packages').select('price').eq('package_id', baselineType).maybeSingle();
+          baselinePrice = Number(basePkg?.price || 0);
         }
+        const previewAmount = Math.max(targetPrice - baselinePrice, 0);
+        setPaymentData({ package_name: packageName, amount: previewAmount });
 
-        const response = await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/secure-paypal-checkout`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ package_id: packageId })
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error('Edge Function Error:', errorData);
-          console.error('Response Status:', response.status);
-          console.error('Package ID:', packageId);
-          throw new Error(errorData.error || 'Failed to create secure checkout');
-        }
-
-        const securePayment = await response.json();
-        setPaymentData(securePayment);
-
-        // Fetch Epoint AZN ratio for this package to show in header (display only)
+        // Fetch Epoint AZN ratio for header
         try {
-          const { data: pkgRow } = await supabase
-            .from('packages')
-            .select('epoint_currency')
-            .eq('package_id', packageId)
-            .maybeSingle();
-          const r = Number((pkgRow as any)?.epoint_currency);
+          const r = Number(ratioVal);
           if (r && isFinite(r) && r > 0) setEpointRatio(r);
         } catch {}
 
@@ -102,19 +89,39 @@ export default function PaypalCheckout() {
 
         const buttons = paypal.Buttons({
           style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' },
-          createOrder: () => {
+          createOrder: async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) throw new Error('Please log in to continue.');
+            const resp = await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/secure-paypal-checkout`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${session.access_token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ package_id: packageId })
+            });
+            if (!resp.ok) {
+              const err = await resp.json().catch(() => ({}));
+              throw new Error(err.error || 'Failed to create secure checkout');
+            }
+            const securePayment = await resp.json();
+            securePaymentRef.current = securePayment;
+            // Update header with authoritative amount in case preview differed
+            setPaymentData({ package_name: securePayment.package_name, amount: securePayment.amount });
             return securePayment.order_id;
           },
           onApprove: async (data: any) => {
             try {
-              console.log('PayPal onApprove data:', data);
-              console.log('Secure payment data:', securePayment);
+              const securePayment = securePaymentRef.current;
+              if (!securePayment) throw new Error('Secure payment not initialized');
               console.log('Sending to capture:', { 
                 order_id: data.orderID, 
                 payment_id: securePayment.payment_id 
               });
               
               // Capture payment via secure endpoint
+              const { data: { session } } = await supabase.auth.getSession();
+              if (!session) throw new Error('Please log in to continue.');
               const captureResponse = await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/capture-paypal-payment`, {
                 method: 'POST',
                 headers: {
@@ -147,6 +154,7 @@ export default function PaypalCheckout() {
             (async () => {
               try {
                 const { data: { session: s } } = await supabase.auth.getSession();
+                const securePayment = securePaymentRef.current;
                 if (s && securePayment?.payment_id) {
                   await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/cancel-paypal-payment`, {
                     method: 'POST',
@@ -166,6 +174,7 @@ export default function PaypalCheckout() {
             (async () => {
               try {
                 const { data: { session: s } } = await supabase.auth.getSession();
+                const securePayment = securePaymentRef.current;
                 if (s && securePayment?.payment_id) {
                   await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/cancel-paypal-payment`, {
                     method: 'POST',
@@ -243,9 +252,12 @@ export default function PaypalCheckout() {
   const handleEpointPay = async () => {
     try {
       if (Platform.OS !== 'web') return;
+      if (epointLoading) return;
+      setEpointLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         setError('Please log in to continue.');
+        setEpointLoading(false);
         return;
       }
       const resp = await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/secure-epoint-checkout`, {
@@ -269,6 +281,7 @@ export default function PaypalCheckout() {
       }
     } catch (e: any) {
       setError(e?.message || 'Epoint failed');
+      setEpointLoading(false);
     }
   };
 
@@ -297,7 +310,7 @@ export default function PaypalCheckout() {
               {/* Epoint section */}
               <View style={{ marginTop: 20, alignItems: 'stretch' }}>
                 <div style={{ width: '100%' }}>
-                  <button onClick={handleEpointPay} style={{
+                  <button onClick={handleEpointPay} disabled={epointLoading} style={{
                     width: '100%',
                     minHeight: paypalHeight,
                     backgroundColor: '#0A2540',
@@ -305,20 +318,21 @@ export default function PaypalCheckout() {
                     border: 'none',
                     borderRadius: 6,
                     padding: '10px 16px',
-                    cursor: 'pointer',
+                    cursor: epointLoading ? 'not-allowed' : 'pointer',
                     fontWeight: 600,
                     fontSize: 16,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: 8
+                    gap: 8,
+                    opacity: epointLoading ? 0.7 : 1
                   }}>
                     <svg width="20" height="16" viewBox="0 0 24 18" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: 8 }}>
                       <rect x="1" y="1" width="22" height="16" rx="2" stroke="#ffffff" strokeWidth="2"/>
                       <rect x="3" y="5" width="18" height="2" fill="#ffffff"/>
                       <rect x="3" y="11" width="6" height="2" fill="#ffffff"/>
                     </svg>
-                    <span>Pay with Debit/Credit card (Epoint)</span>
+                    <span>{epointLoading ? 'Processing…' : 'Pay with Debit/Credit card (Epoint)'}</span>
                   </button>
                 </div>
               </View>

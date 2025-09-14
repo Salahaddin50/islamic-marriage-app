@@ -324,9 +324,9 @@ const SettingsHelpCenter = () => {
 
     const [index, setIndex] = React.useState(0);
     const [routes] = React.useState([
+        { key: 'third', title: t('help_center.tab_tutorial') },
         { key: 'first', title: t('help_center.tab_faq') },
         { key: 'second', title: t('help_center.tab_contact') },
-        { key: 'third', title: t('help_center.tab_tutorial') },
     ]);
 
     const renderTabBar = (props: any) => (
