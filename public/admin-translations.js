@@ -6,6 +6,19 @@ let translations = {};
 const translationData = {
     en: {
         admin: {
+            package_definitions: {
+                title: "Package Definitions",
+                packages_title: "Packages",
+                columns: {
+                    id: "ID",
+                    name: "Name",
+                    price: "Price (USD)",
+                    ratio: "Epoint ratio (AZN/USD)",
+                    updated: "Updated",
+                    actions: "Actions"
+                },
+                no_packages: "No packages"
+            },
             navigation: {
                 dashboard: "Dashboard",
                 female_profiles: "Female Profiles",
@@ -15,6 +28,7 @@ const translationData = {
                 packages: "Packages",
                 support_team: "Support Team",
                 admin_management: "Admin Management",
+                package_definitions: "Package Definitions",
                 logout: "Logout"
             },
             dashboard: {
@@ -370,6 +384,19 @@ const translationData = {
     },
     ar: {
         admin: {
+            package_definitions: {
+                title: "تعريفات الباقات",
+                packages_title: "الباقات",
+                columns: {
+                    id: "المعرف",
+                    name: "الاسم",
+                    price: "السعر (دولار)",
+                    ratio: "معامل إيبويت (AZN/USD)",
+                    updated: "آخر تحديث",
+                    actions: "الإجراءات"
+                },
+                no_packages: "لا توجد باقات"
+            },
             navigation: {
                 dashboard: "لوحة التحكم",
                 female_profiles: "الملفات النسائية",
@@ -379,6 +406,7 @@ const translationData = {
                 packages: "الباقات",
                 support_team: "فريق الدعم",
                 admin_management: "إدارة المديرين",
+                package_definitions: "تعريفات الباقات",
                 logout: "تسجيل الخروج"
             },
             dashboard: {

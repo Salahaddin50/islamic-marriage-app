@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Package Definitions - Zawajplus Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="admin-translations.js"></script>
+    <link rel="stylesheet" href="admin-styles.css">
+</head>
+<body>
+    <div class="admin-layout">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Zawajplus Admin</span>
+                </div>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="/admin-dashboard.html" class="nav-link"><i class="fas fa-tachometer-alt"></i><span data-translate="admin.navigation.dashboard">Dashboard</span></a></li>
+                <li class="nav-item"><a href="/admin-female-profiles.html" class="nav-link"><i class="fas fa-female"></i><span data-translate="admin.navigation.female_profiles">Female Profiles</span></a></li>
+                <li class="nav-item"><a href="/admin-male-profiles.html" class="nav-link"><i class="fas fa-male"></i><span data-translate="admin.navigation.male_profiles">Male Profiles</span></a></li>
+                <li class="nav-item"><a href="/admin-interests.html" class="nav-link"><i class="fas fa-heart"></i><span data-translate="admin.navigation.interests">Interests</span></a></li>
+                <li class="nav-item"><a href="/admin-meet-requests.html" class="nav-link"><i class="fas fa-video"></i><span data-translate="admin.navigation.meet_requests">Meet Requests</span></a></li>
+                <li class="nav-item"><a href="/admin-packages.html" class="nav-link"><i class="fas fa-box"></i><span data-translate="admin.navigation.packages">Packages</span></a></li>
+                <li class="nav-item active"><a href="/admin-package-definitions.html" class="nav-link"><i class="fas fa-list"></i><span data-translate="admin.navigation.package_definitions">Package Definitions</span></a></li>
+                <li class="nav-item"><a href="/admin-support-team.html" class="nav-link"><i class="fas fa-headset"></i><span data-translate="admin.navigation.support_team">Support Team</span></a></li>
+            </ul>
+
+            <!-- Language Selector in Sidebar -->
+            <div class="sidebar-language-selector">
+                <div class="language-dropdown">
+                    <button type="button" class="language-btn" onclick="toggleLanguageMenu()">
+                        <span id="currentLanguage">English</span>
+                        <i class="fas fa-chevron-down" style="font-size: 10px;"></i>
+                    </button>
+                    <div class="language-menu" id="languageMenu">
+                        <div class="language-option active" data-lang="en" onclick="changeLanguage('en')">
+                            <span>English</span>
+                        </div>
+                        <div class="language-option" data-lang="ar" onclick="changeLanguage('ar')">
+                            <span>العربية</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i><span>Logout</span></button>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <button class="sidebar-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                    <h1 class="page-title" data-translate="admin.package_definitions.title">Package Definitions</h1>
+                </div>
+                <div class="top-bar-right">
+                    <div class="admin-info">
+                        <div class="admin-details">
+                            <span class="admin-name" id="adminName">Loading...</span>
+                            <span class="admin-role" id="adminRole">Admin</span>
+                        </div>
+                        <div class="admin-avatar"><i class="fas fa-user-circle"></i></div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <div class="filters-actions" style="margin-bottom:12px;">
+                    <button class="btn btn-secondary btn-sm" onclick="reload()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                </div>
+
+                <div class="data-table">
+                    <div class="table-header">
+                        <div class="table-title"><span data-translate="admin.package_definitions.packages_title">Packages</span> <span id="countSpan"></span></div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th data-translate="admin.package_definitions.columns.id">ID</th>
+                                    <th data-translate="admin.package_definitions.columns.name">Name</th>
+                                    <th data-translate="admin.package_definitions.columns.price">Price (USD)</th>
+                                    <th data-translate="admin.package_definitions.columns.ratio">Epoint ratio (AZN/USD)</th>
+                                    <th data-translate="admin.package_definitions.columns.updated">Updated</th>
+                                    <th data-translate="admin.package_definitions.columns.actions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody"><tr><td colspan="6" data-translate="admin.common.loading">Loading…</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="admin-common.js"></script>
+    <script>
+        let rows = [];
+        let filtered = [];
+        document.addEventListener('DOMContentLoaded', () => { loadAdminInfo(); fetchPkgs(); });
+
+        async function fetchPkgs(){
+            const tb = document.getElementById('tbody');
+            tb.innerHTML = '<tr><td colspan="6">Loading…</td></tr>';
+            try{
+                const { data, error } = await window.supabaseClient
+                    .from('packages')
+                    .select('package_id, name, price, epoint_currency, updated_at')
+                    .order('sort_order');
+                if (error) throw error;
+                rows = data || [];
+                applyFilters();
+            }catch(e){
+                console.error(e);
+                tb.innerHTML = '<tr><td colspan="7">Failed to load packages</td></tr>';
+            }
+        }
+
+        function reload(){ fetchPkgs(); }
+        function applyFilters(){ filtered = rows || []; renderTable(); }
+
+        function renderTable(){
+            const tb = document.getElementById('tbody');
+            document.getElementById('countSpan').textContent = `(${filtered.length})`;
+            if (!filtered.length){ tb.innerHTML = '<tr><td colspan="6" data-translate="admin.package_definitions.no_packages">No packages</td></tr>'; updateTranslations(); return; }
+            tb.innerHTML = filtered.map(r => rowHtml(r)).join('');
+            updateTranslations();
+        }
+
+        function rowHtml(r){
+            const updated = r.updated_at ? new Date(r.updated_at).toLocaleString() : '-';
+            return `
+                <tr>
+                    <td><code>${escapeHtml(r.package_id)}</code></td>
+                    <td><span>${escapeHtml(r.name||'')}</span></td>
+                    <td><input class="table-input" id="price-${r.package_id}" type="number" min="0" step="0.01" value="${Number(r.price||0).toFixed(2)}" /></td>
+                    <td><input class="table-input" id="ratio-${r.package_id}" type="number" min="0" step="0.0001" value="${Number(r.epoint_currency||1.7).toFixed(4)}" /></td>
+                    <td><span class="date-small">${updated}</span></td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" onclick="saveRow('${r.package_id}')"><i class="fas fa-save"></i> <span data-translate="admin.common.save">Save</span></button>
+                    </td>
+                </tr>
+            `;
+        }
+
+        async function saveRow(id){
+            const price = Number(document.getElementById(`price-${id}`).value);
+            const ratio = Number(document.getElementById(`ratio-${id}`).value);
+            try{
+                if (!(price >= 0) || !(ratio > 0)) throw new Error('Invalid price or ratio');
+                const { error } = await window.supabaseClient
+                    .from('packages')
+                    .update({ price, epoint_currency: ratio, updated_at: new Date().toISOString() })
+                    .eq('package_id', id);
+                if (error) throw error;
+                showNotification('Saved', 'success');
+                fetchPkgs();
+            }catch(e){
+                console.error(e);
+                showNotification('Save failed', 'error');
+            }
+        }
+
+        function escapeAttr(v){ return String(v||'').replace(/"/g, '&quot;'); }
+        function escapeHtml(v){ return String(v||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+    </script>
+</body>
+</html>
+
+
