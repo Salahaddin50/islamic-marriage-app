@@ -243,7 +243,7 @@ const MatchDetails = () => {
       const year = String(d.getFullYear()).slice(-2);
       const hours = String(d.getHours()).padStart(2, '0');
       const minutes = String(d.getMinutes()).padStart(2, '0');
-      return `${day} ${month} ${year} at ${hours}:${minutes}`;
+      return `${day} ${month} ${year} ${t('match_details.at')} ${hours}:${minutes}`;
     } catch {
       return '';
     }
@@ -1569,7 +1569,9 @@ const MatchDetails = () => {
                     style={[styles.timezoneIcon, { tintColor: timeDifference?.isSignificant ? COLORS.red : COLORS.primary }]}
                   />
                   <Text style={[styles.timezoneText, { color: timeDifference?.isSignificant ? COLORS.red : COLORS.grayscale700 }]}>
-                    {timeDifference ? timeDifference.message : t('match_details.calculating_time_difference')}
+                    {timeDifference
+                      ? t(timeDifference.messageKey, { hours: timeDifference.hoursLabel })
+                      : t('match_details.calculating_time_difference')}
                   </Text>
                 </View>
                 {timeDifference?.isSignificant && (
@@ -1657,7 +1659,7 @@ const MatchDetails = () => {
               </div>
             ) : (
               <TextInput
-                placeholder="YYYY-MM-DD HH:mm"
+                placeholder={t('match_details.datetime_placeholder')}
                 value={scheduledAt}
                 onChangeText={setScheduledAt}
                 style={{ borderWidth: 1, borderColor: '#e9e9ef', borderRadius: 12, padding: 12, marginBottom: 12 }}

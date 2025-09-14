@@ -1,10 +1,11 @@
-import { View, Text, StyleSheet, TouchableOpacity, useWindowDimensions, FlatList, TextInput, LayoutAnimation } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, useWindowDimensions, FlatList, TextInput, LayoutAnimation, ScrollView } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { COLORS, SIZES, icons } from '../constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import { faqKeywords, faqs } from '../data';
-import { ScrollView } from 'react-native-virtualized-view';
+import { ScrollView as VirtualizedScrollView } from 'react-native-virtualized-view';
+import { supabase } from '@/src/config/supabase';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { router } from 'expo-router';
 import { Image } from 'expo-image';
@@ -134,7 +135,7 @@ const faqsRoute = () => {
                     onChangeText={(text) => setSearchText(text)}
                 />
             </View>
-            <ScrollView
+            <VirtualizedScrollView
                 showsVerticalScrollIndicator={false}
                 style={{ marginVertical: 22 }}>
                 {faqs
@@ -181,8 +182,66 @@ const faqsRoute = () => {
                             </View>
                         );
                     })}
-            </ScrollView>
+            </VirtualizedScrollView>
         </View>
+    );
+};
+
+const tutorialRoute = () => {
+    const { t } = useTranslation();
+    const [userGender, setUserGender] = useState<'male' | 'female' | null>(null);
+    
+    useEffect(() => {
+        const fetchUserGender = async () => {
+            try {
+                // Get current user
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return;
+                
+                // Get user profile to determine gender
+                const { data: profile } = await supabase
+                    .from('user_profiles')
+                    .select('gender')
+                    .eq('user_id', user.id)
+                    .single();
+                    
+                if (profile?.gender) {
+                    setUserGender(profile.gender.toLowerCase() === 'female' ? 'female' : 'male');
+                }
+            } catch (error) {
+                console.error('Error fetching user gender:', error);
+            }
+        };
+        
+        fetchUserGender();
+    }, []);
+    
+    return (
+        <ScrollView style={styles.tutorialContainer}>
+            <View style={styles.tutorialContent}>
+                <Text style={styles.tutorialTitle}>{t('help_center.tutorial.title')}</Text>
+                
+                {userGender === 'male' ? (
+                    <>
+                        <Text style={styles.tutorialStep}>{t('help_center.tutorial.male.step1')}</Text>
+                        <Text style={styles.tutorialStep}>{t('help_center.tutorial.male.step2')}</Text>
+                        <Text style={styles.tutorialStep}>{t('help_center.tutorial.male.step3')}</Text>
+                        <Text style={styles.tutorialStep}>{t('help_center.tutorial.male.step4')}</Text>
+                        
+                        <Text style={styles.tutorialNotesTitle}>{t('help_center.tutorial.male.notes_title')}</Text>
+                        <Text style={styles.tutorialNote}>{t('help_center.tutorial.male.note1')}</Text>
+                        <Text style={styles.tutorialNote}>{t('help_center.tutorial.male.note2')}</Text>
+                    </>
+                ) : (
+                    <>
+                        <Text style={styles.tutorialStep}>{t('help_center.tutorial.female.step1')}</Text>
+                        <Text style={styles.tutorialStep}>{t('help_center.tutorial.female.step2')}</Text>
+                        <Text style={styles.tutorialStep}>{t('help_center.tutorial.female.step3')}</Text>
+                        <Text style={styles.tutorialStep}>{t('help_center.tutorial.female.step4')}</Text>
+                    </>
+                )}
+            </View>
+        </ScrollView>
     );
 };
 
@@ -255,6 +314,7 @@ const contactUsRoute = () => {
 const renderScene = SceneMap({
     first: faqsRoute,
     second: contactUsRoute,
+    third: tutorialRoute,
 });
 
 // Settings help Center Screen
@@ -266,6 +326,7 @@ const SettingsHelpCenter = () => {
     const [routes] = React.useState([
         { key: 'first', title: t('help_center.tab_faq') },
         { key: 'second', title: t('help_center.tab_contact') },
+        { key: 'third', title: t('help_center.tab_tutorial') },
     ]);
 
     const renderTabBar = (props: any) => (
@@ -435,6 +496,43 @@ const styles = StyleSheet.create({
         fontFamily: "regular",
         color: COLORS.gray2,
     },
+    tutorialContainer: {
+        flex: 1,
+        padding: 16,
+    },
+    tutorialContent: {
+        backgroundColor: COLORS.grayscale100,
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 16,
+    },
+    tutorialTitle: {
+        fontSize: 18,
+        fontFamily: "bold",
+        color: COLORS.black,
+        marginBottom: 16,
+    },
+    tutorialStep: {
+        fontSize: 16,
+        fontFamily: "regular",
+        color: COLORS.black,
+        marginBottom: 12,
+        paddingLeft: 8,
+    },
+    tutorialNotesTitle: {
+        fontSize: 16,
+        fontFamily: "semiBold",
+        color: COLORS.black,
+        marginTop: 16,
+        marginBottom: 8,
+    },
+    tutorialNote: {
+        fontSize: 15,
+        fontFamily: "regular",
+        color: COLORS.gray2,
+        marginBottom: 8,
+        paddingLeft: 8,
+    }
 })
 
 export default SettingsHelpCenter

@@ -745,7 +745,18 @@
     "see_whatsapp_messages": "Si l'utilisateur accepte, vous verrez le numéro WhatsApp de l'utilisateur dans la page Messages.",
     "yes_i_swear": "Oui, je le jure",
     "request": "Demander",
-    "chat_request_sent": "Votre demande a été envoyée. Vérifiez Messages pour voir les mises à jour."
+    "chat_request_sent": "Votre demande a été envoyée. Vérifiez Messages pour voir les mises à jour.",
+    "at": "à",
+    "datetime_placeholder": "AAAA-MM-JJ HH:mm",
+    "same_timezone": "Vous êtes dans le même fuseau horaire",
+    "small_time_difference": "Faible décalage horaire de {{hours}}",
+    "moderate_time_difference": "Décalage horaire modéré de {{hours}}",
+    "large_time_difference": "Grand décalage horaire de {{hours}}",
+    "very_large_time_difference": "Très grand décalage horaire de {{hours}}",
+    "time_difference_warning": "Veuillez tenir compte du décalage horaire lors du choix de l'heure de la rencontre",
+    "meeting_time_comparison": "Comparaison de l'heure de la rencontre",
+    "your_time": "Votre heure",
+    "their_time": "Son heure"
   },
   "edit_profile": {
     "title": "Modifier le profil",
@@ -820,10 +831,29 @@
     "header_title": "Centre d'aide",
     "tab_faq": "FAQ",
     "tab_contact": "Nous contacter",
+    "tab_tutorial": "Tutoriel",
     "search_placeholder": "Rechercher",
     "contact_us": "Nous contacter",
     "whatsapp": "WhatsApp",
     "support_email_subject": "Demande de support",
+    "tutorial": {
+      "title": "Guide d'utilisation :",
+      "male": {
+        "step1": "1. Trouvez et sélectionnez un profil",
+        "step2": "2. Allez sur la page du profil et demandez ses photos en cliquant sur un bouton",
+        "step3": "3. Vérifiez la page Demandes pour voir si elle accepte la demande.",
+        "step4": "4. Si elle accepte, vous pouvez voir ses photos. Si elle vous plaît, allez sur la page du profil et demandez une rencontre vidéo",
+        "notes_title": "Remarques :",
+        "note1": "- Les profils des femmes sont vérifiés",
+        "note2": "- Pour obtenir une aide exclusive pour la convaincre, obtenez le forfait VIP ou Golden"
+      },
+      "female": {
+        "step1": "1. Trouvez et sélectionnez un profil",
+        "step2": "2. Allez sur la page du profil et demandez ses photos en cliquant sur le bouton",
+        "step3": "3. Vérifiez la page Demandes pour voir s'il accepte la demande.",
+        "step4": "4. S'il accepte, vous pouvez voir ses photos. S'il vous plaît, allez sur la page du profil et demandez une rencontre vidéo"
+      }
+    },
     "keywords": {
       "getting_started": "Commencer",
       "islamic_features": "Fonctionnalités islamiques",

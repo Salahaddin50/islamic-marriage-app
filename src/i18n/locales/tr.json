@@ -745,7 +745,18 @@
     "see_whatsapp_messages": "Kullanıcı kabul ederse Mesajlar sayfasında kullanıcının WhatsApp numarasını göreceksiniz.",
     "yes_i_swear": "Evet, yemin ederim",
     "request": "Talep Et",
-    "chat_request_sent": "Talebiniz gönderildi. Güncellemeleri görmek için Mesajları kontrol edin."
+    "chat_request_sent": "Talebiniz gönderildi. Güncellemeleri görmek için Mesajları kontrol edin.",
+    "at": "saat",
+    "datetime_placeholder": "YYYY-AA-GG SS:dd",
+    "same_timezone": "Aynı saat dilimindesiniz",
+    "small_time_difference": "Küçük saat farkı: {{hours}}",
+    "moderate_time_difference": "Orta düzey saat farkı: {{hours}}",
+    "large_time_difference": "Büyük saat farkı: {{hours}}",
+    "very_large_time_difference": "Çok büyük saat farkı: {{hours}}",
+    "time_difference_warning": "Görüşme zamanı seçerken saat farkını dikkate alın",
+    "meeting_time_comparison": "Görüşme zamanı karşılaştırması",
+    "your_time": "Sizin saatiniz",
+    "their_time": "Onun saati"
   },
   "edit_profile": {
     "title": "Profili Düzenle",
@@ -820,10 +831,29 @@
     "header_title": "Yardım Merkezi",
     "tab_faq": "SSS",
     "tab_contact": "Bizimle İletişime Geçin",
+    "tab_tutorial": "Öğretici",
     "search_placeholder": "Ara",
     "contact_us": "Bizimle İletişime Geçin",
     "whatsapp": "WhatsApp",
     "support_email_subject": "Destek talebi",
+    "tutorial": {
+      "title": "Kullanım kılavuzu:",
+      "male": {
+        "step1": "1. Bir profil bulun ve seçin",
+        "step2": "2. Profil sayfasına gidin ve bir düğmeye tıklayarak fotoğraflarını isteyin",
+        "step3": "3. İsteği kabul edip etmediğini görmek için İstekler sayfasını kontrol edin.",
+        "step4": "4. Kabul ederse, fotoğraflarını görebilirsiniz. Eğer beğenirseniz, profil sayfasına gidip görüntülü görüşme isteyin",
+        "notes_title": "Notlar:",
+        "note1": "- Kadın profilleri doğrulanmıştır",
+        "note2": "- Onu ikna etmek için özel yardım almak için VIP veya Golden Paket edinin"
+      },
+      "female": {
+        "step1": "1. Bir profil bulun ve seçin",
+        "step2": "2. Profil sayfasına gidin ve düğmeye tıklayarak fotoğraflarını isteyin",
+        "step3": "3. İsteği kabul edip etmediğini görmek için İstekler sayfasını kontrol edin.",
+        "step4": "4. Kabul ederse, fotoğraflarını görebilirsiniz. Eğer beğenirseniz, profil sayfasına gidip görüntülü görüşme isteyin"
+      }
+    },
     "keywords": {
       "getting_started": "Başlarken",
       "islamic_features": "İslami Özellikler",

@@ -163,6 +163,8 @@ export interface TimeDifferenceResult {
   otherUserTimeZone: string;
   message: string;
   isSignificant: boolean; // true if difference is 3+ hours
+  messageKey: string; // i18n key, e.g., match_details.large_time_difference
+  hoursLabel: string; // formatted label, e.g., "6 hours" or "1 hour"
 }
 
 export function calculateTimeDifference(
@@ -184,29 +186,44 @@ export function calculateTimeDifference(
   const hoursDifference = Math.abs(userTimezone.utcOffset - otherUserTimezone.utcOffset);
   const isSignificant = hoursDifference >= 3;
 
-  let message = '';
+  // Localize message via simple key map; UI should translate the label itself.
+  const hoursLabel = formatHours(hoursDifference);
+  let messageKey = 'match_details.same_timezone';
   if (hoursDifference === 0) {
-    message = 'You are in the same timezone';
+    messageKey = 'match_details.same_timezone';
   } else if (hoursDifference < 3) {
-    message = `Small time difference of ${formatHours(hoursDifference)}`;
+    messageKey = 'match_details.small_time_difference';
   } else if (hoursDifference < 6) {
-    message = `Moderate time difference of ${formatHours(hoursDifference)}`;
+    messageKey = 'match_details.moderate_time_difference';
   } else if (hoursDifference < 12) {
-    message = `Large time difference of ${formatHours(hoursDifference)}`;
+    messageKey = 'match_details.large_time_difference';
   } else {
-    message = `Very large time difference of ${formatHours(hoursDifference)}`;
+    messageKey = 'match_details.very_large_time_difference';
   }
+
+  // Backward-compatible message (English fallback)
+  const messageMap: Record<string, string> = {
+    'match_details.same_timezone': 'You are in the same timezone',
+    'match_details.small_time_difference': `Small time difference of ${hoursLabel}`,
+    'match_details.moderate_time_difference': `Moderate time difference of ${hoursLabel}`,
+    'match_details.large_time_difference': `Large time difference of ${hoursLabel}`,
+    'match_details.very_large_time_difference': `Very large time difference of ${hoursLabel}`,
+  };
+  const message = messageMap[messageKey];
 
   return {
     hoursDifference,
     userTimeZone: userTimezone.timezone,
     otherUserTimeZone: otherUserTimezone.timezone,
     message,
-    isSignificant
+    isSignificant,
+    messageKey,
+    hoursLabel
   };
 }
 
-function getTimezoneInfo(country: string): TimezoneInfo | null {
+function getTimezoneInfo(country?: string): TimezoneInfo | null {
+  if (!country) return null;
   // Get timezone info directly from country
   const countryTimezone = COUNTRY_TIMEZONES[country];
   if (countryTimezone) {

@@ -85,7 +85,18 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
 export const useLanguage = (): LanguageContextType => {
   const context = useContext(LanguageContext);
   if (context === undefined) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
+    // Safe fallback to avoid crashes if provider is not mounted yet (e.g. during initial web hydration)
+    const { t, i18n } = useTranslation();
+    const fallbackLang = getCurrentLanguage();
+    return {
+      currentLanguage: fallbackLang,
+      supportedLanguages: getSupportedLanguages(),
+      changeLanguage: async (lng: string) => {
+        await changeLanguage(lng);
+      },
+      t,
+      isRTL: fallbackLang === 'ar',
+    };
   }
   return context;
 };

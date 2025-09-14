@@ -798,7 +798,18 @@
     "see_whatsapp_messages": "If the user accepts you will see user's WhatsApp number in the Messages page.",
     "yes_i_swear": "Yes, I swear",
     "request": "Request",
-    "chat_request_sent": "Your request has been sent. Check Messages to view updates."
+    "chat_request_sent": "Your request has been sent. Check Messages to view updates.",
+    "at": "at",
+    "datetime_placeholder": "YYYY-MM-DD HH:mm",
+    "same_timezone": "You are in the same timezone",
+    "small_time_difference": "Small time difference of {{hours}}",
+    "moderate_time_difference": "Moderate time difference of {{hours}}",
+    "large_time_difference": "Large time difference of {{hours}}",
+    "very_large_time_difference": "Very large time difference of {{hours}}",
+    "time_difference_warning": "Please consider the time difference when choosing the meeting time",
+    "meeting_time_comparison": "Meeting time comparison",
+    "your_time": "Your time",
+    "their_time": "Their time"
   },
   "edit_profile": {
     "title": "Edit Profile",
@@ -873,10 +884,29 @@
     "header_title": "Help Center",
     "tab_faq": "FAQ",
     "tab_contact": "Contact Us",
+    "tab_tutorial": "Tutorial",
     "search_placeholder": "Search",
     "contact_us": "Contact Us",
     "whatsapp": "WhatsApp",
     "support_email_subject": "Support request",
+    "tutorial": {
+      "title": "How to use guide:",
+      "male": {
+        "step1": "1. Find and select a profile",
+        "step2": "2. Go to profile page and Ask her photos by clicking a button",
+        "step3": "3. Check Requests page to see If she accepts the request.",
+        "step4": "4. If she accepts, you can see her photos. If you like her, go to the profile page and request a video meeting",
+        "notes_title": "Notes:",
+        "note1": "- Ladies profiles are verified",
+        "note2": "- To get exclusive help to convince her get VIP or Golden Package"
+      },
+      "female": {
+        "step1": "1. Find and select a profile",
+        "step2": "2. Go to profile page and ask his photos by clicking the button",
+        "step3": "3. Check Requests page to see If he accepts the request.",
+        "step4": "4. If he accepts, you can see his photos. If you like him, go to the profile page and request a video meeting"
+      }
+    },
     "keywords": {
       "getting_started": "Getting Started",
       "islamic_features": "Islamic Features",
