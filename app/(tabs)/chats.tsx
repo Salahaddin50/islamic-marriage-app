@@ -6,7 +6,7 @@ import { COLORS, SIZES, icons, images } from '@/constants';
 import { Image } from 'expo-image';
 import { MessageRequestsService, MessageRequestRecord } from '@/src/services/message-requests.service';
 import { supabase } from '@/src/config/supabase';
-import { useNavigation } from 'expo-router';
+import { useNavigation, useLocalSearchParams } from 'expo-router';
 import { NavigationProp, useIsFocused } from '@react-navigation/native';
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
@@ -30,6 +30,7 @@ const Messages = () => {
   const { t } = useTranslation();
 
   const [index, setIndex] = useState(0);
+  const params = useLocalSearchParams();
   const [routes, setRoutes] = useState([
     { key: 'received', title: t('messages.tabs.received_with_count', { count: 0 }) },
     { key: 'sent', title: t('messages.tabs.sent_with_count', { count: 0 }) },
@@ -70,6 +71,15 @@ const Messages = () => {
   const [showAcceptInfoModal, setShowAcceptInfoModal] = useState(false);
   const [acceptOathConfirmed, setAcceptOathConfirmed] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<MessageRequestRecord | null>(null);
+
+  // Select tab via query param (?tab=approved|received|sent)
+  useEffect(() => {
+    const tab = (params?.tab as string | undefined)?.toLowerCase();
+    if (!tab) return;
+    if (tab === 'approved') setIndex(2);
+    else if (tab === 'sent') setIndex(1);
+    else if (tab === 'received') setIndex(0);
+  }, [params?.tab]);
 
   const sanitizePhone = (phoneCode?: string | null, mobile?: string | null): string | undefined => {
     if (!mobile) return undefined;

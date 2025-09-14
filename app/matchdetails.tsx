@@ -1249,10 +1249,7 @@ const MatchDetails = () => {
           disabled={false}
           onPress={async () => {
             if (interestStatus !== 'accepted') { setShowVideoPreconditionModal(true); return; }
-            if (meetStatus === 'accepted' && meetLink) {
-              try { await Linking.openURL(meetLink); } catch { Alert.alert(t('common.error'), t('match_details.unable_open_meeting_link')); }
-              return;
-            }
+            if (meetStatus === 'accepted') { router.push('/(tabs)/meet-requests?tab=approved'); return; }
             if (meetStatus === 'pending') {
               Alert.alert(t('match_details.video_meet'), isMeetSender ? t('match_details.pending_meet_waiting') : t('match_details.pending_meet_approve_in_tab'));
               return;
@@ -1273,8 +1270,9 @@ const MatchDetails = () => {
             (messageStatus === 'accepted') && { backgroundColor: COLORS.success },
             (messageStatus === 'pending' && isMessageSender) && styles.actionButtonDisabled,
           ]}
-          disabled={(messageStatus === 'pending' && isMessageSender) || (messageStatus === 'accepted')}
+          disabled={(messageStatus === 'pending' && isMessageSender)}
           onPress={() => {
+            if (messageStatus === 'accepted') { router.push('/(tabs)/chats?tab=approved'); return; }
             setChatOathConfirmed(false);
             setShowChatInfoModal(true);
           }}

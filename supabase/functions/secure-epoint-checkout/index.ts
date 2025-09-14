@@ -96,6 +96,19 @@ serve(async (req) => {
 
     const origin = req.headers.get('origin') || 'https://zawajplus.app'
 
+    // Read package-specific Epoint currency ratio (AZN per 1 USD)
+    let ratio = 1.7
+    try {
+      const { data: pkgRow } = await supabaseClient
+        .from('packages')
+        .select('epoint_currency')
+        .eq('package_id', package_id)
+        .maybeSingle()
+      const r = Number(pkgRow?.epoint_currency)
+      if (r && isFinite(r) && r > 0) ratio = r
+    } catch {}
+    const aznAmount = Number((amount * ratio).toFixed(2))
+
     // Build callback URL to Edge Function domain
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '' // e.g. https://xyz.supabase.co
     const fnBase = supabaseUrl.replace('.supabase.co', '.functions.supabase.co')
@@ -103,7 +116,7 @@ serve(async (req) => {
 
     const jsonPayload = {
       public_key: publicKey,
-      amount: Number(amount.toFixed(2)),
+      amount: aznAmount,
       currency: 'AZN',
       language: 'en',
       order_id: String(payment.payment_id),
@@ -155,7 +168,8 @@ serve(async (req) => {
       JSON.stringify({
         payment_id: payment.payment_id,
         package_name: payment.package_name,
-        amount: amount,
+        amount_usd: amount,
+        amount_azn: aznAmount,
         redirect_url: result.redirect_url,
         transaction: result.transaction
       }),

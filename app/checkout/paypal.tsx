@@ -33,6 +33,7 @@ export default function PaypalCheckout() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [paypalHeight, setPaypalHeight] = useState<number>(44);
   const cancelledRef = useRef(false);
+  const [epointRatio, setEpointRatio] = useState<number | null>(null);
 
   const clientId = process.env.EXPO_PUBLIC_PAYPAL_CLIENT_ID || '';
   const packageId = String(params?.package_id || '');
@@ -83,6 +84,17 @@ export default function PaypalCheckout() {
 
         const securePayment = await response.json();
         setPaymentData(securePayment);
+
+        // Fetch Epoint AZN ratio for this package to show in header (display only)
+        try {
+          const { data: pkgRow } = await supabase
+            .from('packages')
+            .select('epoint_currency')
+            .eq('package_id', packageId)
+            .maybeSingle();
+          const r = Number((pkgRow as any)?.epoint_currency);
+          if (r && isFinite(r) && r > 0) setEpointRatio(r);
+        } catch {}
 
         // Load PayPal SDK and render buttons
         const paypal = await loadPayPal(clientId);
@@ -267,7 +279,7 @@ export default function PaypalCheckout() {
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
           {paymentData && (
             <Text style={{ fontFamily: 'medium', fontSize: 14, color: COLORS.grayscale700, marginBottom: 16 }}>
-              Package: {paymentData.package_name} • Amount: ${paymentData.amount.toFixed(2)}
+              Package: {paymentData.package_name} • Amount: ${paymentData.amount.toFixed(2)}{epointRatio ? ` (AZN ${(paymentData.amount * epointRatio).toFixed(2)})` : ''}
             </Text>
           )}
           {Platform.OS === 'web' ? (
