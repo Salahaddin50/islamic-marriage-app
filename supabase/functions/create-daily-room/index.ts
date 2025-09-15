@@ -60,7 +60,14 @@ serve(async (req) => {
     let getRes = await daily(`/rooms/${roomName}`)
     if (getRes.ok) {
       const data = await getRes.json()
-      return new Response(JSON.stringify({ url: data?.url, name: data?.name }), { headers: { ...corsHeaders, "Content-Type": "application/json" } })
+      const props = (data && data.properties) || {}
+      const recordingUiDisabled = props.enable_recording_ui === false
+      const prejoinDisabled = props.enable_prejoin_ui === false
+      if (recordingUiDisabled && prejoinDisabled) {
+        return new Response(JSON.stringify({ url: data?.url, name: data?.name }), { headers: { ...corsHeaders, "Content-Type": "application/json" } })
+      }
+      // If existing room doesn't match desired config, recreate it
+      await daily(`/rooms/${roomName}`, { method: "DELETE" })
     }
 
     // Create room if not exist
@@ -71,7 +78,8 @@ serve(async (req) => {
       properties: {
         exp: Math.floor(Date.now() / 1000) + (isFinite(exp) ? exp : 3600),
         enable_screenshare: true,
-        enable_recording: "cloud", // allowed but optional
+        // Disable recording and hide its controls
+        enable_recording_ui: false,
         enable_prejoin_ui: false, // skip name/pre-call UI
         start_video_off: false,
         start_audio_off: false,
