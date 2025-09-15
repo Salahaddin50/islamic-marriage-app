@@ -12,15 +12,31 @@ function base64UrlEncode(data: Uint8Array): string {
   return btoa(binary).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_")
 }
 
-async function hmacSHA256(secret: string, input: string): Promise<string> {
+function pemToArrayBuffer(pem: string): ArrayBuffer {
+  const cleaned = pem
+    .replace(/-----BEGIN [^-]+-----/g, "")
+    .replace(/-----END [^-]+-----/g, "")
+    .replace(/\s+/g, "")
+  const binary = atob(cleaned)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+  return bytes.buffer
+}
+
+async function signRS256(privateKeyPem: string, input: string): Promise<string> {
+  const keyData = pemToArrayBuffer(privateKeyPem)
   const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
+    "pkcs8",
+    keyData,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
     false,
     ["sign"],
   )
-  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(input))
+  const sig = await crypto.subtle.sign(
+    { name: "RSASSA-PKCS1-v1_5" },
+    key,
+    new TextEncoder().encode(input),
+  )
   return base64UrlEncode(new Uint8Array(sig))
 }
 
@@ -52,7 +68,7 @@ serve(async (req) => {
 
     const JAAS_APP_ID = Deno.env.get("JAAS_APP_ID") || ""
     const JAAS_API_KEY_ID = Deno.env.get("JAAS_API_KEY_ID") || ""
-    const JAAS_API_KEY_SECRET = Deno.env.get("JAAS_API_KEY_SECRET") || ""
+    const JAAS_API_KEY_SECRET = Deno.env.get("JAAS_API_KEY_SECRET") || "" // store full RSA private key PEM
 
     if (!room) {
       return new Response(JSON.stringify({ error: "room is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } })
@@ -64,7 +80,7 @@ serve(async (req) => {
     const now = Math.floor(Date.now() / 1000)
     const exp = now + Number(ttlParam || "3600")
 
-    const header = { alg: "HS256", typ: "JWT", kid: JAAS_API_KEY_ID }
+    const header = { alg: "RS256", typ: "JWT", kid: JAAS_API_KEY_ID }
 
     const payload: Record<string, unknown> = {
       aud: "jitsi",
@@ -83,7 +99,7 @@ serve(async (req) => {
     }
 
     const unsigned = `${encode(header)}.${encode(payload)}`
-    const signature = await hmacSHA256(JAAS_API_KEY_SECRET, unsigned)
+    const signature = await signRS256(JAAS_API_KEY_SECRET, unsigned)
     const token = `${unsigned}.${signature}`
 
     return new Response(JSON.stringify({ token, tenant: JAAS_APP_ID }), {
