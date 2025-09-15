@@ -72,6 +72,7 @@ serve(async (req) => {
         exp: Math.floor(Date.now() / 1000) + (isFinite(exp) ? exp : 3600),
         enable_screenshare: true,
         enable_recording: "cloud", // allowed but optional
+        enable_prejoin_ui: false, // skip name/pre-call UI
         start_video_off: false,
         start_audio_off: false,
       },
