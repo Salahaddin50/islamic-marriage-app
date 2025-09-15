@@ -67,7 +67,6 @@ const MeetRequestsScreen = () => {
   const [showWebCallModal, setShowWebCallModal] = useState(false);
   const [webCallHtml, setWebCallHtml] = useState<string | null>(null);
   const [myDisplayName, setMyDisplayName] = useState<string>('');
-  const [myEmail, setMyEmail] = useState<string>('');
   const [showRingModal, setShowRingModal] = useState(false);
   const [ringMeetRow, setRingMeetRow] = useState<MeetRecord | null>(null);
   const [ringDismissedIds, setRingDismissedIds] = useState<Set<string>>(new Set());
@@ -138,7 +137,6 @@ const MeetRequestsScreen = () => {
     meetId: string;
   } | null>(null);
   const [isCallActive, setIsCallActive] = useState(false);
-  const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
   const [outgoingCall, setOutgoingCall] = useState<{
     receiverId: string;
     receiverName: string;
@@ -464,7 +462,7 @@ const MeetRequestsScreen = () => {
     else if (tab === 'received') setIndex(0);
   }, [params?.tab]);
 
-  // Prefetch display name/email for Jitsi auto-join
+  // Prefetch display name for Jitsi auto-join
   useEffect(() => {
     (async () => {
       try {
@@ -472,23 +470,19 @@ const MeetRequestsScreen = () => {
         if (!user) return;
         const { data } = await supabase
           .from('user_profiles')
-          .select('first_name,last_name,email')
+          .select('first_name,last_name')
           .eq('user_id', user.id)
           .maybeSingle();
         const dn = [data?.first_name, data?.last_name].filter(Boolean).join(' ').trim();
         setMyDisplayName(dn || 'Guest');
-        if ((data as any)?.email) setMyEmail((data as any).email);
       } catch {}
     })();
   }, []);
 
-  const buildJitsiHtml = (meetLink: string, displayName: string, email?: string) => {
+  const buildJitsiHtml = (meetLink: string, displayName: string) => {
     const roomName = (() => { try { return new URL(meetLink).pathname.replace(/^\//, ''); } catch { return meetLink.split('/').pop() || ''; } })();
     const safeName = (displayName || 'Guest').replace(/'/g, "\'");
-    const safeEmail = (email || '').replace(/'/g, "\'");
-    const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://rpzkugodaacelruquhtc.supabase.co';
-    const anon = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
-    return `<!DOCTYPE html><html><head><meta name=viewport content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no" /><script src="https://8x8.vc/external_api.js"></script><style>html,body,#j{margin:0;padding:0;height:100%;width:100%;background:#000;overflow:hidden}</style></head><body><div id=j></div><script>async function getToken(){const url='${supabaseUrl}/functions/v1/generate-jaas-jwt?room='+encodeURIComponent('${roomName}')+'&name='+encodeURIComponent('${safeName}')+'&email='+encodeURIComponent('${safeEmail}');const r=await fetch(url,{headers:{'Authorization':'Bearer ${anon}','apikey':'${anon}'}});if(!r.ok){throw new Error('token fail '+r.status)}const d=await r.json();return d;} (async()=>{try{const { token, tenant } = await getToken();const domain='8x8.vc';const options={roomName:'${roomName}',parentNode:document.getElementById('j'),jwt:token,configOverwrite:{prejoinPageEnabled:false,prejoinConfig:{enabled:false,hideDisplayName:true,hideExtraSettings:true,hideJoinAudioMuteButton:true,hideJoinVideoMuteButton:true},disableDeepLinking:true,startWithAudioMuted:false,startWithVideoMuted:false,enableWelcomePage:false,defaultLanguage:'en',disable1On1Mode:false,enableClosePage:false},interfaceConfigOverwrite:{MOBILE_APP_PROMO:false,HIDE_INVITE_MORE_HEADER:true,TOOLBAR_BUTTONS:['microphone','camera','hangup'],DISABLE_JOIN_LEAVE_NOTIFICATIONS:true}};const api=new JitsiMeetExternalAPI(domain, options);api.executeCommand('toggleTileView', false);api.addEventListener('videoConferenceJoined',function(){try{document.body.style.background='#000';if(api.isAudioMuted){api.isAudioMuted().then(function(m){if(m){api.executeCommand('toggleAudio');}});}if(api.isVideoMuted){api.isVideoMuted().then(function(m){if(m){api.executeCommand('toggleVideo');}});} }catch(e){}});api.addEventListener('videoConferenceLeft',function(){if(window.ReactNativeWebView&&window.ReactNativeWebView.postMessage){window.ReactNativeWebView.postMessage('left');}});}catch(e){document.body.innerHTML='<div style="color:#fff;padding:20px;text-align:center;">Failed to start meeting</div>';}})();</script></body></html>`;
+    return `<!DOCTYPE html><html><head><meta name=viewport content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no" /><script src="https://meet.jit.si/external_api.js"></script><style>html,body,#j{margin:0;padding:0;height:100%;width:100%;background:#000;overflow:hidden}</style></head><body><div id=j></div><script>const api=new JitsiMeetExternalAPI('meet.jit.si',{roomName:'${roomName}',parentNode:document.getElementById('j'),userInfo:{displayName:'${safeName}'},configOverwrite:{prejoinPageEnabled:false,disableDeepLinking:true,startWithAudioMuted:false,startWithVideoMuted:false,toolbarButtons:['microphone','camera','hangup'],enableWelcomePage:false,defaultLanguage:'en',disable1On1Mode:false,enableClosePage:false},interfaceConfigOverwrite:{MOBILE_APP_PROMO:false,HIDE_INVITE_MORE_HEADER:true,TOOLBAR_BUTTONS:['microphone','camera','hangup'],DISABLE_JOIN_LEAVE_NOTIFICATIONS:true}});api.executeCommand('toggleTileView', false);api.addEventListener('videoConferenceJoined',function(){try{document.body.style.background='#000';}catch(e){}});api.addEventListener('videoConferenceLeft',function(){if(window.ReactNativeWebView&&window.ReactNativeWebView.postMessage){window.ReactNativeWebView.postMessage('left');}});</script></body></html>`;
   };
 
   // Build Agora Web call HTML (web only): joins channel and shows local/remote
@@ -670,10 +664,9 @@ const MeetRequestsScreen = () => {
     // Join the call
     const channel = incomingCall.channel;
     if (Platform.OS === 'web') {
-      setActiveChannelId(channel);
-      const html = buildJitsiHtml(`https://meet.jit.si/zawajplus-${channel}`, myDisplayName || 'Guest', myEmail || '');
-      setJitsiHtml(html);
-      setShowJitsiModal(true);
+      const html = buildAgoraWebHtml(channel, myDisplayName || 'Guest').replace(/const appId='[^']*';/, "const appId='ef4c34713fac4794beb5636c2c0aab53';");
+      setWebCallHtml(html);
+      setShowWebCallModal(true);
     } else {
       // @ts-ignore
       navigation.navigate('call' as never, { channel } as never);
@@ -717,10 +710,9 @@ const MeetRequestsScreen = () => {
   const startVideoCall = (channel: string) => {
     setIsCallActive(true);
     if (Platform.OS === 'web') {
-      setActiveChannelId(channel);
-      const html = buildJitsiHtml(`https://meet.jit.si/zawajplus-${channel}`, myDisplayName || 'Guest', myEmail || '');
-      setJitsiHtml(html);
-      setShowJitsiModal(true);
+      const html = buildAgoraWebHtml(channel, myDisplayName || 'Guest').replace(/const appId='[^']*';/, "const appId='ef4c34713fac4794beb5636c2c0aab53';");
+      setWebCallHtml(html);
+      setShowWebCallModal(true);
     } else {
       // @ts-ignore
       navigation.navigate('call' as never, { channel } as never);
@@ -1391,10 +1383,10 @@ const MeetRequestsScreen = () => {
         </Modal>
 
         {/* Centered Jitsi Modal */}
-        <Modal visible={showJitsiModal} transparent={true} animationType="fade" onRequestClose={() => { setShowJitsiModal(false); setIsCallActive(false); try { if (activeChannelId && myUserId) { const current = approved.find(row => row.id === activeChannelId); const otherUserId = current ? (current.sender_id === myUserId ? current.receiver_id : current.sender_id) : null; if (otherUserId) { endCallSignal(otherUserId, activeChannelId); } } } catch {} setActiveChannelId(null); }}>
+        <Modal visible={showJitsiModal} transparent={true} animationType="fade" onRequestClose={() => setShowJitsiModal(false)}>
           <View style={styles.modalContainer}>
             <View style={styles.jitsiCard}>
-              <TouchableOpacity style={styles.jitsiCloseButton} onPress={() => { setShowJitsiModal(false); setIsCallActive(false); try { if (activeChannelId && myUserId) { const current = approved.find(row => row.id === activeChannelId); const otherUserId = current ? (current.sender_id === myUserId ? current.receiver_id : current.sender_id) : null; if (otherUserId) { endCallSignal(otherUserId, activeChannelId); } } } catch {} setActiveChannelId(null); }}>
+              <TouchableOpacity style={styles.jitsiCloseButton} onPress={() => setShowJitsiModal(false)}>
                 <Text style={styles.jitsiCloseButtonText}>×</Text>
               </TouchableOpacity>
               <View style={styles.jitsiVideoContainer}>
