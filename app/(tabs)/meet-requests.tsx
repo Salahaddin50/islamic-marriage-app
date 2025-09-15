@@ -137,6 +137,7 @@ const MeetRequestsScreen = () => {
     meetId: string;
   } | null>(null);
   const [isCallActive, setIsCallActive] = useState(false);
+  const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
   const [outgoingCall, setOutgoingCall] = useState<{
     receiverId: string;
     receiverName: string;
@@ -494,6 +495,14 @@ const MeetRequestsScreen = () => {
     return `<!DOCTYPE html><html><head><meta charset="utf-8"/><meta name=viewport content="width=device-width, initial-scale=1"/><style>html,body,#app{margin:0;padding:0;height:100%;width:100%;background:#000;overflow:hidden}#videos{position:relative;width:100%;height:100%}#local{position:absolute;right:12px;top:12px;width:160px;height:120px;border-radius:8px;overflow:hidden}#remote{position:absolute;left:0;top:0;right:0;bottom:0}#status{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:white;font-family:Arial;text-align:center;padding:20px;background:rgba(0,0,0,0.8);border-radius:8px;max-width:80%;}</style><script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.18.0.js"></script></head><body><div id="app"><div id="videos"><div id="remote"></div><div id="local"></div></div><div id="status">Connecting...</div></div><script>const appId='${effectiveAppId}';const channel='${safeChannel}';const userName='${safeName}';let client,localTrack,localMic;async function fetchToken(c,uid){try{const base='${supabaseUrl}';const url=base+'/functions/v1/generate-agora-token?channel='+encodeURIComponent(c)+'&uid='+(uid||0);console.log('Fetching token from:',url);const res=await fetch(url,{method:'GET',headers:{'Authorization':'Bearer ${process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwemt1Z29kYWFjZWxydXF1aHRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyOTIwNTQsImV4cCI6MjA3MDg2ODA1NH0.NEPLSSs8JG4LK-RwJWI3GIg9hwzQLMXyllVF3Fv3yCE'}','Content-Type':'application/json'}});console.log('Token response status:',res.status);if(!res.ok){const errorText=await res.text();console.error('Token server error:',res.status,errorText);throw new Error('Token server error: '+res.status);}const data=await res.json();console.log('Token received:',data.token?'✓':'✗');return data.token;}catch(e){console.error('Token fetch failed',e);return null;}}async function start(){const statusEl=document.getElementById('status');try{statusEl.textContent='Initializing...';client=AgoraRTC.createClient({mode:'rtc',codec:'vp8'});client.on('user-published',async(user,mediaType)=>{await client.subscribe(user,mediaType);if(mediaType==='video'){user.videoTrack.play('remote');}if(mediaType==='audio'){user.audioTrack.play();}statusEl.style.display='none';});statusEl.textContent='Joining call...';const uid=Math.floor(Math.random()*100000);const token=await fetchToken(channel,uid);await client.join(appId,channel,token||null,uid);statusEl.textContent='Starting camera...';localTrack=await AgoraRTC.createCameraVideoTrack();localMic=await AgoraRTC.createMicrophoneAudioTrack();localTrack.play('local');await client.publish([localTrack,localMic]);statusEl.style.display='none';}catch(e){console.error('Agora error:',e);if(e.message && e.message.includes('CAN_NOT_GET_GATEWAY_SERVER')){statusEl.innerHTML='<div style="color:#ff6b6b;line-height:1.4;">⚠️ Authentication Error<br/><br/>Token required and could not be obtained.<br/><br/><small>Please try again.</small></div>'; }else{statusEl.innerHTML='<div style="color:#ff6b6b;">Call failed: '+e.message+'<br/><small>Please try again</small></div>';}}}function cleanup(){try{if(localTrack){localTrack.stop();localTrack.close();}if(localMic){localMic.stop();localMic.close();}if(client){client.leave();}}catch(e){}}window.addEventListener('beforeunload',cleanup);start();</script></body></html>`;
   };
 
+  // Build Daily Web call HTML (web only): create/fetch room and embed iframe
+  const buildDailyWebHtml = (channelId: string, displayName: string) => {
+    const safeChannel = (channelId || 'default').replace(/[^a-zA-Z0-9-_]/g, '');
+    const safeName = (displayName || 'Guest').replace(/'/g, "\'");
+    const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://rpzkugodaacelruquhtc.supabase.co';
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"/><meta name=viewport content="width=device-width, initial-scale=1"/><style>html,body,#app{margin:0;padding:0;height:100%;width:100%;background:#000;overflow:hidden}#status{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:white;font-family:Arial;text-align:center;padding:20px;background:rgba(0,0,0,0.8);border-radius:8px;max-width:80%;}</style></head><body><div id="app"><div id="status">Preparing room...</div></div><script>const channel='${safeChannel}';const displayName='${safeName}';async function getRoom(){const url='${supabaseUrl}/functions/v1/create-daily-room?channel='+encodeURIComponent(channel);const res=await fetch(url,{method:'GET'});if(!res.ok){const t=await res.text();throw new Error('Room API error '+res.status+' '+t);}const d=await res.json();return d&&d.url;}async function start(){const statusEl=document.getElementById('status');try{statusEl.textContent='Creating room...';const roomUrl=await getRoom();if(!roomUrl){throw new Error('No room URL');}statusEl.textContent='Joining...';const iframe=document.createElement('iframe');iframe.allow='camera; microphone; fullscreen; display-capture; autoplay; clipboard-read; clipboard-write';iframe.style.cssText='position:absolute;left:0;top:0;right:0;bottom:0;width:100%;height:100%;border:0;';const u=new URL(roomUrl);u.searchParams.set('userName', displayName);iframe.src=u.toString();document.getElementById('app').appendChild(iframe);statusEl.style.display='none';}catch(e){console.error('Daily error:',e);statusEl.innerHTML='<div style="color:#ff6b6b;line-height:1.4;">Failed to start Daily call<br/><small>'+e.message+'</small></div>';}}window.addEventListener('beforeunload',()=>{});start();</script></body></html>`;
+  };
+
   // Normalize any meeting link to meet.jit.si domain to avoid JaaS dev limits
   const toMeetJitsiUrl = (link?: string | null) => {
     if (!link) return null;
@@ -664,7 +673,8 @@ const MeetRequestsScreen = () => {
     // Join the call
     const channel = incomingCall.channel;
     if (Platform.OS === 'web') {
-      const html = buildAgoraWebHtml(channel, myDisplayName || 'Guest').replace(/const appId='[^']*';/, "const appId='ef4c34713fac4794beb5636c2c0aab53';");
+      setActiveChannelId(channel);
+      const html = buildDailyWebHtml(channel, myDisplayName || 'Guest');
       setWebCallHtml(html);
       setShowWebCallModal(true);
     } else {
@@ -710,7 +720,8 @@ const MeetRequestsScreen = () => {
   const startVideoCall = (channel: string) => {
     setIsCallActive(true);
     if (Platform.OS === 'web') {
-      const html = buildAgoraWebHtml(channel, myDisplayName || 'Guest').replace(/const appId='[^']*';/, "const appId='ef4c34713fac4794beb5636c2c0aab53';");
+      setActiveChannelId(channel);
+      const html = buildDailyWebHtml(channel, myDisplayName || 'Guest');
       setWebCallHtml(html);
       setShowWebCallModal(true);
     } else {
@@ -1416,7 +1427,7 @@ const MeetRequestsScreen = () => {
           </View>
         </Modal>
 
-        {/* Web-only Agora Call Modal */}
+        {/* Web-only Daily Call Modal */}
         {Platform.OS === 'web' && (
           <Modal visible={showWebCallModal} transparent={true} animationType="fade" onRequestClose={() => setShowWebCallModal(false)}>
             <View style={styles.modalContainer}>
@@ -1426,12 +1437,13 @@ const MeetRequestsScreen = () => {
                   setIsCallActive(false);
                   // End call signal if this was an active call
                   if (isCallActive && approved.length > 0) {
-                    const currentCall = approved.find(row => row.id === webCallHtml?.match(/channel='([^']+)'/)?.[1]);
+                    const currentCall = approved.find(row => row.id === activeChannelId);
                     if (currentCall && myUserId) {
                       const otherUserId = currentCall.sender_id === myUserId ? currentCall.receiver_id : currentCall.sender_id;
                       endCallSignal(otherUserId, currentCall.id);
                     }
                   }
+                  setActiveChannelId(null);
                 }}>
                   <Text style={styles.jitsiCloseButtonText}>×</Text>
             </TouchableOpacity>
@@ -1440,7 +1452,7 @@ const MeetRequestsScreen = () => {
                     <iframe
                       srcDoc={webCallHtml as any}
                       style={{ width: '100%', height: '100%', border: 0 } as any}
-                      allow="camera; microphone; fullscreen; autoplay"
+                      allow="camera; microphone; fullscreen; autoplay; display-capture"
                     />
                   )}
                 </View>
