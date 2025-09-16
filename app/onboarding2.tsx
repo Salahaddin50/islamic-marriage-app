@@ -24,7 +24,7 @@ const Onboarding2 = () => {
           clearInterval(intervalId);
           return prevProgress;
         }
-        return prevProgress + 0.75;
+        return prevProgress + (1 / 6);
       });
     }, 2000);
     intervalRef.current = intervalId;

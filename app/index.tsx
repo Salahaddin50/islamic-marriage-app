@@ -75,7 +75,7 @@ const Index = () => {
           clearInterval(intervalId);
           return prevProgress;
         }
-        return prevProgress + 0.75;
+        return prevProgress + (1 / 6);
       });
     }, 2000);
     intervalRef.current = intervalId;
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
   },
   description: {
-    fontSize: getResponsiveFontSize(14),
+    fontSize: getResponsiveFontSize(16),
     fontFamily: "regular",
     color: COLORS.gray,
     textAlign: 'center',
