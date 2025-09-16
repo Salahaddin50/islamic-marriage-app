@@ -9,6 +9,7 @@ const rootDir = path.join(__dirname, '..');
 const webBuildDir = path.join(rootDir, 'web-build');
 const testBuildDir = path.join(rootDir, 'web-build-test');
 const fallbackHtml = path.join(testBuildDir, 'fallback.html');
+const publicDir = path.join(rootDir, 'public');
 
 // Ensure web-build directory exists
 if (!fs.existsSync(webBuildDir)) {
@@ -45,6 +46,31 @@ if (!fs.existsSync(indexPath)) {
       </html>
     `);
   }
+}
+
+// Copy static files from public/ into web-build/ so they are served at site root
+if (fs.existsSync(publicDir)) {
+  console.log('Copying static files from public/ to web-build/...');
+
+  const copyRecursive = (src, dest) => {
+    if (!fs.existsSync(dest)) {
+      fs.mkdirSync(dest, { recursive: true });
+    }
+    const entries = fs.readdirSync(src, { withFileTypes: true });
+    for (const entry of entries) {
+      const srcPath = path.join(src, entry.name);
+      const destPath = path.join(dest, entry.name);
+      if (entry.isDirectory()) {
+        copyRecursive(srcPath, destPath);
+      } else {
+        fs.copyFileSync(srcPath, destPath);
+      }
+    }
+  };
+
+  copyRecursive(publicDir, webBuildDir);
+} else {
+  console.log('No public/ directory found to copy. Skipping.');
 }
 
 // Create a _redirects file for Vercel
