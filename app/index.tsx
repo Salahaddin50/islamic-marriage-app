@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
   description: {
     fontSize: getResponsiveFontSize(16),
     fontFamily: "regular",
-    color: COLORS.gray,
+    color: COLORS.grayscale700,
     textAlign: 'center',
     lineHeight: getResponsiveFontSize(20),
     paddingHorizontal: getResponsiveSpacing(8),

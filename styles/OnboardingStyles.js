@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
     },
     description: {
         ...FONTS.body3,
-        color: COLORS.black,
+        color: COLORS.grayscale700,
         textAlign: 'center',
         marginBottom: 16,
         maxWidth: isDesktop ? 640 : undefined,
