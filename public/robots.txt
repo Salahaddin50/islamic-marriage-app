@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Optionally keep onboarding steps out of the index
+Disallow: /onboarding2
+Disallow: /onboarding3
+Disallow: /onboarding4
+
+Sitemap: https://zawajplus.app/sitemap.xml
+
+
