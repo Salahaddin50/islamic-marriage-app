@@ -69,6 +69,23 @@ if (fs.existsSync(publicDir)) {
   };
 
   copyRecursive(publicDir, webBuildDir);
+
+  // Ensure favicon/logo exist in deploy root even if not in public/
+  const assetsDir = path.join(rootDir, 'assets', 'images');
+  try {
+    const candidateFiles = [
+      { src: path.join(assetsDir, 'favicon.png'), dest: path.join(webBuildDir, 'favicon.png') },
+      { src: path.join(assetsDir, 'logo.png'), dest: path.join(webBuildDir, 'logo.png') }
+    ];
+    for (const f of candidateFiles) {
+      if (fs.existsSync(f.src) && !fs.existsSync(f.dest)) {
+        fs.copyFileSync(f.src, f.dest);
+        console.log('Copied', f.src, '->', f.dest);
+      }
+    }
+  } catch (e) {
+    console.warn('Optional copy of favicon/logo failed:', e?.message || e);
+  }
 } else {
   console.log('No public/ directory found to copy. Skipping.');
 }
