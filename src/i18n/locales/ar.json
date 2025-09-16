@@ -221,6 +221,10 @@
     "badges": {
       "total_profiles": "{{count}} ملف"
     },
+    "empty": {
+      "no_matches": "لا توجد نتائج مطابقة مع المرشحات الحالية",
+      "adjust_filters": "جرّب تعديل المرشحات لرؤية مزيد من النتائج"
+    },
     "filters": {
       "select_country": "اختر الدولة",
       "select_city": "اختر المدينة",

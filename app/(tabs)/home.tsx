@@ -1642,9 +1642,9 @@ const HomeScreen = () => {
       <View style={[styles.container, { backgroundColor: COLORS.white }]}>
         {renderHeader()}
           <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>No matches found with current filters</Text>
+            <Text style={styles.loadingText}>{t('home.empty.no_matches')}</Text>
             <Text style={[styles.loadingText, { fontSize: 14, marginTop: 8, opacity: 0.7 }]}>
-              Try adjusting your filters to see more results
+              {t('home.empty.adjust_filters')}
             </Text>
           </View>
 
@@ -2103,6 +2103,66 @@ const HomeScreen = () => {
                   }
                 }}
               />
+            </View>
+          </RBSheet>
+
+          {/* Crown Menu Bottom Sheet (also available in empty state) */}
+          <RBSheet
+            ref={refCrownSheet}
+            closeOnPressMask={true}
+            height={120}
+            customStyles={{
+              wrapper: {
+                backgroundColor: "rgba(0,0,0,0.5)",
+              },
+              draggableIcon: {
+                backgroundColor: COLORS.grayscale200,
+                height: 4
+              },
+              container: {
+                borderTopRightRadius: 32,
+                borderTopLeftRadius: 32,
+                height: 120,
+                backgroundColor: COLORS.white
+              }
+            }}
+          >
+            <View style={styles.crownMenuContainer}>
+              <View style={styles.crownMenuContent}>
+                <Image
+                  source={icons.crown2}
+                  resizeMode='contain'
+                  style={[styles.crownMenuIcon, { tintColor: crownColor }]}
+                />
+                <Text style={styles.crownMenuPackage}>
+                  {currentPackage 
+                    ? t(`home.crown_menu.package_names.${currentPackage}`)
+                    : t('home.crown_menu.no_package')}
+                </Text>
+              </View>
+              
+              <TouchableOpacity
+                onPress={() => {
+                  if (currentPackage !== 'golden_premium') {
+                    refCrownSheet.current?.close();
+                    navigation.navigate('membership' as never);
+                  }
+                }}
+                disabled={currentPackage === 'golden_premium'}
+                style={[
+                  styles.upgradeButton,
+                  currentPackage === 'golden_premium' && styles.upgradeButtonDisabled
+                ]}
+              >
+                <Text style={[
+                  styles.upgradeButtonText,
+                  currentPackage === 'golden_premium' && styles.upgradeButtonTextDisabled
+                ]}>
+                  {currentPackage === 'golden_premium' 
+                    ? t('home.crown_menu.max_level') 
+                    : t('home.crown_menu.upgrade')}
+                </Text>
+              </TouchableOpacity>
             </View>
           </RBSheet>
         </View>

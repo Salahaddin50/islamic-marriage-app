@@ -342,6 +342,10 @@
     "badges": {
       "total_profiles": "{{count}} profils"
     },
+    "empty": {
+      "no_matches": "Aucune correspondance trouvée avec les filtres actuels",
+      "adjust_filters": "Essayez d'ajuster vos filtres pour voir plus de résultats"
+    },
     "filters": {
       "select_country": "Sélectionner le pays",
       "select_city": "Sélectionner la ville",
