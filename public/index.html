@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZawajPlus - Islamic Marriage Platform</title>
+    <meta name="description" content="The only Islamic platform dedicated exclusively for Polygamous Marriages following Quran and Sunnah.">
+    <link rel="icon" href="landing-page/assets/images/logo2.png">
+</head>
+<body>
+    <script>
+        // Smart routing based on device type
+        function isDesktopDevice() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(userAgent);
+            const screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+            
+            // Consider desktop if not mobile device AND screen width >= 1024px
+            return !isMobile && screenWidth >= 1024;
+        }
+        
+        function routeUser() {
+            const isDesktop = isDesktopDevice();
+            const currentPath = window.location.pathname;
+            
+            // If user is directly accessing a specific route, don't redirect
+            if (currentPath.match(/\/(welcome|login|signup|onboarding|landing)/)) {
+                return;
+            }
+            
+            if (isDesktop) {
+                // Desktop users see the beautiful landing page
+                window.location.href = '/landing.html';
+            } else {
+                // Mobile users go to React Native app
+                window.location.href = '/app';
+            }
+        }
+        
+        // Execute routing immediately
+        routeUser();
+    </script>
+    
+    <!-- Fallback content if JavaScript is disabled -->
+    <noscript>
+        <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+            <h1>ZawajPlus - Islamic Marriage Platform</h1>
+            <p>Please enable JavaScript to continue.</p>
+            <p><a href="/landing.html">Continue to Landing Page</a></p>
+        </div>
+    </noscript>
+</body>
+</html>

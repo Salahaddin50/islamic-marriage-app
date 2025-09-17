@@ -167,5 +167,42 @@
 <body>
   <noscript>You need to enable JavaScript to run this app.</noscript>
   <div id="root"></div>
+  
+  <script>
+    // Device detection and routing logic
+    function isDesktopDevice() {
+      const userAgent = navigator.userAgent.toLowerCase();
+      const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(userAgent);
+      const isTablet = /ipad|android(?!.*mobile)/i.test(userAgent);
+      const screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+      
+      // Consider desktop if:
+      // 1. Not mobile device AND screen width >= 1024px
+      // 2. OR specifically desktop user agents
+      return (!isMobile && screenWidth >= 1024) || 
+             /windows nt|macintosh|linux/i.test(userAgent) && screenWidth >= 1024;
+    }
+    
+    function shouldRedirectToLanding() {
+      // Check if user is on desktop and not already on landing page
+      const isDesktop = isDesktopDevice();
+      const isAlreadyOnLanding = window.location.pathname.includes('landing.html');
+      const isDirectAppRoute = window.location.pathname.match(/\/(welcome|login|signup|onboarding)/);
+      
+      // Redirect to landing if:
+      // 1. Desktop device
+      // 2. Not already on landing page
+      // 3. Not accessing a specific app route directly
+      return isDesktop && !isAlreadyOnLanding && !isDirectAppRoute;
+    }
+    
+    // Perform redirect before React app loads
+    if (shouldRedirectToLanding()) {
+      // Add a small delay to ensure smooth transition
+      setTimeout(() => {
+        window.location.href = '/landing.html';
+      }, 100);
+    }
+  </script>
 </body>
 </html>
