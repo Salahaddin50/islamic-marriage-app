@@ -16,7 +16,6 @@
     { "source": "/signup", "destination": "/index.html" },
     { "source": "/onboarding(.*)", "destination": "/index.html" },
     { "source": "/\\(tabs\\)/(.*)", "destination": "/index.html" },
-    { "source": "/", "destination": "/public/device-router.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
