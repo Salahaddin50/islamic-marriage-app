@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZawajPlus - Islamic Marriage Platform</title>
+    <meta name="description" content="The only Islamic platform dedicated exclusively for Polygamous Marriages following Quran and Sunnah.">
+    <link rel="icon" href="landing-page/assets/images/logo2.png">
+    
+    <!-- Preload landing page for faster desktop experience -->
+    <link rel="preload" href="landing.html" as="document">
+    
+    <style>
+        /* Loading screen while detecting device */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #9610FF 0%, #6C4DDA 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+        
+        .loader {
+            max-width: 400px;
+            padding: 20px;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .text {
+            opacity: 0.9;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="loader">
+        <div class="logo">💜</div>
+        <h1>ZawajPlus</h1>
+        <div class="spinner"></div>
+        <div class="text">Detecting your device...</div>
+    </div>
+
+    <script>
+        // Comprehensive device detection
+        function isDesktopDevice() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            
+            // Mobile device patterns
+            const mobilePatterns = [
+                /android/i,
+                /webos/i,
+                /iphone/i,
+                /ipad/i,
+                /ipod/i,
+                /blackberry/i,
+                /iemobile/i,
+                /opera mini/i,
+                /mobile/i,
+                /windows phone/i
+            ];
+            
+            // Check if any mobile pattern matches
+            const isMobileUA = mobilePatterns.some(pattern => pattern.test(userAgent));
+            
+            // Screen size detection
+            const screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+            const screenHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+            
+            // Touch capability detection
+            const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            
+            // Desktop criteria:
+            // 1. Not mobile user agent
+            // 2. Screen width >= 1024px OR (screen width >= 768px AND no touch)
+            // 3. Desktop OS indicators
+            const isDesktopUA = /windows nt|macintosh|linux/i.test(userAgent) && !/mobile/i.test(userAgent);
+            const isDesktopScreen = screenWidth >= 1024 || (screenWidth >= 768 && !hasTouch);
+            
+            return !isMobileUA && (isDesktopScreen || isDesktopUA);
+        }
+        
+        function routeUser() {
+            try {
+                const isDesktop = isDesktopDevice();
+                const currentPath = window.location.pathname;
+                const currentHost = window.location.hostname;
+                
+                console.log('Device detection:', {
+                    isDesktop,
+                    userAgent: navigator.userAgent,
+                    screenWidth: window.innerWidth,
+                    hasTouch: 'ontouchstart' in window,
+                    currentPath,
+                    currentHost
+                });
+                
+                // Handle both www and non-www domains
+                const isMainDomain = currentHost.includes('zawajplus.app') || 
+                                   currentHost.includes('localhost') || 
+                                   currentHost.includes('127.0.0.1');
+                
+                // If user is directly accessing a specific route, don't redirect
+                if (currentPath.match(/\/(welcome|login|signup|onboarding|admin|landing)/)) {
+                    console.log('Direct route access, no redirect needed');
+                    return;
+                }
+                
+                if (isDesktop) {
+                    console.log('Desktop detected, redirecting to landing page');
+                    // Desktop users see the beautiful landing page
+                    window.location.replace('/landing.html');
+                } else {
+                    console.log('Mobile detected, redirecting to React app');
+                    // Mobile users go to React Native app
+                    window.location.replace('/app');
+                }
+                
+            } catch (error) {
+                console.error('Routing error:', error);
+                // Fallback to landing page if there's an error
+                window.location.replace('/landing.html');
+            }
+        }
+        
+        // Execute routing after a short delay to ensure page is ready
+        setTimeout(routeUser, 200);
+        
+        // Fallback if routing doesn't work within 3 seconds
+        setTimeout(() => {
+            console.log('Fallback routing to landing page');
+            window.location.replace('/landing.html');
+        }, 3000);
+    </script>
+</body>
+</html>

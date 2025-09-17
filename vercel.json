@@ -11,11 +11,13 @@
     { "source": "/landing-simple.html", "destination": "/public/landing-simple.html" },
     { "source": "/admin(.*)", "destination": "/public$1" },
     { "source": "/auth/callback", "destination": "/index.html" },
-    { "source": "/app/(.*)", "destination": "/index.html" },
     { "source": "/welcome", "destination": "/index.html" },
     { "source": "/login", "destination": "/index.html" },
     { "source": "/signup", "destination": "/index.html" },
-    { "source": "/(.*)", "destination": "/public/index.html" }
+    { "source": "/onboarding(.*)", "destination": "/index.html" },
+    { "source": "/\\(tabs\\)/(.*)", "destination": "/index.html" },
+    { "source": "/", "destination": "/public/device-router.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
     {
