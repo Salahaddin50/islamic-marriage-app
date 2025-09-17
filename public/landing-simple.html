@@ -851,6 +851,12 @@
                         <div class="language-option" data-lang="tr" onclick="changeLanguage('tr')">
                             <span>Türkçe</span>
                         </div>
+                        <div class="language-option" data-lang="ru" onclick="changeLanguage('ru')">
+                            <span>Русский</span>
+                        </div>
+                        <div class="language-option" data-lang="fr" onclick="changeLanguage('fr')">
+                            <span>Français</span>
+                        </div>
                     </div>
                 </div>
                 <a href="/login" class="cta-nav">
@@ -1177,6 +1183,42 @@
                 common: {
                     learn_more: "Daha Fazla"
                 }
+            },
+            ru: {
+                nav: {
+                    home: "Главная",
+                    features: "Возможности",
+                    about: "О нас",
+                    contact: "Контакты",
+                    sign_in: "Войти"
+                },
+                onboarding: {
+                    welcome_greeting: "Ассаляму Алейкум",
+                    welcome_title: "Знакомьтесь по видео и женитесь быстро",
+                    welcome_description: "Единственная исламская платформа, посвящённая исключительно полигамным бракам в соответствии с Кораном и Сунной.",
+                    get_started: "Начать"
+                },
+                common: {
+                    learn_more: "Узнать больше"
+                }
+            },
+            fr: {
+                nav: {
+                    home: "Accueil",
+                    features: "Fonctionnalités",
+                    about: "À propos",
+                    contact: "Contact", 
+                    sign_in: "Se connecter"
+                },
+                onboarding: {
+                    welcome_greeting: "Assalamu Aleykoum",
+                    welcome_title: "Rencontrez en vidéo et mariez‑vous vite",
+                    welcome_description: "La seule plateforme islamique dédiée exclusivement aux Mariages Polygames suivant le Coran et la Sunna.",
+                    get_started: "Commencer"
+                },
+                common: {
+                    learn_more: "En savoir plus"
+                }
             }
         };
 
@@ -1214,7 +1256,9 @@
             const langNames = {
                 'en': 'English',
                 'ar': 'العربية', 
-                'tr': 'Türkçe'
+                'tr': 'Türkçe',
+                'ru': 'Русский',
+                'fr': 'Français'
             };
             currentLanguageEl.textContent = langNames[lang];
 
