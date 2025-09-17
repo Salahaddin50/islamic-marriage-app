@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Modal,
   Dimensions,
+  Pressable,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { COLORS, SIZES } from '../constants';
@@ -159,11 +160,8 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
         animationType="slide"
         onRequestClose={handleClose}
       >
-        <TouchableOpacity
-          style={styles.overlay}
-          activeOpacity={1}
-          onPress={handleClose}
-        >
+        <View style={styles.overlay}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
           <View style={styles.modalContainer}>
             {/* Header */}
             <View style={styles.modalHeader}>
@@ -197,6 +195,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
               keyExtractor={(item) => `${item.value}-${item.label}`}
               style={styles.flatList}
               showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
               ListEmptyComponent={
                 <View style={styles.emptyContainer}>
                   <Text style={styles.emptyText}>No results found</Text>
@@ -204,7 +203,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
               }
             />
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
     </View>
   );
