@@ -1,10 +1,16 @@
 User-agent: *
 Allow: /
 
+# Allow landing page for SEO
+Allow: /landing.html
+
 # Optionally keep onboarding steps out of the index
 Disallow: /onboarding2
 Disallow: /onboarding3
 Disallow: /onboarding4
+
+# Admin pages should not be indexed
+Disallow: /admin*
 
 Sitemap: https://zawajplus.app/sitemap.xml
 
