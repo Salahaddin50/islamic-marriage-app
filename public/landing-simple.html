@@ -8,19 +8,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #667eea;
-            --primary-dark: #764ba2;
-            --secondary-color: #f093fb;
-            --accent-gold: #d4af37;
-            --text-dark: #1f2937;
-            --text-gray: #6b7280;
-            --text-light: #9ca3af;
+            --primary-color: #9610FF;
+            --primary-dark: #6C4DDA;
+            --secondary-color: #FFD300;
+            --accent-gold: #FFD300;
+            --text-dark: #181A20;
+            --text-gray: #616161;
+            --text-light: #9E9E9E;
             --white: #ffffff;
-            --light-bg: #f8fafc;
-            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --gradient-gold: linear-gradient(135deg, #d4af37 0%, #f7dc6f 100%);
-            --shadow-soft: 0 10px 40px rgba(102, 126, 234, 0.1);
+            --light-bg: #F8F8F8;
+            --gradient-primary: linear-gradient(135deg, #9610FF 0%, #6C4DDA 100%);
+            --gradient-secondary: linear-gradient(135deg, #FFD300 0%, #FB9400 100%);
+            --gradient-gold: linear-gradient(135deg, #FFD300 0%, #FB9400 100%);
+            --shadow-soft: 0 10px 40px rgba(150, 16, 255, 0.1);
             --shadow-medium: 0 20px 60px rgba(0, 0, 0, 0.1);
             --shadow-strong: 0 30px 80px rgba(0, 0, 0, 0.15);
         }
@@ -55,7 +55,7 @@
         .navbar.scrolled {
             background: rgba(255, 255, 255, 0.95);
             box-shadow: var(--shadow-soft);
-            border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+            border-bottom: 1px solid rgba(150, 16, 255, 0.1);
         }
 
         .nav-container {
@@ -65,6 +65,86 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* Language Selector */
+        .language-selector {
+            position: relative;
+            display: inline-block;
+        }
+
+        .language-btn {
+            background: transparent;
+            border: 1px solid rgba(150, 16, 255, 0.2);
+            border-radius: 8px;
+            padding: 6px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: var(--primary-color);
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .language-btn:hover {
+            background: rgba(150, 16, 255, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .language-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: var(--shadow-medium);
+            min-width: 120px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-5px);
+            transition: all 0.2s ease;
+        }
+
+        .language-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .language-option {
+            padding: 10px 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-dark);
+            border-bottom: 1px solid #f3f4f6;
+            transition: background 0.2s ease;
+        }
+
+        .language-option:last-child {
+            border-bottom: none;
+        }
+
+        .language-option:hover {
+            background: var(--light-bg);
+        }
+
+        .language-option.active {
+            background: rgba(150, 16, 255, 0.1);
+            color: var(--primary-color);
+            font-weight: 600;
         }
 
         .logo {
@@ -82,13 +162,15 @@
         .logo-icon {
             width: 40px;
             height: 40px;
-            background: var(--gradient-primary);
-            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 20px;
+        }
+
+        .logo-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
 
         .nav-links {
@@ -125,19 +207,20 @@
         }
 
         .cta-nav {
-            background: var(--gradient-primary);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 12px;
+            color: var(--primary-color);
             text-decoration: none;
             font-weight: 600;
             transition: all 0.3s ease;
-            box-shadow: var(--shadow-soft);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            border-radius: 8px;
         }
 
         .cta-nav:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-medium);
+            color: var(--primary-dark);
+            background: rgba(150, 16, 255, 0.1);
         }
 
         /* Hero Section */
@@ -148,6 +231,7 @@
             position: relative;
             overflow: hidden;
             background: linear-gradient(135deg, #f8fafc 0%, #e3f2fd 100%);
+            padding-top: 80px; /* Add padding to prevent navbar overlap */
         }
 
         .hero-container {
@@ -254,10 +338,8 @@
             width: 100%;
             height: auto;
             max-width: 500px;
-            border-radius: 24px;
-            box-shadow: var(--shadow-strong);
-            background: white;
-            padding: 40px;
+            position: relative;
+            z-index: 2;
         }
 
         /* Section Styles */
@@ -342,8 +424,26 @@
             width: 100%;
             height: auto;
             max-width: 450px;
-            border-radius: 20px;
-            box-shadow: var(--shadow-medium);
+            position: relative;
+            z-index: 2;
+        }
+
+        .floating-ornament {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: auto;
+            max-width: 600px;
+            opacity: 0.15;
+            z-index: 1;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(-50%, -50%) translateY(0px) rotate(0deg); }
+            50% { transform: translate(-50%, -50%) translateY(-20px) rotate(2deg); }
         }
 
         .image-placeholder {
@@ -699,19 +799,40 @@
         <div class="nav-container">
             <div class="logo">
                 <div class="logo-icon">
-                    <i class="fas fa-heart"></i>
+                    <img src="landing-page/assets/images/logo2.png" alt="ZawajPlus Logo">
                 </div>
                 ZawajPlus
             </div>
             <ul class="nav-links">
-                <li><a href="#home">Home</a></li>
-                <li><a href="#features">Features</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#contact">Contact</a></li>
+                <li><a href="#home" data-translate="nav.home">Home</a></li>
+                <li><a href="#features" data-translate="nav.features">Features</a></li>
+                <li><a href="#about" data-translate="nav.about">About</a></li>
+                <li><a href="#contact" data-translate="nav.contact">Contact</a></li>
             </ul>
-            <a href="#download" class="cta-nav">
-                <i class="fas fa-download"></i> Download App
-            </a>
+            <div class="nav-right">
+                <div class="language-selector">
+                    <button class="language-btn" onclick="toggleLanguageMenu()">
+                        <i class="fas fa-globe"></i>
+                        <span id="currentLang">English</span>
+                        <i class="fas fa-chevron-down" style="font-size: 10px;"></i>
+                    </button>
+                    <div class="language-menu" id="languageMenu">
+                        <div class="language-option active" data-lang="en" onclick="changeLanguage('en')">
+                            <span>English</span>
+                        </div>
+                        <div class="language-option" data-lang="ar" onclick="changeLanguage('ar')">
+                            <span>العربية</span>
+                        </div>
+                        <div class="language-option" data-lang="tr" onclick="changeLanguage('tr')">
+                            <span>Türkçe</span>
+                        </div>
+                    </div>
+                </div>
+                <a href="login.html" class="cta-nav">
+                    <i class="fas fa-sign-in-alt"></i> 
+                    <span data-translate="nav.sign_in">Sign In</span>
+                </a>
+            </div>
         </div>
     </nav>
 
@@ -719,25 +840,24 @@
     <section class="hero" id="home">
         <div class="hero-container">
             <div class="hero-content">
-                <div class="hero-greeting">Assalamu Aleykoum</div>
+                <div class="hero-greeting" data-translate="onboarding.welcome_greeting">Assalamu Aleykoum</div>
                 <h1 class="hero-title">
-                    Meet on video and marry fast with <span class="brand">ZawajPlus</span>
+                    <span data-translate="onboarding.welcome_title">Meet on video and marry fast</span> with <span class="brand">ZawajPlus</span>
                 </h1>
-                <p class="hero-description">
+                <p class="hero-description" data-translate="onboarding.welcome_description">
                     The only Islamic platform dedicated exclusively for Polygamous Marriages following Quran and Sunnah.
                 </p>
                 <div class="hero-buttons">
-                    <a href="#download" class="btn-primary">
+                    <a href="welcome.html" class="btn-primary">
                         <i class="fas fa-rocket"></i>
-                        Get Started
+                        <span data-translate="onboarding.get_started">Get Started</span>
                     </a>
-                    <a href="#features" class="btn-secondary">Learn More</a>
+                    <a href="#features" class="btn-secondary" data-translate="common.learn_more">Learn More</a>
                 </div>
             </div>
             <div class="hero-image">
-                <div class="image-placeholder">
-                    <i class="fas fa-heart"></i>
-                </div>
+                <img src="landing-page/assets/images/onboarding6.png" alt="ZawajPlus Hero" class="hero-illustration">
+                <img src="landing-page/assets/images/ornament.png" alt="Ornament" class="floating-ornament">
             </div>
         </div>
     </section>
@@ -754,9 +874,8 @@
                     </p>
                 </div>
                 <div class="onboarding-image fade-in-up">
-                    <div class="image-placeholder">
-                        <i class="fas fa-mosque"></i>
-                    </div>
+                    <img src="landing-page/assets/images/onboarding2.png" alt="Shariah Compliant" class="onboarding-illustration">
+                    <img src="landing-page/assets/images/ornament.png" alt="Ornament" class="floating-ornament">
                 </div>
             </div>
         </div>
@@ -765,7 +884,7 @@
     <!-- Onboarding 3 - Verified Profiles -->
     <section class="onboarding-section">
         <div class="container">
-            <div class="onboarding-content reverse">
+            <div class="onboarding-content">
                 <div class="onboarding-text fade-in-up">
                     <div class="section-subtitle">Verified</div>
                     <h2 class="section-title">PROFILES</h2>
@@ -774,9 +893,8 @@
                     </p>
                 </div>
                 <div class="onboarding-image fade-in-up">
-                    <div class="image-placeholder">
-                        <i class="fas fa-user-check"></i>
-                    </div>
+                    <img src="landing-page/assets/images/onboarding3.png" alt="Verified Profiles" class="onboarding-illustration">
+                    <img src="landing-page/assets/images/ornament.png" alt="Ornament" class="floating-ornament">
                 </div>
             </div>
         </div>
@@ -794,9 +912,8 @@
                     </p>
                 </div>
                 <div class="onboarding-image fade-in-up">
-                    <div class="image-placeholder">
-                        <i class="fas fa-ring"></i>
-                    </div>
+                    <img src="landing-page/assets/images/onboarding4.png" alt="Serious Intentions" class="onboarding-illustration">
+                    <img src="landing-page/assets/images/ornament.png" alt="Ornament" class="floating-ornament">
                 </div>
             </div>
         </div>
@@ -856,13 +973,13 @@
                     Join thousands of Muslims who have found their life partners through ZawajPlus. Start your halal journey today.
                 </p>
                 <div class="cta-buttons">
-                    <a href="#" class="btn-white">
-                        <i class="fab fa-apple"></i>
-                        Download for iOS
+                    <a href="welcome.html" class="btn-white">
+                        <i class="fas fa-user-plus"></i>
+                        Get Started
                     </a>
-                    <a href="#" class="btn-white">
-                        <i class="fab fa-google-play"></i>
-                        Download for Android
+                    <a href="login.html" class="btn-white">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Sign In
                     </a>
                 </div>
             </div>
@@ -876,7 +993,7 @@
                 <div>
                     <div class="footer-brand">
                         <div class="logo-icon">
-                            <i class="fas fa-heart"></i>
+                            <img src="landing-page/assets/images/logo2.png" alt="ZawajPlus Logo">
                         </div>
                         ZawajPlus
                     </div>
@@ -976,19 +1093,139 @@
             observer.observe(el);
         });
 
-        // Add click handlers for CTA buttons
-        document.querySelectorAll('.btn-primary, .btn-white').forEach(button => {
-            button.addEventListener('click', function(e) {
-                if (this.href === '#' || this.href.includes('#download')) {
-                    e.preventDefault();
-                    alert('App download functionality would be implemented here!');
+        // Language Translation System
+        let currentLanguage = 'en';
+        let translations = {};
+
+        // Translation data matching React Native app
+        const translationData = {
+            en: {
+                nav: {
+                    home: "Home",
+                    features: "Features", 
+                    about: "About",
+                    contact: "Contact",
+                    sign_in: "Sign In"
+                },
+                onboarding: {
+                    welcome_greeting: "Assalamu Aleykoum",
+                    welcome_title: "Meet on video and marry fast",
+                    welcome_description: "The only Islamic platform dedicated exclusively for Polygamous Marriages following Quran and Sunnah.",
+                    get_started: "Get Started"
+                },
+                common: {
+                    learn_more: "Learn More"
                 }
+            },
+            ar: {
+                nav: {
+                    home: "الرئيسية",
+                    features: "المميزات",
+                    about: "حولنا", 
+                    contact: "تواصل",
+                    sign_in: "تسجيل الدخول"
+                },
+                onboarding: {
+                    welcome_greeting: "السلام عليكم",
+                    welcome_title: "تعارف بالفيديو وتزوج بسرعة",
+                    welcome_description: "المنصة الإسلامية الوحيدة المخصصة حصرياً لزواج تعدد الزوجات وفقاً للقرآن والسنة.",
+                    get_started: "ابدأ الآن"
+                },
+                common: {
+                    learn_more: "تعرف أكثر"
+                }
+            },
+            tr: {
+                nav: {
+                    home: "Ana Sayfa",
+                    features: "Özellikler",
+                    about: "Hakkımızda",
+                    contact: "İletişim",
+                    sign_in: "Giriş Yap"
+                },
+                onboarding: {
+                    welcome_greeting: "Esselamü Aleyküm",
+                    welcome_title: "Videoda tanış, hızlı evlen",
+                    welcome_description: "Kur'an ve Sünnet'e uygun Çok Eşli Evliliklere özel tek İslami platform.",
+                    get_started: "Başlayın"
+                },
+                common: {
+                    learn_more: "Daha Fazla"
+                }
+            }
+        };
+
+        function getNestedValue(obj, path) {
+            return path.split('.').reduce((current, key) => current && current[key], obj);
+        }
+
+        function translateText(key) {
+            return getNestedValue(translations, key) || key;
+        }
+
+        function updateTranslations() {
+            // Update text content
+            document.querySelectorAll('[data-translate]').forEach(element => {
+                const key = element.getAttribute('data-translate');
+                element.textContent = translateText(key);
             });
+
+            // Update document direction for Arabic
+            document.documentElement.dir = currentLanguage === 'ar' ? 'rtl' : 'ltr';
+            document.documentElement.lang = currentLanguage;
+        }
+
+        function toggleLanguageMenu() {
+            const menu = document.getElementById('languageMenu');
+            menu.classList.toggle('show');
+        }
+
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            translations = translationData[lang];
+            
+            // Update current language display
+            const currentLanguageEl = document.getElementById('currentLang');
+            const langNames = {
+                'en': 'English',
+                'ar': 'العربية', 
+                'tr': 'Türkçe'
+            };
+            currentLanguageEl.textContent = langNames[lang];
+
+            // Update active language option
+            document.querySelectorAll('.language-option').forEach(option => {
+                option.classList.toggle('active', option.getAttribute('data-lang') === lang);
+            });
+
+            // Apply translations
+            updateTranslations();
+
+            // Close language menu
+            document.getElementById('languageMenu').classList.remove('show');
+
+            // Save language preference
+            localStorage.setItem('landingLanguage', lang);
+        }
+
+        // Initialize language system
+        function initializeLanguage() {
+            const savedLang = localStorage.getItem('landingLanguage') || 'en';
+            changeLanguage(savedLang);
+        }
+
+        // Close language menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const languageSelector = document.querySelector('.language-selector');
+            if (!languageSelector.contains(event.target)) {
+                document.getElementById('languageMenu').classList.remove('show');
+            }
         });
 
         // Add loading animation
         window.addEventListener('load', function() {
             document.body.classList.add('loaded');
+            initializeLanguage();
         });
     </script>
 </body>
