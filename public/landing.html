@@ -916,7 +916,7 @@
                         </div>
                     </div>
                 </div>
-                <a href="/login" class="cta-nav">
+                <a href="/login" class="cta-nav" onclick="navigateWithLanguage('/login', event)">
                     <i class="fas fa-sign-in-alt"></i> 
                     <span data-translate="nav.sign_in">Sign In</span>
                 </a>
@@ -937,7 +937,7 @@
                     The only Islamic platform dedicated exclusively for Polygamous Marriages following Quran and Sunnah.
                 </p>
                 <div class="hero-buttons">
-                    <a href="/welcome" class="btn-primary">
+                    <a href="/welcome" class="btn-primary" onclick="navigateWithLanguage('/welcome', event)">
                         <i class="fas fa-rocket"></i>
                         <span data-translate="onboarding.get_started">Get Started</span>
                     </a>
@@ -1062,11 +1062,11 @@
                     Join thousands of Muslims who have found their life partners through ZawajPlus. Start your halal journey today.
                 </p>
                 <div class="cta-buttons">
-                    <a href="/welcome" class="btn-white">
+                    <a href="/welcome" class="btn-white" onclick="navigateWithLanguage('/welcome', event)">
                         <i class="fas fa-user-plus"></i>
                         <span data-translate="onboarding.get_started">Get Started</span>
                     </a>
-                    <a href="/login" class="btn-white">
+                    <a href="/login" class="btn-white" onclick="navigateWithLanguage('/login', event)">
                         <i class="fas fa-sign-in-alt"></i>
                         <span data-translate="nav.sign_in">Sign In</span>
                     </a>
@@ -1415,6 +1415,21 @@
         function initializeLanguage() {
             const savedLang = localStorage.getItem('landingLanguage') || 'en';
             changeLanguage(savedLang);
+        }
+
+        // Navigation with language persistence
+        function navigateWithLanguage(url, event) {
+            event.preventDefault();
+            
+            // Save current language to localStorage for React app to read
+            localStorage.setItem('appLanguage', currentLanguage);
+            localStorage.setItem('landingLanguage', currentLanguage);
+            
+            // Add language parameter to URL for immediate recognition
+            const urlWithLang = `${url}?lang=${currentLanguage}`;
+            
+            // Navigate to React page with language context
+            window.location.href = urlWithLang;
         }
 
         // Close language menu when clicking outside

@@ -25,7 +25,28 @@ const languageDetector = {
   async: true,
   detect: async (callback: (lng: string) => void) => {
     try {
-      // First check if user has saved language preference
+      // First check URL parameter (from HTML landing page navigation)
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlLang = urlParams.get('lang');
+        if (urlLang && ['en', 'ru', 'ar', 'tr', 'fr'].includes(urlLang)) {
+          // Save this language preference and use it
+          await AsyncStorage.setItem(LANGUAGE_KEY, urlLang);
+          callback(urlLang);
+          return;
+        }
+
+        // Check localStorage from HTML landing pages
+        const htmlLandingLang = localStorage.getItem('appLanguage') || localStorage.getItem('landingLanguage');
+        if (htmlLandingLang && ['en', 'ru', 'ar', 'tr', 'fr'].includes(htmlLandingLang)) {
+          // Save this language preference and use it
+          await AsyncStorage.setItem(LANGUAGE_KEY, htmlLandingLang);
+          callback(htmlLandingLang);
+          return;
+        }
+      }
+      
+      // Then check if user has saved language preference in AsyncStorage
       const savedLanguage = await AsyncStorage.getItem(LANGUAGE_KEY);
       if (savedLanguage) {
         callback(savedLanguage);

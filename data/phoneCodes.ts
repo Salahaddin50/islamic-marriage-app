@@ -9,6 +9,9 @@ export const phoneCodesData: PhoneCodeData[] = [
   // North America
   { label: '+1 (United States)', value: '+1', country: 'United States' },
   { label: '+1 (Canada)', value: '+1', country: 'Canada' },
+  { label: '+1 (Guam)', value: '+1', country: 'Guam' },
+  { label: '+1 (Northern Mariana Islands)', value: '+1', country: 'Northern Mariana Islands' },
+  { label: '+1 (American Samoa)', value: '+1', country: 'American Samoa' },
 
   // Europe
   { label: '+44 (United Kingdom)', value: '+44', country: 'United Kingdom' },
@@ -48,6 +51,17 @@ export const phoneCodesData: PhoneCodeData[] = [
   { label: '+380 (Ukraine)', value: '+380', country: 'Ukraine' },
   { label: '+373 (Moldova)', value: '+373', country: 'Moldova' },
   { label: '+7 (Russia)', value: '+7', country: 'Russia' },
+  { label: '+374 (Armenia)', value: '+374', country: 'Armenia' },
+  { label: '+994 (Azerbaijan)', value: '+994', country: 'Azerbaijan' },
+  { label: '+995 (Georgia)', value: '+995', country: 'Georgia' },
+  { label: '+357 (Cyprus)', value: '+357', country: 'Cyprus' },
+  { label: '+356 (Malta)', value: '+356', country: 'Malta' },
+  { label: '+354 (Iceland)', value: '+354', country: 'Iceland' },
+  { label: '+352 (Luxembourg)', value: '+352', country: 'Luxembourg' },
+  { label: '+423 (Liechtenstein)', value: '+423', country: 'Liechtenstein' },
+  { label: '+377 (Monaco)', value: '+377', country: 'Monaco' },
+  { label: '+376 (Andorra)', value: '+376', country: 'Andorra' },
+  { label: '+378 (San Marino)', value: '+378', country: 'San Marino' },
 
   // Asia
   { label: '+86 (China)', value: '+86', country: 'China' },
@@ -173,6 +187,9 @@ export const phoneCodesData: PhoneCodeData[] = [
   { label: '+691 (Micronesia)', value: '+691', country: 'Micronesia' },
   { label: '+692 (Marshall Islands)', value: '+692', country: 'Marshall Islands' },
   { label: '+680 (Palau)', value: '+680', country: 'Palau' },
+  { label: '+675 (Papua New Guinea)', value: '+675', country: 'Papua New Guinea' },
+  { label: '+677 (Solomon Islands)', value: '+677', country: 'Solomon Islands' },
+  { label: '+674 (Nauru)', value: '+674', country: 'Nauru' },
 
   // South America
   { label: '+55 (Brazil)', value: '+55', country: 'Brazil' },
@@ -206,6 +223,24 @@ export const phoneCodesData: PhoneCodeData[] = [
   { label: '+1 (Dominican Republic)', value: '+1', country: 'Dominican Republic' },
   { label: '+509 (Haiti)', value: '+509', country: 'Haiti' },
   { label: '+1 (Puerto Rico)', value: '+1', country: 'Puerto Rico' },
+  { label: '+590 (Guadeloupe)', value: '+590', country: 'Guadeloupe' },
+  { label: '+596 (Martinique)', value: '+596', country: 'Martinique' },
+  { label: '+590 (Saint Martin)', value: '+590', country: 'Saint Martin' },
+  { label: '+590 (Saint Barthelemy)', value: '+590', country: 'Saint Barthelemy' },
+  { label: '+1 (Antigua and Barbuda)', value: '+1', country: 'Antigua and Barbuda' },
+  { label: '+1 (Saint Kitts and Nevis)', value: '+1', country: 'Saint Kitts and Nevis' },
+  { label: '+1 (Saint Vincent and the Grenadines)', value: '+1', country: 'Saint Vincent and the Grenadines' },
+  { label: '+1 (Grenada)', value: '+1', country: 'Grenada' },
+  { label: '+1 (Dominica)', value: '+1', country: 'Dominica' },
+  { label: '+1 (Saint Lucia)', value: '+1', country: 'Saint Lucia' },
+  { label: '+1 (Anguilla)', value: '+1', country: 'Anguilla' },
+  { label: '+1 (Bermuda)', value: '+1', country: 'Bermuda' },
+  { label: '+1 (Cayman Islands)', value: '+1', country: 'Cayman Islands' },
+  { label: '+1 (Turks and Caicos Islands)', value: '+1', country: 'Turks and Caicos Islands' },
+  { label: '+1 (British Virgin Islands)', value: '+1', country: 'British Virgin Islands' },
+  { label: '+599 (Curaçao)', value: '+599', country: 'Curaçao' },
+  { label: '+297 (Aruba)', value: '+297', country: 'Aruba' },
+  { label: '+599 (Bonaire, Sint Eustatius and Saba)', value: '+599', country: 'Bonaire, Sint Eustatius and Saba' },
 ].sort((a, b) => a.label.localeCompare(b.label));
 
 export default phoneCodesData;
