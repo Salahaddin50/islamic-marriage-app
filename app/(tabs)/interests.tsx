@@ -335,7 +335,11 @@ const InterestsScreen = () => {
               return (
                 <View key={row.id} style={[styles.userContainer, idx % 2 !== 0 ? styles.oddBackground : null]}>
                   <TouchableOpacity style={styles.userImageContainer} onPress={() => navigation.navigate('matchdetails' as never, { userId: otherUserId } as never)}>
-                    <Image source={other?.avatar ? (typeof other.avatar === 'string' ? { uri: other.avatar } : other.avatar) : images.maleSilhouette} contentFit='cover' style={styles.userImage} />
+                    <Image
+                      source={other?.avatar ? (typeof other.avatar === 'string' ? { uri: other.avatar } : other.avatar) : images.maleSilhouette}
+                      contentFit='cover'
+                      style={styles.userImage}
+                    />
                   </TouchableOpacity>
                   <View style={{ flexDirection: 'row', width: SIZES.width - 104 }}>
                     <View style={styles.userInfoContainer}>
@@ -383,7 +387,12 @@ const InterestsScreen = () => {
               return (
                 <View key={row.id} style={[styles.userContainer, idx % 2 !== 0 ? styles.oddBackground : null]}>
                   <TouchableOpacity style={styles.userImageContainer} onPress={() => navigation.navigate('matchdetails' as never, { userId: otherUserId } as never)}>
-                    <Image source={other?.avatar ? (typeof other.avatar === 'string' ? { uri: other.avatar } : other.avatar) : images.maleSilhouette} contentFit='cover' style={styles.userImage} />
+                    <Image
+                      source={other?.avatar ? (typeof other.avatar === 'string' ? { uri: other.avatar } : other.avatar) : images.maleSilhouette}
+                      contentFit='cover'
+                      style={styles.userImage}
+                      blurRadius={10}
+                    />
                   </TouchableOpacity>
                   <View style={{ flexDirection: 'row', width: SIZES.width - 104 }}>
                     <View style={styles.userInfoContainer}>

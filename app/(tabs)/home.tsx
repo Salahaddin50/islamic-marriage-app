@@ -269,6 +269,8 @@ const Storage = {
 
 const HomeScreen = () => {
   const { t } = useLanguage();
+  // Larger touch area for smoother mobile dragging on sliders
+  const sliderTouchDims = React.useMemo(() => ({ height: 56, width: 56, borderRadius: 28, slipDisplacement: 60 }), []);
   // Temporarily silence console noise on this screen
   useEffect(() => {
     const originalLog = console.log;
@@ -664,7 +666,7 @@ const HomeScreen = () => {
 
   // Handle automatic redirect countdown
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     if (showIncompleteProfileModal && redirectCountdown > 0) {
       interval = setInterval(() => {
         setRedirectCountdown(prev => prev - 1);
@@ -690,7 +692,14 @@ const HomeScreen = () => {
     }, [dispatchFormState]);
 
   const handleSliderChange = (values: any) => {
-    setAgeRange(values); // Update the age range
+    // Clamp values to enforced bounds in case of library edge cases
+    const minAge = 16;
+    const maxAge = 60;
+    const clamped = [
+      Math.max(minAge, Math.min(maxAge, values[0])),
+      Math.max(minAge, Math.min(maxAge, values[1]))
+    ];
+    setAgeRange(clamped);
   };
 
   const handleCountrySelect = (country: string) => {
@@ -788,7 +797,17 @@ const HomeScreen = () => {
   
   // Helper function to apply filters to state
   const applyFiltersToState = (filters: any) => {
-    setAgeRange(filters.ageRange || [20, 50]);
+    if (filters.ageRange) {
+      const [a, b] = filters.ageRange;
+      const minAge = 16;
+      const maxAge = 60;
+      setAgeRange([
+        Math.max(minAge, Math.min(maxAge, a || 20)),
+        Math.max(minAge, Math.min(maxAge, b || 50))
+      ]);
+    } else {
+      setAgeRange([20, 50]);
+    }
     setSelectedCountry(filters.selectedCountry || '');
     setSelectedCity(filters.selectedCity || '');
     setAvailableCities(filters.availableCities || []);
@@ -1714,17 +1733,19 @@ const HomeScreen = () => {
                 values={ageRange}
                 sliderLength={SIZES.width - 32}
                 onValuesChange={handleSliderChange}
-                min={0}
-                max={100}
+                min={16}
+                max={60}
                 step={1}
                 allowOverlap={false}
-                snapped
-                minMarkerOverlapDistance={10}
+                snapped={false}
+                minMarkerOverlapDistance={0}
                 selectedStyle={styles.selectedTrack}
                 unselectedStyle={styles.unselectedTrack}
                 containerStyle={styles.sliderContainer}
                 trackStyle={styles.trackStyle}
                 customMarker={(e) => <CustomMarker {...e} />}
+                touchDimensions={sliderTouchDims}
+                pressedMarkerStyle={{ width: 36, height: 36, borderRadius: 18, borderWidth: 2, borderColor: 'white', backgroundColor: COLORS.primary, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 3, elevation: 3 }}
               />
 
               {/* Physical Characteristics */}
@@ -1736,17 +1757,19 @@ const HomeScreen = () => {
                 values={heightRange}
                 sliderLength={SIZES.width - 32}
                 onValuesChange={(values) => setHeightRange(values)}
-                min={140}
+                min={145}
                 max={210}
                 step={1}
                 allowOverlap={false}
-                snapped
-                minMarkerOverlapDistance={10}
+                snapped={false}
+                minMarkerOverlapDistance={0}
                 selectedStyle={styles.selectedTrack}
                 unselectedStyle={styles.unselectedTrack}
                 containerStyle={styles.sliderContainer}
                 trackStyle={styles.trackStyle}
                 customMarker={(e) => <CustomMarker {...e} />}
+                touchDimensions={sliderTouchDims}
+                pressedMarkerStyle={{ width: 36, height: 36, borderRadius: 18, borderWidth: 2, borderColor: 'white', backgroundColor: COLORS.primary, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 3, elevation: 3 }}
               />
 
               <Text style={[styles.subtitle, {
@@ -1758,16 +1781,18 @@ const HomeScreen = () => {
                 sliderLength={SIZES.width - 32}
                 onValuesChange={(values) => setWeightRange(values)}
                 min={40}
-                max={150}
+                max={140}
                 step={1}
                 allowOverlap={false}
-                snapped
-                minMarkerOverlapDistance={10}
+                snapped={false}
+                minMarkerOverlapDistance={0}
                 selectedStyle={styles.selectedTrack}
                 unselectedStyle={styles.unselectedTrack}
                 containerStyle={styles.sliderContainer}
                 trackStyle={styles.trackStyle}
                 customMarker={(e) => <CustomMarker {...e} />}
+                touchDimensions={sliderTouchDims}
+                pressedMarkerStyle={{ width: 36, height: 36, borderRadius: 18, borderWidth: 2, borderColor: 'white', backgroundColor: COLORS.primary, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 3, elevation: 3 }}
               />
 
               <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_eye_color')}</Text>
@@ -2332,17 +2357,20 @@ const HomeScreen = () => {
               values={ageRange}
               sliderLength={SIZES.width - 32}
               onValuesChange={handleSliderChange}
-              min={0}
-              max={100}
+              min={16}
+              max={60}
               step={1}
               allowOverlap={false}
-              snapped
-              minMarkerOverlapDistance={10}
+              snapped={false}
+              minMarkerOverlapDistance={0}
               selectedStyle={styles.selectedTrack}
               unselectedStyle={styles.unselectedTrack}
               containerStyle={styles.sliderContainer}
               trackStyle={styles.trackStyle}
               customMarker={(e) => <CustomMarker {...e} />}
+              enableLabel={false}
+              touchDimensions={sliderTouchDims}
+              pressedMarkerStyle={{ width: 36, height: 36, borderRadius: 18, borderWidth: 2, borderColor: 'white', backgroundColor: COLORS.primary, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 3, elevation: 3 }}
             />
 
             {/* Physical Characteristics */}
@@ -2354,17 +2382,20 @@ const HomeScreen = () => {
               values={heightRange}
               sliderLength={SIZES.width - 32}
               onValuesChange={(values) => setHeightRange(values)}
-              min={140}
+              min={145}
               max={210}
               step={1}
               allowOverlap={false}
-              snapped
-              minMarkerOverlapDistance={10}
+              snapped={false}
+              minMarkerOverlapDistance={0}
               selectedStyle={styles.selectedTrack}
               unselectedStyle={styles.unselectedTrack}
               containerStyle={styles.sliderContainer}
               trackStyle={styles.trackStyle}
               customMarker={(e) => <CustomMarker {...e} />}
+              enableLabel={false}
+              touchDimensions={sliderTouchDims}
+              pressedMarkerStyle={{ width: 36, height: 36, borderRadius: 18, borderWidth: 2, borderColor: 'white', backgroundColor: COLORS.primary, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 3, elevation: 3 }}
             />
 
             <Text style={[styles.subtitle, {
@@ -2376,16 +2407,19 @@ const HomeScreen = () => {
               sliderLength={SIZES.width - 32}
               onValuesChange={(values) => setWeightRange(values)}
               min={40}
-              max={150}
+              max={140}
               step={1}
               allowOverlap={false}
-              snapped
-              minMarkerOverlapDistance={10}
+              snapped={false}
+              minMarkerOverlapDistance={0}
               selectedStyle={styles.selectedTrack}
               unselectedStyle={styles.unselectedTrack}
               containerStyle={styles.sliderContainer}
               trackStyle={styles.trackStyle}
               customMarker={(e) => <CustomMarker {...e} />}
+              enableLabel={false}
+              touchDimensions={sliderTouchDims}
+              pressedMarkerStyle={{ width: 36, height: 36, borderRadius: 18, borderWidth: 2, borderColor: 'white', backgroundColor: COLORS.primary, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 3, elevation: 3 }}
             />
 
             <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_eye_color')}</Text>

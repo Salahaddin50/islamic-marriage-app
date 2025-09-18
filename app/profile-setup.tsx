@@ -2249,8 +2249,8 @@ const styles = StyleSheet.create({
     marginTop: getResponsiveSpacing(4),
   },
   continueButton: {
-    marginTop: getResponsiveSpacing(24),
-    marginBottom: getResponsiveSpacing(32),
+    marginTop: getResponsiveSpacing(16),
+    marginBottom: getResponsiveSpacing(16),
   },
   stepScrollContent: {
     paddingBottom: getResponsiveSpacing(40),
