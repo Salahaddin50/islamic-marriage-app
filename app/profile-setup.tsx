@@ -32,6 +32,7 @@ import { DEFAULT_VIDEO_THUMBNAIL } from '../constants/defaultThumbnails';
 import type { PhotoVideoItem } from '../src/services/photos-videos.service';
 import { generateVideoThumbnail } from '../utils/videoThumbnailGenerator';
 import { useLanguage } from '../src/contexts/LanguageContext';
+import * as SecureStore from 'expo-secure-store';
 
 // ================================
 // VALIDATION SCHEMAS
@@ -596,6 +597,17 @@ const ProfileSetup: React.FC = () => {
         console.log('Step 6 data saved to database');
       }
       
+      // Set refresh flag for Home screen to fetch fresh, correct matches
+      try {
+        const key = 'hume_reset_filters_on_login';
+        if (typeof window !== 'undefined' && window.localStorage) {
+          window.localStorage.setItem(key, '1');
+        }
+        try {
+          await SecureStore.setItemAsync(key, '1');
+        } catch {}
+      } catch {}
+
       // Navigate to app
       Alert.alert(
         'Profile Complete!',
@@ -605,6 +617,14 @@ const ProfileSetup: React.FC = () => {
             text: 'Start Browsing',
             onPress: () => {
               console.log('Navigating to tabs...');
+              // Ensure the refresh flag is written before navigation (best-effort)
+              try {
+                const key = 'hume_reset_filters_on_login';
+                if (typeof window !== 'undefined' && window.localStorage) {
+                  window.localStorage.setItem(key, '1');
+                }
+                SecureStore.setItemAsync(key, '1').catch(() => {});
+              } catch {}
               router.replace('/(tabs)/home');
           }
           }
@@ -614,6 +634,13 @@ const ProfileSetup: React.FC = () => {
       // Automatic navigation after 2 seconds as backup
       setTimeout(() => {
         console.log('Auto-navigating to home...');
+        try {
+          const key = 'hume_reset_filters_on_login';
+          if (typeof window !== 'undefined' && window.localStorage) {
+            window.localStorage.setItem(key, '1');
+          }
+          SecureStore.setItemAsync(key, '1').catch(() => {});
+        } catch {}
         router.replace('/(tabs)/home');
       }, 2000);
       
@@ -1209,6 +1236,17 @@ const ProfileSetup: React.FC = () => {
       const result = await RegistrationService.createProfileWithPreferences(registrationData, preferencesPayload);
       console.log('Profile creation result:', result);
 
+      // Set refresh flag for Home screen to fetch fresh, correct matches
+      try {
+        const key = 'hume_reset_filters_on_login';
+        if (typeof window !== 'undefined' && window.localStorage) {
+          window.localStorage.setItem(key, '1');
+        }
+        try {
+          await SecureStore.setItemAsync(key, '1');
+        } catch {}
+      } catch {}
+
       Alert.alert(
         'Profile Complete!',
         'Your profile has been set up successfully. Welcome to Zawajplus!',
@@ -1217,6 +1255,13 @@ const ProfileSetup: React.FC = () => {
             text: 'Start Browsing',
             onPress: () => {
               console.log('Navigating to tabs...');
+              try {
+                const key = 'hume_reset_filters_on_login';
+                if (typeof window !== 'undefined' && window.localStorage) {
+                  window.localStorage.setItem(key, '1');
+                }
+                SecureStore.setItemAsync(key, '1').catch(() => {});
+              } catch {}
               router.replace('/(tabs)/home');
             }
           }
@@ -1226,6 +1271,13 @@ const ProfileSetup: React.FC = () => {
       // Automatic navigation after 2 seconds as backup
       setTimeout(() => {
         console.log('Auto-navigating to home...');
+        try {
+          const key = 'hume_reset_filters_on_login';
+          if (typeof window !== 'undefined' && window.localStorage) {
+            window.localStorage.setItem(key, '1');
+          }
+          SecureStore.setItemAsync(key, '1').catch(() => {});
+        } catch {}
         router.replace('/(tabs)/home');
       }, 2000);
     } catch (error: any) {

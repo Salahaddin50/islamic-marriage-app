@@ -1,5 +1,5 @@
 import React, { useMemo, useState, FC } from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, FlatList, Platform } from 'react-native';
 import DatePicker from 'react-native-modern-datepicker';
 import { COLORS } from '../constants';
 
@@ -167,8 +167,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 20,
-    padding: 35,
+    padding: Platform.select({ web: 24, default: 35 }) as number,
     width: '90%',
+    maxWidth: 420,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
