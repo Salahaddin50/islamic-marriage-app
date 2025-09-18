@@ -259,6 +259,11 @@ const ProfileSetup: React.FC = () => {
     ((watchedValues?.gender === 'female') ? !!religiousWatch?.coveringLevel : true)
   );
 
+  // Step 6 completion: at least one selection depending on gender
+  const step6Complete = watchedValues.gender === 'male'
+    ? !!polygamyDetails.seekingWifeNumber
+    : !!(polygamyDetails.acceptedWifePositions && polygamyDetails.acceptedWifePositions.length);
+
   // Fetch existing profile data on component mount
   useEffect(() => {
     const fetchExistingProfile = async () => {
@@ -1955,7 +1960,13 @@ const ProfileSetup: React.FC = () => {
               <Button
                 title={t('profile_setup.continue')}
                 onPress={handleMediaNext}
-                style={styles.continueButton}
+                style={[
+                  styles.continueButton,
+                  photos.length >= 3
+                    ? { backgroundColor: COLORS.primary, borderColor: COLORS.primary }
+                    : { backgroundColor: COLORS.white, borderColor: COLORS.primary }
+                ]}
+                textColor={photos.length >= 3 ? COLORS.white : COLORS.primary}
                 disabled={mediaLoading || mediaUploading || photos.length < 3}
               />
             </View>
@@ -2072,9 +2083,15 @@ const ProfileSetup: React.FC = () => {
               <Button
                 title={isLoading ? t('profile_setup.completing_registration') : t('profile_setup.complete_registration')}
                 onPress={handlePolygamyNext}
-                style={styles.continueButton}
+                style={[
+                  styles.continueButton,
+                  step6Complete
+                    ? { backgroundColor: COLORS.primary, borderColor: COLORS.primary }
+                    : { backgroundColor: COLORS.white, borderColor: COLORS.primary }
+                ]}
+                textColor={step6Complete ? COLORS.white : COLORS.primary}
                 disabled={isLoading || (
-                  watchedValues.gender === 'male' ? !polygamyDetails.seekingWifeNumber : 
+                  watchedValues.gender === 'male' ? !polygamyDetails.seekingWifeNumber :
                   !polygamyDetails.acceptedWifePositions?.length
                 )}
               />
