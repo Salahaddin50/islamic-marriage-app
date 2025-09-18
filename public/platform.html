@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Primary Meta Tags -->
+    <title>ZawajPlus Platform - Features, Pricing & Success Stories | Islamic Marriage</title>
+    <meta name="title" content="ZawajPlus Platform - Features, Pricing & Success Stories | Islamic Marriage">
+    <meta name="description" content="Discover ZawajPlus platform features including verified profiles, video meetings, Islamic guidance, and success stories. View our membership packages and pricing for halal marriage connections.">
+    <meta name="keywords" content="ZawajPlus features, Islamic marriage platform, verified profiles, video meetings, membership packages, pricing, success stories, halal dating features">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="English">
+    <meta name="author" content="ZawajPlus">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://zawajplus.app/platform.html">
+    <meta property="og:title" content="ZawajPlus Platform - Features, Pricing & Success Stories">
+    <meta property="og:description" content="Discover ZawajPlus platform features including verified profiles, video meetings, Islamic guidance, and success stories.">
+    <meta property="og:image" content="https://zawajplus.app/landing-page/assets/images/onboarding6.png">
+    <meta property="og:site_name" content="ZawajPlus">
+    <meta property="og:locale" content="en_US">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://zawajplus.app/platform.html">
+    <meta property="twitter:title" content="ZawajPlus Platform - Features & Pricing">
+    <meta property="twitter:description" content="Discover ZawajPlus platform features including verified profiles, video meetings, and Islamic guidance.">
+    <meta property="twitter:image" content="https://zawajplus.app/landing-page/assets/images/onboarding6.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="landing-page/assets/images/logo2.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="landing-page/assets/images/logo2.png">
+    <link rel="apple-touch-icon" href="landing-page/assets/images/logo2.png">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://zawajplus.app/platform.html">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "ZawajPlus Platform",
+        "description": "Platform features and pricing for Islamic marriage connections following Quran and Sunnah",
+        "url": "https://zawajplus.app/platform.html",
+        "applicationCategory": "SocialNetworkingApplication",
+        "operatingSystem": "Web, iOS, Android",
+        "offers": [
+            {
+                "@type": "Offer",
+                "name": "Premium Package",
+                "price": "19",
+                "priceCurrency": "USD",
+                "description": "Lifetime subscription with basic features"
+            },
+            {
+                "@type": "Offer", 
+                "name": "VIP Premium Package",
+                "price": "39",
+                "priceCurrency": "USD",
+                "description": "Lifetime subscription with advanced features"
+            },
+            {
+                "@type": "Offer",
+                "name": "Golden Premium Package", 
+                "price": "69",
+                "priceCurrency": "USD",
+                "description": "Lifetime subscription with premium features and full support"
+            }
+        ]
+    }
+    </script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Supabase -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary-color: #9610FF;
+            --primary-dark: #6C4DDA;
+            --secondary-color: #FFD300;
+            --accent-gold: #FFD300;
+            --text-dark: #181A20;
+            --text-gray: #616161;
+            --text-light: #9E9E9E;
+            --white: #ffffff;
+            --light-bg: #F8F8F8;
+            --gradient-primary: linear-gradient(135deg, #9610FF 0%, #6C4DDA 100%);
+            --gradient-secondary: linear-gradient(135deg, #FFD300 0%, #FB9400 100%);
+            --gradient-gold: linear-gradient(135deg, #FFD300 0%, #FB9400 100%);
+            --shadow-soft: 0 10px 40px rgba(150, 16, 255, 0.1);
+            --shadow-medium: 0 20px 60px rgba(0, 0, 0, 0.1);
+            --shadow-strong: 0 30px 80px rgba(0, 0, 0, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 15px 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: var(--shadow-soft);
+            border-bottom: 1px solid rgba(150, 16, 255, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* Language Selector */
+        .language-selector {
+            position: relative;
+            display: inline-block;
+        }
+
+        .language-btn {
+            background: transparent;
+            border: 1px solid rgba(150, 16, 255, 0.2);
+            border-radius: 8px;
+            padding: 6px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: var(--primary-color);
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .language-btn:hover {
+            background: rgba(150, 16, 255, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .language-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: var(--shadow-medium);
+            min-width: 120px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-5px);
+            transition: all 0.2s ease;
+        }
+
+        .language-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .language-option {
+            padding: 10px 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-dark);
+            border-bottom: 1px solid #f3f4f6;
+            transition: background 0.2s ease;
+        }
+
+        .language-option:last-child {
+            border-bottom: none;
+        }
+
+        .language-option:hover {
+            background: var(--light-bg);
+        }
+
+        .language-option.active {
+            background: rgba(150, 16, 255, 0.1);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-dark);
+            font-weight: 500;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--gradient-primary);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .cta-nav {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+
+        .cta-nav:hover {
+            color: var(--primary-dark);
+            background: rgba(150, 16, 255, 0.1);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 60vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #f8fafc 0%, #e3f2fd 100%);
+            padding-top: 80px;
+        }
+
+        .hero-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-content h1 {
+            font-size: 4rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-content p {
+            font-size: 1.25rem;
+            color: var(--text-gray);
+            margin-bottom: 40px;
+            line-height: 1.7;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Section Styles */
+        .section {
+            padding: 120px 0;
+            position: relative;
+        }
+
+        .section:nth-child(even) {
+            background: var(--light-bg);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .section-subtitle {
+            font-size: 1rem;
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .section-title {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 24px;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-description {
+            font-size: 1.25rem;
+            color: var(--text-gray);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        /* Feature Cards */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 24px;
+            padding: 50px 40px;
+            box-shadow: var(--shadow-soft);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-strong);
+        }
+
+        .feature-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 30px;
+            background: var(--gradient-primary);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+            box-shadow: var(--shadow-medium);
+        }
+
+        .feature-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-dark);
+        }
+
+        .feature-subtitle {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .feature-description {
+            font-size: 1.1rem;
+            color: var(--text-gray);
+            line-height: 1.6;
+        }
+
+        /* Pricing Cards */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .pricing-card {
+            background: white;
+            border-radius: 24px;
+            padding: 50px 40px;
+            box-shadow: var(--shadow-soft);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .pricing-card.popular {
+            border: 3px solid var(--primary-color);
+            transform: scale(1.05);
+        }
+
+        .pricing-card.popular::before {
+            content: 'Most Popular';
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--gradient-primary);
+            color: white;
+            padding: 8px 24px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-strong);
+        }
+
+        .pricing-card.popular:hover {
+            transform: scale(1.05) translateY(-10px);
+        }
+
+        .pricing-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-dark);
+        }
+
+        .pricing-price {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .pricing-period {
+            color: var(--text-gray);
+            margin-bottom: 30px;
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin-bottom: 40px;
+        }
+
+        .pricing-features li {
+            padding: 8px 0;
+            color: var(--text-gray);
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            line-height: 1.5;
+        }
+
+        .pricing-features li i {
+            color: var(--primary-color);
+            width: 16px;
+            height: 16px;
+            font-size: 14px;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .pricing-features li span {
+            flex: 1;
+            line-height: 1.5;
+        }
+
+        .popular-badge {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: center;
+            margin-top: 20px;
+            box-shadow: var(--shadow-medium);
+        }
+
+        .popular-badge-bottom {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: center;
+            margin-top: 20px;
+            box-shadow: var(--shadow-medium);
+        }
+
+        .pricing-card.selected {
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 10px 30px rgba(150, 16, 255, 0.2);
+            transform: translateY(-5px);
+        }
+
+        .pricing-card.selected .pricing-title {
+            color: var(--primary-color);
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-medium);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-width: 200px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-strong);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary-color);
+            padding: 16px 32px;
+            border: 1px solid var(--primary-color);
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 200px;
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-gray);
+        }
+
+        .loading-spinner i {
+            font-size: 2rem;
+            margin-bottom: 16px;
+            color: var(--primary-color);
+        }
+
+        .loading-spinner p {
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        /* Error State */
+        .error-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-gray);
+        }
+
+        .error-state i {
+            font-size: 2rem;
+            margin-bottom: 16px;
+            color: #ff4444;
+        }
+
+        .error-state p {
+            font-size: 1.1rem;
+            margin: 0 0 20px 0;
+        }
+
+        .retry-btn {
+            background: var(--primary-color);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .retry-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        /* Success Stories */
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .testimonial-card {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: var(--shadow-soft);
+            position: relative;
+        }
+
+        .testimonial-text {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: var(--text-gray);
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .author-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .author-info h4 {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .author-info p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--text-dark);
+            color: white;
+            padding: 60px 0 30px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .footer-description {
+            color: var(--text-light);
+            line-height: 1.7;
+            margin-bottom: 30px;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+        }
+
+        .social-link {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-color);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .social-link:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .footer-section h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+
+        .footer-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #374151;
+            padding-top: 30px;
+            text-align: center;
+            color: var(--text-light);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .hero-content h1 {
+                font-size: 3rem;
+            }
+            
+            .section-title {
+                font-size: 2.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .features-grid,
+            .pricing-grid,
+            .testimonials-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .pricing-card.popular {
+                transform: none;
+            }
+
+            .pricing-card.popular:hover {
+                transform: translateY(-10px);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 15px;
+            }
+            
+            .section {
+                padding: 80px 0;
+            }
+            
+            .hero-content h1 {
+                font-size: 2rem;
+            }
+            
+            .section-title {
+                font-size: 1.8rem;
+            }
+            
+            .feature-card,
+            .pricing-card,
+            .testimonial-card {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="landing.html" class="logo">
+                <div class="logo-icon">
+                    <img src="landing-page/assets/images/logo2.png" alt="ZawajPlus Logo">
+                </div>
+                ZawajPlus
+            </a>
+            <ul class="nav-links">
+                <li><a href="landing.html">Home</a></li>
+                <li><a href="platform.html">Platform</a></li>
+                <li><a href="support.html">Support</a></li>
+                <li><a href="legal.html">Legal</a></li>
+            </ul>
+            <div class="nav-right">
+                <div class="language-selector">
+                    <button class="language-btn" onclick="toggleLanguageMenu()">
+                        <i class="fas fa-globe"></i>
+                        <span id="currentLang">English</span>
+                        <i class="fas fa-chevron-down" style="font-size: 10px;"></i>
+                    </button>
+                    <div class="language-menu" id="languageMenu">
+                        <div class="language-option active" data-lang="en" onclick="changeLanguage('en')">
+                            <span>English</span>
+                        </div>
+                        <div class="language-option" data-lang="ar" onclick="changeLanguage('ar')">
+                            <span>العربية</span>
+                        </div>
+                        <div class="language-option" data-lang="tr" onclick="changeLanguage('tr')">
+                            <span>Türkçe</span>
+                        </div>
+                        <div class="language-option" data-lang="ru" onclick="changeLanguage('ru')">
+                            <span>Русский</span>
+                        </div>
+                        <div class="language-option" data-lang="fr" onclick="changeLanguage('fr')">
+                            <span>Français</span>
+                        </div>
+                    </div>
+                </div>
+                <a href="/login" class="cta-nav">
+                    <i class="fas fa-sign-in-alt"></i> 
+                    <span data-translate="nav.sign_in">Sign In</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <main>
+    <section class="hero" id="home">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 data-translate="platform.hero.title">ZawajPlus Platform</h1>
+                <p data-translate="platform.hero.description">
+                    Discover our comprehensive Islamic marriage platform features, pricing packages, and success stories from couples who found their perfect match through ZawajPlus.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="section" id="features">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-subtitle" data-translate="platform.features.subtitle">Platform Features</div>
+                <h2 class="section-title" data-translate="platform.features.title">Why Choose ZawajPlus</h2>
+                <p class="section-description" data-translate="platform.features.description">
+                    Experience the most comprehensive Islamic marriage platform designed with modern technology and traditional values.
+                </p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <h3 class="feature-title" data-translate="platform.features.video.title">Video Meetings</h3>
+                    <div class="feature-subtitle" data-translate="platform.features.video.subtitle">SECURE & PRIVATE</div>
+                    <p class="feature-description" data-translate="platform.features.video.description">
+                        Meet potential matches through secure video calls with proper Islamic etiquette and family involvement. All meetings are conducted with complete privacy and respect.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3 class="feature-title" data-translate="platform.features.verified.title">Verified Profiles</h3>
+                    <div class="feature-subtitle" data-translate="platform.features.verified.subtitle">100% AUTHENTIC</div>
+                    <p class="feature-description" data-translate="platform.features.verified.description">
+                        All female profiles are verified by our team and Walis are properly informed. We ensure complete transparency and authenticity in every connection.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-mosque"></i>
+                    </div>
+                    <h3 class="feature-title" data-translate="platform.features.islamic.title">Islamic Guidance</h3>
+                    <div class="feature-subtitle" data-translate="platform.features.islamic.subtitle">QURAN & SUNNAH</div>
+                    <p class="feature-description" data-translate="platform.features.islamic.description">
+                        Every feature is designed according to Islamic principles with guidance from qualified scholars. Follow the blessed Sunnah of polygamy with confidence.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="feature-title" data-translate="platform.features.family.title">Family Involvement</h3>
+                    <div class="feature-subtitle" data-translate="platform.features.family.subtitle">WALI INTEGRATION</div>
+                    <p class="feature-description" data-translate="platform.features.family.description">
+                        Walis are notified and involved in the process, ensuring proper Islamic marriage procedures. Complete transparency with family members throughout.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <h3 class="feature-title" data-translate="platform.features.privacy.title">Privacy Protection</h3>
+                    <div class="feature-subtitle" data-translate="platform.features.privacy.subtitle">COMPLETE SECURITY</div>
+                    <p class="feature-description" data-translate="platform.features.privacy.description">
+                        Your personal information and media are protected with advanced security. You control what information is shared and when.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h3 class="feature-title" data-translate="platform.features.serious.title">Serious Intentions</h3>
+                    <div class="feature-subtitle" data-translate="platform.features.serious.subtitle">MARRIAGE FOCUSED</div>
+                    <p class="feature-description" data-translate="platform.features.serious.description">
+                        This platform is exclusively for serious individuals where every communication is intended for marriage. No casual dating, only genuine matrimonial connections.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="section" id="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-subtitle" data-translate="platform.process.subtitle">Simple Process</div>
+                <h2 class="section-title" data-translate="platform.process.title">How ZawajPlus Works</h2>
+                <p class="section-description">
+                    <span data-translate="platform.process.description">Our platform makes it easy to find your perfect Islamic match while maintaining the highest standards of Islamic values.</span>
+                </p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <h3 class="feature-title" data-translate="platform.process.step1.title">Step 1: Create Profile</h3>
+                    <p class="feature-description">
+                        <span data-translate="platform.process.step1.description">Sign up with your email, complete the registration process including your Islamic preferences, and verify your account with proper documentation.</span>
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3 class="feature-title" data-translate="platform.process.step2.title">Step 2: Browse Profiles</h3>
+                    <p class="feature-description">
+                        <span data-translate="platform.process.step2.description">Search through verified profiles based on your preferences. Request to see photos and videos of potential matches you're interested in.</span>
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <h3 class="feature-title" data-translate="platform.process.step3.title">Step 3: Video Meeting</h3>
+                    <p class="feature-description">
+                        <span data-translate="platform.process.step3.description">If both parties are interested, request a video meeting. Meet in a respectful Islamic environment with family involvement when appropriate.</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="section" id="pricing">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-subtitle" data-translate="platform.pricing.subtitle">Membership Packages</div>
+                <h2 class="section-title" data-translate="platform.pricing.title">Choose Your Package</h2>
+                <p class="section-description" data-translate="platform.pricing.description">
+                    All packages are lifetime subscriptions. Select the membership package that best suits your needs and start your journey to find your perfect Islamic match.
+                </p>
+            </div>
+            <div class="pricing-grid" id="packagesContainer">
+                <!-- Packages will be loaded dynamically from database -->
+                <div class="pricing-card">
+                    <div class="loading-spinner">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p data-translate="platform.pricing.loading">Loading packages...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Success Stories Section -->
+    <section class="section" id="success-stories">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-subtitle" data-translate="platform.testimonials.subtitle">Success Stories</div>
+                <h2 class="section-title" data-translate="platform.testimonials.title">Happy Couples</h2>
+                <p class="section-description">
+                    <span data-translate="platform.testimonials.description">Read inspiring stories from couples who found their perfect match through ZawajPlus and are now living blessed Islamic marriages.</span>
+                </p>
+            </div>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <p class="testimonial-text">
+                        <span data-translate="platform.testimonials.testimonial1.text">"Alhamdulillah, I found my second wife through ZawajPlus. The platform made it easy to connect with someone who understood and accepted polygamy according to Islamic principles. The video meeting feature helped us get to know each other properly before marriage."</span>
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">AH</div>
+                        <div class="author-info">
+                            <h4 data-translate="platform.testimonials.testimonial1.name">Ahmad H.</h4>
+                            <p data-translate="platform.testimonials.testimonial1.subtitle">Married through ZawajPlus</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <p class="testimonial-text">
+                        <span data-translate="platform.testimonials.testimonial2.text">"As a woman seeking to be a second wife, I was impressed by how respectful and Islamic the entire process was. My Wali was involved from the beginning, and I felt completely safe and protected throughout my journey on ZawajPlus."</span>
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">FM</div>
+                        <div class="author-info">
+                            <h4 data-translate="platform.testimonials.testimonial2.name">Fatima M.</h4>
+                            <p data-translate="platform.testimonials.testimonial2.subtitle">Found her perfect match</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <p class="testimonial-text">
+                        <span data-translate="platform.testimonials.testimonial3.text">"The verification process gave me confidence that all profiles were genuine. I appreciated the Islamic guidance provided throughout the platform. May Allah bless this platform for helping Muslims find their life partners in a halal way."</span>
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">YA</div>
+                        <div class="author-info">
+                            <h4 data-translate="platform.testimonials.testimonial3.name">Yusuf A.</h4>
+                            <p data-translate="platform.testimonials.testimonial3.subtitle">Successfully married</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div>
+                    <div class="footer-brand">
+                        <div class="logo-icon">
+                            <img src="landing-page/assets/images/logo2.png" alt="ZawajPlus Logo">
+                        </div>
+                        ZawajPlus
+                    </div>
+                    <p class="footer-description" data-translate="footer.description">
+                        The premier Islamic marriage platform connecting hearts worldwide while maintaining the highest standards of Islamic values and traditions.
+                    </p>
+                    <div class="social-links">
+                        <a href="#" class="social-link">
+                            <i class="fab fa-tiktok"></i>
+                        </a>
+                        <a href="#" class="social-link">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="social-link">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Platform</h3>
+                    <ul class="footer-links">
+                        <li><a href="platform.html">Features</a></li>
+                        <li><a href="platform.html#how-it-works">How it Works</a></li>
+                        <li><a href="platform.html#success-stories">Success Stories</a></li>
+                        <li><a href="platform.html#pricing">Pricing</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Support</h3>
+                    <ul class="footer-links">
+                        <li><a href="support.html">Help Center</a></li>
+                        <li><a href="support.html#contact">Contact Us</a></li>
+                        <li><a href="support.html#islamic-guidelines">Islamic Guidelines</a></li>
+                        <li><a href="support.html#safety">Safety</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Legal</h3>
+                    <ul class="footer-links">
+                        <li><a href="legal.html">Privacy Policy</a></li>
+                        <li><a href="legal.html#terms">Terms of Service</a></li>
+                        <li><a href="legal.html#cookies">Cookie Policy</a></li>
+                        <li><a href="legal.html#disclaimer">Disclaimer</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 ZawajPlus. All rights reserved. Built with Islamic values and modern technology.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Supabase configuration
+        const SUPABASE_URL = 'https://rpzkugodaacelruquhtc.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwemt1Z29kYWFjZWxydXF1aHRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyOTIwNTQsImV4cCI6MjA3MDg2ODA1NH0.NEPLSSs8JG4LK-RwJWI3GIg9hwzQLMXyllVF3Fv3yCE';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let packages = [];
+        let currentLanguage = 'en';
+        let translations = {};
+
+        // Translation data matching React Native app
+        const translationData = {
+            en: {
+                nav: {
+                    sign_in: "Sign In"
+                },
+                platform: {
+                    hero: {
+                        title: "ZawajPlus Platform",
+                        description: "Discover our comprehensive Islamic marriage platform features, pricing packages, and success stories from couples who found their perfect match through ZawajPlus."
+                    },
+                    features: {
+                        subtitle: "Platform Features",
+                        title: "Why Choose ZawajPlus",
+                        description: "Experience the most comprehensive Islamic marriage platform designed with modern technology and traditional values.",
+                        video: {
+                            title: "Video Meetings",
+                            subtitle: "SECURE & PRIVATE",
+                            description: "Meet potential matches through secure video calls with proper Islamic etiquette and family involvement. All meetings are conducted with complete privacy and respect."
+                        },
+                        verified: {
+                            title: "Verified Profiles",
+                            subtitle: "100% AUTHENTIC",
+                            description: "All female profiles are verified by our team and Walis are properly informed. We ensure complete transparency and authenticity in every connection."
+                        },
+                        islamic: {
+                            title: "Islamic Guidance",
+                            subtitle: "QURAN & SUNNAH",
+                            description: "Every feature is designed according to Islamic principles with guidance from qualified scholars. Follow the blessed Sunnah of polygamy with confidence."
+                        },
+                        family: {
+                            title: "Family Involvement",
+                            subtitle: "WALI INTEGRATION",
+                            description: "Walis are notified and involved in the process, ensuring proper Islamic marriage procedures. Complete transparency with family members throughout."
+                        },
+                        privacy: {
+                            title: "Privacy Protection",
+                            subtitle: "COMPLETE SECURITY",
+                            description: "Your personal information and media are protected with advanced security. You control what information is shared and when."
+                        },
+                        serious: {
+                            title: "Serious Intentions",
+                            subtitle: "MARRIAGE FOCUSED",
+                            description: "This platform is exclusively for serious individuals where every communication is intended for marriage. No casual dating, only genuine matrimonial connections."
+                        }
+                    },
+                    pricing: {
+                        subtitle: "Membership Packages",
+                        title: "Choose Your Package",
+                        description: "All packages are lifetime subscriptions. Select the membership package that best suits your needs and start your journey to find your perfect Islamic match.",
+                        loading: "Loading packages...",
+                        lifetime: "Lifetime",
+                        most_popular: "Most Popular"
+                    },
+                    process: {
+                        subtitle: "Simple Process",
+                        title: "How ZawajPlus Works",
+                        description: "Our platform makes it easy to find your perfect Islamic match while maintaining the highest standards of Islamic values.",
+                        step1: {
+                            title: "Step 1: Create Profile",
+                            description: "Sign up with your email, complete the registration process including your Islamic preferences, and verify your account with proper documentation."
+                        },
+                        step2: {
+                            title: "Step 2: Browse Profiles",
+                            description: "Search through verified profiles based on your preferences. Request to see photos and videos of potential matches you're interested in."
+                        },
+                        step3: {
+                            title: "Step 3: Video Meeting",
+                            description: "If both parties are interested, request a video meeting. Meet in a respectful Islamic environment with family involvement when appropriate."
+                        }
+                    },
+                    testimonials: {
+                        subtitle: "Success Stories",
+                        title: "Happy Couples",
+                        description: "Read inspiring stories from couples who found their perfect match through ZawajPlus and are now living blessed Islamic marriages.",
+                        testimonial1: {
+                            text: "\"Alhamdulillah, I found my second wife through ZawajPlus. The platform made it easy to connect with someone who understood and accepted polygamy according to Islamic principles. The video meeting feature helped us get to know each other properly before marriage.\"",
+                            name: "Ahmad H.",
+                            subtitle: "Married through ZawajPlus"
+                        },
+                        testimonial2: {
+                            text: "\"As a woman seeking to be a second wife, I was impressed by how respectful and Islamic the entire process was. My Wali was involved from the beginning, and I felt completely safe and protected throughout my journey on ZawajPlus.\"",
+                            name: "Fatima M.",
+                            subtitle: "Found her perfect match"
+                        },
+                        testimonial3: {
+                            text: "\"The verification process gave me confidence that all profiles were genuine. I appreciated the Islamic guidance provided throughout the platform. May Allah bless this platform for helping Muslims find their life partners in a halal way.\"",
+                            name: "Yusuf A.",
+                            subtitle: "Successfully married"
+                        }
+                    }
+                },
+                footer: {
+                    description: "The premier Islamic marriage platform connecting hearts worldwide while maintaining the highest standards of Islamic values and traditions."
+                }
+            },
+            ar: {
+                nav: {
+                    sign_in: "تسجيل الدخول"
+                },
+                platform: {
+                    hero: {
+                        title: "منصة زواج بلس",
+                        description: "اكتشف ميزات منصة الزواج الإسلامية الشاملة وباقات الأسعار وقصص النجاح من الأزواج الذين وجدوا شريك حياتهم المثالي من خلال زواج بلس."
+                    },
+                    features: {
+                        subtitle: "ميزات المنصة",
+                        title: "لماذا تختار زواج بلس",
+                        description: "اختبر أشمل منصة زواج إسلامية مصممة بتكنولوجيا حديثة وقيم تقليدية."
+                    },
+                    pricing: {
+                        subtitle: "باقات العضوية",
+                        title: "اختر باقتك",
+                        description: "جميع الباقات هي اشتراكات مدى الحياة. اختر باقة العضوية التي تناسب احتياجاتك وابدأ رحلتك للعثور على شريك حياتك الإسلامي المثالي.",
+                        lifetime: "مدى الحياة",
+                        most_popular: "الأكثر شعبية"
+                    }
+                }
+            },
+            tr: {
+                nav: {
+                    sign_in: "Giriş Yap"
+                },
+                platform: {
+                    hero: {
+                        title: "ZawajPlus Platform",
+                        description: "Kapsamlı İslami evlilik platformu özelliklerimizi, fiyat paketlerimizi ve ZawajPlus aracılığıyla mükemmel eşlerini bulan çiftlerin başarı hikayelerini keşfedin."
+                    },
+                    features: {
+                        subtitle: "Platform Özellikleri",
+                        title: "Neden ZawajPlus'ı Seçmelisiniz",
+                        description: "Modern teknoloji ve geleneksel değerlerle tasarlanmış en kapsamlı İslami evlilik platformunu deneyimleyin."
+                    },
+                    pricing: {
+                        subtitle: "Üyelik Paketleri",
+                        title: "Paketinizi Seçin",
+                        description: "Tüm paketler yaşam boyu aboneliklerdir. İhtiyaçlarınıza en uygun üyelik paketini seçin ve mükemmel İslami eşinizi bulma yolculuğunuza başlayın.",
+                        lifetime: "Yaşam Boyu",
+                        most_popular: "En Popüler"
+                    }
+                }
+            },
+            ru: {
+                nav: {
+                    sign_in: "Войти"
+                },
+                platform: {
+                    hero: {
+                        title: "Платформа ZawajPlus",
+                        description: "Откройте для себя наши комплексные функции исламской платформы брака, пакеты цен и истории успеха пар, которые нашли свою идеальную пару через ZawajPlus."
+                    },
+                    features: {
+                        subtitle: "Особенности Платформы",
+                        title: "Почему Выбирают ZawajPlus",
+                        description: "Испытайте самую комплексную исламскую платформу брака, разработанную с современными технологиями и традиционными ценностями."
+                    },
+                    pricing: {
+                        subtitle: "Пакеты Членства",
+                        title: "Выберите Ваш Пакет",
+                        description: "Все пакеты - это пожизненные подписки. Выберите пакет членства, который лучше всего подходит вашим потребностям, и начните свое путешествие к поиску идеального исламского партнера.",
+                        lifetime: "Пожизненно",
+                        most_popular: "Самый Популярный"
+                    }
+                }
+            },
+            fr: {
+                nav: {
+                    sign_in: "Se connecter"
+                },
+                platform: {
+                    hero: {
+                        title: "Plateforme ZawajPlus",
+                        description: "Découvrez nos fonctionnalités complètes de plateforme de mariage islamique, nos packages de prix et les histoires de réussite de couples qui ont trouvé leur partenaire parfait grâce à ZawajPlus."
+                    },
+                    features: {
+                        subtitle: "Fonctionnalités de la Plateforme",
+                        title: "Pourquoi Choisir ZawajPlus",
+                        description: "Découvrez la plateforme de mariage islamique la plus complète conçue avec une technologie moderne et des valeurs traditionnelles."
+                    },
+                    pricing: {
+                        subtitle: "Forfaits d'Adhésion",
+                        title: "Choisissez Votre Forfait",
+                        description: "Tous les forfaits sont des abonnements à vie. Sélectionnez le forfait d'adhésion qui convient le mieux à vos besoins et commencez votre voyage pour trouver votre partenaire islamique parfait.",
+                        lifetime: "À Vie",
+                        most_popular: "Le Plus Populaire"
+                    }
+                }
+            }
+        };
+
+        // Translation functions
+        function getNestedValue(obj, path) {
+            return path.split('.').reduce((current, key) => current && current[key], obj);
+        }
+
+        function translateText(key) {
+            return getNestedValue(translations, key) || key;
+        }
+
+        function updateTranslations() {
+            // Update text content
+            document.querySelectorAll('[data-translate]').forEach(element => {
+                const key = element.getAttribute('data-translate');
+                element.textContent = translateText(key);
+            });
+
+            // Update document direction for Arabic
+            document.documentElement.dir = currentLanguage === 'ar' ? 'rtl' : 'ltr';
+            document.documentElement.lang = currentLanguage;
+        }
+
+        function toggleLanguageMenu() {
+            const menu = document.getElementById('languageMenu');
+            menu.classList.toggle('show');
+        }
+
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            translations = translationData[lang];
+            
+            // Update current language display
+            const currentLanguageEl = document.getElementById('currentLang');
+            const langNames = {
+                'en': 'English',
+                'ar': 'العربية', 
+                'tr': 'Türkçe',
+                'ru': 'Русский',
+                'fr': 'Français'
+            };
+            currentLanguageEl.textContent = langNames[lang];
+
+            // Update active language option
+            document.querySelectorAll('.language-option').forEach(option => {
+                option.classList.toggle('active', option.getAttribute('data-lang') === lang);
+            });
+
+            // Apply translations
+            updateTranslations();
+
+            // Close language menu
+            document.getElementById('languageMenu').classList.remove('show');
+
+            // Save language preference globally
+            localStorage.setItem('zawajplusLanguage', lang);
+
+            // Reload packages with new language
+            loadPackages();
+        }
+
+        // Initialize language system
+        function initializeLanguage() {
+            const savedLang = localStorage.getItem('zawajplusLanguage') || 'en';
+            changeLanguage(savedLang);
+        }
+
+        // Navbar scroll effect (always show as scrolled since it's a sub-page)
+        document.addEventListener('DOMContentLoaded', function() {
+            const navbar = document.getElementById('navbar');
+            navbar.classList.add('scrolled');
+            
+            // Initialize language system
+            initializeLanguage();
+            
+            // Load packages from database
+            loadPackages();
+        });
+
+        // Close language menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const languageSelector = document.querySelector('.language-selector');
+            if (!languageSelector.contains(event.target)) {
+                document.getElementById('languageMenu').classList.remove('show');
+            }
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Load packages from database
+        async function loadPackages() {
+            try {
+                const container = document.getElementById('packagesContainer');
+                
+                // Fetch packages and features in parallel
+                const [pkgRes, featRes] = await Promise.all([
+                    supabase
+                        .from('packages')
+                        .select('*')
+                        .eq('is_active', true)
+                        .order('sort_order'),
+                    supabase
+                        .from('package_features')
+                        .select('*')
+                        .eq('is_active', true)
+                        .order('sort_order')
+                ]);
+
+                if (pkgRes.error) throw pkgRes.error;
+
+                const featuresData = featRes.data || [];
+                const packagesData = pkgRes.data || [];
+
+                // Group features by package type
+                const featuresByType = {};
+                featuresData.forEach(feature => {
+                    const packageType = feature.package_type || feature.package || feature.type;
+                    if (!packageType) return;
+                    
+                    if (!featuresByType[packageType]) {
+                        featuresByType[packageType] = [];
+                    }
+                    
+                    // Get feature name in current language
+                    let featureName = feature.feature_name;
+                    if (feature.feature_translations) {
+                        try {
+                            const featureTranslations = typeof feature.feature_translations === 'string' 
+                                ? JSON.parse(feature.feature_translations) 
+                                : feature.feature_translations;
+                            featureName = featureTranslations[currentLanguage] || featureTranslations['en'] || feature.feature_name;
+                        } catch (e) {
+                            // Use default name if parsing fails
+                        }
+                    }
+                    
+                    featuresByType[packageType].push(featureName);
+                });
+
+                // Process packages
+                packages = packagesData.map(pkg => {
+                    const packageType = pkg.package_type || pkg.package_id;
+                    
+                    // Get package name in current language
+                    let packageName = pkg.name;
+                    if (pkg.name_translations) {
+                        try {
+                            const nameTranslations = typeof pkg.name_translations === 'string' 
+                                ? JSON.parse(pkg.name_translations) 
+                                : pkg.name_translations;
+                            packageName = nameTranslations[currentLanguage] || nameTranslations['en'] || pkg.name;
+                        } catch (e) {
+                            // Use default name if parsing fails
+                        }
+                    }
+                    
+                    return {
+                        id: pkg.package_id,
+                        type: packageType,
+                        name: packageName,
+                        price: Number(pkg.price || 0),
+                        crownColor: pkg.crown_color || '#9610FF',
+                        features: featuresByType[packageType] || [],
+                        isLifetime: pkg.is_lifetime !== false
+                    };
+                });
+
+                // Render packages
+                renderPackages(packages);
+                
+            } catch (error) {
+                console.error('Error loading packages:', error);
+                showErrorState();
+            }
+        }
+
+        // Render packages in the container
+        function renderPackages(packages) {
+            const container = document.getElementById('packagesContainer');
+            
+            if (!packages || packages.length === 0) {
+                container.innerHTML = `
+                    <div class="error-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>No packages available at the moment.</p>
+                        <button class="retry-btn" onclick="loadPackages()">Retry</button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort packages by price for consistent display
+            const sortedPackages = [...packages].sort((a, b) => a.price - b.price);
+            
+            container.innerHTML = sortedPackages.map((pkg, index) => {
+                const isPopular = pkg.price === 250; // $250 package is most popular
+                const featuresHtml = pkg.features.map(feature => 
+                    `<li><i class="fas fa-heart"></i><span>${escapeHtml(feature)}</span></li>`
+                ).join('');
+                
+                return `
+                    <div class="pricing-card ${isPopular ? 'selected' : ''}" onclick="selectPackage('${pkg.id}')" style="cursor: pointer;">
+                        <h3 class="pricing-title">${escapeHtml(pkg.name)}</h3>
+                        <div class="pricing-price">$${pkg.price}</div>
+                        <div class="pricing-period">${pkg.isLifetime ? translateText('platform.pricing.lifetime') : 'Subscription'}</div>
+                        <ul class="pricing-features">
+                            ${featuresHtml}
+                        </ul>
+                        ${isPopular ? `<div class="popular-badge">${translateText('platform.pricing.most_popular')}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Show error state
+        function showErrorState() {
+            const container = document.getElementById('packagesContainer');
+            container.innerHTML = `
+                <div class="error-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Failed to load packages. Please check your connection and try again.</p>
+                    <button class="retry-btn" onclick="loadPackages()">Retry</button>
+                </div>
+            `;
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        // Package selection function
+        function selectPackage(packageId) {
+            // Save selected package to localStorage
+            localStorage.setItem('selectedPackage', packageId);
+            
+            // First redirect to login/signup, then navigate to membership page
+            // Check if user is already logged in (this is a simplified check)
+            const isLoggedIn = localStorage.getItem('userToken') || localStorage.getItem('supabase.auth.token');
+            
+            if (isLoggedIn) {
+                // User is logged in, go directly to membership page
+                window.location.href = '/membership?package=' + packageId;
+            } else {
+                // User needs to sign in first, then will be redirected to membership
+                localStorage.setItem('redirectAfterLogin', '/membership?package=' + packageId);
+                window.location.href = '/login';
+            }
+        }
+    </script>
+</body>
+</html>
