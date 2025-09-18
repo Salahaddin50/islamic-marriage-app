@@ -1034,8 +1034,8 @@ body {
 
 .fullscreen-media-container {
     position: relative;
-    width: 80vw;
-    height: 80vh;
+    width: min(80vw, 800px);
+    height: min(80vh, 600px);
     display: flex;
     flex-direction: column;
     max-width: 800px;
@@ -1079,16 +1079,20 @@ body {
     align-items: center;
     justify-content: center;
     padding: 20px;
+    overflow: hidden;
+    min-height: 0;
 }
 
 .fullscreen-image {
-    max-width: 100%;
-    max-height: 100%;
+    max-width: min(100%, 700px);
+    max-height: min(100%, 500px);
     width: auto;
     height: auto;
     object-fit: contain;
     border-radius: 8px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    display: block;
+    margin: 0 auto;
 }
 
 .fullscreen-video {
@@ -1182,8 +1186,10 @@ body {
 /* Mobile responsiveness for fullscreen viewer */
 @media (max-width: 768px) {
     .fullscreen-media-container {
-        width: 100vw;
-        height: 100vh;
+        width: min(90vw, 600px);
+        height: min(85vh, 500px);
+        max-width: 600px;
+        max-height: 500px;
     }
     
     .fullscreen-header {
