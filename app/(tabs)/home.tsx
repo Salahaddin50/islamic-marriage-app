@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, FlatList, useWindowDimensions, ScrollView, Alert, Modal } from 'react-native';
+ import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, FlatList, useWindowDimensions, ScrollView, Alert, Modal } from 'react-native';
 import React, { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, icons, images, SIZES } from '@/constants';
@@ -1422,13 +1422,9 @@ const HomeScreen = () => {
         if (isFresh) {
           setUsers(cachedUsers as UserProfileWithMedia[]);
           setLoading(false);
-          // Check profile completeness after profiles are loaded
-          await checkProfileCompleteness();
           return;
         }
         await fetchUserProfiles();
-        // Check profile completeness after profiles are fetched
-        await checkProfileCompleteness();
       };
       
       initializeScreen();
@@ -2340,7 +2336,7 @@ const HomeScreen = () => {
           onRequestClose={() => {}}
         >
           <View style={styles.fullscreenContainer}>
-            <View style={[styles.modalCard, { maxWidth: 380 }]}> 
+            <View style={[styles.modalCard, { maxWidth: 380 }]}>
               <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 16, textAlign: 'center', color: COLORS.primary }]}>
                 {t('home.incomplete_profile.title')}
               </Text>

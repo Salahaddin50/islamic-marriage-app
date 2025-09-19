@@ -182,23 +182,15 @@ const SimpleSignup: React.FC<Props> = ({ onGoogleSignup, onSignupSuccess }) => {
 
       console.log('Profile check:', { hasProfile: !!existingProfile, profileError: profileError?.message, profileErrorCode: profileError?.code });
 
-      // If profile doesn't exist (PGRST116 = no rows returned), navigate to setup
-      if (!existingProfile) {
-        console.log('Profile missing or incomplete, navigating to profile setup...');
-        // Force navigation to profile setup
-        router.push('/profile-setup');
-        return;
-      }
-      
-      // If profile exists, go to main app
-      console.log('Profile completed, navigating to main app...');
+      // Always go to main app - profile completeness handled by modal only
+      console.log('Navigating to main app...');
       router.push('/(tabs)');
 
     } catch (error: any) {
       console.error('Post-signup navigation error:', error);
-      // Fallback to profile setup on error
-      console.log('Fallback: navigating to profile setup...');
-      router.push('/profile-setup');
+      // Always go to main app - profile completeness handled by modal only
+      console.log('Fallback: navigating to main app...');
+      router.push('/(tabs)');
     }
   };
 

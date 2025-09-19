@@ -338,8 +338,8 @@ const Login = () => {
                     } catch {}
                     router.replace('/(tabs)/home');
                 } else {
-                    // No profile - go to profile setup
-                    router.replace('/profile-setup');
+                    // Always go to main app - profile completeness handled by modal only
+                    router.replace('/(tabs)/home');
                 }
             }
         } catch (error) {

@@ -35,21 +35,7 @@ const TabLayout = () => {
         router.replace('/login');
         return;
       }
-      // Only run profile guard on meaningful auth events, not token refreshes
-      if (event === 'SIGNED_IN') {
-        (async () => {
-          try {
-            const { data: profile } = await supabase
-              .from('user_profiles')
-              .select('user_id')
-              .eq('user_id', session.user.id)
-              .maybeSingle();
-            if (!profile) {
-              router.replace('/profile-setup');
-            }
-          } catch {}
-        })();
-      }
+      // Profile setup enforcement removed - only manual navigation via modal button
     });
     return () => {
       isMounted = false;
