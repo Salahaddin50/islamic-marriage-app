@@ -304,7 +304,7 @@ const HomeScreen = () => {
   const refRBSheet = useRef<any>(null);
   const imagePreloadRef = useRef(new Set<string>());
   const [showIncompleteProfileModal, setShowIncompleteProfileModal] = useState(false);
-  const [redirectCountdown, setRedirectCountdown] = useState(2);
+  const [redirectCountdown, setRedirectCountdown] = useState(5);
 
   const [ageRange, setAgeRange] = useState([20, 50]); // Initial age range values
   const [formState, dispatchFormState] = useReducer(reducer, initialState);
@@ -657,7 +657,7 @@ const HomeScreen = () => {
       if (missingFields.length > 0) {
         console.log('Missing mandatory fields:', missingFields);
         setShowIncompleteProfileModal(true);
-        setRedirectCountdown(2);
+        setRedirectCountdown(5);
       }
     } catch (error) {
       console.error('Error checking profile completeness:', error);
@@ -2278,14 +2278,17 @@ const HomeScreen = () => {
         >
           <View style={styles.fullscreenContainer}>
             <View style={[styles.modalCard, { maxWidth: 380 }]}>
-              <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 16, textAlign: 'center', color: COLORS.primary }]}>
-                Complete Your Profile
+              <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 16, textAlign: 'center', color: COLORS.primary }]}> 
+                {t('home.incomplete_profile.title')}
               </Text>
-              <Text style={[styles.modalText, { textAlign: 'center', marginBottom: 20 }]}>
-                Your profile is incomplete. Please complete all mandatory fields to access the app and start connecting with other users.
+              <Text style={[styles.modalText, { textAlign: 'center' }]}> 
+                {t('home.incomplete_profile.line1')}
               </Text>
-              <Text style={[styles.modalText, { textAlign: 'center', fontSize: 18, fontFamily: 'semiBold', color: COLORS.primary }]}>
-                Redirecting in {redirectCountdown} seconds...
+              <Text style={[styles.modalText, { textAlign: 'center', marginBottom: 20 }]}> 
+                {t('home.incomplete_profile.line2')}
+              </Text>
+              <Text style={[styles.modalText, { textAlign: 'center', fontSize: 18, fontFamily: 'semiBold', color: COLORS.primary }]}> 
+                {t('home.incomplete_profile.redirecting', { seconds: redirectCountdown })}
               </Text>
             </View>
           </View>

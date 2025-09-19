@@ -342,6 +342,12 @@
   }
   ,
   "home": {
+    "incomplete_profile": {
+      "title": "Complete Your Profile",
+      "line1": "Your profile is incomplete.",
+      "line2": "Please complete all mandatory fields and upload minimum 3 photos to access the app and start connecting with other users.",
+      "redirecting": "Redirecting in {{seconds}} seconds..."
+    },
     "badges": {
       "total_profiles": "{{count}} profiles"
     },

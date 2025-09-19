@@ -339,6 +339,12 @@
     }
   },
   "home": {
+    "incomplete_profile": {
+      "title": "Complétez votre profil",
+      "line1": "Votre profil est incomplet.",
+      "line2": "Veuillez compléter tous les champs obligatoires et téléverser un minimum de 3 photos pour accéder à l'application et commencer à vous connecter avec d'autres utilisateurs.",
+      "redirecting": "Redirection dans {{seconds}} secondes..."
+    },
     "badges": {
       "total_profiles": "{{count}} profils"
     },

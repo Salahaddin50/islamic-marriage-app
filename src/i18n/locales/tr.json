@@ -339,6 +339,12 @@
     }
   },
   "home": {
+    "incomplete_profile": {
+      "title": "Profilinizi Tamamlayın",
+      "line1": "Profiliniz eksik.",
+      "line2": "Uygulamaya erişmek ve diğer kullanıcılarla bağlantı kurmaya başlamak için lütfen tüm zorunlu alanları doldurun ve en az 3 fotoğraf yükleyin.",
+      "redirecting": "{{seconds}} saniye içinde yönlendiriliyor..."
+    },
     "badges": {
       "total_profiles": "{{count}} profil"
     },
