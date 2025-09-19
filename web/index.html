@@ -184,16 +184,14 @@
     }
     
     function shouldRedirectToLanding() {
-      // Check if user is on desktop and not already on landing page
+      // Only redirect desktop users when visiting the root path
       const isDesktop = isDesktopDevice();
       const isAlreadyOnLanding = window.location.pathname.includes('landing.html');
-      const isDirectAppRoute = window.location.pathname.match(/\/(welcome|login|signup|onboarding)/);
+      const currentPath = window.location.pathname || '';
+      const isRootPath = currentPath === '/' || currentPath === '/index' || currentPath === '';
       
-      // Redirect to landing if:
-      // 1. Desktop device
-      // 2. Not already on landing page
-      // 3. Not accessing a specific app route directly
-      return isDesktop && !isAlreadyOnLanding && !isDirectAppRoute;
+      // Redirect to landing if on desktop and at root only
+      return isDesktop && isRootPath && !isAlreadyOnLanding;
     }
     
     // Perform redirect before React app loads

@@ -22,7 +22,7 @@ const TabLayout = () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user && isMounted) {
-          router.replace('/');
+          router.replace('/login');
           return;
         }
         // Guard: if authenticated but no completed profile, force profile-setup
@@ -41,7 +41,7 @@ const TabLayout = () => {
     checkAuth();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session?.user) {
-        router.replace('/');
+        router.replace('/login');
         return;
       }
       // Guard on auth change as well

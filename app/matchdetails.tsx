@@ -118,6 +118,8 @@ const MatchDetails = () => {
   const [showVideoMeetInfoModal, setShowVideoMeetInfoModal] = useState(false);
   const [showVideoPreconditionModal, setShowVideoPreconditionModal] = useState(false);
   const [showChatInfoModal, setShowChatInfoModal] = useState(false);
+  const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
+  const [returnToModal, setReturnToModal] = useState<'none' | 'videoPre' | 'videoInfo' | 'chatInfo'>('none');
   const [showUnderReviewModal, setShowUnderReviewModal] = useState(false);
   const [chatOathConfirmed, setChatOathConfirmed] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -1171,6 +1173,74 @@ const MatchDetails = () => {
           </TouchableOpacity>
         </View>
       </Modal>
+      {/* How it works Modal */}
+      <Modal
+        visible={showHowItWorksModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowHowItWorksModal(false)}
+      >
+        <View style={styles.fullscreenContainer}>
+          <View style={[styles.modalCard, { maxWidth: 380 }]}> 
+            <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 12, textAlign: 'center', color: COLORS.primary }]}>{t('help_center.tutorial.title')}</Text>
+
+            {((currentUserProfile?.gender || '').toLowerCase() === 'female') ? (
+              <>
+                <View style={styles.infoStepContainer}>
+                  <View style={styles.infoStepNumberContainer}><Text style={styles.infoStepNumber}>1</Text></View>
+                  <Text style={styles.infoStepText}>{t('help_center.tutorial.female.step1')}</Text>
+                </View>
+                <View style={styles.infoStepContainer}>
+                  <View style={styles.infoStepNumberContainer}><Text style={styles.infoStepNumber}>2</Text></View>
+                  <Text style={styles.infoStepText}>{t('help_center.tutorial.female.step2')}</Text>
+                </View>
+                <View style={styles.infoStepContainer}>
+                  <View style={styles.infoStepNumberContainer}><Text style={styles.infoStepNumber}>3</Text></View>
+                  <Text style={styles.infoStepText}>{t('help_center.tutorial.female.step3')}</Text>
+                </View>
+                <View style={styles.infoStepContainer}>
+                  <View style={styles.infoStepNumberContainer}><Text style={styles.infoStepNumber}>4</Text></View>
+                  <Text style={styles.infoStepText}>{t('help_center.tutorial.female.step4')}</Text>
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={styles.infoStepContainer}>
+                  <View style={styles.infoStepNumberContainer}><Text style={styles.infoStepNumber}>1</Text></View>
+                  <Text style={styles.infoStepText}>{t('help_center.tutorial.male.step1')}</Text>
+                </View>
+                <View style={styles.infoStepContainer}>
+                  <View style={styles.infoStepNumberContainer}><Text style={styles.infoStepNumber}>2</Text></View>
+                  <Text style={styles.infoStepText}>{t('help_center.tutorial.male.step2')}</Text>
+                </View>
+                <View style={styles.infoStepContainer}>
+                  <View style={styles.infoStepNumberContainer}><Text style={styles.infoStepNumber}>3</Text></View>
+                  <Text style={styles.infoStepText}>{t('help_center.tutorial.male.step3')}</Text>
+                </View>
+                <View style={styles.infoStepContainer}>
+                  <View style={styles.infoStepNumberContainer}><Text style={styles.infoStepNumber}>4</Text></View>
+                  <Text style={styles.infoStepText}>{t('help_center.tutorial.male.step4')}</Text>
+                </View>
+              </>
+            )}
+
+            <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8 }}>
+              <TouchableOpacity 
+                style={[styles.infoButton, styles.confirmButton, { width: '100%' }]} 
+                onPress={() => {
+                  setShowHowItWorksModal(false);
+                  if (returnToModal === 'videoPre') setShowVideoPreconditionModal(true);
+                  else if (returnToModal === 'videoInfo') setShowVideoMeetInfoModal(true);
+                  else if (returnToModal === 'chatInfo') setShowChatInfoModal(true);
+                  setReturnToModal('none');
+                }}
+              >
+                <Text style={styles.infoButtonText}>{t('match_details.ok')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
       {/* White backdrop strip to hide underlying content while scrolling */}
       <View style={styles.fabBackdrop} />
       {/* Floating footer actions */}
@@ -1419,31 +1489,38 @@ const MatchDetails = () => {
         <View style={styles.fullscreenContainer}>
           <View style={[styles.modalCard, { maxWidth: 360 }]}> 
             <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 12, textAlign: 'center', color: COLORS.primary }]}>{t('match_details.video_meet_info')}</Text>
-            <View style={styles.infoStepContainer}>
-              <View style={styles.infoStepNumberContainer}>
-                <Text style={styles.infoStepNumber}>1</Text>
-              </View>
-              <Text style={styles.infoStepText}>{t('match_details.step_1_video')}</Text>
-            </View>
-            <View style={styles.infoStepContainer}>
-              <View style={styles.infoStepNumberContainer}>
-                <Text style={styles.infoStepNumber}>2</Text>
-              </View>
-              <Text style={styles.infoStepText}>{t('match_details.step_2_video')}</Text>
-            </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+            {(interestStatus === 'pending' && isInterestSender) ? (
+              <Text style={[styles.infoStepText, { textAlign: 'center' }]}>{t('match_details.pending_photo_request_message')}</Text>
+            ) : (
+              <>
+                <View style={styles.infoStepContainer}>
+                  <View style={styles.infoStepNumberContainer}>
+                    <Text style={styles.infoStepNumber}>1</Text>
+                  </View>
+                  <Text style={styles.infoStepText}>{t('match_details.step_1_video')}</Text>
+                </View>
+                <View style={styles.infoStepContainer}>
+                  <View style={styles.infoStepNumberContainer}>
+                    <Text style={styles.infoStepNumber}>2</Text>
+                  </View>
+                  <Text style={styles.infoStepText}>{t('match_details.step_2_video')}</Text>
+                </View>
+              </>
+            )}
+            {/* See how it works link */}
+            <TouchableOpacity onPress={() => {
+              setReturnToModal('videoPre');
+              setShowVideoPreconditionModal(false);
+              setShowHowItWorksModal(true);
+            }}>
+              <Text style={styles.linkText}>{t('match_details.see_how_it_works')}</Text>
+            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8 }}>
               <TouchableOpacity 
-                style={[styles.infoButton, styles.cancelButton]} 
+                style={[styles.infoButton, styles.confirmButton, { width: '100%' }]} 
                 onPress={() => setShowVideoPreconditionModal(false)}
               >
-                <Text style={[styles.infoButtonText, { color: COLORS.primary }]}>{t('match_details.ok')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.infoButton, styles.confirmButton]} 
-                onPress={() => { setShowVideoPreconditionModal(false); setShowPhotoRequestInfoModal(true); }}
-              >
-                <Image source={icons.heart2} contentFit="contain" style={{ width: 18, height: 18, tintColor: COLORS.white, marginRight: 8 }} />
-                <Text style={styles.infoButtonText}>{t('match_details.ask_photo')}</Text>
+                <Text style={styles.infoButtonText}>{t('match_details.ok')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1495,6 +1572,14 @@ const MatchDetails = () => {
               </View>
               <Text style={styles.infoStepText}>{t('match_details.step_5_meet')}</Text>
             </View>
+            {/* See how it works link */}
+            <TouchableOpacity onPress={() => {
+              setReturnToModal('videoInfo');
+              setShowVideoMeetInfoModal(false);
+              setShowHowItWorksModal(true);
+            }}>
+              <Text style={styles.linkText}>{t('match_details.see_how_it_works')}</Text>
+            </TouchableOpacity>
             
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
               <TouchableOpacity 
@@ -1763,6 +1848,14 @@ const MatchDetails = () => {
                 <Text style={styles.infoStepText}>{t('match_details.see_whatsapp_messages')}</Text>
               </View>
             )}
+            {/* See how it works link */}
+            <TouchableOpacity onPress={() => {
+              setReturnToModal('chatInfo');
+              setShowChatInfoModal(false);
+              setShowHowItWorksModal(true);
+            }}>
+              <Text style={styles.linkText}>{t('match_details.see_how_it_works')}</Text>
+            </TouchableOpacity>
 
             {canMessage && (
               <TouchableOpacity
@@ -2281,6 +2374,13 @@ const styles = StyleSheet.create({
     },
     actionTextDisabled: {
         color: 'rgba(255,255,255,0.85)'
+    },
+    linkText: {
+        color: COLORS.primary,
+        fontFamily: 'medium',
+        textAlign: 'center',
+        marginTop: 8,
+        textDecorationLine: 'underline'
     },
     tinyBtn: {
         paddingHorizontal: 12,
