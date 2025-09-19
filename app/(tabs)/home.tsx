@@ -307,6 +307,7 @@ const HomeScreen = () => {
   const [redirectCountdown, setRedirectCountdown] = useState(5);
 
   const [ageRange, setAgeRange] = useState([20, 50]); // Initial age range values
+  const [selectedAgeBuckets, setSelectedAgeBuckets] = useState<number[]>([]);
   const [formState, dispatchFormState] = useReducer(reducer, initialState);
   const [selectedCountry, setSelectedCountry] = useState<string>('');
   const [selectedCity, setSelectedCity] = useState<string>('');
@@ -314,7 +315,9 @@ const HomeScreen = () => {
   
   // Physical filters
   const [heightRange, setHeightRange] = useState([150, 200]); // Height in cm
+  const [selectedHeightBuckets, setSelectedHeightBuckets] = useState<number[]>([]);
   const [weightRange, setWeightRange] = useState([40, 120]); // Weight in kg
+  const [selectedWeightBuckets, setSelectedWeightBuckets] = useState<number[]>([]);
   const [selectedEyeColor, setSelectedEyeColor] = useState<string[]>([]);
   const [selectedHairColor, setSelectedHairColor] = useState<string[]>([]);
   const [selectedSkinTone, setSelectedSkinTone] = useState<string[]>([]);
@@ -346,12 +349,17 @@ const HomeScreen = () => {
   const loadTotalCount = React.useCallback(async () => {
     try {
       // Build minimal filters object matching current UI state
+      // Use bucket-derived ranges so count matches list filtering
+      const bucketAgeRange = deriveRangeFromBuckets(ageBuckets, selectedAgeBuckets, ageRange as [number, number]);
+      const bucketHeightRange = deriveRangeFromBuckets(heightBuckets, selectedHeightBuckets, heightRange as [number, number]);
+      const bucketWeightRange = deriveRangeFromBuckets(weightBuckets, selectedWeightBuckets, weightRange as [number, number]);
+
       const filters: any = {
         selectedCountry,
         selectedCity,
-        ageRange,
-        heightRange,
-        weightRange,
+        ageRange: bucketAgeRange,
+        heightRange: bucketHeightRange,
+        weightRange: bucketWeightRange,
         selectedEyeColor,
         selectedHairColor,
         selectedSkinTone,
@@ -394,6 +402,9 @@ const HomeScreen = () => {
     ageRange,
     heightRange,
     weightRange,
+    selectedAgeBuckets,
+    selectedHeightBuckets,
+    selectedWeightBuckets,
     selectedEyeColor,
     selectedHairColor,
     selectedSkinTone,
@@ -563,6 +574,39 @@ const HomeScreen = () => {
   const beardPracticeOptions = ['Full Beard', 'Trimmed Beard', 'Mustache Only', 'Clean Shaven'];
   const acceptedWifeOptions = ['2', '3', '4'];
 
+  // Predefined range buckets for multi-select filters
+  const ageBuckets = [
+    { label: '18-22', min: 18, max: 22 },
+    { label: '22-25', min: 22, max: 25 },
+    { label: '25-30', min: 25, max: 30 },
+    { label: '30-35', min: 30, max: 35 },
+    { label: '35-42', min: 35, max: 42 },
+    { label: '42-47', min: 42, max: 47 },
+    { label: '47-55', min: 47, max: 55 },
+  ];
+
+  const heightBuckets = [
+    { label: '145-155', min: 145, max: 155 },
+    { label: '155-161', min: 155, max: 161 },
+    { label: '161-165', min: 161, max: 165 },
+    { label: '165-170', min: 165, max: 170 },
+    { label: '170-175', min: 170, max: 175 },
+    { label: '175-181', min: 175, max: 181 },
+    { label: '181-185', min: 181, max: 185 },
+    { label: '185-195', min: 185, max: 195 },
+    { label: '195-210', min: 195, max: 210 },
+  ];
+
+  const weightBuckets = [
+    { label: '40-55', min: 40, max: 55 },
+    { label: '55-65', min: 55, max: 65 },
+    { label: '65-75', min: 65, max: 75 },
+    { label: '75-85', min: 75, max: 85 },
+    { label: '85-95', min: 85, max: 95 },
+    { label: '95-110', min: 95, max: 110 },
+    { label: '110-130', min: 110, max: 130 },
+  ];
+
   // Check if user profile is complete
   const checkProfileCompleteness = async () => {
     try {
@@ -659,7 +703,7 @@ const HomeScreen = () => {
       // Only enforce the photo requirement if count successfully loaded
       if (!photoCountError && typeof photoCount === 'number') {
         if (photoCount < 3) {
-          missingFields.push('Photos (minimum 3 required)');
+        missingFields.push('Photos (minimum 3 required)');
         }
       }
 
@@ -709,6 +753,30 @@ const HomeScreen = () => {
       Math.max(minAge, Math.min(maxAge, values[1]))
     ];
     setAgeRange(clamped);
+  };
+
+  const toggleBucket = (index: number, setter: (fn: any) => void) => {
+    setter((prev: number[]) => {
+      if (prev.includes(index)) {
+        return prev.filter(i => i !== index);
+      }
+      return [...prev, index];
+    });
+  };
+
+  // Derive consolidated ranges from selected buckets
+  const deriveRangeFromBuckets = (buckets: { min: number; max: number }[], selected: number[], fallback: [number, number]): [number, number] => {
+    if (!selected || selected.length === 0) return fallback;
+    let min = Infinity;
+    let max = -Infinity;
+    selected.forEach(i => {
+      const b = buckets[i];
+      if (!b) return;
+      if (b.min < min) min = b.min;
+      if (b.max > max) max = b.max;
+    });
+    if (!isFinite(min) || !isFinite(max)) return fallback;
+    return [min, max];
   };
 
   const handleCountrySelect = (country: string) => {
@@ -1019,16 +1087,18 @@ const HomeScreen = () => {
       }
 
       // Apply physical filters (only when user deviates from defaults)
-      const isDefaultHeight = Array.isArray(heightRange) && heightRange[0] === 150 && heightRange[1] === 200;
-      const isDefaultWeight = Array.isArray(weightRange) && weightRange[0] === 40 && weightRange[1] === 120;
-      const isDefaultAge = Array.isArray(ageRange) && ageRange[0] === 20 && ageRange[1] === 50;
+      const bucketAgeRange = deriveRangeFromBuckets(ageBuckets, selectedAgeBuckets, ageRange as [number, number]);
+      const bucketHeightRange = deriveRangeFromBuckets(heightBuckets, selectedHeightBuckets, heightRange as [number, number]);
+      const bucketWeightRange = deriveRangeFromBuckets(weightBuckets, selectedWeightBuckets, weightRange as [number, number]);
 
-      if (shouldApplyFilters && heightRange && heightRange[0] && heightRange[1] && !isDefaultHeight) {
-        query = query.gte('height_cm', heightRange[0]).lte('height_cm', heightRange[1]);
+      const isDefaultHeight = Array.isArray(bucketHeightRange) && bucketHeightRange[0] === 150 && bucketHeightRange[1] === 200;
+      const isDefaultWeight = Array.isArray(bucketWeightRange) && bucketWeightRange[0] === 40 && bucketWeightRange[1] === 120;
+      const isDefaultAge = Array.isArray(bucketAgeRange) && bucketAgeRange[0] === 20 && bucketAgeRange[1] === 50;
+
+      if (shouldApplyFilters && bucketHeightRange && bucketHeightRange[0] && bucketHeightRange[1] && !isDefaultHeight) {
+        query = query.gte('height_cm', bucketHeightRange[0]).lte('height_cm', bucketHeightRange[1]);
       }
-      if (shouldApplyFilters && weightRange && weightRange[0] && weightRange[1] && !isDefaultWeight) {
-        query = query.gte('weight_kg', weightRange[0]).lte('weight_kg', weightRange[1]);
-      }
+      // Weight filter will be enforced on the mapped result set to avoid overconstraining server query
       if (shouldApplyFilters && selectedEyeColor.length) {
         query = query.in('eye_color', selectedEyeColor);
       }
@@ -1196,8 +1266,16 @@ const HomeScreen = () => {
                       (currentMonth === birthMonth && currentDate < birthDay)) ? 1 : 0);
 
           // Apply age filter early for performance
-          if (shouldApplyFilters && !isDefaultAge && (age < ageRange[0] || age > ageRange[1])) {
+          if (shouldApplyFilters && !isDefaultAge && (age < bucketAgeRange[0] || age > bucketAgeRange[1])) {
             return null;
+          }
+
+          // Apply weight filter client-side (exclude missing weight when filter active)
+          if (shouldApplyFilters && !isDefaultWeight) {
+            const w = (profile as any).weight_kg as number | null | undefined;
+            if (typeof w !== 'number' || w < bucketWeightRange[0] || w > bucketWeightRange[1]) {
+              return null;
+            }
           }
 
           // Optimized image URL selection
@@ -1738,71 +1816,59 @@ const HomeScreen = () => {
               <Text style={[styles.subtitle, {
                 color: COLORS.greyscale900,
               }]}>{t('home.filters.title_age')}</Text>
-              <MultiSlider
-                values={ageRange}
-                sliderLength={SIZES.width - 32}
-                onValuesChange={handleSliderChange}
-                min={16}
-                max={60}
-                step={1}
-                allowOverlap={false}
-                snapped={false}
-                minMarkerOverlapDistance={0}
-                selectedStyle={styles.selectedTrack}
-                unselectedStyle={styles.unselectedTrack}
-                containerStyle={styles.sliderContainer}
-                trackStyle={styles.trackStyle}
-                customMarker={(e) => <CustomMarker {...e} />}
-                touchDimensions={sliderTouchDims}
-                pressedMarkerStyle={{ width: 36, height: 36, borderRadius: 18, borderWidth: 2, borderColor: 'white', backgroundColor: COLORS.primary, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 3, elevation: 3 }}
-              />
+              <View style={styles.pillContainer}>
+                {ageBuckets.map((b, i) => {
+                  const active = selectedAgeBuckets.includes(i);
+                  return (
+                    <TouchableOpacity
+                      key={`age-bucket-${i}`}
+                      onPress={() => toggleBucket(i, setSelectedAgeBuckets)}
+                      style={[styles.multiSelectPill, active ? styles.multiSelectPillActive : styles.multiSelectPillInactive]}
+                    >
+                      <Text style={[styles.multiSelectPillText, active ? styles.multiSelectPillTextActive : null]}>{b.label}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
 
               {/* Physical Characteristics */}
               <Text style={[styles.subtitle, {
                 color: COLORS.greyscale900,
                 marginTop: 16,
               }]}>{t('home.filters.title_height')}</Text>
-              <MultiSlider
-                values={heightRange}
-                sliderLength={SIZES.width - 32}
-                onValuesChange={(values) => setHeightRange(values)}
-                min={145}
-                max={210}
-                step={1}
-                allowOverlap={false}
-                snapped={false}
-                minMarkerOverlapDistance={0}
-                selectedStyle={styles.selectedTrack}
-                unselectedStyle={styles.unselectedTrack}
-                containerStyle={styles.sliderContainer}
-                trackStyle={styles.trackStyle}
-                customMarker={(e) => <CustomMarker {...e} />}
-                touchDimensions={sliderTouchDims}
-                pressedMarkerStyle={{ width: 36, height: 36, borderRadius: 18, borderWidth: 2, borderColor: 'white', backgroundColor: COLORS.primary, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 3, elevation: 3 }}
-              />
+              <View style={styles.pillContainer}>
+                {heightBuckets.map((b, i) => {
+                  const active = selectedHeightBuckets.includes(i);
+                  return (
+                    <TouchableOpacity
+                      key={`height-bucket-${i}`}
+                      onPress={() => toggleBucket(i, setSelectedHeightBuckets)}
+                      style={[styles.multiSelectPill, active ? styles.multiSelectPillActive : styles.multiSelectPillInactive]}
+                    >
+                      <Text style={[styles.multiSelectPillText, active ? styles.multiSelectPillTextActive : null]}>{b.label}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
 
               <Text style={[styles.subtitle, {
                 color: COLORS.greyscale900,
                 marginTop: 16,
               }]}>{t('home.filters.title_weight_range')}</Text>
-              <MultiSlider
-                values={weightRange}
-                sliderLength={SIZES.width - 32}
-                onValuesChange={(values) => setWeightRange(values)}
-                min={40}
-                max={140}
-                step={1}
-                allowOverlap={false}
-                snapped={false}
-                minMarkerOverlapDistance={0}
-                selectedStyle={styles.selectedTrack}
-                unselectedStyle={styles.unselectedTrack}
-                containerStyle={styles.sliderContainer}
-                trackStyle={styles.trackStyle}
-                customMarker={(e) => <CustomMarker {...e} />}
-                touchDimensions={sliderTouchDims}
-                pressedMarkerStyle={{ width: 36, height: 36, borderRadius: 18, borderWidth: 2, borderColor: 'white', backgroundColor: COLORS.primary, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 3, elevation: 3 }}
-              />
+              <View style={styles.pillContainer}>
+                {weightBuckets.map((b, i) => {
+                  const active = selectedWeightBuckets.includes(i);
+                  return (
+                    <TouchableOpacity
+                      key={`weight-bucket-${i}`}
+                      onPress={() => toggleBucket(i, setSelectedWeightBuckets)}
+                      style={[styles.multiSelectPill, active ? styles.multiSelectPillActive : styles.multiSelectPillInactive]}
+                    >
+                      <Text style={[styles.multiSelectPillText, active ? styles.multiSelectPillTextActive : null]}>{b.label}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
 
               <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_eye_color')}</Text>
               <View style={styles.horizontalMultiSelect}>
@@ -2287,16 +2353,16 @@ const HomeScreen = () => {
         >
           <View style={styles.fullscreenContainer}>
             <View style={[styles.modalCard, { maxWidth: 380 }]}>
-              <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 16, textAlign: 'center', color: COLORS.primary }]}> 
+              <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 16, textAlign: 'center', color: COLORS.primary }]}>
                 {t('home.incomplete_profile.title')}
               </Text>
               <Text style={[styles.modalText, { textAlign: 'center' }]}> 
                 {t('home.incomplete_profile.line1')}
               </Text>
-              <Text style={[styles.modalText, { textAlign: 'center', marginBottom: 20 }]}> 
+              <Text style={[styles.modalText, { textAlign: 'center', marginBottom: 20 }]}>
                 {t('home.incomplete_profile.line2')}
               </Text>
-              <Text style={[styles.modalText, { textAlign: 'center', fontSize: 18, fontFamily: 'semiBold', color: COLORS.primary }]}> 
+              <Text style={[styles.modalText, { textAlign: 'center', fontSize: 18, fontFamily: 'semiBold', color: COLORS.primary }]}>
                 {t('home.incomplete_profile.redirecting', { seconds: redirectCountdown })}
               </Text>
             </View>
@@ -2365,74 +2431,59 @@ const HomeScreen = () => {
             <Text style={[styles.subtitle, {
               color: COLORS.greyscale900,
             }]}>{t('home.filters.title_age')}</Text>
-            <MultiSlider
-              values={ageRange}
-              sliderLength={SIZES.width - 32}
-              onValuesChange={handleSliderChange}
-              min={16}
-              max={60}
-              step={1}
-              allowOverlap={false}
-              snapped={false}
-              minMarkerOverlapDistance={0}
-              selectedStyle={styles.selectedTrack}
-              unselectedStyle={styles.unselectedTrack}
-              containerStyle={styles.sliderContainer}
-              trackStyle={styles.trackStyle}
-              customMarker={(e) => <CustomMarker {...e} />}
-              enableLabel={false}
-              touchDimensions={sliderTouchDims}
-              pressedMarkerStyle={{ width: 36, height: 36, borderRadius: 18, borderWidth: 2, borderColor: 'white', backgroundColor: COLORS.primary, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 3, elevation: 3 }}
-            />
+            <View style={styles.pillContainer}>
+              {ageBuckets.map((b, i) => {
+                const active = selectedAgeBuckets.includes(i);
+                return (
+                  <TouchableOpacity
+                    key={`age-bucket-${i}`}
+                    onPress={() => toggleBucket(i, setSelectedAgeBuckets)}
+                    style={[styles.multiSelectPill, active ? styles.multiSelectPillActive : styles.multiSelectPillInactive]}
+                  >
+                    <Text style={[styles.multiSelectPillText, active ? styles.multiSelectPillTextActive : null]}>{b.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
 
             {/* Physical Characteristics */}
             <Text style={[styles.subtitle, {
               color: COLORS.greyscale900,
               marginTop: 16,
             }]}>{t('home.filters.title_height')}</Text>
-            <MultiSlider
-              values={heightRange}
-              sliderLength={SIZES.width - 32}
-              onValuesChange={(values) => setHeightRange(values)}
-              min={145}
-              max={210}
-              step={1}
-              allowOverlap={false}
-              snapped={false}
-              minMarkerOverlapDistance={0}
-              selectedStyle={styles.selectedTrack}
-              unselectedStyle={styles.unselectedTrack}
-              containerStyle={styles.sliderContainer}
-              trackStyle={styles.trackStyle}
-              customMarker={(e) => <CustomMarker {...e} />}
-              enableLabel={false}
-              touchDimensions={sliderTouchDims}
-              pressedMarkerStyle={{ width: 36, height: 36, borderRadius: 18, borderWidth: 2, borderColor: 'white', backgroundColor: COLORS.primary, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 3, elevation: 3 }}
-            />
+            <View style={styles.pillContainer}>
+              {heightBuckets.map((b, i) => {
+                const active = selectedHeightBuckets.includes(i);
+                return (
+                  <TouchableOpacity
+                    key={`height-bucket-${i}`}
+                    onPress={() => toggleBucket(i, setSelectedHeightBuckets)}
+                    style={[styles.multiSelectPill, active ? styles.multiSelectPillActive : styles.multiSelectPillInactive]}
+                  >
+                    <Text style={[styles.multiSelectPillText, active ? styles.multiSelectPillTextActive : null]}>{b.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
 
             <Text style={[styles.subtitle, {
               color: COLORS.greyscale900,
               marginTop: 16,
             }]}>{t('home.filters.title_weight_range')}</Text>
-            <MultiSlider
-              values={weightRange}
-              sliderLength={SIZES.width - 32}
-              onValuesChange={(values) => setWeightRange(values)}
-              min={40}
-              max={140}
-              step={1}
-              allowOverlap={false}
-              snapped={false}
-              minMarkerOverlapDistance={0}
-              selectedStyle={styles.selectedTrack}
-              unselectedStyle={styles.unselectedTrack}
-              containerStyle={styles.sliderContainer}
-              trackStyle={styles.trackStyle}
-              customMarker={(e) => <CustomMarker {...e} />}
-              enableLabel={false}
-              touchDimensions={sliderTouchDims}
-              pressedMarkerStyle={{ width: 36, height: 36, borderRadius: 18, borderWidth: 2, borderColor: 'white', backgroundColor: COLORS.primary, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 3, elevation: 3 }}
-            />
+            <View style={styles.pillContainer}>
+              {weightBuckets.map((b, i) => {
+                const active = selectedWeightBuckets.includes(i);
+                return (
+                  <TouchableOpacity
+                    key={`weight-bucket-${i}`}
+                    onPress={() => toggleBucket(i, setSelectedWeightBuckets)}
+                    style={[styles.multiSelectPill, active ? styles.multiSelectPillActive : styles.multiSelectPillInactive]}
+                  >
+                    <Text style={[styles.multiSelectPillText, active ? styles.multiSelectPillTextActive : null]}>{b.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
 
             <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_eye_color')}</Text>
             <View style={styles.horizontalMultiSelect}>
@@ -3333,6 +3384,38 @@ const styles = StyleSheet.create({
   },
   upgradeButtonTextDisabled: {
     color: COLORS.white,
+  },
+  pillContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 8,
+  },
+  multiSelectPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: COLORS.greyscale300,
+    backgroundColor: COLORS.white,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  multiSelectPillActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  multiSelectPillInactive: {
+    backgroundColor: COLORS.white,
+    borderColor: COLORS.greyscale300,
+  },
+  multiSelectPillText: {
+    fontSize: 14,
+    color: COLORS.black,
+    fontFamily: 'medium',
+  },
+  multiSelectPillTextActive: {
+    color: COLORS.white,
+    fontFamily: 'semiBold',
   },
 })
 
