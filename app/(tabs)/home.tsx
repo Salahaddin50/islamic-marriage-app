@@ -1422,9 +1422,13 @@ const HomeScreen = () => {
         if (isFresh) {
           setUsers(cachedUsers as UserProfileWithMedia[]);
           setLoading(false);
+          // Check profile completeness to show modal (no auto-redirect)
+          await checkProfileCompleteness();
           return;
         }
         await fetchUserProfiles();
+        // Check profile completeness to show modal (no auto-redirect)
+        await checkProfileCompleteness();
       };
       
       initializeScreen();
