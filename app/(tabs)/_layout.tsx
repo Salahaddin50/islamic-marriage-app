@@ -39,24 +39,26 @@ const TabLayout = () => {
       } catch {}
     };
     checkAuth();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!session?.user) {
         router.replace('/login');
         return;
       }
-      // Guard on auth change as well
-      (async () => {
-        try {
-          const { data: profile } = await supabase
-            .from('user_profiles')
-            .select('user_id')
-            .eq('user_id', session.user.id)
-            .maybeSingle();
-          if (!profile) {
-            router.replace('/profile-setup');
-          }
-        } catch {}
-      })();
+      // Only run profile guard on meaningful auth events, not token refreshes
+      if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'PASSWORD_RECOVERY') {
+        (async () => {
+          try {
+            const { data: profile } = await supabase
+              .from('user_profiles')
+              .select('user_id')
+              .eq('user_id', session.user.id)
+              .maybeSingle();
+            if (!profile) {
+              router.replace('/profile-setup');
+            }
+          } catch {}
+        })();
+      }
     });
     return () => {
       isMounted = false;

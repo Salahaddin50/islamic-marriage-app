@@ -569,11 +569,17 @@ const HomeScreen = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
+
+      // If we couldn't reliably load the profile (e.g., transient network/RLS), do not force redirect
+      if (profileError) {
+        console.warn('Profile load error while checking completeness:', profileError.message);
+        return;
+      }
 
       if (!profile) {
         console.log('No profile found, redirecting to setup');
@@ -644,14 +650,17 @@ const HomeScreen = () => {
       }
 
       // Check for photos (minimum 3 required)
-      const { count: photoCount } = await supabase
+      const { count: photoCount, error: photoCountError } = await supabase
         .from('media_references')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('media_type', 'photo');
 
-      if ((photoCount ?? 0) < 3) {
-        missingFields.push('Photos (minimum 3 required)');
+      // Only enforce the photo requirement if count successfully loaded
+      if (!photoCountError && typeof photoCount === 'number') {
+        if (photoCount < 3) {
+          missingFields.push('Photos (minimum 3 required)');
+        }
       }
 
       if (missingFields.length > 0) {
