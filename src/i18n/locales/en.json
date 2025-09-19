@@ -596,7 +596,8 @@
       "accept": "Accept",
       "reject": "Reject",
       "withdraw": "Withdraw",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "meet": "Meet"
     },
     "modal": {
       "photo_request": "photo request",

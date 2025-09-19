@@ -255,6 +255,7 @@ const MatchDetails = () => {
     })();
   }, [userId, nowTick]);
 
+  // autoMeet behavior removed per request — navigating should not auto-click anything
   // Refresh ticker every minute so time-based gating updates
   useEffect(() => {
     const id = setInterval(() => setNowTick(Date.now()), 60000);

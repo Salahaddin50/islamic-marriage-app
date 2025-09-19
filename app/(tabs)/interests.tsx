@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, useWindowDimensions, Animated } from 'react-native';
 import { COLORS, SIZES, icons, images } from '@/constants';
 import { Image } from 'expo-image';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
@@ -31,12 +31,26 @@ const InterestsScreen = () => {
   ]);
 
   const [profilesById, setProfilesById] = useState<Record<string, { name: string; age?: number; avatar?: any }>>({});
+  const [meetButtonDisabledByUser, setMeetButtonDisabledByUser] = useState<Record<string, boolean>>({});
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 20;
   const CACHE_KEY = 'hume_interests_cache_v1';
   const [myUserId, setMyUserId] = useState<string | null>(null);
+  const blinkOpacity = React.useRef(new Animated.Value(1)).current;
+  React.useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(blinkOpacity, { toValue: 0.4, duration: 600, useNativeDriver: true }),
+        Animated.timing(blinkOpacity, { toValue: 1, duration: 600, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [blinkOpacity]);
+  // style-like object to share opacity
+  const stylesBlink = { opacity: blinkOpacity } as const;
   
   // Modal state for accept confirmation
   const [showAcceptModal, setShowAcceptModal] = useState(false);
@@ -434,6 +448,7 @@ const InterestsScreen = () => {
             approved.map((row, idx) => {
               const otherUserId = myUserId && row.sender_id === myUserId ? row.receiver_id : row.sender_id;
               const other = profilesById[otherUserId];
+              const meetDisabled = !!meetButtonDisabledByUser[otherUserId];
               return (
                 <View key={row.id} style={[styles.userContainer, idx % 2 !== 0 ? styles.oddBackground : null]}>
                   <TouchableOpacity style={styles.userImageContainer} onPress={() => navigation.navigate('matchdetails' as never, { userId: otherUserId } as never)}>
@@ -447,6 +462,15 @@ const InterestsScreen = () => {
                         </Text>
                       </TouchableOpacity>
                       <View style={styles.rowActions}>
+                        {/* Blinking Meet button - navigate only */}
+                        <Animated.View style={{ opacity: stylesBlink.opacity, marginRight: 8 }}>
+                          <TouchableOpacity
+                            style={[styles.tinyBtn, { backgroundColor: COLORS.primary }]}
+                            onPress={() => navigation.navigate('matchdetails' as never, { userId: otherUserId } as never)}
+                          >
+                            <Text style={styles.tinyBtnText}>{t('interests.actions.meet')}</Text>
+                          </TouchableOpacity>
+                        </Animated.View>
                         <TouchableOpacity style={[styles.tinyBtn, { backgroundColor: COLORS.tansparentPrimary, borderColor: COLORS.primary, borderWidth: 1 }]} onPress={() => cancelApproved(row.id)}>
                           <Text style={[styles.tinyBtnText, { color: COLORS.primary }]}>{t('interests.actions.cancel')}</Text>
                         </TouchableOpacity>
@@ -482,6 +506,7 @@ const InterestsScreen = () => {
           initialLayout={{ width: layout.width }}
           renderTabBar={renderTabBar}
         />
+        {/* Blinking handled via shared Animated.Value (no component needed) */}
         
         {/* Accept Confirmation Modal */}
         <AcceptConfirmationModal
