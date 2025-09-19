@@ -929,7 +929,7 @@
 
                     <div class="last-updated">
                         <p>Last updated: January 1, 2024</p>
-                        <p>For questions about these legal documents, please contact us at: asim.mammadov82@outlook.com</p>
+                        <p class="contact-email-text">For questions about these legal documents, please contact us at: <a href="mailto:zawajplusapp@gmail.com">zawajplusapp@gmail.com</a></p>
                     </div>
                 </div>
             </div>
@@ -1635,6 +1635,27 @@
             changeLanguage(savedLang);
         }
 
+        // Load contact information (using configuration for now due to RLS restrictions)
+        async function loadContactInfo() {
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('support_team')
+                    .select('email')
+                    .ilike('role', 'customer%support%')
+                    .eq('is_active', true)
+                    .limit(1)
+                    .single();
+                if (error) throw error;
+                if (!data || !data.email) throw new Error('No active support email');
+                const contactSpan = document.querySelector('.loading-contact');
+                if (contactSpan) {
+                    contactSpan.innerHTML = `<a href="mailto:${data.email}">${data.email}</a>`;
+                }
+            } catch (err) {
+                console.error('Failed to load legal contact email from DB:', err);
+            }
+        }
+
         // Navbar scroll effect (always show as scrolled since it's a sub-page)
         document.addEventListener('DOMContentLoaded', function() {
             const navbar = document.getElementById('navbar');
@@ -1642,6 +1663,9 @@
             
             // Initialize language system
             initializeLanguage();
+            
+            // Load dynamic contact information
+            loadContactInfo();
         });
 
         // Close language menu when clicking outside
