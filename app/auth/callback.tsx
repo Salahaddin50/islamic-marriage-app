@@ -7,12 +7,12 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
-import { useNavigation } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { supabase } from '../../src/config/supabase';
 import { COLORS } from '../../constants';
 
 const AuthCallback: React.FC = () => {
-  const navigation = useNavigation();
+  const router = useRouter();
 
   useEffect(() => {
     handleAuthCallback();
@@ -52,17 +52,17 @@ const AuthCallback: React.FC = () => {
             await SecureStore.setItemAsync('hume_reset_filters_on_login', '1');
           }
         } catch {}
-        navigation.navigate('(tabs)' as never);
+        router.replace('/(tabs)/home');
       } else {
         // New user (no profile) - redirect to profile setup IMMEDIATELY  
-        navigation.navigate('profile-setup' as never);
+        router.replace('/profile-setup');
       }
 
     } catch (error: any) {
       console.error('Auth callback error:', error);
       
       // Redirect to login immediately on error
-      navigation.navigate('login' as never);
+      router.replace('/login');
     }
   };
 
