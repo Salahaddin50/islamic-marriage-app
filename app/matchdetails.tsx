@@ -1,5 +1,5 @@
-   import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Alert, Modal, Dimensions, Platform, Linking, TextInput } from 'react-native';
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+  import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Alert, Modal, Dimensions, Platform, Linking, TextInput, Animated } from 'react-native';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { COLORS, icons, images, SIZES } from '@/constants';
 // import AutoSlider from '@/components/AutoSlider'; // Removed to ensure we only use custom implementation
@@ -141,6 +141,41 @@ const MatchDetails = () => {
     const day = String(d.getDate()).padStart(2, '0');
     return `${y}-${m}-${day}`; // Local YYYY-MM-DD
   }, []);
+
+  // Blinking animation for active step (runs only when not yet accepted)
+  const blinkOpacity = useRef(new Animated.Value(1)).current;
+  const [activeStep, setActiveStep] = useState<1 | 2 | 3 | null>(null);
+
+  useEffect(() => {
+    // Blink only when the current step has no request yet (status === 'none').
+    if (interestStatus !== 'accepted') {
+      setActiveStep(interestStatus === 'none' ? 1 : null);
+    } else if (meetStatus !== 'accepted') {
+      setActiveStep(meetStatus === 'none' ? 2 : null);
+    } else if (messageStatus !== 'accepted') {
+      setActiveStep(messageStatus === 'none' ? 3 : null);
+    } else {
+      setActiveStep(null);
+    }
+  }, [interestStatus, meetStatus, messageStatus]);
+
+  useEffect(() => {
+    let loop: Animated.CompositeAnimation | null = null;
+    if (activeStep) {
+      loop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(blinkOpacity, { toValue: 0.3, duration: 600, useNativeDriver: true }),
+          Animated.timing(blinkOpacity, { toValue: 1, duration: 600, useNativeDriver: true })
+        ])
+      );
+      loop.start();
+    } else {
+      blinkOpacity.setValue(1);
+    }
+    return () => {
+      if (loop) loop.stop();
+    };
+  }, [activeStep, blinkOpacity]);
 
   // Check if user has any active package (for video request validation)
   const checkUserPackage = async (): Promise<boolean> => {
@@ -1243,6 +1278,26 @@ const MatchDetails = () => {
       </Modal>
       {/* White backdrop strip to hide underlying content while scrolling */}
       <View style={styles.fabBackdrop} />
+      {/* Small 3-step indicator just above footer buttons */}
+      <View style={styles.stepsContainer}>
+        <View style={styles.stepsRow}>
+          <View style={styles.stepColumn}>
+            <Animated.View style={[styles.stepCircle, (interestStatus === 'accepted') && styles.stepCircleDone, (activeStep === 1) && { opacity: blinkOpacity }]}>
+              <Text style={[styles.stepCircleText, (interestStatus === 'accepted') && styles.stepCircleTextDone]}>1</Text>
+            </Animated.View>
+          </View>
+          <View style={styles.stepColumn}>
+            <Animated.View style={[styles.stepCircle, (meetStatus === 'accepted') && styles.stepCircleDone, (activeStep === 2) && { opacity: blinkOpacity }]}>
+              <Text style={[styles.stepCircleText, (meetStatus === 'accepted') && styles.stepCircleTextDone]}>2</Text>
+            </Animated.View>
+          </View>
+          <View style={styles.stepColumn}>
+            <Animated.View style={[styles.stepCircle, (messageStatus === 'accepted') && styles.stepCircleDone, (activeStep === 3) && { opacity: blinkOpacity }]}>
+              <Text style={[styles.stepCircleText, (messageStatus === 'accepted') && styles.stepCircleTextDone]}>3</Text>
+            </Animated.View>
+          </View>
+        </View>
+      </View>
       {/* Floating footer actions */}
       <View style={styles.fabContainer}>
         <TouchableOpacity
@@ -2330,7 +2385,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         left: 0,
         right: 0,
-        bottom: 24,
+        bottom: 36,
         height: 42, // exactly equal to button height
         backgroundColor: COLORS.white,
     },
@@ -2338,10 +2393,67 @@ const styles = StyleSheet.create({
         position: 'absolute',
         left: 16,
         right: 16,
-        bottom: 24,
+        bottom: 36,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
+    },
+    // Steps indicator styles
+    stepsContainer: {
+        position: 'absolute',
+        left: 16,
+        right: 16,
+        bottom: 8, // place slightly below buttons
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    stepsRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '100%',
+        position: 'relative',
+    },
+    // (connectors removed as requested)
+    stepColumn: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    stepItem: {
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    stepCircle: {
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        backgroundColor: COLORS.white,
+        borderWidth: 1,
+        borderColor: COLORS.primary,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    stepCircleDone: {
+        backgroundColor: COLORS.success,
+        borderColor: COLORS.success,
+    },
+    stepCircleText: {
+        fontFamily: 'bold',
+        fontSize: getResponsiveFontSize(12),
+        color: COLORS.primary,
+    },
+    stepCircleTextDone: {
+        color: COLORS.white,
+    },
+    stepConnector: {
+        flex: 1,
+        height: 2,
+        backgroundColor: COLORS.grayscale400,
+        marginHorizontal: 6,
     },
     actionButton: {
         flexDirection: 'row',
