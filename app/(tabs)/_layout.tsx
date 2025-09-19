@@ -25,17 +25,8 @@ const TabLayout = () => {
           router.replace('/login');
           return;
         }
-        // Guard: if authenticated but no completed profile, force profile-setup
-        if (session?.user && isMounted) {
-          const { data: profile } = await supabase
-            .from('user_profiles')
-            .select('user_id')
-            .eq('user_id', session.user.id)
-            .maybeSingle();
-          if (!profile) {
-            router.replace('/profile-setup');
-          }
-        }
+        // For already signed-in users, do not enforce profile-setup here.
+        // Completeness enforcement is handled only on SIGNED_IN events below.
       } catch {}
     };
     checkAuth();
@@ -45,7 +36,7 @@ const TabLayout = () => {
         return;
       }
       // Only run profile guard on meaningful auth events, not token refreshes
-      if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'PASSWORD_RECOVERY') {
+      if (event === 'SIGNED_IN') {
         (async () => {
           try {
             const { data: profile } = await supabase

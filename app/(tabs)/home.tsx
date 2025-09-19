@@ -1,4 +1,4 @@
- import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, FlatList, useWindowDimensions, ScrollView, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, FlatList, useWindowDimensions, ScrollView, Alert, Modal } from 'react-native';
 import React, { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, icons, images, SIZES } from '@/constants';
@@ -717,22 +717,7 @@ const HomeScreen = () => {
     }
   };
 
-  // Handle automatic redirect countdown
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-    if (showIncompleteProfileModal && redirectCountdown > 0) {
-      interval = setInterval(() => {
-        setRedirectCountdown(prev => prev - 1);
-      }, 1000);
-    } else if (showIncompleteProfileModal && redirectCountdown === 0) {
-      setShowIncompleteProfileModal(false);
-      router.push('/profile-setup');
-    }
-    
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [showIncompleteProfileModal, redirectCountdown, router]);
+  // Remove auto-navigation. If needed, show info-only modal.
 
   const inputChangedHandler = useCallback(
     (inputId: string, inputValue: string) => {
@@ -912,14 +897,14 @@ const HomeScreen = () => {
   const getActiveFiltersCount = (): number => {
     let count = 0;
     
-    // Age range (default: [20, 50])
-    if (ageRange[0] !== 20 || ageRange[1] !== 50) count++;
+  // Age range or age buckets (default: [20, 50])
+  if (selectedAgeBuckets.length > 0 || ageRange[0] !== 20 || ageRange[1] !== 50) count++;
     
-    // Height range (default: [150, 200])
-    if (heightRange[0] !== 150 || heightRange[1] !== 200) count++;
+  // Height range or height buckets (default: [150, 200])
+  if (selectedHeightBuckets.length > 0 || heightRange[0] !== 150 || heightRange[1] !== 200) count++;
     
-    // Weight range (default: [40, 120])
-    if (weightRange[0] !== 40 || weightRange[1] !== 120) count++;
+  // Weight range or weight buckets (default: [40, 120])
+  if (selectedWeightBuckets.length > 0 || weightRange[0] !== 40 || weightRange[1] !== 120) count++;
     
     // Location filters
     if (selectedCountry) count++;
@@ -953,8 +938,11 @@ const HomeScreen = () => {
     setSelectedCity('');
     setAvailableCities([]);
     setAgeRange([20, 50]);
+    setSelectedAgeBuckets([]);
     setHeightRange([150, 200]);
+    setSelectedHeightBuckets([]);
     setWeightRange([40, 120]);
+    setSelectedWeightBuckets([]);
     setSelectedEyeColor([]);
     setSelectedHairColor([]);
     setSelectedSkinTone([]);
@@ -2352,7 +2340,7 @@ const HomeScreen = () => {
           onRequestClose={() => {}}
         >
           <View style={styles.fullscreenContainer}>
-            <View style={[styles.modalCard, { maxWidth: 380 }]}>
+            <View style={[styles.modalCard, { maxWidth: 380 }]}> 
               <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 16, textAlign: 'center', color: COLORS.primary }]}>
                 {t('home.incomplete_profile.title')}
               </Text>
@@ -2362,9 +2350,14 @@ const HomeScreen = () => {
               <Text style={[styles.modalText, { textAlign: 'center', marginBottom: 20 }]}>
                 {t('home.incomplete_profile.line2')}
               </Text>
-              <Text style={[styles.modalText, { textAlign: 'center', fontSize: 18, fontFamily: 'semiBold', color: COLORS.primary }]}>
-                {t('home.incomplete_profile.redirecting', { seconds: redirectCountdown })}
-              </Text>
+              <View style={{ alignItems: 'center' }}>
+                <TouchableOpacity
+                  onPress={() => { setShowIncompleteProfileModal(false); router.push('/profile-setup'); }}
+                  style={[styles.modalPrimaryButton]}
+                >
+                  <Text style={styles.modalPrimaryButtonText}>{t('profile_setup.complete_registration')}</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>
@@ -3416,6 +3409,19 @@ const styles = StyleSheet.create({
   multiSelectPillTextActive: {
     color: COLORS.white,
     fontFamily: 'semiBold',
+  },
+  modalPrimaryButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    minWidth: 180,
+  },
+  modalPrimaryButtonText: {
+    color: COLORS.white,
+    fontFamily: 'semiBold',
+    fontSize: 16,
+    textAlign: 'center',
   },
 })
 
