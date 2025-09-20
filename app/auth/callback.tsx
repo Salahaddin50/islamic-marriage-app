@@ -41,23 +41,27 @@ const AuthCallback: React.FC = () => {
       console.log('Profile check in callback:', { 
         hasProfile: !!existingProfile, 
         error: profileError?.message,
-        code: profileError?.code 
+        code: profileError?.code,
+        userId: session.user.id 
       });
 
-      if (existingProfile) {
-        // Existing user with a profile - go to main app (modal handles any incompleteness)
-        try {
-          if (Platform.OS === 'web') {
-            localStorage.setItem('hume_reset_filters_on_login', '1');
-          } else {
-            await SecureStore.setItemAsync('hume_reset_filters_on_login', '1');
-          }
-        } catch {}
-        router.replace('/(tabs)/home');
-      } else {
-        // First-time user (no profile) - auto-redirect to profile setup
+      // Force new Google users to profile setup regardless of any profile row
+      if (!existingProfile || profileError) {
+        console.log('No profile found or error - redirecting to profile setup');
         router.push('/profile-setup');
+        return;
       }
+
+      // Existing user with confirmed profile - go to main app
+      console.log('Existing profile found - going to home');
+      try {
+        if (Platform.OS === 'web') {
+          localStorage.setItem('hume_reset_filters_on_login', '1');
+        } else {
+          await SecureStore.setItemAsync('hume_reset_filters_on_login', '1');
+        }
+      } catch {}
+      router.replace('/(tabs)/home');
 
     } catch (error: any) {
       console.error('Auth callback error:', error);
