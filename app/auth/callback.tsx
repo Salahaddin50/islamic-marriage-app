@@ -43,15 +43,20 @@ const AuthCallback: React.FC = () => {
         console.log('Database tables not set up yet, treating as new user');
       }
 
-      // Always go to main app - profile completeness handled by modal only
-      try {
-        if (Platform.OS === 'web') {
-          localStorage.setItem('hume_reset_filters_on_login', '1');
-        } else {
-          await SecureStore.setItemAsync('hume_reset_filters_on_login', '1');
-        }
-      } catch {}
-      router.replace('/(tabs)/home');
+      if (existingProfile) {
+        // Existing user with a profile - go to main app (modal handles any incompleteness)
+        try {
+          if (Platform.OS === 'web') {
+            localStorage.setItem('hume_reset_filters_on_login', '1');
+          } else {
+            await SecureStore.setItemAsync('hume_reset_filters_on_login', '1');
+          }
+        } catch {}
+        router.replace('/(tabs)/home');
+      } else {
+        // First-time user (no profile) - auto-redirect to profile setup
+        router.push('/profile-setup');
+      }
 
     } catch (error: any) {
       console.error('Auth callback error:', error);
