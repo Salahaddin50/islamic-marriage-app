@@ -6,6 +6,7 @@ import { Image } from 'expo-image';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import Button from '@/components/Button';
 import { InterestsService, InterestRecord } from '@/src/services/interests';
+import { MeetService } from '@/src/services/meet';
 import { supabase } from '@/src/config/supabase';
 import { useNavigation } from 'expo-router';
 import { NavigationProp, useIsFocused } from '@react-navigation/native';
@@ -32,6 +33,7 @@ const InterestsScreen = () => {
 
   const [profilesById, setProfilesById] = useState<Record<string, { name: string; age?: number; avatar?: any }>>({});
   const [meetButtonDisabledByUser, setMeetButtonDisabledByUser] = useState<Record<string, boolean>>({});
+  const [meetStatusByUser, setMeetStatusByUser] = useState<Record<string, 'none' | 'pending' | 'accepted'>>({});
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
@@ -286,6 +288,31 @@ const InterestsScreen = () => {
     ]);
   }, [incoming.length, outgoing.length, approved.length, t]);
 
+  // Load meet status for users shown under Approved interests so we can control blinking
+  useEffect(() => {
+    (async () => {
+      try {
+        if (!approved || approved.length === 0) { setMeetStatusByUser({}); return; }
+        const userIds = Array.from(new Set(approved.map(row => {
+          const otherUserId = myUserId && row.sender_id === myUserId ? row.receiver_id : row.sender_id;
+          return otherUserId;
+        })));
+        const results = await Promise.all(userIds.map(async (uid) => {
+          try {
+            const res = await MeetService.getStatusForTarget(uid);
+            const status = (res?.status as any) || 'none';
+            return [uid, status] as const;
+          } catch {
+            return [uid, 'none'] as const;
+          }
+        }));
+        const map: Record<string, 'none' | 'pending' | 'accepted'> = {};
+        results.forEach(([uid, status]) => { map[uid] = (status === 'accepted' || status === 'pending') ? status : 'none'; });
+        setMeetStatusByUser(map);
+      } catch {}
+    })();
+  }, [approved, myUserId]);
+
   const renderTabBar = (props: any) => (
     <TabBar
       {...props}
@@ -449,6 +476,8 @@ const InterestsScreen = () => {
               const otherUserId = myUserId && row.sender_id === myUserId ? row.receiver_id : row.sender_id;
               const other = profilesById[otherUserId];
               const meetDisabled = !!meetButtonDisabledByUser[otherUserId];
+              const meetStatus = meetStatusByUser[otherUserId] || 'none';
+              const shouldBlink = (meetStatus === 'none' || meetStatus === 'pending');
               return (
                 <View key={row.id} style={[styles.userContainer, idx % 2 !== 0 ? styles.oddBackground : null]}>
                   <TouchableOpacity style={styles.userImageContainer} onPress={() => navigation.navigate('matchdetails' as never, { userId: otherUserId } as never)}>
@@ -463,8 +492,9 @@ const InterestsScreen = () => {
                       </TouchableOpacity>
                       <View style={styles.rowActions}>
                         {/* Blinking Meet button - navigate only */}
-                        <Animated.View style={{ opacity: stylesBlink.opacity, marginRight: 8 }}>
+                        <Animated.View style={{ opacity: shouldBlink ? stylesBlink.opacity : 0.6, marginRight: 8 }} pointerEvents={meetStatus === 'accepted' ? 'none' : 'auto'}>
                           <TouchableOpacity
+                            disabled={meetStatus === 'accepted'}
                             style={[styles.tinyBtn, { backgroundColor: COLORS.primary }]}
                             onPress={() => navigation.navigate('matchdetails' as never, { userId: otherUserId } as never)}
                           >
