@@ -1,4 +1,5 @@
   import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Alert, Modal, Dimensions, Platform, Linking, TextInput, Animated } from 'react-native';
+import { BlurView } from 'expo-blur';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { COLORS, icons, images, SIZES } from '@/constants';
@@ -147,13 +148,13 @@ const MatchDetails = () => {
   const [activeStep, setActiveStep] = useState<1 | 2 | 3 | null>(null);
 
   useEffect(() => {
-    // Blink only when the current step has no request yet (status === 'none').
+    // Blink the first non-accepted step: 1 (interest) → 2 (meet) → 3 (message)
     if (interestStatus !== 'accepted') {
-      setActiveStep(interestStatus === 'none' ? 1 : null);
+      setActiveStep(1);
     } else if (meetStatus !== 'accepted') {
-      setActiveStep(meetStatus === 'none' ? 2 : null);
+      setActiveStep(2);
     } else if (messageStatus !== 'accepted') {
-      setActiveStep(messageStatus === 'none' ? 3 : null);
+      setActiveStep(3);
     } else {
       setActiveStep(null);
     }
@@ -1281,6 +1282,10 @@ const MatchDetails = () => {
       <View style={styles.fabBackdrop} />
       {/* Small 3-step indicator just above footer buttons */}
       <View style={styles.stepsContainer}>
+        {/* Full-width white/blur backdrop behind circles for visibility */}
+        <BlurView intensity={80} tint={'light'} style={styles.stepsBackdrop}>
+          <View style={styles.stepsBackdropOverlay} />
+        </BlurView>
         <View style={styles.stepsRow}>
           <View style={styles.stepColumn}>
             <Animated.View style={[styles.stepCircle, (interestStatus === 'accepted') && styles.stepCircleDone, (activeStep === 1) && { opacity: blinkOpacity }]}>
@@ -2414,6 +2419,23 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         width: '100%',
         position: 'relative',
+    },
+    stepsBackdrop: {
+        position: 'absolute',
+        left: -16, // extend to full screen width (container has 16px margins)
+        right: -16,
+        bottom: -6,
+        height: 44,
+        borderRadius: 0,
+        overflow: 'hidden',
+    },
+    stepsBackdropOverlay: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(255,255,255,0.98)'
     },
     // (connectors removed as requested)
     stepColumn: {
