@@ -6,14 +6,6 @@
   "framework": null,
   "cleanUrls": true,
   "trailingSlash": false,
-  "redirects": [
-    {
-      "source": "/(.*)",
-      "has": [{ "type": "host", "value": "www.zawajplus.app" }],
-      "destination": "https://zawajplus.app/$1",
-      "permanent": true
-    }
-  ],
   "rewrites": [
     { "source": "/landing.html", "destination": "/public/landing.html" },
     { "source": "/landing-simple.html", "destination": "/public/landing-simple.html" },
