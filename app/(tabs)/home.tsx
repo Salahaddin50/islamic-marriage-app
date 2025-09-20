@@ -626,8 +626,8 @@ const HomeScreen = () => {
       }
 
       if (!profile) {
-        console.log('No profile found, redirecting to setup');
-        setShowIncompleteProfileModal(true);
+        console.log('No profile found, auto-redirecting to setup');
+        router.push('/profile-setup');
         return;
       }
 
