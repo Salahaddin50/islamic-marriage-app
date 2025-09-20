@@ -36,12 +36,13 @@ const AuthCallback: React.FC = () => {
         .from('user_profiles')
         .select('user_id')
         .eq('user_id', session.user.id)
-        .single();
+        .maybeSingle();
 
-      // If error is because table doesn't exist, treat as new user
-      if (profileError && (profileError.code === 'PGRST116' || profileError.message.includes('406'))) {
-        console.log('Database tables not set up yet, treating as new user');
-      }
+      console.log('Profile check in callback:', { 
+        hasProfile: !!existingProfile, 
+        error: profileError?.message,
+        code: profileError?.code 
+      });
 
       if (existingProfile) {
         // Existing user with a profile - go to main app (modal handles any incompleteness)
