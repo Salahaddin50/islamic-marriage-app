@@ -136,10 +136,20 @@
                     return;
                 }
                 
+                // Check for authentication state before routing desktop users
+                const hasAuthSession = localStorage.getItem('supabase.auth.token') || 
+                                     localStorage.getItem('sb-' + window.location.hostname.replace(/\./g, '-') + '-auth-token');
+                
                 if (isDesktop) {
-                    console.log('Desktop detected, redirecting to landing page');
-                    // Desktop users see the beautiful landing page
-                    window.location.replace('/landing.html');
+                    if (hasAuthSession) {
+                        console.log('Desktop user is authenticated, redirecting to React app');
+                        // Authenticated desktop users go to the React app
+                        window.location.replace('/app');
+                    } else {
+                        console.log('Desktop detected, unauthenticated user redirecting to landing page');
+                        // Unauthenticated desktop users see the beautiful landing page
+                        window.location.replace('/landing.html');
+                    }
                 } else {
                     console.log('Mobile detected, redirecting to React app');
                     // Mobile users go to React Native app

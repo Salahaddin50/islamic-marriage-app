@@ -24,24 +24,42 @@ const Index = () => {
   const navigatingRef = useRef(false);
   const isDesktopWeb = Platform.OS === 'web' && Dimensions.get('window').width >= 1024;
 
-  // Desktop redirect logic
+  // Desktop redirect logic - only redirect if not authenticated
   useEffect(() => {
     if (Platform.OS === 'web') {
-      const isDesktop = () => {
-        const userAgent = navigator.userAgent.toLowerCase();
-        const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(userAgent);
-        const screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-        return !isMobile && screenWidth >= 1024;
-      };
+      const checkAuthAndRedirect = async () => {
+        const isDesktop = () => {
+          const userAgent = navigator.userAgent.toLowerCase();
+          const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(userAgent);
+          const screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+          return !isMobile && screenWidth >= 1024;
+        };
 
-      const currentPath = window.location.pathname;
-      const isRootPath = currentPath === '/' || currentPath === '/index' || currentPath === '';
+        const currentPath = window.location.pathname;
+        const isRootPath = currentPath === '/' || currentPath === '/index' || currentPath === '';
+        
+        if (isDesktop() && isRootPath && !navigatingRef.current) {
+          // Check if user is already authenticated before redirecting to landing
+          try {
+            const { data: { session }, error } = await supabase.auth.getSession();
+            
+            if (!error && session?.user) {
+              // User is authenticated, don't redirect to landing page
+              console.log('Desktop user is authenticated, staying in app');
+              return;
+            }
+          } catch (error) {
+            console.log('Auth check error during desktop redirect:', error);
+          }
+          
+          // Only redirect unauthenticated desktop users to landing page
+          console.log('Desktop detected, unauthenticated user redirecting to landing page');
+          window.location.replace('/landing.html');
+          return;
+        }
+      };
       
-      if (isDesktop() && isRootPath && !navigatingRef.current) {
-        console.log('Desktop detected, redirecting to landing page');
-        window.location.replace('/landing.html');
-        return;
-      }
+      checkAuthAndRedirect();
     }
   }, []);
 

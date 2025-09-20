@@ -185,14 +185,18 @@
     }
     
     function shouldRedirectToLanding() {
-      // Only redirect desktop users when visiting the root path
+      // Only redirect desktop users when visiting the root path and not authenticated
       const isDesktop = isDesktopDevice();
       const isAlreadyOnLanding = window.location.pathname.includes('landing.html');
       const currentPath = window.location.pathname || '';
       const isRootPath = currentPath === '/' || currentPath === '/index' || currentPath === '';
       
-      // Redirect to landing if on desktop and at root only
-      return isDesktop && isRootPath && !isAlreadyOnLanding;
+      // Check for authentication state in localStorage (set by Supabase)
+      const hasAuthSession = localStorage.getItem('supabase.auth.token') || 
+                           localStorage.getItem('sb-' + window.location.hostname.replace(/\./g, '-') + '-auth-token');
+      
+      // Redirect to landing if on desktop, at root, not already on landing, and not authenticated
+      return isDesktop && isRootPath && !isAlreadyOnLanding && !hasAuthSession;
     }
     
     // Perform redirect before React app loads
