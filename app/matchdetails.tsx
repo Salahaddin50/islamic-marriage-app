@@ -1288,18 +1288,45 @@ const MatchDetails = () => {
         </BlurView>
         <View style={styles.stepsRow}>
           <View style={styles.stepColumn}>
-            <Animated.View style={[styles.stepCircle, (interestStatus === 'accepted') && styles.stepCircleDone, (activeStep === 1) && { opacity: blinkOpacity }]}>
-              <Text style={[styles.stepCircleText, (interestStatus === 'accepted') && styles.stepCircleTextDone]}>1</Text>
+            <Animated.View style={[
+              styles.stepCircle,
+              (interestStatus === 'accepted') && styles.stepCircleDone,
+              (activeStep === 1 && interestStatus !== 'accepted') && styles.stepCircleActive,
+              (activeStep === 1) && { opacity: blinkOpacity }
+            ]}>
+              <Text style={[
+                styles.stepCircleText,
+                (interestStatus === 'accepted') && styles.stepCircleTextDone,
+                (activeStep === 1 && interestStatus !== 'accepted') && styles.stepCircleTextActive
+              ]}>1</Text>
             </Animated.View>
           </View>
           <View style={styles.stepColumn}>
-            <Animated.View style={[styles.stepCircle, (meetStatus === 'accepted') && styles.stepCircleDone, (activeStep === 2) && { opacity: blinkOpacity }]}>
-              <Text style={[styles.stepCircleText, (meetStatus === 'accepted') && styles.stepCircleTextDone]}>2</Text>
+            <Animated.View style={[
+              styles.stepCircle,
+              (meetStatus === 'accepted') && styles.stepCircleDone,
+              (activeStep === 2 && meetStatus !== 'accepted') && styles.stepCircleActive,
+              (activeStep === 2) && { opacity: blinkOpacity }
+            ]}>
+              <Text style={[
+                styles.stepCircleText,
+                (meetStatus === 'accepted') && styles.stepCircleTextDone,
+                (activeStep === 2 && meetStatus !== 'accepted') && styles.stepCircleTextActive
+              ]}>2</Text>
             </Animated.View>
           </View>
           <View style={styles.stepColumn}>
-            <Animated.View style={[styles.stepCircle, (messageStatus === 'accepted') && styles.stepCircleDone, (activeStep === 3) && { opacity: blinkOpacity }]}>
-              <Text style={[styles.stepCircleText, (messageStatus === 'accepted') && styles.stepCircleTextDone]}>3</Text>
+            <Animated.View style={[
+              styles.stepCircle,
+              (messageStatus === 'accepted') && styles.stepCircleDone,
+              (activeStep === 3 && messageStatus !== 'accepted') && styles.stepCircleActive,
+              (activeStep === 3) && { opacity: blinkOpacity }
+            ]}>
+              <Text style={[
+                styles.stepCircleText,
+                (messageStatus === 'accepted') && styles.stepCircleTextDone,
+                (activeStep === 3 && messageStatus !== 'accepted') && styles.stepCircleTextActive
+              ]}>3</Text>
             </Animated.View>
           </View>
         </View>
@@ -2460,6 +2487,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
+    stepCircleActive: {
+        backgroundColor: COLORS.primary,
+        borderColor: COLORS.primary,
+    },
     stepCircleDone: {
         backgroundColor: COLORS.success,
         borderColor: COLORS.success,
@@ -2468,6 +2499,9 @@ const styles = StyleSheet.create({
         fontFamily: 'bold',
         fontSize: getResponsiveFontSize(12),
         color: COLORS.primary,
+    },
+    stepCircleTextActive: {
+        color: COLORS.white,
     },
     stepCircleTextDone: {
         color: COLORS.white,
