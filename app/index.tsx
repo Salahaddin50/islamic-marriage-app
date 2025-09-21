@@ -16,6 +16,7 @@ import { getResponsiveFontSize, getResponsiveSpacing, getResponsiveWidth, getRes
 import { supabase } from '../src/config/supabase';
 import { useLanguage } from '../src/contexts/LanguageContext';
 import LanguageSelector from '../src/components/LanguageSelector';
+import { trackEvent, trackPageView } from '../src/utils/analytics';
 
 const Index = () => {
   const { t, currentLanguage } = useLanguage();
@@ -64,6 +65,10 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
+    // Track onboarding landing screen view (web only)
+    trackPageView('/onboarding');
+    trackEvent({ name: 'onboarding_open', props: { step: 1 } });
+
     const checkInitialAuth = async () => {
       try {
         // Add a small delay to ensure Supabase is fully initialized

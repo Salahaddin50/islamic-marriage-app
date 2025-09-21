@@ -23,6 +23,7 @@ import { useNotifications } from '@/src/contexts/NotificationContext';
 import DesktopMobileNotice from '@/components/DesktopMobileNotice';
 import { OptimizedProfilesService } from '@/src/services/optimized-profiles.service';
 import { useLanguage } from '@/src/contexts/LanguageContext';
+import { trackEvent, trackPageView } from '@/src/utils/analytics';
 
 // Cached profile image to prevent reloading
 let cachedProfileImageUrl: string | null = null;
@@ -273,6 +274,10 @@ const HomeScreen = () => {
   const sliderTouchDims = React.useMemo(() => ({ height: 56, width: 56, borderRadius: 28, slipDisplacement: 60 }), []);
   // Temporarily silence console noise on this screen
   useEffect(() => {
+    // Track home screen view (web only)
+    trackPageView('/home');
+    trackEvent({ name: 'home_open' });
+
     const originalLog = console.log;
     const originalWarn = console.warn;
     const originalInfo = console.info;

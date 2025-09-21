@@ -17,6 +17,8 @@
       "backgroundColor": "#9610FF"
     },
     "android": {
+      "package": "com.zawajplus.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#9610FF"
@@ -28,7 +30,10 @@
       "favicon": "./assets/images/favicon.png",
       "build": {
         "babel": {
-          "include": ["**/*.css", "**/*.scss"]
+          "include": [
+            "**/*.css",
+            "**/*.scss"
+          ]
         }
       }
     },
@@ -46,6 +51,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "Zawajplus"
+      }
     }
   }
 }
