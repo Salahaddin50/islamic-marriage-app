@@ -21,7 +21,14 @@ export class MediaService {
     uploadUrl: process.env.EXPO_PUBLIC_MEDIA_SERVER_URL || 'https://your-media-server.com',
     apiKey: process.env.EXPO_PUBLIC_MEDIA_SERVER_API_KEY || '',
     maxFileSize: 50 * 1024 * 1024, // 50MB
-    allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/webm']
+    allowedTypes: [
+      // Image formats
+      'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 
+      'image/gif', 'image/bmp', 'image/tiff', 'image/svg+xml',
+      // Video formats  
+      'video/mp4', 'video/webm', 'video/quicktime', 
+      'video/avi', 'video/x-msvideo', 'video/x-matroska'
+    ]
   };
 
   /**

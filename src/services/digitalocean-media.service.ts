@@ -287,8 +287,12 @@ export class DigitalOceanMediaService {
     isValid: boolean;
     error?: string;
   } {
-    const maxPhotoSize = parseInt(process.env.EXPO_PUBLIC_MAX_PHOTO_SIZE || '10485760'); // 10MB
-    const maxVideoSize = parseInt(process.env.EXPO_PUBLIC_MAX_VIDEO_SIZE || '104857600'); // 100MB
+    // Import config for dynamic limits
+    const { MEDIA_CONFIG } = require('../config');
+    
+    // Use config values with env fallbacks
+    const maxPhotoSize = MEDIA_CONFIG.MAX_PHOTO_SIZE || parseInt(process.env.EXPO_PUBLIC_MAX_PHOTO_SIZE || '26214400'); // 25MB
+    const maxVideoSize = MEDIA_CONFIG.MAX_VIDEO_SIZE || parseInt(process.env.EXPO_PUBLIC_MAX_VIDEO_SIZE || '104857600'); // 100MB
 
     if (mediaType === 'photo') {
       if (file.size > maxPhotoSize) {
@@ -298,10 +302,16 @@ export class DigitalOceanMediaService {
         };
       }
 
+      // Expanded photo format support
       const allowedPhotoTypes = [
         'image/jpeg',
         'image/jpg', 
         'image/png',
+        'image/webp',
+        'image/gif',
+        'image/bmp',
+        'image/tiff',
+        'image/svg+xml',
         'image/webp'
       ];
 

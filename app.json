@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Zawajplus",
-    "slug": "Zawajplus",
+    "slug": "zawajplusapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -47,7 +47,9 @@
           "resizeMode": "contain",
           "backgroundColor": "#9610FF"
         }
-      ]
+      ],
+      "expo-localization",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
@@ -57,7 +59,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "Zawajplus"
+        "projectId": "edc26d27-182e-4d9d-ae57-1aca60a23fec"
       }
     }
   }

@@ -348,25 +348,38 @@ export class PhotosVideosService {
   }
 
   private static validateFile(file: File | Blob, mediaType: 'photo' | 'video'): { isValid: boolean; error?: string } {
-    // File size limits
-    const MAX_PHOTO_SIZE = 10 * 1024 * 1024; // 10MB
-    const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
+    // Import config for dynamic limits
+    const { MEDIA_CONFIG } = require('../config');
+    
+    // File size limits from config
+    const MAX_PHOTO_SIZE = MEDIA_CONFIG.MAX_PHOTO_SIZE; // 25MB
+    const MAX_VIDEO_SIZE = MEDIA_CONFIG.MAX_VIDEO_SIZE; // 100MB
 
     if (mediaType === 'photo') {
       if (file.size > MAX_PHOTO_SIZE) {
-        return { isValid: false, error: 'Photo size must be less than 10MB' };
+        const sizeMB = Math.round(MAX_PHOTO_SIZE / (1024 * 1024));
+        return { isValid: false, error: `Photo size must be less than ${sizeMB}MB` };
       }
       
-      const photoTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      // Expanded photo format support
+      const photoTypes = [
+        'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 
+        'image/gif', 'image/bmp', 'image/tiff', 'image/svg+xml'
+      ];
       if (file.type && !photoTypes.includes(file.type)) {
-        return { isValid: false, error: 'Photo must be JPEG, PNG, or WebP format' };
+        return { isValid: false, error: 'Photo must be in JPEG, PNG, WebP, GIF, BMP, TIFF, or SVG format' };
       }
     } else {
       if (file.size > MAX_VIDEO_SIZE) {
-        return { isValid: false, error: 'Video size must be less than 100MB' };
+        const sizeMB = Math.round(MAX_VIDEO_SIZE / (1024 * 1024));
+        return { isValid: false, error: `Video size must be less than ${sizeMB}MB` };
       }
       
-      const videoTypes = ['video/mp4', 'video/webm', 'video/quicktime'];
+      // Expanded video format support
+      const videoTypes = [
+        'video/mp4', 'video/webm', 'video/quicktime', 
+        'video/avi', 'video/x-msvideo', 'video/x-matroska'
+      ];
       if (file.type && !videoTypes.includes(file.type)) {
         return { isValid: false, error: 'Video must be MP4, WebM, or MOV format' };
       }

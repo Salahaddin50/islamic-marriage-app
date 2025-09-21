@@ -259,12 +259,14 @@ export const PAYMENT_CONFIG = {
 export const MEDIA_CONFIG = {
   // Image Configuration
   MAX_PROFILE_PHOTOS: 6,
+  MAX_PHOTO_SIZE: 25 * 1024 * 1024, // 25MB (increased from 10MB)
   PHOTO_UPLOAD_QUALITY: 0.8,
   THUMBNAIL_SIZE: { width: 300, height: 300 },
   PREVIEW_SIZE: { width: 800, height: 800 },
   
   // Video Configuration
   MAX_VIDEO_DURATION: 30, // seconds
+  MAX_VIDEO_SIZE: 100 * 1024 * 1024, // 100MB
   VIDEO_QUALITY: 'high',
   
   // CDN Configuration
@@ -275,7 +277,8 @@ export const MEDIA_CONFIG = {
   },
   
   // Image Processing
-  IMAGE_FORMATS: ['webp', 'jpeg', 'png'],
+  IMAGE_FORMATS: ['webp', 'jpeg', 'jpg', 'png', 'gif', 'bmp', 'tiff', 'svg'],
+  VIDEO_FORMATS: ['mp4', 'webm', 'avi', 'mov', 'mkv'],
   AUTO_OPTIMIZATION: true,
 };
 

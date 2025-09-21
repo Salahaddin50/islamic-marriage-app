@@ -717,15 +717,18 @@ const ProfileSetup: React.FC = () => {
       if (media.mimeType) {
         blob = new Blob([blob], { type: media.mimeType });
       }
-      // Validate size before upload
-      const MAX_PHOTO_SIZE = 10 * 1024 * 1024; // 10MB
-      const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
+      // Validate size before upload using config
+      const { MEDIA_CONFIG } = require('../src/config');
+      const MAX_PHOTO_SIZE = MEDIA_CONFIG.MAX_PHOTO_SIZE; // 25MB
+      const MAX_VIDEO_SIZE = MEDIA_CONFIG.MAX_VIDEO_SIZE; // 100MB
       if (type === 'photo' && blob.size > MAX_PHOTO_SIZE) {
-        Alert.alert('File too large', 'Photo size must be less than 10MB.');
+        const sizeMB = Math.round(MAX_PHOTO_SIZE / (1024 * 1024));
+        Alert.alert('File too large', `Photo size must be less than ${sizeMB}MB.`);
         return;
       }
       if (type === 'video' && blob.size > MAX_VIDEO_SIZE) {
-        Alert.alert('File too large', 'Video size must be less than 100MB.');
+        const sizeMB = Math.round(MAX_VIDEO_SIZE / (1024 * 1024));
+        Alert.alert('File too large', `Video size must be less than ${sizeMB}MB.`);
         return;
       }
       const result = type === 'photo'
