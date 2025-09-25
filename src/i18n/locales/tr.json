@@ -603,9 +603,9 @@
       "approved_with_count": "Onaylanan ({{count}})"
     },
     "empty": {
-      "received": "Alınan sohbet talebi yok",
-      "sent": "Gönderilen sohbet talebi yok",
-      "approved": "Onaylanan sohbet talebi yok"
+      "received": "Alınan whatsapp talebi yok",
+      "sent": "Gönderilen whatsapp talebi yok",
+      "approved": "Onaylanan whatsapp talebi yok"
     },
     "actions": {
       "accept": "Kabul Et",
@@ -615,7 +615,7 @@
     },
     "no_number": "Numara yok",
     "accept_modal": {
-      "title": "Sohbet Talebini Kabul Et",
+      "title": "WhatsApp Talebini Kabul Et",
       "oath_text": "Kabul ederek Allah'a yemin edersiniz ki kişi ile video görüşme yaptınız ve evliliği daha fazla tartışmayı niyetliyorsunuz.",
       "yes_i_swear": "Evet, yemin ederim",
       "cancel": "İptal"
@@ -747,11 +747,11 @@
     "upgrade_required": "Yükseltme Gerekli",
     "need_premium": "Video görüşme ayarlamak için paketinizi Premium'a yükseltmeniz gerekiyor",
     "upgrade": "Yükselt",
-    "chat_request_process": "Sohbet Talep Süreci",
+    "chat_request_process": "WhatsApp Talep Süreci",
     "need_meeting_first": "Önce Video Görüşme'ye tıklayarak bir görüşme ayarlamanız ve onay beklemeniz gerekiyor.",
-    "chat_after_meeting": "Sohbet video görüşmeden bir saat sonra aktif olacak.",
+    "chat_after_meeting": "WhatsApp video görüşmeden bir saat sonra aktif olacak.",
     "meeting_time": "Görüşme saati",
-    "swear_had_meeting": "Allah'a yemin edersiniz ki kişi ile video görüşme yaptınız ve sohbet talep ederek nikah için ilerlemek istiyorsunuz.",
+    "swear_had_meeting": "Allah'a yemin edersiniz ki kişi ile video görüşme yaptınız ve whatsapp talep ederek nikah için ilerlemek istiyorsunuz.",
     "see_whatsapp": "Kullanıcı talebinizi kabul ederse, Mesajlar sayfasında kullanıcının WhatsApp numarasını göreceksiniz.",
     "swear_for_nikah": "Allah'a yemin edersiniz ki kişi ile zaten video görüşme yaptınız ve onunla mesajlaşma talep ederek evlilik niyetindesiniz.",
     "see_whatsapp_messages": "Kullanıcı kabul ederse Mesajlar sayfasında kullanıcının WhatsApp numarasını göreceksiniz.",

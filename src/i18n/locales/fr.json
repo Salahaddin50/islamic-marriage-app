@@ -497,7 +497,7 @@
     "home": "Accueil",
     "requests": "Demandes",
     "meet": "Rencontrer",
-    "message": "Message",
+    "message": "WhatsApp",
     "profile": "Profil"
   },
   "badges": {
@@ -596,16 +596,16 @@
     }
   },
   "messages": {
-    "header_title": "Messages",
+    "header_title": "WhatsApp",
     "tabs": {
       "received_with_count": "Reçus ({{count}})",
       "sent_with_count": "Envoyés ({{count}})",
       "approved_with_count": "Approuvés ({{count}})"
     },
     "empty": {
-      "received": "Aucune demande de chat reçue",
-      "sent": "Aucune demande de chat envoyée",
-      "approved": "Aucune demande de chat approuvée"
+      "received": "Aucune demande de whatsapp reçue",
+      "sent": "Aucune demande de whatsapp envoyée",
+      "approved": "Aucune demande de whatsapp approuvée"
     },
     "actions": {
       "accept": "Accepter",
@@ -615,7 +615,7 @@
     },
     "no_number": "Aucun numéro",
     "accept_modal": {
-      "title": "Accepter la demande de chat",
+      "title": "Accepter la demande de whatsapp",
       "oath_text": "En acceptant, vous jurez par Allah que vous avez eu une rencontre vidéo avec la personne et que vous avez l'intention de discuter davantage du mariage.",
       "yes_i_swear": "Oui, je le jure",
       "cancel": "Annuler"
@@ -747,17 +747,17 @@
     "upgrade_required": "Mise à niveau requise",
     "need_premium": "Vous devez mettre à niveau votre forfait vers Premium pour organiser une rencontre vidéo",
     "upgrade": "Mettre à niveau",
-    "chat_request_process": "Processus de demande de chat",
+    "chat_request_process": "Processus de demande de whatsapp",
     "need_meeting_first": "Vous devez d'abord organiser une rencontre en cliquant sur Rencontre vidéo et attendre l'approbation.",
-    "chat_after_meeting": "Le chat sera actif une heure après la rencontre vidéo.",
+    "chat_after_meeting": "Le whatsapp sera actif une heure après la rencontre vidéo.",
     "meeting_time": "Heure de rencontre",
-    "swear_had_meeting": "Vous jurez par Allah que vous avez eu une rencontre vidéo avec la personne et voulez procéder au nikah en demandant un chat.",
-    "see_whatsapp": "Si l'utilisateur accepte votre demande, vous verrez le numéro WhatsApp de l'utilisateur dans la page Messages.",
+    "swear_had_meeting": "Vous jurez par Allah que vous avez eu une rencontre vidéo avec la personne et voulez procéder au nikah en demandant un numéro de whatsapp.",
+    "see_whatsapp": "Si l'utilisateur accepte votre demande, vous verrez le numéro WhatsApp de l'utilisateur dans la page WhatsApp.",
     "swear_for_nikah": "Vous jurez par Allah que vous avez déjà eu une rencontre vidéo avec la personne et que vous avez l'intention de vous marier en demandant à échanger des messages avec elle.",
-    "see_whatsapp_messages": "Si l'utilisateur accepte, vous verrez le numéro WhatsApp de l'utilisateur dans la page Messages.",
+    "see_whatsapp_messages": "Si l'utilisateur accepte, vous verrez le numéro WhatsApp de l'utilisateur dans la page WhatsApp.",
     "yes_i_swear": "Oui, je le jure",
     "request": "Demander",
-    "chat_request_sent": "Votre demande a été envoyée. Vérifiez Messages pour voir les mises à jour.",
+    "chat_request_sent": "Votre demande a été envoyée. Vérifiez WhatsApp page pour voir les mises à jour.",
     "at": "à",
     "datetime_placeholder": "AAAA-MM-JJ HH:mm",
     "same_timezone": "Vous êtes dans le même fuseau horaire",

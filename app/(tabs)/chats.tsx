@@ -6,7 +6,7 @@ import { COLORS, SIZES, icons, images } from '@/constants';
 import { Image } from 'expo-image';
 import { MessageRequestsService, MessageRequestRecord } from '@/src/services/message-requests.service';
 import { supabase } from '@/src/config/supabase';
-import { useNavigation, useLocalSearchParams } from 'expo-router';
+import { useNavigation, useLocalSearchParams, useRouter } from 'expo-router';
 import { NavigationProp, useIsFocused } from '@react-navigation/native';
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
@@ -25,6 +25,7 @@ interface RenderLabelProps {
 
 const Messages = () => {
   const navigation = useNavigation<NavigationProp<any>>();
+  const router = useRouter();
   const isFocused = useIsFocused();
   const layout = useWindowDimensions();
   const { t } = useTranslation();
@@ -415,6 +416,12 @@ const Messages = () => {
           <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>{t('messages.header_title')}</Text>
         </View>
         <View style={styles.headerRight}>
+          <TouchableOpacity 
+            onPress={() => router.push('/messenger')} 
+            style={{ padding: 8, borderRadius: 20, marginRight: 8, backgroundColor: COLORS.tansparentPrimary }}
+          >
+            <Image source={icons.chat} contentFit='contain' style={{ width: 24, height: 24, tintColor: COLORS.primary }} />
+          </TouchableOpacity>
           <TouchableOpacity onPress={refreshPage} style={{ padding: 8, borderRadius: 20, marginLeft: 8 }}>
             <Image source={icons.refresh} contentFit='contain' style={{ width: 24, height: 24, tintColor: COLORS.greyscale900 }} />
           </TouchableOpacity>

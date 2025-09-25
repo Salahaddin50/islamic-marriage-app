@@ -819,6 +819,12 @@ const MeetRequestsScreen = () => {
         <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>{t('meet_requests.header_title')}</Text>
       </View>
       <View style={styles.headerRight}>
+        <TouchableOpacity 
+          onPress={() => router.push('/messenger')} 
+          style={{ padding: 8, borderRadius: 20, marginRight: 8, backgroundColor: COLORS.tansparentPrimary }}
+        >
+          <Image source={icons.chat} contentFit='contain' style={{ width: 24, height: 24, tintColor: COLORS.primary }} />
+        </TouchableOpacity>
         <TouchableOpacity onPress={refreshPage} style={{ padding: 8, borderRadius: 20, marginLeft: 8 }}>
           <Image source={icons.refresh} contentFit='contain' style={{ width: 24, height: 24, tintColor: COLORS.greyscale900 }} />
         </TouchableOpacity>

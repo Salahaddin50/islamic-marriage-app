@@ -512,7 +512,7 @@
     "home": "Home",
     "requests": "Requests",
     "meet": "Meet",
-    "message": "Message",
+    "message": "WhatsApp",
     "profile": "Profile"
   }
   ,
@@ -650,16 +650,16 @@
     }
   },
   "messages": {
-    "header_title": "Messages",
+    "header_title": "WhatsApp",
     "tabs": {
       "received_with_count": "Received ({{count}})",
       "sent_with_count": "Sent ({{count}})",
       "approved_with_count": "Approved ({{count}})"
     },
     "empty": {
-      "received": "No received chat requests",
-      "sent": "No sent chat requests",
-      "approved": "No approved chat requests"
+      "received": "No received whatsapp requests",
+      "sent": "No sent whatsapp requests",
+      "approved": "No approved whatsapp requests"
     },
     "actions": {
       "accept": "Accept",
@@ -669,7 +669,7 @@
     },
     "no_number": "No number",
     "accept_modal": {
-      "title": "Accept Chat Request",
+      "title": "Accept WhatsApp Request",
       "oath_text": "By accepting you swear to Allah that you had a video meeting with the person and you intend to discuss the marriage further.",
       "yes_i_swear": "Yes, I swear",
       "cancel": "Cancel"
@@ -801,17 +801,17 @@
     "upgrade_required": "Upgrade Required",
     "need_premium": "You need to upgrade your package to Premium to arrange a video meet",
     "upgrade": "Upgrade",
-    "chat_request_process": "Chat Request Process",
+    "chat_request_process": "WhatsApp Request Process",
     "need_meeting_first": "You need first to arrange a meeting by clicking Video Meet and waiting for approval.",
-    "chat_after_meeting": "Chat will be active one hour after the video meeting.",
+    "chat_after_meeting": "WhatsApp request will be active one hour after the video meeting.",
     "meeting_time": "Meeting time",
-    "swear_had_meeting": "You swear to Allah that you had a video meeting with the person and want to proceed for nikah by requesting chat.",
-    "see_whatsapp": "If the user accepts your request, you will see user's WhatsApp number in the Messages page.",
+    "swear_had_meeting": "You swear to Allah that you had a video meeting with the person and want to proceed for nikah by requesting whatsapp number.",
+    "see_whatsapp": "If the user accepts your request, you will see user's WhatsApp number in the WhatsApp page.",
     "swear_for_nikah": "You swear by Allah that you have already video meeting with the person and you intend marriage by requesting messaging with her.",
-    "see_whatsapp_messages": "If the user accepts you will see user's WhatsApp number in the Messages page.",
+    "see_whatsapp_messages": "If the user accepts you will see user's WhatsApp number in the WhatsApp page.",
     "yes_i_swear": "Yes, I swear",
     "request": "Request",
-    "chat_request_sent": "Your request has been sent. Check Messages to view updates.",
+    "chat_request_sent": "Your request has been sent. Check WhatsApp page to view updates.",
     "at": "at",
     "datetime_placeholder": "YYYY-MM-DD HH:mm",
     "same_timezone": "You are in the same timezone",
