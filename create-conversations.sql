@@ -41,6 +41,21 @@ create policy conversations_select on public.conversations
     auth.uid() is not null and (user_a = auth.uid() or user_b = auth.uid())
   );
 
+-- Admins can select all conversations
+drop policy if exists conversations_admin_select on public.conversations;
+create policy conversations_admin_select on public.conversations
+  for select
+  using (
+    exists (
+      select 1 from public.admin_users au
+      where coalesce(au.is_approved, false) = true
+        and (
+          au.id = auth.uid()
+          or lower(au.email) = lower( (current_setting('request.jwt.claims', true)::jsonb ->> 'email') )
+        )
+    )
+  );
+
 -- Insert/upsert: allow only if inserting a conversation where current user is one of the participants
 drop policy if exists conversations_insert on public.conversations;
 create policy conversations_insert on public.conversations
@@ -120,6 +135,184 @@ begin
 end;
 $$;
 
+-- Grants: allow web app (authenticated) to call moderation RPCs
+grant execute on function public.approve_conversation_message(text, text) to authenticated;
+grant execute on function public.reject_conversation_message(text, text, text) to authenticated;
+
+-- Moderation table: queue user messages for admin approval
+create table if not exists public.moderation_messages (
+  id uuid primary key default gen_random_uuid(),
+  conversation_id uuid not null references public.conversations(id) on delete cascade,
+  sender_id uuid not null,
+  content text not null,
+  status text not null default 'pending', -- pending | approved | rejected
+  reason text,
+  created_at timestamptz not null default now(),
+  reviewed_by uuid,
+  reviewed_at timestamptz
+);
+
+alter table public.moderation_messages enable row level security;
+
+-- Users can insert their own pending items if participants
+drop policy if exists moderation_insert on public.moderation_messages;
+create policy moderation_insert on public.moderation_messages
+  for insert
+  with check (
+    auth.uid() is not null
+    and sender_id = auth.uid()
+    and exists (
+      select 1 from public.conversations c
+      where c.id = moderation_messages.conversation_id
+        and (c.user_a = auth.uid() or c.user_b = auth.uid())
+    )
+  );
+
+-- Users can see their own submitted items
+drop policy if exists moderation_select_own on public.moderation_messages;
+create policy moderation_select_own on public.moderation_messages
+  for select
+  using (
+    auth.uid() is not null and sender_id = auth.uid()
+  );
+
+-- Admins can read and update all moderation messages
+drop policy if exists moderation_admin_select on public.moderation_messages;
+create policy moderation_admin_select on public.moderation_messages
+  for select
+  using (
+    exists (
+      select 1 from public.admin_users au
+      where au.id = auth.uid() and coalesce(au.is_approved, false) = true
+    )
+  );
+
+drop policy if exists moderation_admin_update on public.moderation_messages;
+create policy moderation_admin_update on public.moderation_messages
+  for update
+  using (
+    exists (
+      select 1 from public.admin_users au
+      where au.id = auth.uid() and coalesce(au.is_approved, false) = true
+    )
+  )
+  with check (
+    exists (
+      select 1 from public.admin_users au
+      where au.id = auth.uid() and coalesce(au.is_approved, false) = true
+    )
+  );
+
+-- RPC: submit message for review (returns pending id & timestamps)
+drop function if exists public.submit_message_for_review cascade;
+create function public.submit_message_for_review(p_conversation_id uuid, p_content text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_sender uuid := auth.uid();
+  v_row public.moderation_messages%rowtype;
+begin
+  if v_sender is null then raise exception 'Not authenticated'; end if;
+  if p_content is null or length(trim(p_content)) = 0 then raise exception 'Empty content'; end if;
+  if not exists (
+    select 1 from public.conversations c
+    where c.id = p_conversation_id and (c.user_a = v_sender or c.user_b = v_sender)
+  ) then
+    raise exception 'Not a participant';
+  end if;
+
+  insert into public.moderation_messages (conversation_id, sender_id, content, status)
+  values (p_conversation_id, v_sender, p_content, 'pending')
+  returning * into v_row;
+
+  return jsonb_build_object(
+    'id', v_row.id,
+    'conversation_id', v_row.conversation_id,
+    'sender_id', v_row.sender_id,
+    'content', v_row.content,
+    'status', v_row.status,
+    'created_at', v_row.created_at
+  );
+end;
+$$;
+
+-- RPC: approve pending message → append to conversations.messages using same id
+drop function if exists public.approve_pending_message cascade;
+create function public.approve_pending_message(p_pending_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_admin uuid := auth.uid();
+  v_row public.moderation_messages%rowtype;
+begin
+  if v_admin is null then raise exception 'Not authenticated'; end if;
+  if not exists (
+    select 1 from public.admin_users au 
+    where coalesce(au.is_approved, false) = true
+      and (
+        au.id = v_admin or lower(au.email) = lower( (current_setting('request.jwt.claims', true)::jsonb ->> 'email') )
+      )
+  ) then
+    raise exception 'Not authorized';
+  end if;
+
+  select * into v_row from public.moderation_messages where id = p_pending_id;
+  if not found then raise exception 'Pending not found'; end if;
+  if v_row.status <> 'pending' then return; end if;
+
+  -- Append to conversation using the same message ID
+  update public.conversations c
+     set messages = coalesce(c.messages, '[]'::jsonb) || jsonb_build_array(
+           jsonb_build_object(
+             'id', v_row.id,
+             'sender_id', v_row.sender_id,
+             'content', v_row.content,
+             'message_type', 'text',
+             'created_at', now()
+           )
+         ),
+         last_message_at = now()
+   where c.id = v_row.conversation_id;
+
+  update public.moderation_messages
+     set status = 'approved', reviewed_by = v_admin, reviewed_at = now()
+   where id = p_pending_id;
+end;
+$$;
+
+-- RPC: reject pending message
+drop function if exists public.reject_pending_message cascade;
+create function public.reject_pending_message(p_pending_id uuid, p_reason text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_admin uuid := auth.uid();
+begin
+  if v_admin is null then raise exception 'Not authenticated'; end if;
+  if not exists (
+    select 1 from public.admin_users au 
+    where coalesce(au.is_approved, false) = true
+      and (
+        au.id = v_admin or lower(au.email) = lower( (current_setting('request.jwt.claims', true)::jsonb ->> 'email') )
+      )
+  ) then
+    raise exception 'Not authorized';
+  end if;
+
+  update public.moderation_messages
+     set status = 'rejected', reviewed_by = v_admin, reviewed_at = now(), reason = p_reason
+   where id = p_pending_id;
+end;
+$$;
 drop trigger if exists trg_conversation_messages_append on public.conversation_messages;
 create trigger trg_conversation_messages_append
 after insert on public.conversation_messages
@@ -156,7 +349,8 @@ begin
     'sender_id', v_sender,
     'content', p_content,
     'message_type', 'text',
-    'created_at', now()
+    'created_at', now(),
+    'status', 'pending'
   );
 
   update public.conversations c
@@ -165,6 +359,71 @@ begin
    where c.id = p_conversation_id;
 
   return v_msg;
+end;
+$$;
+
+-- RPC: approve a specific message inside conversations.messages
+drop function if exists public.approve_conversation_message cascade;
+create function public.approve_conversation_message(p_conversation_id text, p_message_id text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_admin uuid := auth.uid();
+begin
+  if v_admin is null then raise exception 'Not authenticated'; end if;
+  if not exists (
+    select 1 from public.admin_users au 
+    where coalesce(au.is_approved, false) = true
+      and (
+        au.id = v_admin or lower(au.email) = lower( (current_setting('request.jwt.claims', true)::jsonb ->> 'email') )
+      )
+  ) then
+    raise exception 'Not authorized';
+  end if;
+
+  update public.conversations c
+     set messages = (
+       select coalesce(jsonb_agg(
+         case when (elem->>'id') = p_message_id
+              then elem || jsonb_build_object('status','approved')
+              else elem end
+       ), '[]'::jsonb)
+       from jsonb_array_elements(coalesce(c.messages, '[]'::jsonb)) elem
+     ),
+         last_message_at = now()
+   where c.id = p_conversation_id::uuid;
+end;
+$$;
+
+-- RPC: reject a specific message inside conversations.messages
+drop function if exists public.reject_conversation_message cascade;
+create function public.reject_conversation_message(p_conversation_id text, p_message_id text, p_reason text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_admin uuid := auth.uid();
+begin
+  if v_admin is null then raise exception 'Not authenticated'; end if;
+  if not exists (select 1 from public.admin_users au where au.id = v_admin and coalesce(au.is_approved, false) = true) then
+    raise exception 'Not authorized';
+  end if;
+
+  update public.conversations c
+     set messages = (
+       select coalesce(jsonb_agg(
+         case when (elem->>'id') = p_message_id::text
+              then elem || jsonb_build_object('status','rejected','reason', coalesce(p_reason,''))
+              else elem end
+       ), '[]'::jsonb)
+       from jsonb_array_elements(coalesce(c.messages, '[]'::jsonb)) elem
+     )
+   where c.id = p_conversation_id::uuid;
 end;
 $$;
 

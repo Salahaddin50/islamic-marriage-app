@@ -98,8 +98,8 @@ const Messenger = () => {
 
   const getTextMessageCountLabel = useCallback((c?: Contact | null) => {
     const count = getTextMessageCount(c);
-    return `${count} message${count === 1 ? '' : 's'}`;
-  }, [getTextMessageCount]);
+    return `${count} ${count === 1 ? t('messenger.message') : t('messenger.messages')}`;
+  }, [getTextMessageCount, t]);
 
   // Load current user
   useEffect(() => {
@@ -409,12 +409,12 @@ const Messenger = () => {
           const myLastReadAt = (user_a === currentUserId) ? last_read_at_user_a : last_read_at_user_b;
 
           // Transform text messages from row.messages (if present)
-          const textMsgs: ChatMessage[] = Array.isArray(messages)
+      const textMsgs: ChatMessage[] = Array.isArray(messages)
             ? (messages as any[]).map((m) => ({
                 id: m.id,
                 type: 'text_message',
                 isSent: m.sender_id === currentUserId,
-                status: 'accepted',
+          status: 'accepted',
                 timestamp: m.created_at,
                 recordId: m.id,
                 canTakeAction: false,
@@ -555,7 +555,14 @@ const Messenger = () => {
   const handleRefresh = useCallback(() => {
     setIsRefreshing(true);
     loadConversations();
-  }, [loadConversations]);
+    // Also refresh the currently selected chat
+    if (selectedContactId) {
+      setTimeout(() => {
+        setContacts(prev => prev.map(c => c.userId === selectedContactId ? { ...c, messages: [] } : c));
+        loadChatRef.current && loadChatRef.current(selectedContactId);
+      }, 100);
+    }
+  }, [loadConversations, selectedContactId]);
 
   // Send text message
   const handleSendMessage = useCallback(async () => {
@@ -586,50 +593,49 @@ const Messenger = () => {
 
     // Gate: females unlimited; males require premium and 10 messages/day
     try {
-      if (currentUserGender === 'male') {
-        const allowedPackages = new Set(['premium', 'vip_premium', 'golden_premium']);
-        if (!currentPackage || !allowedPackages.has(currentPackage)) {
-          setShowUpgradeModal(true);
-          return;
-        }
-        // Count today's sent messages (across all conversations)
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
-        const { data: rows } = await supabase
-          .from('conversations')
-          .select('user_a,user_b,messages')
-          .or(`user_a.eq.${currentUserId},user_b.eq.${currentUserId}`);
-        const totalToday = (rows || []).reduce((sum: number, row: any) => {
-          const msgs: any[] = row?.messages || [];
-          const count = msgs.filter((m: any) => m.message_type === 'text' && m.sender_id === currentUserId && new Date(m.created_at).getTime() >= todayStart.getTime()).length;
-          return sum + count;
-        }, 0);
-        if (totalToday >= 10) {
-          setShowLimitModal(true);
-          return;
-        }
+      // Everyone has a daily cap of 10 messages across all conversations
+      const allowedPackages = new Set(['premium', 'vip_premium', 'golden_premium']);
+      if (currentUserGender === 'male' && (!currentPackage || !allowedPackages.has(currentPackage))) {
+        setShowUpgradeModal(true);
+        return;
+      }
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const { data: rows } = await supabase
+        .from('conversations')
+        .select('user_a,user_b,messages')
+        .or(`user_a.eq.${currentUserId},user_b.eq.${currentUserId}`);
+      const totalToday = (rows || []).reduce((sum: number, row: any) => {
+        const msgs: any[] = row?.messages || [];
+        const count = msgs.filter((m: any) => m.message_type === 'text' && m.sender_id === currentUserId && new Date(m.created_at).getTime() >= todayStart.getTime()).length;
+        return sum + count;
+      }, 0);
+      if (totalToday >= 10) {
+        setShowLimitModal(true);
+        return;
       }
     } catch {}
 
     setIsSending(true);
     try {
-      console.log('Attempting to send message...');
+      console.log('Attempting to send message (pending in JSON)...');
+      const conversationId = (selectedContact.conversationId as string) || (contacts.find(c => c.userId === selectedContact.userId)?.conversationId as string);
       const message = await ConversationsService.sendText(
-        (selectedContact.conversationId as string) || (contacts.find(c => c.userId === selectedContact.userId)?.conversationId as string), 
-        currentUserId, 
+        conversationId,
+        currentUserId,
         newMessage.trim()
       );
 
-      // Add message to local state
+      // Add pending message locally (status comes from RPC; may be pending)
       const newChatMessage: ChatMessage = {
         id: message.id,
         type: 'text_message',
         isSent: true,
-        status: 'accepted',
+        status: 'pending',
         timestamp: message.created_at,
         recordId: message.id,
         canTakeAction: false,
-        content: message.content || '',
+        content: newMessage.trim(),
       };
 
       setContacts(prev => prev.map(c => 
@@ -641,7 +647,7 @@ const Messenger = () => {
       setNewMessage('');
     } catch (error) {
       console.error('Failed to send message:', error);
-      Alert.alert(t('common.error'), 'Failed to send message');
+      Alert.alert(t('common.error'), t('messenger.failed_to_send'));
     } finally {
       setIsSending(false);
     }
@@ -733,9 +739,7 @@ const Messenger = () => {
           <Text style={[styles.contactName, { color: COLORS.greyscale900 }]}>
             {fullName}
           </Text>
-          <Text style={[styles.contactLastMessage, { color: COLORS.grayscale700 }]} numberOfLines={1}>
-            {lastMessage ? getMessagePreview(lastMessage) : 'No messages'}
-          </Text>
+          {/* Removed last message preview - only showing unread badge on the right */}
         </View>
         <View style={styles.contactMeta}>
           <Text style={[styles.contactTime, { color: COLORS.grayscale700 }]}>
@@ -753,7 +757,7 @@ const Messenger = () => {
   const getMessagePreview = (message: ChatMessage): string => {
     switch (message.type) {
       case 'text_message':
-        return message.isSent ? `You: ${message.content}` : message.content || 'Message';
+        return message.isSent ? `${t('messenger.you_sent')}${message.content}` : message.content || 'Message';
       case 'photo_request_sent':
         return 'You: Photo request sent';
       case 'photo_request_received':
@@ -833,8 +837,8 @@ const Messenger = () => {
               {formatTime(message.timestamp)}
             </Text>
             {isText && isFromMe && (
-              <Text style={[styles.messageTicks, { color: isMessageRead(message) ? (COLORS.white) : (isFromMe ? 'rgba(255,255,255,0.8)' : COLORS.grayscale700) }]}>
-                {isMessageRead(message) ? '✓✓' : '✓'}
+              <Text style={[styles.messageTicks, { color: message.status === 'rejected' ? (isFromMe ? 'rgba(255,255,255,0.8)' : COLORS.grayscale700) : (isMessageRead(message) ? COLORS.white : (isFromMe ? 'rgba(255,255,255,0.8)' : COLORS.grayscale700)) }]}>
+                {message.status === 'pending' ? '⏳' : message.status === 'rejected' ? '✗' : (isMessageRead(message) ? '✓✓' : '✓')}
               </Text>
             )}
           </View>
@@ -847,13 +851,13 @@ const Messenger = () => {
               style={[styles.actionButton, styles.acceptButton]}
               onPress={() => handleAcceptRequest(message)}
             >
-              <Text style={styles.actionButtonText}>Accept</Text>
+              <Text style={styles.actionButtonText}>{t('messenger.accept')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.actionButton, styles.rejectButton]}
               onPress={() => handleRejectRequest(message)}
             >
-              <Text style={[styles.actionButtonText, { color: COLORS.red }]}>Reject</Text>
+              <Text style={[styles.actionButtonText, { color: COLORS.red }]}>{t('messenger.reject')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -866,7 +870,7 @@ const Messenger = () => {
               onPress={() => handleVideoCall(message.meetLink!)}
             >
               <Image source={icons.videoCamera2} style={styles.actionButtonIcon} />
-              <Text style={styles.actionButtonText}>Join Video Call</Text>
+              <Text style={styles.actionButtonText}>{t('messenger.join_video_call')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -878,7 +882,7 @@ const Messenger = () => {
               onPress={handleWhatsAppChat}
             >
               <Image source={icons.chat} style={styles.actionButtonIcon} />
-              <Text style={styles.actionButtonText}>Open Whatsapp</Text>
+              <Text style={styles.actionButtonText}>{t('messenger.open_whatsapp')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -906,29 +910,29 @@ const Messenger = () => {
       case 'text_message':
         return message.content || '';
       case 'photo_request_sent':
-        return 'I sent a photo request';
+        return t('messenger.photo_request_sent');
       case 'photo_request_received':
-        return 'I received a photo request from you';
+        return t('messenger.photo_request_received');
       case 'photo_request_approved':
         return message.isSent 
-          ? 'I approved your photo request' 
-          : 'You approved my photo request';
+          ? t('messenger.photo_request_approved_sent')
+          : t('messenger.photo_request_approved_received');
       case 'video_request_sent':
-        return 'I sent a video call request';
+        return t('messenger.video_request_sent');
       case 'video_request_received':
-        return 'I received a video call request from you';
+        return t('messenger.video_request_received');
       case 'video_request_approved':
         return message.isSent 
-          ? 'I approved your video call request' 
-          : 'You approved my video call request';
+          ? t('messenger.video_request_approved_sent')
+          : t('messenger.video_request_approved_received');
       case 'message_request_sent':
-        return 'I sent a Whatsapp request';
+        return t('messenger.whatsapp_request_sent');
       case 'message_request_received':
-        return 'I received a Whatsapp request from you';
+        return t('messenger.whatsapp_request_received');
       case 'message_request_approved':
         return message.isSent 
-          ? 'I approved your Whatsapp request' 
-          : 'You approved my Whatsapp request';
+          ? t('messenger.whatsapp_request_approved_sent')
+          : t('messenger.whatsapp_request_approved_received');
       default:
         return 'Message';
     }
@@ -957,7 +961,7 @@ const Messenger = () => {
           <Image source={icons.back} style={styles.backIcon} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: COLORS.greyscale900 }]}>
-          Messenger
+          {t('messenger.title')}
         </Text>
       </View>
       <TouchableOpacity onPress={handleRefresh} style={styles.refreshButton}>
@@ -971,10 +975,10 @@ const Messenger = () => {
     <View style={styles.emptyState}>
       <Image source={icons.chat} style={styles.emptyStateIcon} />
       <Text style={[styles.emptyStateTitle, { color: COLORS.greyscale900 }]}>
-        No Conversations
+        {t('messenger.no_conversations_title')}
       </Text>
       <Text style={[styles.emptyStateText, { color: COLORS.grayscale700 }]}>
-        Your photo requests, video calls, and Whatsapp chats will appear here
+        {t('messenger.no_conversations_text')}
       </Text>
     </View>
   );
@@ -986,22 +990,47 @@ const Messenger = () => {
       <StatusBar style="dark" />
       {renderHeader()}
       
-      {contacts.length === 0 ? (
+      {contacts.length === 0 && !isLoading ? (
         renderEmptyState()
+      ) : contacts.length === 0 && isLoading ? (
+        <View style={styles.content}>
+          <View style={[styles.contactsList, desktop && styles.contactsListDesktop]}>
+            {/* Contact skeleton items */}
+            {[1, 2, 3, 4, 5].map(i => (
+              <View key={i} style={styles.contactSkeleton}>
+                <View style={styles.contactSkeletonAvatar} />
+                <View style={styles.contactSkeletonInfo}>
+                  <View style={styles.contactSkeletonName} />
+                  <View style={styles.contactSkeletonMessage} />
+                </View>
+                <View style={styles.contactSkeletonTime} />
+              </View>
+            ))}
+          </View>
+          {desktop && (
+            <View style={styles.chatArea}>
+              <View style={styles.noChatSelected}>
+                <Text style={[styles.noChatText, { color: COLORS.grayscale700 }]}>
+                  Loading...
+                </Text>
+              </View>
+            </View>
+          )}
+        </View>
       ) : (
         <View style={styles.content}>
           {/* Upgrade required modal */}
           {showUpgradeModal && (
             <View style={styles.inlineModalBackdrop}>
               <View style={styles.inlineModalCard}>
-                <Text style={[styles.chatHeaderName, { textAlign: 'center', marginBottom: 8, color: COLORS.greyscale900 }]}>Upgrade Required</Text>
-                <Text style={[styles.contactLastMessage, { textAlign: 'center', marginBottom: 16, color: COLORS.grayscale700 }]}>Please upgrade to Premium to send messages.</Text>
+                <Text style={[styles.chatHeaderName, { textAlign: 'center', marginBottom: 8, color: COLORS.greyscale900 }]}>{t('messenger.upgrade_required_title')}</Text>
+                <Text style={[styles.contactLastMessage, { textAlign: 'center', marginBottom: 16, color: COLORS.grayscale700 }]}>{t('messenger.upgrade_required_text')}</Text>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
                   <TouchableOpacity style={[styles.actionButton, styles.rejectButton]} onPress={() => setShowUpgradeModal(false)}>
-                    <Text style={[styles.actionButtonText, { color: COLORS.red }]}>Close</Text>
+                    <Text style={[styles.actionButtonText, { color: COLORS.red }]}>{t('messenger.close')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={[styles.actionButton, styles.videoCallButton]} onPress={() => { setShowUpgradeModal(false); router.push('/membership'); }}>
-                    <Text style={styles.actionButtonText}>Upgrade</Text>
+                    <Text style={styles.actionButtonText}>{t('messenger.upgrade')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -1012,10 +1041,10 @@ const Messenger = () => {
           {showLimitModal && (
             <View style={styles.inlineModalBackdrop}>
               <View style={styles.inlineModalCard}>
-                <Text style={[styles.chatHeaderName, { textAlign: 'center', marginBottom: 8, color: COLORS.greyscale900 }]}>Daily Limit Reached</Text>
-                <Text style={[styles.contactLastMessage, { textAlign: 'center', marginBottom: 16, color: COLORS.grayscale700 }]}>Please arrange a video call and WhatsApp communication to have quicker nikah inshaAllah.</Text>
+                <Text style={[styles.chatHeaderName, { textAlign: 'center', marginBottom: 8, color: COLORS.greyscale900 }]}>{t('messenger.daily_limit_title')}</Text>
+                <Text style={[styles.contactLastMessage, { textAlign: 'center', marginBottom: 16, color: COLORS.grayscale700 }]}>{t('messenger.daily_limit_text')}</Text>
                 <TouchableOpacity style={[styles.actionButton, styles.videoCallButton]} onPress={() => setShowLimitModal(false)}>
-                  <Text style={styles.actionButtonText}>OK</Text>
+                  <Text style={styles.actionButtonText}>{t('messenger.ok')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1081,7 +1110,7 @@ const Messenger = () => {
                   <View style={styles.messageInputContainer}>
                     <TextInput
                       style={[styles.messageInput, { color: COLORS.greyscale900 }]}
-                      placeholder="Type a message..."
+                      placeholder={t('messenger.type_message')}
                       placeholderTextColor={COLORS.grayscale700}
                       value={newMessage}
                       onChangeText={setNewMessage}
@@ -1107,7 +1136,7 @@ const Messenger = () => {
               ) : (
                 <View style={styles.noChatSelected}>
                   <Text style={[styles.noChatText, { color: COLORS.grayscale700 }]}>
-                    Select a conversation to view messages
+                    {t('messenger.select_conversation')}
                   </Text>
                 </View>
               )}
@@ -1562,6 +1591,54 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     tintColor: COLORS.white,
+  },
+  contactSkeleton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.grayscale100,
+  },
+  contactSkeletonAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: COLORS.grayscale200,
+    marginRight: 12,
+  },
+  contactSkeletonInfo: {
+    flex: 1,
+  },
+  contactSkeletonName: {
+    height: 16,
+    backgroundColor: COLORS.grayscale200,
+    borderRadius: 4,
+    marginBottom: 4,
+    width: '60%',
+  },
+  contactSkeletonMessage: {
+    height: 12,
+    backgroundColor: COLORS.grayscale200,
+    borderRadius: 4,
+    width: '80%',
+  },
+  contactSkeletonTime: {
+    width: 40,
+    height: 12,
+    backgroundColor: COLORS.grayscale200,
+    borderRadius: 4,
+  },
+  messageMetaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  messageTicks: {
+    fontSize: getResponsiveFontSize(12),
+    fontFamily: 'regular',
+    marginLeft: 8,
   },
 });
 

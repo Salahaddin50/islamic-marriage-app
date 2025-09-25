@@ -91,6 +91,15 @@ export class ConversationsService {
     });
     if (error) throw error;
   }
+
+  static async submitForModeration(conversationId: string, content: string): Promise<{ id: string; created_at: string; }>{
+    const { data, error } = await supabase.rpc('submit_message_for_review', {
+      p_conversation_id: conversationId,
+      p_content: content,
+    });
+    if (error) throw error;
+    return { id: (data as any).id, created_at: (data as any).created_at };
+  }
 }
 
 

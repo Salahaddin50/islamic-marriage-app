@@ -956,6 +956,24 @@
       }
     }
   },
+  "messenger": {
+    "title": "Mesajlaşma",
+    "no_conversations_title": "Konuşma Yok",
+    "no_conversations_text": "Fotoğraf istekleri, video aramalar ve WhatsApp sohbetleri burada görünecek",
+    "loading_conversations": "Konuşmalar yükleniyor...",
+    "select_conversation": "Mesajları görüntülemek için bir konuşma seçin",
+    "type_message": "Bir mesaj yazın...",
+    "message": "mesaj",
+    "messages": "mesajlar",
+    "upgrade_required_title": "Yükseltme Gerekli",
+    "upgrade_required_text": "Mesaj göndermek için Premium'a yükseltmeniz gerekiyor.",
+    "daily_limit_title": "Günlük Limit Ulaşıldı",
+    "daily_limit_text": "Lütfen daha hızlı nikah için video arama ve WhatsApp iletişimi ayarlayın inşaAllah.",
+    "close": "Kapat",
+    "upgrade": "Yükselt",
+    "ok": "Tamam",
+    "failed_to_send": "Mesaj gönderme başarısız"
+  },
   "membership": {
     "header_title": "Üyeliğim",
     "tabs": {

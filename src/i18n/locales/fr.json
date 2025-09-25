@@ -956,6 +956,24 @@
       }
     }
   },
+  "messenger": {
+    "title": "Messenger",
+    "no_conversations_title": "Aucune conversation",
+    "no_conversations_text": "Vos demandes de photos, appels vidéo et chats WhatsApp apparaîtront ici",
+    "loading_conversations": "Chargement des conversations...",
+    "select_conversation": "Sélectionnez une conversation pour voir les messages",
+    "type_message": "Tapez un message...",
+    "message": "message",
+    "messages": "messages",
+    "upgrade_required_title": "Mise à niveau requise",
+    "upgrade_required_text": "Veuillez passer à Premium pour envoyer des messages.",
+    "daily_limit_title": "Limite quotidienne atteinte",
+    "daily_limit_text": "Veuillez organiser un appel vidéo et une communication WhatsApp pour un nikah plus rapide insha'Allah.",
+    "close": "Fermer",
+    "upgrade": "Mettre à niveau",
+    "ok": "OK",
+    "failed_to_send": "Échec de l'envoi du message"
+  },
   "membership": {
     "header_title": "Mon abonnement",
     "tabs": {

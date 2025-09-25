@@ -956,6 +956,24 @@
       }
     }
   },
+  "messenger": {
+    "title": "Мессенджер",
+    "no_conversations_title": "Нет разговоров",
+    "no_conversations_text": "Ваши запросы фотографий, видеозвонки и чаты WhatsApp появятся здесь",
+    "loading_conversations": "Загрузка разговоров...",
+    "select_conversation": "Выберите разговор для просмотра сообщений",
+    "type_message": "Введите сообщение...",
+    "message": "сообщение",
+    "messages": "сообщения",
+    "upgrade_required_title": "Требуется обновление",
+    "upgrade_required_text": "Пожалуйста, обновитесь до Premium для отправки сообщений.",
+    "daily_limit_title": "Дневной лимит достигнут",
+    "daily_limit_text": "Пожалуйста, организуйте видеозвонок и общение в WhatsApp для более быстрого никаха, иншаАллах.",
+    "close": "Закрыть",
+    "upgrade": "Обновить",
+    "ok": "ОК",
+    "failed_to_send": "Не удалось отправить сообщение"
+  },
   "membership": {
     "header_title": "Мое членство",
     "tabs": {
