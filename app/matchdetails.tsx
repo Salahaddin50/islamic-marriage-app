@@ -118,6 +118,7 @@ const MatchDetails = () => {
   const [showPhotoRequestInfoModal, setShowPhotoRequestInfoModal] = useState(false);
   const [showVideoMeetInfoModal, setShowVideoMeetInfoModal] = useState(false);
   const [showVideoPreconditionModal, setShowVideoPreconditionModal] = useState(false);
+  const [showChatPreconditionModal, setShowChatPreconditionModal] = useState(false);
   const [showChatInfoModal, setShowChatInfoModal] = useState(false);
   const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
   const [returnToModal, setReturnToModal] = useState<'none' | 'videoPre' | 'videoInfo' | 'chatInfo'>('none');
@@ -894,10 +895,27 @@ const MatchDetails = () => {
             {renderHeader()}
       
             <ScrollView style={[styles.footerContainer, { backgroundColor: "white" }]}>
-        {/* Basic Info: Name, Age */}
-        <Text style={[styles.fullName, { color: COLORS.greyscale900 }]}>
-          {fullName}, {age}
-        </Text>
+        {/* Basic Info: Name, Age with chat button */}
+        <View style={styles.nameRow}>
+          <Text style={[styles.fullName, { color: COLORS.greyscale900, flex: 1 }]}>
+            {fullName}, {age}
+          </Text>
+          <TouchableOpacity
+            onPress={() => {
+              if (interestStatus !== 'accepted') { setShowChatPreconditionModal(true); return; }
+              router.push({ pathname: '/messenger', params: { userId } });
+            }}
+            style={styles.nameChatBtn}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Image
+              source={icons.chatBubble2Outline || icons.chat}
+              contentFit="contain"
+              style={styles.nameChatIcon}
+            />
+            <Text style={styles.nameChatText}>Chat</Text>
+          </TouchableOpacity>
+        </View>
         
         {/* Location: Country, City */}
         {location && (
@@ -1615,6 +1633,40 @@ const MatchDetails = () => {
         </View>
       </Modal>
 
+      {/* Chat Precondition Modal */}
+      <Modal
+        visible={showChatPreconditionModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowChatPreconditionModal(false)}
+      >
+        <View style={styles.fullscreenContainer}>
+          <View style={[styles.modalCard, { maxWidth: 360 }]}> 
+            <Text style={[styles.subtitle, { marginTop: 0, marginBottom: 12, textAlign: 'center', color: COLORS.primary }]}>{t('match_details.chat_info')}</Text>
+            <View style={styles.infoStepContainer}>
+              <View style={styles.infoStepNumberContainer}>
+                <Text style={styles.infoStepNumber}>1</Text>
+              </View>
+              <Text style={styles.infoStepText}>{t('match_details.step_1_chat')}</Text>
+            </View>
+            <View style={styles.infoStepContainer}>
+              <View style={styles.infoStepNumberContainer}>
+                <Text style={styles.infoStepNumber}>2</Text>
+              </View>
+              <Text style={styles.infoStepText}>{t('match_details.step_2_chat')}</Text>
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8 }}>
+              <TouchableOpacity 
+                style={[styles.infoButton, styles.confirmButton, { width: '100%' }]} 
+                onPress={() => setShowChatPreconditionModal(false)}
+              >
+                <Text style={styles.infoButtonText}>{t('match_details.ok')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       {/* Video Meet Info Modal */}
       <Modal
         visible={showVideoMeetInfoModal}
@@ -2157,6 +2209,35 @@ const styles = StyleSheet.create({
         fontFamily: "bold",
         color: COLORS.greyscale900,
         marginBottom: getResponsiveSpacing(8)
+    },
+    nameRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    nameChatBtn: {
+        height: 36,
+        paddingHorizontal: 12,
+        borderRadius: 10,
+        backgroundColor: COLORS.primary,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.18,
+        shadowRadius: 3,
+        elevation: 4,
+    },
+    nameChatIcon: {
+        width: 18,
+        height: 18,
+        tintColor: COLORS.white,
+    },
+    nameChatText: {
+        fontSize: getResponsiveFontSize(14),
+        color: COLORS.white,
+        fontFamily: 'semiBold',
     },
     locationText: {
         fontSize: getResponsiveFontSize(16),

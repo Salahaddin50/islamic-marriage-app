@@ -671,6 +671,9 @@
     "update_button": "Kişisel Detayları Güncelle"
   },
   "match_details": {
+    "chat_info": "Sohbet Bilgisi",
+    "step_1_chat": "Önce Fotoğraf İste butonuna tıklayarak fotoğraf isteyin.",
+    "step_2_chat": "Fotoğraf isteğiniz onaylanınca Sohbet aktif olacaktır.",
     "profile_under_review_title": "Profil İncelemede",
     "profile_under_review_message": "Profiliniz incelemede. Talepler yalnızca onaydan sonra çalışır. Onaylandığında bilgilendirileceksiniz (bildirimleri kontrol edin).",
     "noted": "Anlaşıldı",

@@ -671,6 +671,9 @@
     "update_button": "Mettre à jour les détails personnels"
   },
   "match_details": {
+    "chat_info": "Infos Chat",
+    "step_1_chat": "D'abord, cliquez sur Demander Photo pour demander des photos.",
+    "step_2_chat": "Une fois votre demande photo approuvée, le Chat sera actif.",
     "profile_under_review_title": "Profil en cours d'examen",
     "profile_under_review_message": "Votre profil est en cours d'examen. Les demandes fonctionneront après approbation. Vous serez notifié une fois approuvé (vérifiez les notifications).",
     "noted": "C'est noté",

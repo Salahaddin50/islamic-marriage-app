@@ -725,6 +725,9 @@
     "update_button": "Update Personal Details"
   },
   "match_details": {
+    "chat_info": "Chat Info",
+    "step_1_chat": "First click Ask Photo to request pictures of the user.",
+    "step_2_chat": "Once your photo request is approved, Chat will be active.",
     "profile_under_review_title": "Profile Under Review",
     "profile_under_review_message": "Your profile is under review. Requests work only after approval. You will be notified once approved (check notifications).",
     "noted": "Noted",
