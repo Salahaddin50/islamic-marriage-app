@@ -2970,7 +2970,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 16
+    paddingHorizontal: 16,
+    minHeight: 60
   },
   filterHeaderRow: {
     flexDirection: 'row',
@@ -3011,11 +3012,13 @@ const styles = StyleSheet.create({
   },
   viewRight: {
     flexDirection: "row",
-    alignItems: "center"
+    alignItems: "center",
+    flexWrap: 'wrap',
+    gap: 4
   },
   notifButton: {
-    padding: 6,
-    marginRight: 8,
+    padding: 4,
+    marginRight: 4,
     position: 'relative',
   },
   notificationBadge: {
@@ -3146,11 +3149,11 @@ const styles = StyleSheet.create({
   },
   filterButton: {
     position: 'relative',
-    padding: getResponsiveSpacing(4),
+    padding: 4,
   },
   galleryButton: {
-    padding: getResponsiveSpacing(4),
-    marginRight: getResponsiveSpacing(4),
+    padding: 4,
+    marginRight: 4,
   },
   filterBadge: {
     position: 'absolute',
