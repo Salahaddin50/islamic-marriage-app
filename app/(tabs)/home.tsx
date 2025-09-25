@@ -1618,6 +1618,17 @@ const HomeScreen = () => {
               </View>
             )}
           </TouchableOpacity>
+          {/* Messenger icon between notifications and upgrade */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('messenger')}
+            style={styles.notifButton}
+          >
+            <Image
+              source={icons.chatBubble2Outline}
+              resizeMode='contain'
+              style={styles.bellIcon}
+            />
+          </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setIsGalleryView(!isGalleryView)}
             style={[styles.galleryButton, isDesktopWeb() && { display: 'none' }]}>
@@ -2964,8 +2975,8 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   notifButton: {
-    padding: 4,
-    marginRight: 4,
+    padding: 6,
+    marginRight: 8,
     position: 'relative',
   },
   notificationBadge: {
@@ -2988,10 +2999,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   bellIcon: {
-    height: 24,
-    width: 24,
+    height: 20,
+    width: 20,
     tintColor: COLORS.black,
-    marginRight: 4
+    marginRight: 0
   },
   bookmarkIcon: {
     height: 24,

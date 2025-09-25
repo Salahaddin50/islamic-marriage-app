@@ -67,9 +67,11 @@ const Messenger = () => {
   // State
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const loadChatRef = useRef<null | ((id: string) => void)>(null);
+  const [messagesLoadingByUser, setMessagesLoadingByUser] = useState<Record<string, boolean>>({});
 
   // Get selected contact
   const selectedContact = useMemo(() => {
@@ -87,197 +89,27 @@ const Messenger = () => {
     getCurrentUser();
   }, []);
 
-  // Load all conversations
+  // Load contacts (approved interests only) for fast initial render
   const loadConversations = useCallback(async () => {
     if (!currentUserId) return;
 
     try {
       setIsLoading(true);
-
-      // Load all requests in parallel
-      const [
-        interestsIncoming,
-        interestsOutgoing,
-        interestsApproved,
-        meetIncoming,
-        meetOutgoing,
-        meetApproved,
-        messageIncoming,
-        messageOutgoing,
-        messageApproved
-      ] = await Promise.all([
-        InterestsService.listIncoming({ limit: 100 }),
-        InterestsService.listOutgoing({ limit: 100 }),
-        InterestsService.listApproved({ limit: 100 }),
-        MeetService.listIncoming({ limit: 100 }),
-        MeetService.listOutgoing({ limit: 100 }),
-        MeetService.listApproved({ limit: 100 }),
-        MessageRequestsService.listIncoming({ limit: 100 }),
-        MessageRequestsService.listOutgoing({ limit: 100 }),
-        MessageRequestsService.listApproved({ limit: 100 })
-      ]);
-
-      // Combine all requests and create historical messages
-      const allRequests = [
-        // Photo requests - incoming (pending)
-        ...interestsIncoming.map(r => ({ 
-          ...r, 
-          requestType: 'photo_request_received' as const, 
-          isSent: false, 
-          canTakeAction: true,
-          timestamp: r.created_at
-        })),
-        // Photo requests - outgoing (pending)
-        ...interestsOutgoing.map(r => ({ 
-          ...r, 
-          requestType: 'photo_request_sent' as const, 
-          isSent: true, 
-          canTakeAction: false,
-          timestamp: r.created_at
-        })),
-        // Photo requests - approved (create both original request and approval messages)
-        ...interestsApproved.flatMap(r => [
-          // Original request message
-          {
-            ...r,
-            id: `${r.id}_original`,
-            requestType: r.sender_id === currentUserId ? 'photo_request_sent' as const : 'photo_request_received' as const,
-            isSent: r.sender_id === currentUserId,
-            canTakeAction: false,
-            status: 'accepted' as const,
-            timestamp: r.created_at
-          },
-          // Approval message
-          {
-            ...r,
-            id: `${r.id}_approved`,
-            requestType: 'photo_request_approved' as const,
-            isSent: r.receiver_id === currentUserId, // The person who approved it
-            canTakeAction: false,
-            status: 'accepted' as const,
-            timestamp: r.updated_at || r.created_at
-          }
-        ]),
-        
-        // Video call requests - incoming (pending)
-        ...meetIncoming.map(r => ({ 
-          ...r, 
-          requestType: 'video_request_received' as const, 
-          isSent: false, 
-          canTakeAction: true,
-          timestamp: r.created_at
-        })),
-        // Video call requests - outgoing (pending)
-        ...meetOutgoing.map(r => ({ 
-          ...r, 
-          requestType: 'video_request_sent' as const, 
-          isSent: true, 
-          canTakeAction: false,
-          timestamp: r.created_at
-        })),
-        // Video call requests - approved
-        ...meetApproved.flatMap(r => [
-          // Original request message
-          {
-            ...r,
-            id: `${r.id}_original`,
-            requestType: r.sender_id === currentUserId ? 'video_request_sent' as const : 'video_request_received' as const,
-            isSent: r.sender_id === currentUserId,
-            canTakeAction: false,
-            status: 'accepted' as const,
-            timestamp: r.created_at
-          },
-          // Approval message
-          {
-            ...r,
-            id: `${r.id}_approved`,
-            requestType: 'video_request_approved' as const,
-            isSent: r.receiver_id === currentUserId, // The person who approved it
-            canTakeAction: false,
-            status: 'accepted' as const,
-            timestamp: r.updated_at || r.created_at
-          }
-        ]),
-        
-        // Message requests - incoming (pending)
-        ...messageIncoming.map(r => ({ 
-          ...r, 
-          requestType: 'message_request_received' as const, 
-          isSent: false, 
-          canTakeAction: true,
-          timestamp: r.created_at
-        })),
-        // Message requests - outgoing (pending)
-        ...messageOutgoing.map(r => ({ 
-          ...r, 
-          requestType: 'message_request_sent' as const, 
-          isSent: true, 
-          canTakeAction: false,
-          timestamp: r.created_at
-        })),
-        // Message requests - approved
-        ...messageApproved.flatMap(r => [
-          // Original request message
-          {
-            ...r,
-            id: `${r.id}_original`,
-            requestType: r.sender_id === currentUserId ? 'message_request_sent' as const : 'message_request_received' as const,
-            isSent: r.sender_id === currentUserId,
-            canTakeAction: false,
-            status: 'accepted' as const,
-            timestamp: r.created_at
-          },
-          // Approval message
-          {
-            ...r,
-            id: `${r.id}_approved`,
-            requestType: 'message_request_approved' as const,
-            isSent: r.receiver_id === currentUserId, // The person who approved it
-            canTakeAction: false,
-            status: 'accepted' as const,
-            timestamp: r.updated_at || r.created_at
-          }
-        ])
-      ];
-
-      // Group by other user
+      // Only pull approved interests to construct contact list
+      const interestsApproved = await InterestsService.listApproved({ limit: 200 });
       const contactsMap = new Map<string, Contact>();
-
-      for (const request of allRequests) {
-        const otherUserId = request.sender_id === currentUserId ? request.receiver_id : request.sender_id;
-        
+      interestsApproved.forEach(r => {
+        const otherUserId = r.sender_id === currentUserId ? r.receiver_id : r.sender_id;
         if (!contactsMap.has(otherUserId)) {
           contactsMap.set(otherUserId, {
             userId: otherUserId,
-            profile: {} as UserProfile, // Will be loaded separately
-            lastActivity: request.updated_at || request.created_at,
+            profile: {} as UserProfile,
+            lastActivity: r.updated_at || r.created_at,
             messages: [],
-            hasUnreadActivity: false
+            hasUnreadActivity: false,
           });
         }
-
-        const contact = contactsMap.get(otherUserId)!;
-        
-        // Add message
-        const message: ChatMessage = {
-          id: request.id,
-          type: request.requestType as any,
-          isSent: request.isSent,
-          status: request.status,
-          timestamp: request.timestamp || request.updated_at || request.created_at,
-          scheduledAt: (request as any).scheduled_at,
-          meetLink: (request as any).meet_link,
-          recordId: request.id,
-          canTakeAction: request.canTakeAction && request.status === 'pending'
-        };
-
-        contact.messages.push(message);
-        
-        // Update last activity
-        if (new Date(message.timestamp) > new Date(contact.lastActivity)) {
-          contact.lastActivity = message.timestamp;
-        }
-      }
+      });
 
       // Load user profiles for all contacts
       const userIds = Array.from(contactsMap.keys());
@@ -305,23 +137,32 @@ const Messenger = () => {
         });
       }
 
-      // Sort contacts by last activity and sort messages within each contact
+      // Sort contacts by last activity
       const contactsList = Array.from(contactsMap.values())
-        .map(contact => ({
-          ...contact,
-          messages: contact.messages.sort((a, b) => 
-            new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-          )
-        }))
-        .sort((a, b) => 
-          new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime()
-        );
+        .map(c => {
+          const existing = contacts.find(prev => prev.userId === c.userId);
+          return {
+            ...c,
+            messages: existing?.messages || c.messages,
+          } as Contact;
+        })
+        .sort((a, b) => new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime());
 
-      setContacts(contactsList);
+      // Preserve already loaded message threads to prevent flicker/resets
+      setContacts(prev => contactsList.map(c => {
+        const prevC = prev.find(p => p.userId === c.userId);
+        return {
+          ...c,
+          messages: prevC?.messages && prevC.messages.length > 0 ? prevC.messages : c.messages,
+        } as Contact;
+      }));
 
       // Auto-select first contact on desktop
       if (desktop && contactsList.length > 0 && !selectedContactId) {
-        setSelectedContactId(contactsList[0].userId);
+        const firstId = contactsList[0].userId;
+        setSelectedContactId(firstId);
+        // Lazy-load chat for first contact on desktop
+        setTimeout(() => loadChatRef.current && loadChatRef.current(firstId), 0);
       }
 
     } catch (error) {
@@ -333,11 +174,114 @@ const Messenger = () => {
     }
   }, [currentUserId, desktop, selectedContactId, t]);
 
-  // Load conversations on mount and when user changes
+  // Ensure chat reloads if selection changes (handles list refreshes on desktop)
   useEffect(() => {
-    if (currentUserId) {
-      loadConversations();
+    if (!desktop) return;
+    if (!selectedContactId) return;
+    const tid = setTimeout(() => {
+      loadChatRef.current && loadChatRef.current(selectedContactId);
+    }, 0);
+    return () => clearTimeout(tid);
+  }, [desktop, selectedContactId]);
+
+  // Lazy-load messages for a specific contact
+  const loadChatForContact = useCallback(async (otherUserId: string) => {
+    if (!currentUserId) return;
+    const contact = contacts.find(c => c.userId === otherUserId);
+    if (!contact) return;
+    if (messagesLoadingByUser[otherUserId]) return;
+    if (contact.messages && contact.messages.length > 0) return;
+
+    setMessagesLoadingByUser(prev => ({ ...prev, [otherUserId]: true }));
+    try {
+      const [interestsRes, meetsRes, messagesRes] = await Promise.all([
+        supabase
+          .from('interests')
+          .select('id,sender_id,receiver_id,status,created_at,updated_at')
+          .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${currentUserId})`),
+        supabase
+          .from('meet_requests')
+          .select('id,sender_id,receiver_id,status,scheduled_at,meet_link,created_at,updated_at')
+          .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${currentUserId})`)
+          .order('created_at', { ascending: true }),
+        supabase
+          .from('message_requests')
+          .select('id,sender_id,receiver_id,status,created_at,updated_at')
+          .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${currentUserId})`)
+          .order('created_at', { ascending: true })
+      ]);
+
+      const msgs: ChatMessage[] = [];
+      const interest = (interestsRes.data || [])[0];
+      if (interest) {
+        msgs.push({
+          id: `${interest.id}_orig`,
+          type: interest.sender_id === currentUserId ? 'photo_request_sent' : 'photo_request_received',
+          isSent: interest.sender_id === currentUserId,
+          status: interest.status as any,
+          timestamp: interest.created_at,
+          recordId: interest.id,
+          canTakeAction: false,
+        });
+        if (interest.status === 'accepted') {
+          msgs.push({
+            id: `${interest.id}_approved`,
+            type: 'photo_request_approved',
+            isSent: interest.receiver_id === currentUserId,
+            status: 'accepted',
+            timestamp: interest.updated_at || interest.created_at,
+            recordId: interest.id,
+            canTakeAction: false,
+          });
+        }
+      }
+
+      (meetsRes.data || []).forEach((r: any) => {
+        msgs.push({
+          id: r.id,
+          type: r.status === 'accepted' ? 'video_request_approved' : (r.sender_id === currentUserId ? 'video_request_sent' : 'video_request_received'),
+          isSent: r.sender_id === currentUserId,
+          status: r.status,
+          timestamp: r.updated_at || r.created_at,
+          scheduledAt: r.scheduled_at || undefined,
+          meetLink: r.meet_link || undefined,
+          recordId: r.id,
+          canTakeAction: false,
+        });
+      });
+
+      (messagesRes.data || []).forEach((r: any) => {
+        msgs.push({
+          id: r.id,
+          type: r.status === 'accepted' ? 'message_request_approved' : (r.sender_id === currentUserId ? 'message_request_sent' : 'message_request_received'),
+          isSent: r.sender_id === currentUserId,
+          status: r.status,
+          timestamp: r.updated_at || r.created_at,
+          recordId: r.id,
+          canTakeAction: false,
+        });
+      });
+
+      msgs.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+      setContacts(prev => prev.map(c => c.userId === otherUserId ? { ...c, messages: msgs } : c));
+    } finally {
+      setMessagesLoadingByUser(prev => ({ ...prev, [otherUserId]: false }));
     }
+  }, [currentUserId, contacts, messagesLoadingByUser]);
+
+  // Keep ref pointing at latest loader to avoid TDZ/use-before-init in closures
+  useEffect(() => {
+    loadChatRef.current = (id: string) => { loadChatForContact(id); };
+  }, [loadChatForContact]);
+
+  // Load conversations lazily after first paint
+  useEffect(() => {
+    if (!currentUserId) return;
+    const id = setTimeout(() => {
+      loadConversations();
+    }, 0);
+    return () => clearTimeout(id);
   }, [currentUserId, loadConversations]);
 
   // Handle refresh
@@ -415,7 +359,10 @@ const Messenger = () => {
       <TouchableOpacity
         key={contact.userId}
         style={[styles.contactItem, isSelected && styles.contactItemSelected]}
-        onPress={() => setSelectedContactId(contact.userId)}
+        onPress={() => {
+          setSelectedContactId(contact.userId);
+          setTimeout(() => loadChatForContact(contact.userId), 0);
+        }}
       >
         <Image
           source={{ 
@@ -649,20 +596,7 @@ const Messenger = () => {
     </View>
   );
 
-  if (isLoading && contacts.length === 0) {
-    return (
-      <View style={[styles.container, styles.loadingContainer]}>
-        <StatusBar style="dark" />
-        {renderHeader()}
-        <View style={styles.loadingContent}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={[styles.loadingText, { color: COLORS.grayscale700 }]}>
-            Loading conversations...
-          </Text>
-        </View>
-      </View>
-    );
-  }
+  // Avoid blocking UI; show page immediately and load panes lazily
 
   return (
     <View style={[styles.container, { backgroundColor: COLORS.white }]}>
@@ -673,21 +607,28 @@ const Messenger = () => {
         renderEmptyState()
       ) : (
         <View style={styles.content}>
-          {/* Contacts List */}
-          <View style={[styles.contactsList, desktop && styles.contactsListDesktop]}>
-            <ScrollView
-              style={styles.contactsScroll}
-              refreshControl={
-                <RefreshControl
-                  refreshing={isRefreshing}
-                  onRefresh={handleRefresh}
-                  tintColor={COLORS.primary}
-                />
-              }
-            >
-              {contacts.map(renderContactItem)}
-            </ScrollView>
-          </View>
+          {/* Contacts List (lazy). On mobile, hide when a chat is open */}
+          {(desktop || !selectedContact) && (
+            <View style={[styles.contactsList, desktop && styles.contactsListDesktop]}>
+              <ScrollView
+                style={styles.contactsScroll}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={isRefreshing}
+                    onRefresh={handleRefresh}
+                    tintColor={COLORS.primary}
+                  />
+                }
+              >
+                {contacts.length === 0 && isLoading && (
+                  <View style={{ padding: 16, alignItems: 'center' }}>
+                    <ActivityIndicator size="small" color={COLORS.primary} />
+                  </View>
+                )}
+                {contacts.map(renderContactItem)}
+              </ScrollView>
+            </View>
+          )}
 
           {/* Chat Area */}
           {desktop ? (
@@ -713,9 +654,12 @@ const Messenger = () => {
                     </View>
                   </View>
 
-                  {/* Messages */}
+                  {/* Messages (lazy) */}
                   <ScrollView style={styles.messagesScroll}>
                     <View style={styles.messagesContainer}>
+                      {(messagesLoadingByUser[selectedContact.userId] && selectedContact.messages.length === 0) && (
+                        <ActivityIndicator size="small" color={COLORS.primary} />
+                      )}
                       {selectedContact.messages.map(renderMessage)}
                     </View>
                   </ScrollView>
@@ -729,7 +673,7 @@ const Messenger = () => {
               )}
             </View>
           ) : (
-            // Mobile: Show chat when contact is selected
+            // Mobile: Show chat full screen when contact is selected
             selectedContact && (
               <View style={styles.chatArea}>
                 {/* Chat Header */}
