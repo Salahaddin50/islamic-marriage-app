@@ -1440,7 +1440,7 @@ const MatchDetails = () => {
             styles.actionText,
             (messageStatus === 'pending' && isMessageSender) && styles.actionTextDisabled
           ]}>
-            {messageStatus === 'accepted' ? t('match_details.approved') : (messageStatus === 'pending' && isMessageSender) ? t('match_details.requested') : t('match_details.message')}
+            {messageStatus === 'accepted' ? t('match_details.approved') : (messageStatus === 'pending' && isMessageSender) ? t('match_details.requested') : 'Whatsapp'}
           </Text>
         </TouchableOpacity>
       </View>
