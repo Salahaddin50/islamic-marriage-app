@@ -1,4 +1,4 @@
- import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, FlatList, useWindowDimensions, ScrollView, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, FlatList, useWindowDimensions, ScrollView, Alert, Modal } from 'react-native';
 import React, { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, icons, images, SIZES } from '@/constants';
@@ -297,6 +297,35 @@ const HomeScreen = () => {
     };
   }, []);
   const navigation = useNavigation<NavigationProp<any>>();
+  const [totalUnreadCount, setTotalUnreadCount] = React.useState(0);
+  // Aggregate unread count from conversations table in realtime
+  React.useEffect(() => {
+    let isMounted = true;
+
+    const computeTotal = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data, error } = await supabase
+        .from('conversations')
+        .select('user_a,user_b,messages,last_read_at_user_a,last_read_at_user_b');
+      if (error) return;
+      const total = (data || []).reduce((acc: number, row: any) => {
+        const isA = row.user_a === user.id;
+        const myLastRead = isA ? row.last_read_at_user_a : row.last_read_at_user_b;
+        const unread = (row.messages || []).filter((m: any) => m.message_type === 'text' && m.sender_id !== user.id && (!myLastRead || m.created_at > myLastRead)).length;
+        return acc + unread;
+      }, 0);
+      if (isMounted) setTotalUnreadCount(total);
+    };
+
+    computeTotal();
+
+    const channel = supabase
+      .channel('conversations-unread-total')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, () => computeTotal())
+      .subscribe();
+    return () => { isMounted = false; try { supabase.removeChannel(channel); } catch {} };
+  }, []);
   const { unreadCount, refreshNotifications } = useNotifications();
   const router = useRouter();
   const [users, setUsers] = useState<UserProfileWithMedia[]>([]);
@@ -1623,11 +1652,21 @@ const HomeScreen = () => {
             onPress={() => navigation.navigate('messenger')}
             style={styles.notifButton}
           >
-            <Image
-              source={icons.chatBubble2Outline}
-              resizeMode='contain'
-              style={styles.bellIcon}
-            />
+            <View style={{ position: 'relative' }}>
+              <Image
+                source={icons.chatBubble2Outline}
+                resizeMode='contain'
+                style={styles.bellIcon}
+              />
+              {/* Unread badge overlay */}
+              {totalUnreadCount > 0 && (
+                <View style={styles.headerUnreadBadge}>
+                  <Text style={styles.headerUnreadBadgeText}>
+                    {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
+                  </Text>
+                </View>
+              )}
+            </View>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setIsGalleryView(!isGalleryView)}
@@ -3003,6 +3042,24 @@ const styles = StyleSheet.create({
     width: 20,
     tintColor: COLORS.black,
     marginRight: 0
+  },
+  headerUnreadBadge: {
+    position: 'absolute',
+    right: -6,
+    top: -6,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  headerUnreadBadgeText: {
+    color: COLORS.white,
+    fontSize: 10,
+    fontFamily: 'bold',
+    textAlign: 'center',
   },
   bookmarkIcon: {
     height: 24,

@@ -14,6 +14,7 @@ import MatchDetailsSkeleton from '@/components/MatchDetailsSkeleton';
 import { InterestsService, InterestStatus } from '@/src/services/interests';
 import { MeetService, MeetOverallStatus } from '@/src/services/meet';
 import { MessageRequestsService } from '@/src/services/message-requests.service';
+import { ConversationsService } from '@/src/services/conversations';
 import { calculateTimeDifference, getLocalTimeForUser, TimeDifferenceResult } from '@/utils/timezoneUtils';
 import { useTranslation } from 'react-i18next';
 
@@ -901,8 +902,15 @@ const MatchDetails = () => {
             {fullName}, {age}
           </Text>
           <TouchableOpacity
-            onPress={() => {
+            onPress={async () => {
               if (interestStatus !== 'accepted') { setShowChatPreconditionModal(true); return; }
+              try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                  // Only create conversation - no message request needed
+                  await ConversationsService.getOrCreateByOtherUser(user.id, userId);
+                }
+              } catch {}
               router.push({ pathname: '/messenger', params: { userId } });
             }}
             style={styles.nameChatBtn}

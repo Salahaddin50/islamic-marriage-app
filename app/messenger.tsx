@@ -14,13 +14,14 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Image } from 'expo-image';
-import { useNavigation, useRouter } from 'expo-router';
+import { useNavigation, useRouter, useLocalSearchParams } from 'expo-router';
 import { NavigationProp } from '@react-navigation/native';
 import { COLORS, icons, SIZES } from '@/constants';
 import { supabase } from '@/src/config/supabase';
 import { InterestsService, InterestRecord } from '@/src/services/interests';
 import { MeetService, MeetRecord } from '@/src/services/meet';
 import { MessageRequestsService, MessageRequestRecord } from '@/src/services/message-requests.service';
+import { ConversationsService, ConversationRecord, ConversationMessageRecord } from '@/src/services/conversations';
 import { getResponsiveFontSize, getResponsiveSpacing, safeGoBack, isDesktopWeb } from '@/utils/responsive';
 import { useTranslation } from 'react-i18next';
 
@@ -40,7 +41,8 @@ interface ChatMessage {
   id: string;
   type: 'photo_request_sent' | 'photo_request_received' | 'photo_request_approved' | 
         'video_request_sent' | 'video_request_received' | 'video_request_approved' |
-        'message_request_sent' | 'message_request_received' | 'message_request_approved';
+        'message_request_sent' | 'message_request_received' | 'message_request_approved' |
+        'text_message';
   isSent: boolean;
   status: 'pending' | 'accepted' | 'rejected';
   timestamp: string;
@@ -48,6 +50,7 @@ interface ChatMessage {
   meetLink?: string;
   recordId: string;
   canTakeAction: boolean; // whether user can accept/reject
+  content?: string; // for text messages
 }
 
 interface Contact {
@@ -56,11 +59,15 @@ interface Contact {
   lastActivity: string;
   messages: ChatMessage[];
   hasUnreadActivity: boolean;
+  conversationId?: string; // Add conversation ID for real messaging
+  otherReadAt?: string | null; // Last read timestamp of the other participant
+  unreadCount: number; // unread text messages from the other user
 }
 
 const Messenger = () => {
   const navigation = useNavigation<NavigationProp<any>>();
   const router = useRouter();
+  const params = useLocalSearchParams<{ userId?: string }>();
   const { t } = useTranslation();
   const desktop = Platform.OS === 'web' && isDesktopWeb();
 
@@ -72,11 +79,27 @@ const Messenger = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const loadChatRef = useRef<null | ((id: string) => void)>(null);
   const [messagesLoadingByUser, setMessagesLoadingByUser] = useState<Record<string, boolean>>({});
+  const [newMessage, setNewMessage] = useState<string>('');
+  const [isSending, setIsSending] = useState(false);
+  const [currentUserGender, setCurrentUserGender] = useState<'male' | 'female' | null>(null);
+  const [currentPackage, setCurrentPackage] = useState<string | null>(null);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // Get selected contact
   const selectedContact = useMemo(() => {
     return contacts.find(c => c.userId === selectedContactId) || null;
   }, [contacts, selectedContactId]);
+
+  const getTextMessageCount = useCallback((c?: Contact | null) => {
+    if (!c) return 0;
+    return c.messages.filter(m => m.type === 'text_message').length;
+  }, []);
+
+  const getTextMessageCountLabel = useCallback((c?: Contact | null) => {
+    const count = getTextMessageCount(c);
+    return `${count} message${count === 1 ? '' : 's'}`;
+  }, [getTextMessageCount]);
 
   // Load current user
   useEffect(() => {
@@ -84,6 +107,27 @@ const Messenger = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setCurrentUserId(user.id);
+        // Load gender
+        try {
+          const { data: prof } = await supabase
+            .from('user_profiles')
+            .select('gender')
+            .eq('user_id', user.id)
+            .single();
+          if (prof?.gender === 'male' || prof?.gender === 'female') {
+            setCurrentUserGender(prof.gender);
+          }
+        } catch {}
+        // Load current package (latest completed)
+        try {
+          const { data: records } = await supabase
+            .from('payment_records')
+            .select('package_type,status,created_at')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+          const latest = (records || []).find((r: any) => (r.status || '').toLowerCase() === 'completed');
+          if (latest?.package_type) setCurrentPackage(String(latest.package_type));
+        } catch {}
       }
     };
     getCurrentUser();
@@ -107,6 +151,7 @@ const Messenger = () => {
             lastActivity: r.updated_at || r.created_at,
             messages: [],
             hasUnreadActivity: false,
+            unreadCount: 0,
           });
         }
       });
@@ -144,6 +189,8 @@ const Messenger = () => {
           return {
             ...c,
             messages: existing?.messages || c.messages,
+            hasUnreadActivity: existing?.hasUnreadActivity ?? c.hasUnreadActivity,
+            unreadCount: existing?.unreadCount ?? c.unreadCount,
           } as Contact;
         })
         .sort((a, b) => new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime());
@@ -190,11 +237,13 @@ const Messenger = () => {
     const contact = contacts.find(c => c.userId === otherUserId);
     if (!contact) return;
     if (messagesLoadingByUser[otherUserId]) return;
-    if (contact.messages && contact.messages.length > 0) return;
 
     setMessagesLoadingByUser(prev => ({ ...prev, [otherUserId]: true }));
     try {
-      const [interestsRes, meetsRes, messagesRes] = await Promise.all([
+      // Get or create conversation
+      const conversation = await ConversationsService.getOrCreateByOtherUser(currentUserId, otherUserId);
+      
+      const [interestsRes, meetsRes, messagesRes, conversationRow] = await Promise.all([
         supabase
           .from('interests')
           .select('id,sender_id,receiver_id,status,created_at,updated_at')
@@ -208,8 +257,24 @@ const Messenger = () => {
           .from('message_requests')
           .select('id,sender_id,receiver_id,status,created_at,updated_at')
           .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${currentUserId})`)
-          .order('created_at', { ascending: true })
+          .order('created_at', { ascending: true }),
+        supabase
+          .from('conversations')
+          .select('messages,last_read_at_user_a,last_read_at_user_b,user_a,user_b')
+          .eq('id', conversation.id)
+          .single()
       ]);
+
+      // If messages already loaded, just ensure conversationId is stored
+      if (contact.messages && contact.messages.length > 0) {
+        setContacts(prev => prev.map(c => c.userId === otherUserId ? { 
+          ...c, 
+          conversationId: conversation.id 
+        } : c));
+        // Mark as read
+        try { await ConversationsService.markRead(conversation.id); } catch {}
+        return;
+      }
 
       const msgs: ChatMessage[] = [];
       const interest = (interestsRes.data || [])[0];
@@ -262,9 +327,49 @@ const Messenger = () => {
         });
       });
 
+      // Add conversation text messages
+      const convoMessages: any[] = (conversationRow.data?.messages ?? []) as any[];
+      convoMessages.forEach((msg: any) => {
+        msgs.push({
+          id: msg.id,
+          type: 'text_message',
+          isSent: msg.sender_id === currentUserId,
+          status: 'accepted',
+          timestamp: msg.created_at,
+          recordId: msg.id,
+          canTakeAction: false,
+          content: msg.content || '',
+        });
+      });
+
       msgs.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
-      setContacts(prev => prev.map(c => c.userId === otherUserId ? { ...c, messages: msgs } : c));
+      const otherReadAt = (conversationRow.data?.user_a === currentUserId)
+        ? conversationRow.data?.last_read_at_user_b
+        : conversationRow.data?.last_read_at_user_a;
+
+      // Compute unread (text) messages from the other user since my last read
+      const myLastReadAt = (conversationRow.data?.user_a === currentUserId)
+        ? conversationRow.data?.last_read_at_user_a
+        : conversationRow.data?.last_read_at_user_b;
+      let unreadCount = 0;
+      if (myLastReadAt) {
+        unreadCount = convoMessages.filter((m: any) => m.message_type === 'text' && m.created_at > myLastReadAt && m.sender_id !== currentUserId).length;
+      } else {
+        unreadCount = convoMessages.filter((m: any) => m.message_type === 'text' && m.sender_id !== currentUserId).length;
+      }
+
+      setContacts(prev => prev.map(c => c.userId === otherUserId ? { 
+        ...c, 
+        messages: msgs, 
+        conversationId: conversation.id,
+        otherReadAt: otherReadAt ?? null,
+        unreadCount,
+        hasUnreadActivity: unreadCount > 0,
+      } : c));
+
+      // Mark as read
+      try { await ConversationsService.markRead(conversation.id); } catch {}
     } finally {
       setMessagesLoadingByUser(prev => ({ ...prev, [otherUserId]: false }));
     }
@@ -284,11 +389,263 @@ const Messenger = () => {
     return () => clearTimeout(id);
   }, [currentUserId, loadConversations]);
 
+  // Realtime: keep conversation list and unread counts in sync
+  useEffect(() => {
+    if (!currentUserId) return;
+    const channel = supabase
+      .channel('conversations-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'conversations' },
+        (payload: any) => {
+          const row = payload.new || payload.record;
+          if (!row) return;
+          const { id: conversationId, user_a, user_b, last_message_at, messages, last_read_at_user_a, last_read_at_user_b } = row;
+          if (!(user_a === currentUserId || user_b === currentUserId)) return;
+          const otherUserId = user_a === currentUserId ? user_b : user_a;
+
+          // Compute otherReadAt and myLastReadAt
+          const otherReadAt = (user_a === currentUserId) ? last_read_at_user_b : last_read_at_user_a;
+          const myLastReadAt = (user_a === currentUserId) ? last_read_at_user_a : last_read_at_user_b;
+
+          // Transform text messages from row.messages (if present)
+          const textMsgs: ChatMessage[] = Array.isArray(messages)
+            ? (messages as any[]).map((m) => ({
+                id: m.id,
+                type: 'text_message',
+                isSent: m.sender_id === currentUserId,
+                status: 'accepted',
+                timestamp: m.created_at,
+                recordId: m.id,
+                canTakeAction: false,
+                content: m.content || '',
+              }))
+            : [];
+
+          // Unread count: text messages from other after myLastReadAt
+          let unreadCount = 0;
+          if (Array.isArray(messages)) {
+            if (myLastReadAt) {
+              unreadCount = (messages as any[]).filter(
+                (m: any) => m.message_type === 'text' && m.sender_id !== currentUserId && m.created_at > myLastReadAt
+              ).length;
+            } else {
+              unreadCount = (messages as any[]).filter(
+                (m: any) => m.message_type === 'text' && m.sender_id !== currentUserId
+              ).length;
+            }
+          }
+
+          setContacts((prev) => {
+            // If contact exists, update; else insert placeholder and update
+            const exists = prev.some((c) => c.userId === otherUserId);
+            const updated = prev.map((c) => {
+              if (c.userId !== otherUserId) return c;
+              // Merge text messages; keep request-history already present
+              const existingIds = new Set(c.messages.map((m) => m.id));
+              const mergedMessages = [
+                ...c.messages,
+                ...textMsgs.filter((m) => !existingIds.has(m.id)),
+              ].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+              return {
+                ...c,
+                messages: mergedMessages,
+                conversationId,
+                otherReadAt: otherReadAt ?? null,
+                unreadCount,
+                hasUnreadActivity: unreadCount > 0,
+                lastActivity: last_message_at || c.lastActivity,
+              } as Contact;
+            });
+
+            if (exists) {
+              // Re-sort by lastActivity
+              return [...updated].sort((a, b) => new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime());
+            }
+
+            // Insert placeholder contact and let existing loaders fill profile
+            const placeholder: Contact = {
+              userId: otherUserId,
+              profile: {
+                id: otherUserId,
+                user_id: otherUserId,
+                first_name: '',
+                last_name: '',
+                gender: 'male',
+              } as any,
+              lastActivity: last_message_at || new Date().toISOString(),
+              messages: textMsgs,
+              hasUnreadActivity: unreadCount > 0,
+              conversationId,
+              otherReadAt: otherReadAt ?? null,
+              unreadCount,
+            };
+
+            return [placeholder, ...updated].sort(
+              (a, b) => new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime()
+            );
+          });
+        }
+      );
+
+    channel.subscribe();
+    return () => {
+      try { supabase.removeChannel(channel); } catch {}
+    };
+  }, [currentUserId]);
+
+  // If a userId is passed via route (from matchdetails), ensure we open that conversation
+  useEffect(() => {
+    if (!currentUserId) return;
+    const targetUserId = (params?.userId as string) || null;
+    if (!targetUserId) return;
+
+    // If not in contacts yet, add a placeholder and load
+    setContacts(prev => {
+      if (prev.some(c => c.userId === targetUserId)) return prev;
+      const placeholder: Contact = {
+        userId: targetUserId,
+        profile: {
+          id: targetUserId,
+          user_id: targetUserId,
+          first_name: '',
+          last_name: '',
+          gender: 'male',
+        } as any,
+        lastActivity: new Date().toISOString(),
+        messages: [],
+        hasUnreadActivity: false,
+      };
+      return [placeholder, ...prev];
+    });
+
+    // Load profile and messages, then select
+    (async () => {
+      try {
+        const { data: profiles } = await supabase
+          .from('user_profiles')
+          .select('user_id, first_name, last_name, age, profile_picture_url, gender, country, city')
+          .eq('user_id', targetUserId)
+          .limit(1);
+        if (profiles && profiles.length > 0) {
+          const p = profiles[0];
+          setContacts(prev => prev.map(c => c.userId === targetUserId ? {
+            ...c,
+            profile: {
+              id: p.user_id,
+              user_id: p.user_id,
+              first_name: p.first_name || '',
+              last_name: p.last_name || '',
+              age: p.age,
+              profile_picture_url: p.profile_picture_url,
+              gender: p.gender,
+              country: p.country,
+              city: p.city,
+            }
+          } : c));
+        }
+        setSelectedContactId(targetUserId);
+        setTimeout(() => loadChatRef.current && loadChatRef.current(targetUserId), 0);
+      } catch {}
+    })();
+  }, [currentUserId, params?.userId]);
+
   // Handle refresh
   const handleRefresh = useCallback(() => {
     setIsRefreshing(true);
     loadConversations();
   }, [loadConversations]);
+
+  // Send text message
+  const handleSendMessage = useCallback(async () => {
+    console.log('handleSendMessage called', { 
+      selectedContact: selectedContact?.userId, 
+      currentUserId, 
+      newMessage: newMessage.trim(),
+      conversationId: selectedContact?.conversationId,
+      isSending 
+    });
+
+    if (!selectedContact || !currentUserId || !newMessage.trim() || isSending) {
+      console.log('Validation failed - not sending message');
+      return;
+    }
+    // Ensure conversation exists (just-in-time)
+    try {
+      if (!selectedContact.conversationId) {
+        console.log('No conversation ID - creating one now');
+        const convo = await ConversationsService.getOrCreateByOtherUser(currentUserId, selectedContact.userId);
+        setContacts(prev => prev.map(c => c.userId === selectedContact.userId ? { ...c, conversationId: convo.id } : c));
+      }
+    } catch (e) {
+      console.error('Failed to ensure conversation exists', e);
+      Alert.alert(t('common.error'), 'Failed to start conversation');
+      return;
+    }
+
+    // Gate: females unlimited; males require premium and 10 messages/day
+    try {
+      if (currentUserGender === 'male') {
+        const allowedPackages = new Set(['premium', 'vip_premium', 'golden_premium']);
+        if (!currentPackage || !allowedPackages.has(currentPackage)) {
+          setShowUpgradeModal(true);
+          return;
+        }
+        // Count today's sent messages (across all conversations)
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const { data: rows } = await supabase
+          .from('conversations')
+          .select('user_a,user_b,messages')
+          .or(`user_a.eq.${currentUserId},user_b.eq.${currentUserId}`);
+        const totalToday = (rows || []).reduce((sum: number, row: any) => {
+          const msgs: any[] = row?.messages || [];
+          const count = msgs.filter((m: any) => m.message_type === 'text' && m.sender_id === currentUserId && new Date(m.created_at).getTime() >= todayStart.getTime()).length;
+          return sum + count;
+        }, 0);
+        if (totalToday >= 10) {
+          setShowLimitModal(true);
+          return;
+        }
+      }
+    } catch {}
+
+    setIsSending(true);
+    try {
+      console.log('Attempting to send message...');
+      const message = await ConversationsService.sendText(
+        (selectedContact.conversationId as string) || (contacts.find(c => c.userId === selectedContact.userId)?.conversationId as string), 
+        currentUserId, 
+        newMessage.trim()
+      );
+
+      // Add message to local state
+      const newChatMessage: ChatMessage = {
+        id: message.id,
+        type: 'text_message',
+        isSent: true,
+        status: 'accepted',
+        timestamp: message.created_at,
+        recordId: message.id,
+        canTakeAction: false,
+        content: message.content || '',
+      };
+
+      setContacts(prev => prev.map(c => 
+        c.userId === selectedContact.userId 
+          ? { ...c, messages: [...c.messages, newChatMessage] }
+          : c
+      ));
+
+      setNewMessage('');
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      Alert.alert(t('common.error'), 'Failed to send message');
+    } finally {
+      setIsSending(false);
+    }
+  }, [selectedContact, currentUserId, newMessage, isSending, t]);
 
   // Handle request actions
   const handleAcceptRequest = async (message: ChatMessage) => {
@@ -384,8 +741,8 @@ const Messenger = () => {
           <Text style={[styles.contactTime, { color: COLORS.grayscale700 }]}>
             {formatTime(contact.lastActivity)}
           </Text>
-          {contact.hasUnreadActivity && (
-            <View style={styles.unreadDot} />
+          {contact.unreadCount > 0 && (
+            <View style={styles.unreadBadge}><Text style={styles.unreadBadgeText}>{contact.unreadCount}</Text></View>
           )}
         </View>
       </TouchableOpacity>
@@ -395,6 +752,8 @@ const Messenger = () => {
   // Get message preview text
   const getMessagePreview = (message: ChatMessage): string => {
     switch (message.type) {
+      case 'text_message':
+        return message.isSent ? `You: ${message.content}` : message.content || 'Message';
       case 'photo_request_sent':
         return 'You: Photo request sent';
       case 'photo_request_received':
@@ -439,6 +798,7 @@ const Messenger = () => {
   // Render message bubble
   const renderMessage = (message: ChatMessage) => {
     const isFromMe = message.isSent;
+    const isText = message.type === 'text_message';
     
     return (
       <View 
@@ -465,12 +825,19 @@ const Messenger = () => {
             </Text>
           )}
           
-          <Text style={[
-            styles.messageTime,
-            { color: isFromMe ? 'rgba(255,255,255,0.8)' : COLORS.grayscale700 }
-          ]}>
-            {formatTime(message.timestamp)}
-          </Text>
+          <View style={styles.messageMetaRow}>
+            <Text style={[
+              styles.messageTime,
+              { color: isFromMe ? 'rgba(255,255,255,0.8)' : COLORS.grayscale700 }
+            ]}>
+              {formatTime(message.timestamp)}
+            </Text>
+            {isText && isFromMe && (
+              <Text style={[styles.messageTicks, { color: isMessageRead(message) ? (COLORS.white) : (isFromMe ? 'rgba(255,255,255,0.8)' : COLORS.grayscale700) }]}>
+                {isMessageRead(message) ? '✓✓' : '✓'}
+              </Text>
+            )}
+          </View>
         </View>
 
         {/* Action buttons for pending requests */}
@@ -516,17 +883,19 @@ const Messenger = () => {
           </View>
         )}
 
-        {/* Status indicator */}
-        <View style={[
-          styles.statusIndicator,
-          message.status === 'accepted' && styles.statusAccepted,
-          message.status === 'rejected' && styles.statusRejected,
-          message.status === 'pending' && styles.statusPending
-        ]}>
-          <Text style={styles.statusText}>
-            {message.status === 'accepted' ? '✓' : message.status === 'rejected' ? '✗' : '⏳'}
-          </Text>
-        </View>
+        {/* Status indicator for request-related messages only (no ticks here) */}
+        {message.type !== 'text_message' && (
+          <View style={[
+            styles.statusIndicator,
+            message.status === 'accepted' && styles.statusAccepted,
+            message.status === 'rejected' && styles.statusRejected,
+            message.status === 'pending' && styles.statusPending
+          ]}>
+            <Text style={styles.statusText}>
+              {message.status === 'accepted' ? '✓' : message.status === 'rejected' ? '✗' : '⏳'}
+            </Text>
+          </View>
+        )}
       </View>
     );
   };
@@ -534,6 +903,8 @@ const Messenger = () => {
   // Get message text based on type
   const getMessageText = (message: ChatMessage): string => {
     switch (message.type) {
+      case 'text_message':
+        return message.content || '';
       case 'photo_request_sent':
         return 'I sent a photo request';
       case 'photo_request_received':
@@ -560,6 +931,18 @@ const Messenger = () => {
           : 'You approved my Whatsapp request';
       default:
         return 'Message';
+    }
+  };
+
+  // Whether a sent message is read: message.created_at <= otherReadAt
+  const isMessageRead = (message: ChatMessage): boolean => {
+    if (!selectedContact) return false;
+    if (!message.isSent) return false;
+    if (!selectedContact.otherReadAt) return false;
+    try {
+      return new Date(message.timestamp).getTime() <= new Date(selectedContact.otherReadAt).getTime();
+    } catch {
+      return false;
     }
   };
 
@@ -607,6 +990,36 @@ const Messenger = () => {
         renderEmptyState()
       ) : (
         <View style={styles.content}>
+          {/* Upgrade required modal */}
+          {showUpgradeModal && (
+            <View style={styles.inlineModalBackdrop}>
+              <View style={styles.inlineModalCard}>
+                <Text style={[styles.chatHeaderName, { textAlign: 'center', marginBottom: 8, color: COLORS.greyscale900 }]}>Upgrade Required</Text>
+                <Text style={[styles.contactLastMessage, { textAlign: 'center', marginBottom: 16, color: COLORS.grayscale700 }]}>Please upgrade to Premium to send messages.</Text>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <TouchableOpacity style={[styles.actionButton, styles.rejectButton]} onPress={() => setShowUpgradeModal(false)}>
+                    <Text style={[styles.actionButtonText, { color: COLORS.red }]}>Close</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.actionButton, styles.videoCallButton]} onPress={() => { setShowUpgradeModal(false); router.push('/membership'); }}>
+                    <Text style={styles.actionButtonText}>Upgrade</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          )}
+
+          {/* Daily limit reached modal */}
+          {showLimitModal && (
+            <View style={styles.inlineModalBackdrop}>
+              <View style={styles.inlineModalCard}>
+                <Text style={[styles.chatHeaderName, { textAlign: 'center', marginBottom: 8, color: COLORS.greyscale900 }]}>Daily Limit Reached</Text>
+                <Text style={[styles.contactLastMessage, { textAlign: 'center', marginBottom: 16, color: COLORS.grayscale700 }]}>Please arrange a video call and WhatsApp communication to have quicker nikah inshaAllah.</Text>
+                <TouchableOpacity style={[styles.actionButton, styles.videoCallButton]} onPress={() => setShowLimitModal(false)}>
+                  <Text style={styles.actionButtonText}>OK</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
           {/* Contacts List (lazy). On mobile, hide when a chat is open */}
           {(desktop || !selectedContact) && (
             <View style={[styles.contactsList, desktop && styles.contactsListDesktop]}>
@@ -649,7 +1062,7 @@ const Messenger = () => {
                         {`${selectedContact.profile.first_name} ${selectedContact.profile.last_name}`.trim()}
                       </Text>
                       <Text style={[styles.chatHeaderStatus, { color: COLORS.grayscale700 }]}>
-                        {selectedContact.messages.length} messages
+                        {getTextMessageCountLabel(selectedContact)}
                       </Text>
                     </View>
                   </View>
@@ -663,6 +1076,33 @@ const Messenger = () => {
                       {selectedContact.messages.map(renderMessage)}
                     </View>
                   </ScrollView>
+
+                  {/* Message Input */}
+                  <View style={styles.messageInputContainer}>
+                    <TextInput
+                      style={[styles.messageInput, { color: COLORS.greyscale900 }]}
+                      placeholder="Type a message..."
+                      placeholderTextColor={COLORS.grayscale700}
+                      value={newMessage}
+                      onChangeText={setNewMessage}
+                      multiline
+                      maxLength={500}
+                    />
+                    <TouchableOpacity
+                      style={[
+                        styles.sendButton,
+                        (!newMessage.trim() || isSending) && styles.sendButtonDisabled
+                      ]}
+                      onPress={handleSendMessage}
+                      disabled={!newMessage.trim() || isSending}
+                    >
+                      {isSending ? (
+                        <ActivityIndicator size="small" color={COLORS.white} />
+                      ) : (
+                        <Image source={icons.send} style={styles.sendIcon} />
+                      )}
+                    </TouchableOpacity>
+                  </View>
                 </>
               ) : (
                 <View style={styles.noChatSelected}>
@@ -696,7 +1136,7 @@ const Messenger = () => {
                       {`${selectedContact.profile.first_name} ${selectedContact.profile.last_name}`.trim()}
                     </Text>
                     <Text style={[styles.chatHeaderStatus, { color: COLORS.grayscale700 }]}>
-                      {selectedContact.messages.length} messages
+                      {getTextMessageCountLabel(selectedContact)}
                     </Text>
                   </View>
                 </View>
@@ -707,6 +1147,33 @@ const Messenger = () => {
                     {selectedContact.messages.map(renderMessage)}
                   </View>
                 </ScrollView>
+
+                {/* Message Input */}
+                <View style={styles.messageInputContainer}>
+                  <TextInput
+                    style={[styles.messageInput, { color: COLORS.greyscale900 }]}
+                    placeholder="Type a message..."
+                    placeholderTextColor={COLORS.grayscale700}
+                    value={newMessage}
+                    onChangeText={setNewMessage}
+                    multiline
+                    maxLength={500}
+                  />
+                  <TouchableOpacity
+                    style={[
+                      styles.sendButton,
+                      (!newMessage.trim() || isSending) && styles.sendButtonDisabled
+                    ]}
+                    onPress={handleSendMessage}
+                    disabled={!newMessage.trim() || isSending}
+                  >
+                    {isSending ? (
+                      <ActivityIndicator size="small" color={COLORS.white} />
+                    ) : (
+                      <Image source={icons.send} style={styles.sendIcon} />
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
             )
           )}
@@ -839,6 +1306,39 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: COLORS.primary,
+  },
+  unreadBadge: {
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  unreadBadgeText: {
+    color: COLORS.white,
+    fontSize: getResponsiveFontSize(10),
+    fontFamily: 'bold',
+  },
+  inlineModalBackdrop: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  inlineModalCard: {
+    width: 320,
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: COLORS.grayscale200,
   },
   chatArea: {
     flex: 1,
@@ -1023,6 +1523,45 @@ const styles = StyleSheet.create({
     fontFamily: 'regular',
     textAlign: 'center',
     lineHeight: 22,
+  },
+  messageInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: COLORS.white,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.grayscale200,
+  },
+  messageInput: {
+    flex: 1,
+    maxHeight: 100,
+    minHeight: 40,
+    borderWidth: 1,
+    borderColor: COLORS.grayscale200,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginRight: 12,
+    fontSize: getResponsiveFontSize(16),
+    fontFamily: 'regular',
+    backgroundColor: COLORS.grayscale100,
+  },
+  sendButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sendButtonDisabled: {
+    backgroundColor: COLORS.grayscale300,
+  },
+  sendIcon: {
+    width: 20,
+    height: 20,
+    tintColor: COLORS.white,
   },
 });
 
