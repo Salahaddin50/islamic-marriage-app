@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interests - Zawajplus Admin</title>
+    <title>WhatsApp Requests - Zawajplus Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="admin-translations.js"></script>
@@ -35,9 +35,9 @@
                 <li class="nav-item"><a href="/admin-dashboard.html" class="nav-link"><i class="fas fa-tachometer-alt"></i><span data-translate="admin.navigation.dashboard">Dashboard</span></a></li>
                 <li class="nav-item"><a href="/admin-female-profiles.html" class="nav-link"><i class="fas fa-female"></i><span data-translate="admin.navigation.female_profiles">Female Profiles</span></a></li>
                 <li class="nav-item"><a href="/admin-male-profiles.html" class="nav-link"><i class="fas fa-male"></i><span data-translate="admin.navigation.male_profiles">Male Profiles</span></a></li>
-                <li class="nav-item active"><a href="/admin-interests.html" class="nav-link"><i class="fas fa-heart"></i><span data-translate="admin.navigation.interests">Interests</span></a></li>
+                <li class="nav-item"><a href="/admin-interests.html" class="nav-link"><i class="fas fa-heart"></i><span data-translate="admin.navigation.interests">Interests</span></a></li>
                 <li class="nav-item"><a href="/admin-meet-requests.html" class="nav-link"><i class="fas fa-video"></i><span data-translate="admin.navigation.meet_requests">Meet Requests</span></a></li>
-                <li class="nav-item"><a href="/admin-whatsapp-requests.html" class="nav-link"><i class="fab fa-whatsapp"></i><span data-translate="admin.navigation.whatsapp_requests">WhatsApp Requests</span></a></li>
+                <li class="nav-item active"><a href="/admin-whatsapp-requests.html" class="nav-link"><i class="fab fa-whatsapp"></i><span data-translate="admin.navigation.whatsapp_requests">WhatsApp Requests</span></a></li>
                 <li class="nav-item"><a href="/admin-packages.html" class="nav-link"><i class="fas fa-box"></i><span data-translate="admin.navigation.packages">Packages</span></a></li>
                 <li class="nav-item"><a href="/admin-support-team.html" class="nav-link"><i class="fas fa-headset"></i><span data-translate="admin.navigation.support_team">Support Team</span></a></li>
             </ul>
@@ -69,7 +69,7 @@
             <header class="top-bar">
                 <div class="top-bar-left">
                     <button class="sidebar-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-                    <h1 class="page-title" data-translate="admin.interests.title">Interests</h1>
+                    <h1 class="page-title" data-translate="admin.whatsapp_requests.title">WhatsApp Requests</h1>
                 </div>
                 <div class="top-bar-right">
                     <div class="admin-info">
@@ -86,69 +86,69 @@
                 <div class="filters-section">
                     <div class="filters-inline">
                         <div class="filter-group" style="flex:1; min-width:260px;">
-                            <label class="filter-label" data-translate="admin.interests.filters.search_label">Search</label>
-                            <input type="text" id="searchInput" class="filter-input" placeholder="Search by sender, receiver, email..." data-translate-placeholder="admin.interests.filters.search_placeholder" oninput="handleSearch()" />
+                            <label class="filter-label" data-translate="admin.whatsapp_requests.filters.search_label">Search</label>
+                            <input type="text" id="searchInput" class="filter-input" placeholder="Search by sender, receiver, email..." data-translate-placeholder="admin.whatsapp_requests.filters.search_placeholder" oninput="handleSearch()" />
                         </div>
                         <div class="filter-group">
-                            <label class="filter-label" data-translate="admin.interests.filters.status_label">Status</label>
+                            <label class="filter-label" data-translate="admin.whatsapp_requests.filters.status_label">Status</label>
                             <select id="statusFilter" class="filter-select" onchange="applyFilters()">
-                                <option value="" data-translate="admin.interests.filters.all">All</option>
-                                <option value="accepted" data-translate="admin.interests.status.accepted">Accepted</option>
-                                <option value="rejected" data-translate="admin.interests.status.rejected">Rejected</option>
-                                <option value="pending" data-translate="admin.interests.status.pending">Pending</option>
+                                <option value="" data-translate="admin.whatsapp_requests.filters.all">All</option>
+                                <option value="accepted" data-translate="admin.whatsapp_requests.status.accepted">Accepted</option>
+                                <option value="rejected" data-translate="admin.whatsapp_requests.status.rejected">Rejected</option>
+                                <option value="pending" data-translate="admin.whatsapp_requests.status.pending">Pending</option>
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label class="filter-label" data-translate="admin.interests.filters.time_label">Time</label>
+                            <label class="filter-label" data-translate="admin.whatsapp_requests.filters.time_label">Time</label>
                             <select id="timeFilter" class="filter-select" onchange="applyFilters()">
-                                <option value="all" data-translate="admin.interests.filters.all_time">All Time</option>
-                                <option value="today" data-translate="admin.interests.filters.today">Today</option>
-                                <option value="7" data-translate="admin.interests.filters.last_7_days">Last 7 Days</option>
-                                <option value="30" data-translate="admin.interests.filters.last_30_days">Last 30 Days</option>
+                                <option value="all" data-translate="admin.whatsapp_requests.filters.all_time">All Time</option>
+                                <option value="today" data-translate="admin.whatsapp_requests.filters.today">Today</option>
+                                <option value="7" data-translate="admin.whatsapp_requests.filters.last_7_days">Last 7 Days</option>
+                                <option value="30" data-translate="admin.whatsapp_requests.filters.last_30_days">Last 30 Days</option>
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label class="filter-label" data-translate="admin.interests.filters.sender_gender">Sender Gender</label>
+                            <label class="filter-label" data-translate="admin.whatsapp_requests.filters.sender_gender">Sender Gender</label>
                             <select id="senderGenderFilter" class="filter-select" onchange="applyFilters()">
-                                <option value="" data-translate="admin.interests.filters.all">All</option>
-                                <option value="male" data-translate="admin.interests.filters.male">Male</option>
-                                <option value="female" data-translate="admin.interests.filters.female">Female</option>
+                                <option value="" data-translate="admin.whatsapp_requests.filters.all">All</option>
+                                <option value="male" data-translate="admin.whatsapp_requests.filters.male">Male</option>
+                                <option value="female" data-translate="admin.whatsapp_requests.filters.female">Female</option>
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label class="filter-label" data-translate="admin.interests.filters.receiver_gender">Receiver Gender</label>
+                            <label class="filter-label" data-translate="admin.whatsapp_requests.filters.receiver_gender">Receiver Gender</label>
                             <select id="receiverGenderFilter" class="filter-select" onchange="applyFilters()">
-                                <option value="" data-translate="admin.interests.filters.all">All</option>
-                                <option value="male" data-translate="admin.interests.filters.male">Male</option>
-                                <option value="female" data-translate="admin.interests.filters.female">Female</option>
+                                <option value="" data-translate="admin.whatsapp_requests.filters.all">All</option>
+                                <option value="male" data-translate="admin.whatsapp_requests.filters.male">Male</option>
+                                <option value="female" data-translate="admin.whatsapp_requests.filters.female">Female</option>
                             </select>
                         </div>
                     </div>
                     <div class="filters-actions">
-                        <button class="btn btn-secondary btn-sm" onclick="resetFilters()"><i class="fas fa-eraser"></i> <span data-translate="admin.interests.buttons.reset_filters">Reset Filters</span></button>
+                        <button class="btn btn-secondary btn-sm" onclick="resetFilters()"><i class="fas fa-eraser"></i> <span data-translate="admin.whatsapp_requests.buttons.reset_filters">Reset Filters</span></button>
                     </div>
                 </div>
 
                 <div class="data-table">
                     <div class="table-header">
-                        <div class="table-title"><span data-translate="admin.interests.title">Interests</span> <span id="recordsCount"></span></div>
+                        <div class="table-title"><span data-translate="admin.whatsapp_requests.title">WhatsApp Requests</span> <span id="recordsCount"></span></div>
                         <div class="table-actions">
-                            <button class="btn btn-secondary btn-sm" onclick="reload()"><i class="fas fa-sync-alt"></i> <span data-translate="admin.interests.buttons.refresh">Refresh</span></button>
+                            <button class="btn btn-secondary btn-sm" onclick="reload()"><i class="fas fa-sync-alt"></i> <span data-translate="admin.whatsapp_requests.buttons.refresh">Refresh</span></button>
                         </div>
                     </div>
                     <div style="overflow-x:auto;">
-                        <table class="table" id="interestsTable">
+                        <table class="table" id="whatsappTable">
                             <thead>
                                 <tr>
-                                    <th data-translate="admin.interests.table.sender">Sender</th>
-                                    <th data-translate="admin.interests.table.receiver">Receiver</th>
-                                    <th data-translate="admin.interests.table.status">Status</th>
-                                    <th data-translate="admin.interests.table.created">Created</th>
-                                    <th data-translate="admin.interests.table.actions">Actions</th>
+                                    <th data-translate="admin.whatsapp_requests.table.sender">Sender</th>
+                                    <th data-translate="admin.whatsapp_requests.table.receiver">Receiver</th>
+                                    <th data-translate="admin.whatsapp_requests.table.status">Status</th>
+                                    <th data-translate="admin.whatsapp_requests.table.created">Created</th>
+                                    <th data-translate="admin.whatsapp_requests.table.actions">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="interestsTbody">
-                                <tr><td colspan="5">${translateText('admin.interests.messages.loading')}</td></tr>
+                            <tbody id="whatsappTbody">
+                                <tr><td colspan="5">${translateText('admin.whatsapp_requests.messages.loading')}</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -173,18 +173,17 @@
         });
 
         async function fetchRows(){
-            const tbody = document.getElementById('interestsTbody');
+            const tbody = document.getElementById('whatsappTbody');
             tbody.innerHTML = '<tr><td colspan="5">Loading...</td></tr>';
             try{
                 const { data, error } = await window.supabaseClient
-                    .from('interests')
-                    .select('id, sender_id, receiver_id, status, created_at')
+                    .from('message_requests')
+                    .select('id, sender_id, receiver_id, status, created_at, updated_at')
                     .order('created_at', { ascending: false })
                     .limit(1000);
                 if (error) throw error;
                 allRows = data || [];
 
-                // collect ids
                 const senderIds = Array.from(new Set(allRows.map(r => r.sender_id)));
                 const receiverIds = Array.from(new Set(allRows.map(r => r.receiver_id)));
                 senderProfiles.clear();
@@ -207,8 +206,8 @@
 
                 applyFilters();
             }catch(e){
-                console.error('Load interests error:', e);
-                tbody.innerHTML = `<tr><td colspan="5">${translateText('admin.interests.messages.failed_to_load_records')}</td></tr>`;
+                console.error('Load message_requests error:', e);
+                tbody.innerHTML = `<tr><td colspan="5">${translateText('admin.whatsapp_requests.messages.failed_to_load_records')}</td></tr>`;
             }
         }
 
@@ -272,9 +271,9 @@
         }
 
         function renderTable(){
-            const tbody = document.getElementById('interestsTbody');
+            const tbody = document.getElementById('whatsappTbody');
             if (!filtered.length){
-                tbody.innerHTML = `<tr><td colspan="5">${translateText('admin.interests.messages.no_records')}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5">${translateText('admin.whatsapp_requests.messages.no_records')}</td></tr>`;
                 document.getElementById('recordsCount').textContent = '(0)';
                 document.getElementById('paginationContainer').innerHTML = '';
                 return;
@@ -299,29 +298,29 @@
                             <div class="user-name"><a href="/matchdetails?userId=${r.sender_id}" target="_blank">${sName} ${sGenderTag}</a></div>
                             <div class="user-meta">
                                 <span class="email-link" data-user-id="${r.sender_id}"></span>
-                                ${sPhone ? `<a href="https://wa.me/${sPhone.replace(/\+/g,'')}" target="_blank">${sPhone}</a>` : ''}
+                                ${sPhone ? `<a href="https://wa.me/${sPhone.replace(/\\+/g,'')}" target="_blank">${sPhone}</a>` : ''}
                             </div>
                         </td>
                         <td>
                             <div class="user-name"><a href="/matchdetails?userId=${r.receiver_id}" target="_blank">${rName} ${rGenderTag}</a></div>
                             <div class="user-meta">
                                 <span class="email-link" data-user-id="${r.receiver_id}"></span>
-                                ${rPhone ? `<a href="https://wa.me/${rPhone.replace(/\+/g,'')}" target="_blank">${rPhone}</a>` : ''}
+                                ${rPhone ? `<a href="https://wa.me/${rPhone.replace(/\\+/g,'')}" target="_blank">${rPhone}</a>` : ''}
                             </div>
                         </td>
                         <td class="table-actions-inline">
                             <div style="display:flex; align-items:center; gap:8px;">
-                                <span class="status-badge ${statusClass}">${translateText(`admin.interests.status.${status}`)}</span>
-                                <select onchange="updateInterestStatus('${r.id}', this.value)">
-                                    <option value="accepted" ${status==='accepted'?'selected':''}>${translateText('admin.interests.status.accepted')}</option>
-                                    <option value="rejected" ${status==='rejected'?'selected':''}>${translateText('admin.interests.status.rejected')}</option>
-                                    <option value="pending" ${status==='pending'?'selected':''}>${translateText('admin.interests.status.pending')}</option>
+                                <span class="status-badge ${statusClass}">${translateText(`admin.whatsapp_requests.status.${status}`)}</span>
+                                <select onchange="updateWhatsappStatus('${r.id}', this.value)">
+                                    <option value="accepted" ${status==='accepted'?'selected':''}>${translateText('admin.whatsapp_requests.status.accepted')}</option>
+                                    <option value="rejected" ${status==='rejected'?'selected':''}>${translateText('admin.whatsapp_requests.status.rejected')}</option>
+                                    <option value="pending" ${status==='pending'?'selected':''}>${translateText('admin.whatsapp_requests.status.pending')}</option>
                                 </select>
                             </div>
                         </td>
                         <td><span class="date-small">${formatDateTime(r.created_at)}</span></td>
                         <td>
-                            <button class="btn btn-danger btn-sm" onclick="deleteInterest('${r.id}')" style="padding: 6px 8px; font-size: 14px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Delete Interest">
+                            <button class="btn btn-danger btn-sm" onclick="deleteWhatsappRequest('${r.id}')" style="padding: 6px 8px; font-size: 14px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Delete WhatsApp Request">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
@@ -329,7 +328,7 @@
                 `;
             }).join('');
 
-            if (window.fillEmailsForElements) window.fillEmailsForElements(document.getElementById('interestsTable'));
+            if (window.fillEmailsForElements) window.fillEmailsForElements(document.getElementById('whatsappTable'));
             document.getElementById('recordsCount').textContent = `(${filtered.length})`;
             const cont = document.getElementById('paginationContainer');
             cont.innerHTML = '';
@@ -344,11 +343,11 @@
             if (n.startsWith('00')) n = n.slice(2); return `+${n}`;
         }
 
-        async function updateInterestStatus(id, value){
+        async function updateWhatsappStatus(id, value){
             try{
                 const statusVal = (value==='null')? null : value;
                 const { error } = await window.supabaseClient
-                    .from('interests')
+                    .from('message_requests')
                     .update({ status: statusVal })
                     .eq('id', id);
                 if (error) throw error;
@@ -362,26 +361,25 @@
             }
         }
 
-        async function deleteInterest(id){
-            if (!confirm('Are you sure you want to delete this interest? This action cannot be undone.')) {
+        async function deleteWhatsappRequest(id){
+            if (!confirm('Are you sure you want to delete this WhatsApp request? This action cannot be undone.')) {
                 return;
             }
             try{
                 const { error } = await window.supabaseClient
-                    .from('interests')
+                    .from('message_requests')
                     .delete()
                     .eq('id', id);
                 if (error) throw error;
-                showNotification('Interest deleted successfully', 'success');
+                showNotification('WhatsApp request deleted successfully', 'success');
                 fetchRows();
             }catch(e){
-                console.error('Delete interest error:', e);
+                console.error('Delete WhatsApp request error:', e);
                 if (window.handleAuthIssue) window.handleAuthIssue(e);
-                showNotification('Failed to delete interest', 'error');
+                showNotification('Failed to delete WhatsApp request', 'error');
                 fetchRows();
             }
         }
     </script>
 </body>
 </html>
-

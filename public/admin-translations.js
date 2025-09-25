@@ -55,6 +55,7 @@ const translationData = {
                 male_profiles: "Male Profiles",
                 interests: "Interests",
                 meet_requests: "Meet Requests",
+                whatsapp_requests: "WhatsApp Requests",
                 packages: "Payments",
                 user_packages: "Packages",
                 support_team: "Support Team",
@@ -236,7 +237,8 @@ const translationData = {
                     sender: "Sender",
                     receiver: "Receiver",
                     status: "Status",
-                    created: "Created"
+                    created: "Created",
+                    actions: "Actions"
                 },
                 messages: {
                     loading: "Loading...",
@@ -285,7 +287,8 @@ const translationData = {
                     receiver: "Receiver",
                     status: "Status", 
                     scheduled: "Scheduled",
-                    created: "Created"
+                    created: "Created",
+                    actions: "Actions"
                 },
                 messages: {
                     loading: "Loading...",
@@ -298,6 +301,50 @@ const translationData = {
                     timezone: "Time Zone",
                     date: "Date",
                     time: "Time"
+                },
+                status: {
+                    accepted: "Accepted",
+                    rejected: "Rejected",
+                    pending: "Pending",
+                    null: "Unknown"
+                },
+                notifications: {
+                    status_updated: "Status updated",
+                    update_status_failed: "Failed to update status"
+                }
+            },
+            whatsapp_requests: {
+                title: "WhatsApp Requests",
+                filters: {
+                    search_label: "Search",
+                    search_placeholder: "Search by sender, receiver, email...",
+                    status_label: "Status",
+                    time_label: "Time",
+                    sender_gender: "Sender Gender",
+                    receiver_gender: "Receiver Gender",
+                    all_time: "All Time",
+                    today: "Today",
+                    last_7_days: "Last 7 Days",
+                    last_30_days: "Last 30 Days",
+                    all: "All",
+                    male: "Male",
+                    female: "Female"
+                },
+                buttons: {
+                    reset_filters: "Reset Filters",
+                    refresh: "Refresh"
+                },
+                table: {
+                    sender: "Sender",
+                    receiver: "Receiver",
+                    status: "Status",
+                    created: "Created",
+                    actions: "Actions"
+                },
+                messages: {
+                    loading: "Loading...",
+                    no_records: "No records found",
+                    failed_to_load_records: "Failed to load records."
                 },
                 status: {
                     accepted: "Accepted",
@@ -464,6 +511,7 @@ const translationData = {
                 male_profiles: "الملفات الرجالية",
                 interests: "الاهتمامات",
                 meet_requests: "طلبات المقابلة",
+                whatsapp_requests: "طلبات الواتساب",
                 packages: "المدفوعات",
                 user_packages: "الباقات",
                 support_team: "فريق الدعم",
@@ -645,7 +693,8 @@ const translationData = {
                     sender: "المرسل",
                     receiver: "المستقبل",
                     status: "الحالة",
-                    created: "تاريخ الإنشاء"
+                    created: "تاريخ الإنشاء",
+                    actions: "الإجراءات"
                 },
                 messages: {
                     loading: "جارٍ التحميل...",
@@ -694,7 +743,8 @@ const translationData = {
                     receiver: "المستقبل",
                     status: "الحالة",
                     scheduled: "موعد المقابلة",
-                    created: "تاريخ الإنشاء"
+                    created: "تاريخ الإنشاء",
+                    actions: "الإجراءات"
                 },
                 messages: {
                     loading: "جارٍ التحميل...",
@@ -707,6 +757,50 @@ const translationData = {
                     timezone: "المنطقة الزمنية",
                     date: "التاريخ",
                     time: "الوقت"
+                },
+                status: {
+                    accepted: "مقبول",
+                    rejected: "مرفوض",
+                    pending: "قيد الانتظار",
+                    null: "غير معروف"
+                },
+                notifications: {
+                    status_updated: "تم تحديث الحالة",
+                    update_status_failed: "تعذر تحديث الحالة"
+                }
+            },
+            whatsapp_requests: {
+                title: "طلبات الواتساب",
+                filters: {
+                    search_label: "بحث",
+                    search_placeholder: "ابحث بالمرسل، المستقبل، البريد...",
+                    status_label: "الحالة",
+                    time_label: "الوقت",
+                    sender_gender: "جنس المرسل",
+                    receiver_gender: "جنس المستقبل",
+                    all_time: "كل الوقت",
+                    today: "اليوم",
+                    last_7_days: "آخر 7 أيام",
+                    last_30_days: "آخر 30 يوماً",
+                    all: "الكل",
+                    male: "ذكر",
+                    female: "أنثى"
+                },
+                buttons: {
+                    reset_filters: "مسح المرشحات",
+                    refresh: "تحديث"
+                },
+                table: {
+                    sender: "المرسل",
+                    receiver: "المستقبل",
+                    status: "الحالة",
+                    created: "تاريخ الإنشاء",
+                    actions: "الإجراءات"
+                },
+                messages: {
+                    loading: "جارٍ التحميل...",
+                    no_records: "لا توجد سجلات",
+                    failed_to_load_records: "تعذر تحميل السجلات."
                 },
                 status: {
                     accepted: "مقبول",

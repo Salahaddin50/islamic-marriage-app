@@ -1204,7 +1204,8 @@
           "sender": "المرسل",
           "receiver": "المستقبل",
           "status": "الحالة",
-          "created": "تاريخ الإنشاء"
+          "created": "تاريخ الإنشاء",
+          "actions": "الإجراءات"
         }
       },
       "meet_requests": {
@@ -1214,7 +1215,8 @@
           "receiver": "المستقبل",
           "status": "الحالة",
           "scheduled": "موعد المقابلة",
-          "created": "تاريخ الإنشاء"
+          "created": "تاريخ الإنشاء",
+          "actions": "الإجراءات"
         }
       },
       "packages": {

@@ -1207,7 +1207,8 @@
         "sender": "Sender",
         "receiver": "Receiver", 
         "status": "Status",
-        "created": "Created"
+        "created": "Created",
+        "actions": "Actions"
       }
     },
     "meet_requests": {
@@ -1217,7 +1218,8 @@
         "receiver": "Receiver",
         "status": "Status", 
         "scheduled": "Scheduled",
-        "created": "Created"
+        "created": "Created",
+        "actions": "Actions"
       }
     },
     "packages": {
