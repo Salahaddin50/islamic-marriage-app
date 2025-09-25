@@ -24,11 +24,25 @@ import DesktopMobileNotice from '@/components/DesktopMobileNotice';
 import { OptimizedProfilesService } from '@/src/services/optimized-profiles.service';
 import { useLanguage } from '@/src/contexts/LanguageContext';
 import { trackEvent, trackPageView } from '@/src/utils/analytics';
+import { authCache } from '@/src/utils/auth-cache';
 
 // Cached profile image to prevent reloading
 let cachedProfileImageUrl: string | null = null;
 let profileImageLoadTime = 0;
 const PROFILE_IMAGE_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+// Age calculation utility
+const calculateAge = (dateOfBirth: string): number | null => {
+  if (!dateOfBirth) return null;
+  const today = new Date();
+  const birthDate = new Date(dateOfBirth);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+};
 
 // Simple Header Avatar Component with Profile Picture Support
 const SimpleHeaderAvatar = ({ size, displayName, isLoading }: { size: number, displayName?: string, isLoading: boolean }) => {
@@ -380,88 +394,6 @@ const HomeScreen = () => {
   // Total public profiles count (respects filters)
   const [totalPublicCount, setTotalPublicCount] = useState<number | null>(null);
 
-  const loadTotalCount = React.useCallback(async () => {
-    try {
-      // Build minimal filters object matching current UI state
-      // Use bucket-derived ranges so count matches list filtering
-      const bucketAgeRange = deriveRangeFromBuckets(ageBuckets, selectedAgeBuckets, ageRange as [number, number]);
-      const bucketHeightRange = deriveRangeFromBuckets(heightBuckets, selectedHeightBuckets, heightRange as [number, number]);
-      const bucketWeightRange = deriveRangeFromBuckets(weightBuckets, selectedWeightBuckets, weightRange as [number, number]);
-
-      const filters: any = {
-        selectedCountry,
-        selectedCity,
-        ageRange: bucketAgeRange,
-        heightRange: bucketHeightRange,
-        weightRange: bucketWeightRange,
-        selectedEyeColor,
-        selectedHairColor,
-        selectedSkinTone,
-        selectedBodyType,
-        selectedEducation,
-        selectedLanguages,
-        selectedHousingType,
-        selectedLivingCondition,
-        selectedSocialCondition,
-        selectedWorkStatus,
-        selectedReligiousLevel,
-        selectedPrayerFrequency,
-        selectedQuranReading,
-        selectedCoveringLevel,
-        selectedBeardPractice,
-        selectedAcceptedWifePositions,
-        selectedSeekingWifeNumber,
-      };
-
-      const { data: { user } } = await supabase.auth.getUser();
-      let currentUserGender: string | null = null;
-      if (user?.id) {
-        const { data: me } = await supabase
-          .from('user_profiles')
-          .select('gender')
-          .eq('user_id', user.id)
-          .single();
-        currentUserGender = me?.gender || null;
-      }
-
-      // Use fast filtered count for exact total
-      const total = await OptimizedProfilesService.getFilteredCount(filters, currentUserGender);
-      setTotalPublicCount(total);
-    } catch {
-      setTotalPublicCount(null);
-    }
-  }, [
-    selectedCountry,
-    selectedCity,
-    ageRange,
-    heightRange,
-    weightRange,
-    selectedAgeBuckets,
-    selectedHeightBuckets,
-    selectedWeightBuckets,
-    selectedEyeColor,
-    selectedHairColor,
-    selectedSkinTone,
-    selectedBodyType,
-    selectedEducation,
-    selectedLanguages,
-    selectedHousingType,
-    selectedLivingCondition,
-    selectedSocialCondition,
-    selectedWorkStatus,
-    selectedReligiousLevel,
-    selectedPrayerFrequency,
-    selectedQuranReading,
-    selectedCoveringLevel,
-    selectedBeardPractice,
-    selectedAcceptedWifePositions,
-    selectedSeekingWifeNumber,
-  ]);
-
-  // Load count on mount and whenever filters change
-  React.useEffect(() => {
-    loadTotalCount();
-  }, [loadTotalCount]);
   const [crownColor, setCrownColor] = useState<string>('#666666');
   const [currentPackage, setCurrentPackage] = useState<string | null>(null);
   const [isMale, setIsMale] = useState<boolean | null>(null);
@@ -1020,7 +952,126 @@ const HomeScreen = () => {
     imageCache.preloadBatch(imageUris).catch(() => {});
   }, []);
 
-  // Fetch user profiles from database
+  // Cache current user data to avoid repeated queries
+  const [currentUserData, setCurrentUserData] = useState<{user: any, gender: string | null} | null>(null);
+  
+  // Initialize current user data once using auth cache
+  const initializeCurrentUser = useCallback(async () => {
+    if (currentUserData) return currentUserData;
+    
+    try {
+      // Try to get from cache first for instant access
+      const cachedData = authCache.getCachedUserData();
+      if (cachedData && cachedData.user && cachedData.profile) {
+        const userData = {
+          user: cachedData.user,
+          gender: cachedData.profile?.gender || null
+        };
+        setCurrentUserData(userData);
+        return userData;
+      }
+      
+      // Fallback to fresh fetch if not cached
+      const freshData = await authCache.getCurrentUserData();
+      if (freshData && freshData.user) {
+        const userData = {
+          user: freshData.user,
+          gender: freshData.profile?.gender || null
+        };
+        setCurrentUserData(userData);
+        return userData;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Failed to initialize current user:', error);
+      return null;
+    }
+  }, [currentUserData]);
+
+  const loadTotalCount = React.useCallback(async () => {
+    try {
+      // Use the same user data source as profile fetching for consistency
+      const userData = await initializeCurrentUser();
+      const currentUserGender = userData?.gender;
+      
+      if (!currentUserGender) {
+        setTotalPublicCount(null);
+        return;
+      }
+
+      // Build minimal filters object matching current UI state
+      // Use bucket-derived ranges so count matches list filtering
+      const bucketAgeRange = deriveRangeFromBuckets(ageBuckets, selectedAgeBuckets, ageRange as [number, number]);
+      const bucketHeightRange = deriveRangeFromBuckets(heightBuckets, selectedHeightBuckets, heightRange as [number, number]);
+      const bucketWeightRange = deriveRangeFromBuckets(weightBuckets, selectedWeightBuckets, weightRange as [number, number]);
+
+      const filters: any = {
+        selectedCountry,
+        selectedCity,
+        ageRange: bucketAgeRange,
+        heightRange: bucketHeightRange,
+        weightRange: bucketWeightRange,
+        selectedEyeColor,
+        selectedHairColor,
+        selectedSkinTone,
+        selectedBodyType,
+        selectedEducation,
+        selectedLanguages,
+        selectedHousingType,
+        selectedLivingCondition,
+        selectedSocialCondition,
+        selectedWorkStatus,
+        selectedReligiousLevel,
+        selectedPrayerFrequency,
+        selectedQuranReading,
+        selectedCoveringLevel,
+        selectedBeardPractice,
+        selectedAcceptedWifePositions,
+        selectedSeekingWifeNumber,
+      };
+
+      // Use fast filtered count for exact total
+      const total = await OptimizedProfilesService.getFilteredCount(filters, currentUserGender);
+      setTotalPublicCount(total);
+    } catch {
+      setTotalPublicCount(null);
+    }
+  }, [
+    initializeCurrentUser,
+    selectedCountry,
+    selectedCity,
+    ageRange,
+    heightRange,
+    weightRange,
+    selectedAgeBuckets,
+    selectedHeightBuckets,
+    selectedWeightBuckets,
+    selectedEyeColor,
+    selectedHairColor,
+    selectedSkinTone,
+    selectedBodyType,
+    selectedEducation,
+    selectedLanguages,
+    selectedHousingType,
+    selectedLivingCondition,
+    selectedSocialCondition,
+    selectedWorkStatus,
+    selectedReligiousLevel,
+    selectedPrayerFrequency,
+    selectedQuranReading,
+    selectedCoveringLevel,
+    selectedBeardPractice,
+    selectedAcceptedWifePositions,
+    selectedSeekingWifeNumber,
+  ]);
+
+  // Load count on mount and whenever filters change
+  React.useEffect(() => {
+    loadTotalCount();
+  }, [loadTotalCount]);
+
+  // Optimized fetch using materialized view for maximum performance
   const fetchUserProfiles = async (ignoreFilters: boolean = false, isFilter: boolean = false, isLoadMore: boolean = false) => {
     try {
       if (isLoadMore) {
@@ -1031,27 +1082,118 @@ const HomeScreen = () => {
       setLoading(true);
       }
       
-      // Do not clear cached users here; preserve list across navigations to avoid empty states
-      
-      // Get current user to exclude them from results and determine their gender
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      
-      // Get current user's gender to show opposite gender profiles
-      let currentUserGender = null;
-      if (currentUser?.id) {
-        const { data: currentUserProfile } = await supabase
-          .from('user_profiles')
-          .select('gender')
-          .eq('user_id', currentUser.id)
-          .single();
-        
-        currentUserGender = currentUserProfile?.gender;
-      }
+      // Get current user data (cached)
+      const userData = await initializeCurrentUser();
+      const currentUserGender = userData?.gender;
+      const currentUserId = userData?.user?.id;
 
+      // Try to use optimized materialized view first for maximum performance
+      try {
+        const shouldApplyFilters = !ignoreFilters;
+        const filters = shouldApplyFilters ? {
+          selectedCountry,
+          selectedCity,
+          ageRange: deriveRangeFromBuckets(ageBuckets, selectedAgeBuckets, ageRange as [number, number]),
+          heightRange: deriveRangeFromBuckets(heightBuckets, selectedHeightBuckets, heightRange as [number, number]),
+          weightRange: deriveRangeFromBuckets(weightBuckets, selectedWeightBuckets, weightRange as [number, number]),
+          selectedEyeColor,
+          selectedHairColor,
+          selectedSkinTone,
+          selectedBodyType,
+          selectedEducation,
+          selectedLanguages,
+          selectedHousingType,
+          selectedLivingCondition,
+          selectedSocialCondition,
+          selectedWorkStatus,
+          selectedReligiousLevel,
+          selectedPrayerFrequency,
+          selectedQuranReading,
+          selectedCoveringLevel,
+          selectedBeardPractice,
+          selectedAcceptedWifePositions,
+          selectedSeekingWifeNumber
+        } : {};
+        
+        const currentPage = isLoadMore ? page + 1 : 0;
+        const optimizedResult = await OptimizedProfilesService.fetchOptimizedProfiles(
+          currentPage,
+          filters,
+          currentUserGender
+        );
+        
+        if (optimizedResult.profiles.length > 0) {
+          // Use optimized result - convert to expected format
+          const optimizedProfiles = optimizedResult.profiles.map(profile => ({
+            id: profile.id,
+            user_id: profile.user_id,
+            first_name: profile.name,
+            date_of_birth: null, // Age is pre-computed
+            height_cm: profile.height ? parseInt(profile.height.replace('cm', '')) : null,
+            weight_kg: profile.weight ? parseInt(profile.weight.replace('kg', '')) : null,
+            city: profile.city,
+            country: profile.country,
+            gender: currentUserGender === 'male' ? 'female' : 'male',
+            profile_picture_url: profile.image?.uri || null,
+            islamic_questionnaire: null,
+            age: profile.age // Pre-computed age
+          }));
+          
+          // Process and update state with optimized data
+          const processedUsers = await Promise.all(
+            optimizedProfiles.map(async (profile: any) => {
+              const age = profile.age || (profile.date_of_birth ? calculateAge(profile.date_of_birth) : null);
+              return {
+                ...profile,
+                name: profile.first_name || 'Member', // Ensure name field is available for mappedData
+                age,
+                image: profile.profile_picture_url ? 
+                  { uri: imageCache.getCachedImage(profile.profile_picture_url) } : 
+                  (profile.gender === 'female' ? images.femaleSilhouette : images.maleSilhouette)
+              };
+            })
+          );
+          
+          if (isLoadMore) {
+            setUsers(prev => [...prev, ...processedUsers]);
+            setPage(prev => prev + 1);
+            setHasMore(optimizedResult.hasMore);
+          } else {
+            setUsers(processedUsers);
+            setPage(0);
+            setHasMore(optimizedResult.hasMore);
+            cachedUsers = processedUsers;
+            cachedAt = Date.now();
+            
+            // Update count to match actual results when using optimized service
+            if (optimizedResult.total !== undefined) {
+              setTotalPublicCount(optimizedResult.total);
+            } else if (processedUsers.length < PAGE_SIZE) {
+              // If no total provided and we got less than a full page, update count
+              setTotalPublicCount(processedUsers.length);
+            }
+          }
+          
+          // Preload next batch of images in background
+          const nextImageUrls = processedUsers
+            .slice(0, 8)
+            .map(user => user.profile_picture_url)
+            .filter(Boolean);
+          if (nextImageUrls.length > 0) {
+            imageCache.preloadBatch(nextImageUrls).catch(() => {});
+          }
+          
+          return; // Successfully used optimized service
+        }
+      } catch (optimizedError) {
+        console.log('Optimized service failed, falling back to regular query:', optimizedError);
+      }
+      
+      // Fallback to original query if optimized service fails
       const start = isLoadMore ? (page + 1) * PAGE_SIZE : 0;
       const end = start + PAGE_SIZE - 1;
 
-      // Optimized query with computed age and better field selection
+      // Optimized query with minimal field selection for speed
       let query = supabase
         .from('user_profiles')
         .select(`
@@ -1067,33 +1209,24 @@ const HomeScreen = () => {
           profile_picture_url,
           islamic_questionnaire
         `)
-        .eq('is_public', true) // Apply early for better index usage
+        .eq('is_public', true)
         .order('created_at', { ascending: false })
         .range(start, end);
 
       // Exclude current user if exists
-      if (currentUser?.id) {
-        query = query.neq('user_id', currentUser.id);
+      if (currentUserId) {
+        query = query.neq('user_id', currentUserId);
       }
-
-      // Note: We'll calculate age on the client side since age column might be null
 
       // Apply gender filter based on current user's gender to show opposite gender
       if (currentUserGender) {
         const og = currentUserGender.toLowerCase() === 'male' ? 'female' : 'male';
-        console.log('🔍 Gender Filter Debug:', {
-          currentUserGender: currentUserGender,
-          oppositeGender: og,
-          currentUserLowercase: currentUserGender.toLowerCase()
-        });
         setOppositeGender(og);
         query = query.eq('gender', og);
         // Additional rule: male users should not see unapproved female profiles
         if (currentUserGender?.toLowerCase() === 'male' && og === 'female') {
           query = query.eq('admin_approved', true);
         }
-      } else {
-        console.log('❌ No current user gender found');
       }
 
       const shouldApplyFilters = !ignoreFilters;
@@ -1344,6 +1477,13 @@ const HomeScreen = () => {
           setUsers(usersWithMedia);
           setPage(0);
           setHasMore(true);
+          
+          // Update count based on actual results for better accuracy
+          // This helps when the optimized count service gives different results
+          if (usersWithMedia.length < PAGE_SIZE && totalPublicCount !== usersWithMedia.length) {
+            setTotalPublicCount(usersWithMedia.length);
+          }
+          
           // Preload first batch of images aggressively
           const firstImages = usersWithMedia
             .slice(0, 8)
@@ -1415,7 +1555,8 @@ const HomeScreen = () => {
           console.log('Failed to refresh notifications on focus:', error);
         }
 
-        // Render from persistent cache immediately if present
+        // Instant loading: Render from cache immediately without await
+        const loadFromCache = async () => {
         try {
           const stored = await Storage.getItem(HOME_CACHE_KEY);
           if (stored) {
@@ -1423,9 +1564,22 @@ const HomeScreen = () => {
             if (parsed?.users?.length) {
               setUsers(parsed.users as UserProfileWithMedia[]);
               setLoading(false);
+                
+                // Preload images from cached profiles
+                const imageUrls = parsed.users
+                  .slice(0, 8)
+                  .map((user: any) => user.profile_picture_url)
+                  .filter(Boolean);
+                if (imageUrls.length > 0) {
+                  imageCache.preloadBatch(imageUrls).catch(() => {});
+                }
             }
           }
         } catch {}
+        };
+        
+        // Start cache loading immediately (non-blocking)
+        loadFromCache();
 
         // If coming from a fresh login, reset filters once
         try {
@@ -1694,6 +1848,7 @@ const HomeScreen = () => {
             onPress={() => !filterLoading && refRBSheet.current?.open()}
             disabled={filterLoading}
             style={[styles.filterButton, filterLoading && { opacity: 0.7 }]}>
+            <View style={{ position: 'relative' }}>
             {filterLoading ? (
               <ActivityIndicator size="small" color={COLORS.primary} />
             ) : (
@@ -1708,6 +1863,7 @@ const HomeScreen = () => {
                 <Text style={styles.filterBadgeText}>{t('home.filters.filters_active_count', { count: getActiveFiltersCount() })}</Text>
               </View>
             )}
+            </View>
           </TouchableOpacity>
         </View>
       </View>
@@ -2327,9 +2483,9 @@ const HomeScreen = () => {
             }))}
             cardWidth={galleryCardWidth}
             cardHeight={galleryCardHeight}
-            initialNumToRender={4}
-            maxToRenderPerBatch={4}
-            windowSize={5}
+            initialNumToRender={8}
+            maxToRenderPerBatch={8}
+            windowSize={10}
             removeClippedSubviews={false}
             onEndReachedThreshold={0.2}
             onEndReached={() => {
@@ -2354,9 +2510,9 @@ const HomeScreen = () => {
             cardHeight={gridCardHeight}
             spacing={gridSpacing}
             numColumns={desktopColumns}
-            initialNumToRender={4}
-            maxToRenderPerBatch={4}
-            windowSize={5}
+            initialNumToRender={8}
+            maxToRenderPerBatch={8}
+            windowSize={10}
             removeClippedSubviews={false}
             onEndReachedThreshold={0.2}
             onEndReached={() => {
@@ -3157,18 +3313,20 @@ const styles = StyleSheet.create({
   },
   filterBadge: {
     position: 'absolute',
-    top: getResponsiveSpacing(2),
-    right: getResponsiveSpacing(2),
+    top: -6,
+    right: -6,
     backgroundColor: COLORS.primary,
     borderRadius: getResponsiveSpacing(10),
-    minWidth: getResponsiveSpacing(20),
-    height: getResponsiveSpacing(20),
+    minWidth: getResponsiveSpacing(18),
+    height: getResponsiveSpacing(18),
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: COLORS.white,
   },
   filterBadgeText: {
     color: COLORS.white,
-    fontSize: getResponsiveFontSize(12),
+    fontSize: getResponsiveFontSize(10),
     fontFamily: 'bold',
     textAlign: 'center',
   },

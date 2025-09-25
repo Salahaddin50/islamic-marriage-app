@@ -37,7 +37,6 @@
                 <li class="nav-item"><a href="/admin-male-profiles.html" class="nav-link"><i class="fas fa-male"></i><span data-translate="admin.navigation.male_profiles">Male Profiles</span></a></li>
                 <li class="nav-item active"><a href="/admin-interests.html" class="nav-link"><i class="fas fa-heart"></i><span data-translate="admin.navigation.interests">Interests</span></a></li>
                 <li class="nav-item"><a href="/admin-meet-requests.html" class="nav-link"><i class="fas fa-video"></i><span data-translate="admin.navigation.meet_requests">Meet Requests</span></a></li>
-                <li class="nav-item"><a href="/admin-whatsapp-requests.html" class="nav-link"><i class="fab fa-whatsapp"></i><span data-translate="admin.navigation.whatsapp_requests">WhatsApp Requests</span></a></li>
                 <li class="nav-item"><a href="/admin-packages.html" class="nav-link"><i class="fas fa-box"></i><span data-translate="admin.navigation.packages">Packages</span></a></li>
                 <li class="nav-item"><a href="/admin-support-team.html" class="nav-link"><i class="fas fa-headset"></i><span data-translate="admin.navigation.support_team">Support Team</span></a></li>
             </ul>
@@ -144,11 +143,10 @@
                                     <th data-translate="admin.interests.table.receiver">Receiver</th>
                                     <th data-translate="admin.interests.table.status">Status</th>
                                     <th data-translate="admin.interests.table.created">Created</th>
-                                    <th data-translate="admin.interests.table.actions">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="interestsTbody">
-                                <tr><td colspan="5">${translateText('admin.interests.messages.loading')}</td></tr>
+                                <tr><td colspan="4">${translateText('admin.interests.messages.loading')}</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -174,7 +172,7 @@
 
         async function fetchRows(){
             const tbody = document.getElementById('interestsTbody');
-            tbody.innerHTML = '<tr><td colspan="5">Loading...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
             try{
                 const { data, error } = await window.supabaseClient
                     .from('interests')
@@ -208,7 +206,7 @@
                 applyFilters();
             }catch(e){
                 console.error('Load interests error:', e);
-                tbody.innerHTML = `<tr><td colspan="5">${translateText('admin.interests.messages.failed_to_load_records')}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4">${translateText('admin.interests.messages.failed_to_load_records')}</td></tr>`;
             }
         }
 
@@ -274,7 +272,7 @@
         function renderTable(){
             const tbody = document.getElementById('interestsTbody');
             if (!filtered.length){
-                tbody.innerHTML = `<tr><td colspan="5">${translateText('admin.interests.messages.no_records')}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4">${translateText('admin.interests.messages.no_records')}</td></tr>`;
                 document.getElementById('recordsCount').textContent = '(0)';
                 document.getElementById('paginationContainer').innerHTML = '';
                 return;
@@ -320,11 +318,6 @@
                             </div>
                         </td>
                         <td><span class="date-small">${formatDateTime(r.created_at)}</span></td>
-                        <td>
-                            <button class="btn btn-danger btn-sm" onclick="deleteInterest('${r.id}')" style="padding: 6px 8px; font-size: 14px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Delete Interest">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
                     </tr>
                 `;
             }).join('');
@@ -358,26 +351,6 @@
                 console.error(e);
                 if (window.handleAuthIssue) window.handleAuthIssue(e);
                 showNotification('Failed to update status', 'error');
-                fetchRows();
-            }
-        }
-
-        async function deleteInterest(id){
-            if (!confirm('Are you sure you want to delete this interest? This action cannot be undone.')) {
-                return;
-            }
-            try{
-                const { error } = await window.supabaseClient
-                    .from('interests')
-                    .delete()
-                    .eq('id', id);
-                if (error) throw error;
-                showNotification('Interest deleted successfully', 'success');
-                fetchRows();
-            }catch(e){
-                console.error('Delete interest error:', e);
-                if (window.handleAuthIssue) window.handleAuthIssue(e);
-                showNotification('Failed to delete interest', 'error');
                 fetchRows();
             }
         }

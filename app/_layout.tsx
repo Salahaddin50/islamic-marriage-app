@@ -102,7 +102,31 @@ export default function RootLayout() {
   useEffect(() => {
     const preloadAssets = async () => {
       try {
+        // Initialize performance optimizations and auth cache in parallel with asset loading
+        const performancePromise = (async () => {
+          try {
+            const [
+              { initializePerformanceOptimizations },
+              { initializeAuthCache, setupAuthCacheListener }
+            ] = await Promise.all([
+              import('../src/utils/performance'),
+              import('../src/utils/auth-cache')
+            ]);
+            
+            await Promise.all([
+              initializePerformanceOptimizations(),
+              initializeAuthCache()
+            ]);
+            
+            // Set up auth cache listener
+            setupAuthCacheListener();
+          } catch (error) {
+            console.warn('Performance/auth optimization initialization failed:', error);
+          }
+        })();
+        
         await Promise.all([
+          performancePromise,
           Asset.fromModule(illustrations.onboarding6).downloadAsync(),
           Asset.fromModule(illustrations.onboarding2).downloadAsync(),
           Asset.fromModule(illustrations.onboarding3).downloadAsync(),
