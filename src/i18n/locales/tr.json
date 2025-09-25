@@ -497,7 +497,7 @@
     "home": "Ev",
     "requests": "Talepler",
     "meet": "Görüş",
-    "message": "Mesaj",
+    "message": "WhatsApp",
     "profile": "Profil"
   },
   "badges": {
@@ -596,7 +596,7 @@
     }
   },
   "messages": {
-    "header_title": "Mesajlar",
+    "header_title": "WhatsApp",
     "tabs": {
       "received_with_count": "Alınan ({{count}})",
       "sent_with_count": "Gönderilen ({{count}})",
@@ -715,7 +715,7 @@
     "requested": "Talep Edildi",
     "ask_photo": "Fotoğraf İste",
     "video_meet": "Video görüşme",
-    "message": "Mesaj",
+    "message": "WhatsApp",
     "photo_request_process": "Fotoğraf Talep Süreci",
     "step_1_photo": "Bu kişiye fotoğraf talebi gönderirsiniz",
     "step_2_photo": "\"Talepler\" sayfasında bildirim alırlar",
@@ -752,12 +752,12 @@
     "chat_after_meeting": "WhatsApp video görüşmeden bir saat sonra aktif olacak.",
     "meeting_time": "Görüşme saati",
     "swear_had_meeting": "Allah'a yemin edersiniz ki kişi ile video görüşme yaptınız ve whatsapp talep ederek nikah için ilerlemek istiyorsunuz.",
-    "see_whatsapp": "Kullanıcı talebinizi kabul ederse, Mesajlar sayfasında kullanıcının WhatsApp numarasını göreceksiniz.",
+    "see_whatsapp": "Kullanıcı talebinizi kabul ederse, WhatsApp sayfasında kullanıcının WhatsApp numarasını göreceksiniz.",
     "swear_for_nikah": "Allah'a yemin edersiniz ki kişi ile zaten video görüşme yaptınız ve onunla mesajlaşma talep ederek evlilik niyetindesiniz.",
-    "see_whatsapp_messages": "Kullanıcı kabul ederse Mesajlar sayfasında kullanıcının WhatsApp numarasını göreceksiniz.",
+    "see_whatsapp_messages": "Kullanıcı kabul ederse WhatsApp sayfasında kullanıcının WhatsApp numarasını göreceksiniz.",
     "yes_i_swear": "Evet, yemin ederim",
     "request": "Talep Et",
-    "chat_request_sent": "Talebiniz gönderildi. Güncellemeleri görmek için Mesajları kontrol edin.",
+    "chat_request_sent": "Talebiniz gönderildi. Güncellemeleri görmek için WhatsApp sayfasını kontrol edin.",
     "at": "saat",
     "datetime_placeholder": "YYYY-AA-GG SS:dd",
     "same_timezone": "Aynı saat dilimindesiniz",
