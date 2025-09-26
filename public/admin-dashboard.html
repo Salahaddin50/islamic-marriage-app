@@ -393,7 +393,8 @@
                     return;
                 }
                 list.innerHTML = '';
-                pending.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+                // Newest first
+                pending.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
 
                 // Fetch profiles (batch) for sender/receiver avatars
                 const userIds = Array.from(new Set(pending.flatMap(p => [p.sender_id, p.receiver_id])));
@@ -780,19 +781,33 @@
             // Always use real data
             
             try {
-                // Get profiles pending approval
+                // Get profiles pending approval - ensure latest are always on top
                 let query = supabase
                     .from('user_profiles')
                     .select('id, first_name, last_name, user_id, created_at, gender')
-                    .is('admin_approved', null)
-                    .order('created_at', { ascending: false })
-                    .limit(20);
+                    .is('admin_approved', null);
+                
                 if (genderFilter) {
                     query = query.eq('gender', genderFilter);
                 }
-                const { data: pendingProfiles } = await query;
+                
+                // Always order by created_at descending (latest first) and limit results
+                const { data: pendingProfiles, error } = await query
+                    .order('created_at', { ascending: false })
+                    .limit(20);
+                
+                if (error) {
+                    console.error('Error fetching pending approvals:', error);
+                    throw error;
+                }
 
                 if (pendingProfiles && pendingProfiles.length > 0) {
+                    // Debug: Log the profiles to see their order
+                    console.log('Pending profiles order:', pendingProfiles.map(p => ({
+                        name: `${p.first_name} ${p.last_name}`,
+                        created_at: p.created_at
+                    })));
+                    
                     approvalCount.textContent = pendingProfiles.length;
                     approvalsList.innerHTML = pendingProfiles.map(profile => `
                         <div class="approval-item">
@@ -1289,3 +1304,4 @@
     </script>
 </body>
 </html>
+
