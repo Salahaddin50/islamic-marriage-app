@@ -327,19 +327,26 @@ const Messenger = () => {
         });
       });
 
-      // Add conversation text messages
+      // Add conversation text messages (filter by approval status)
       const convoMessages: any[] = (conversationRow.data?.messages ?? []) as any[];
       convoMessages.forEach((msg: any) => {
-        msgs.push({
-          id: msg.id,
-          type: 'text_message',
-          isSent: msg.sender_id === currentUserId,
-          status: msg.status || 'pending', // Use actual status from DB
-          timestamp: msg.created_at,
-          recordId: msg.id,
-          canTakeAction: false,
-          content: msg.content || '',
-        });
+        // Only show approved messages to receiver; sender sees all their own messages
+        const isMyMessage = msg.sender_id === currentUserId;
+        const messageStatus = msg.status || 'pending';
+        
+        // Show message if: it's mine (any status) OR it's approved by admin
+        if (isMyMessage || messageStatus === 'approved') {
+          msgs.push({
+            id: msg.id,
+            type: 'text_message',
+            isSent: isMyMessage,
+            status: messageStatus,
+            timestamp: msg.created_at,
+            recordId: msg.id,
+            canTakeAction: false,
+            content: msg.content || '',
+          });
+        }
       });
 
       msgs.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
@@ -408,13 +415,18 @@ const Messenger = () => {
           const otherReadAt = (user_a === currentUserId) ? last_read_at_user_b : last_read_at_user_a;
           const myLastReadAt = (user_a === currentUserId) ? last_read_at_user_a : last_read_at_user_b;
 
-          // Transform text messages from row.messages (if present)
+          // Transform text messages from row.messages (filter by approval status)
         const textMsgs: ChatMessage[] = Array.isArray(messages)
-            ? (messages as any[]).map((m) => ({
+            ? (messages as any[]).filter((m) => {
+                const isMyMessage = m.sender_id === currentUserId;
+                const messageStatus = m.status || 'pending';
+                // Show message if: it's mine (any status) OR it's approved by admin
+                return isMyMessage || messageStatus === 'approved';
+              }).map((m) => ({
                 id: m.id,
                 type: 'text_message',
                 isSent: m.sender_id === currentUserId,
-                status: m.status || 'pending', // Use actual status from realtime update
+                status: m.status || 'pending',
                 timestamp: m.created_at,
                 recordId: m.id,
                 canTakeAction: false,

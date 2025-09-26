@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, FlatList, useWindowDimensions, ScrollView, Alert, Modal } from 'react-native';
+ import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, FlatList, useWindowDimensions, ScrollView, Alert, Modal } from 'react-native';
 import React, { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, icons, images, SIZES } from '@/constants';
@@ -317,28 +317,72 @@ const HomeScreen = () => {
     let isMounted = true;
 
     const computeTotal = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data, error } = await supabase
-        .from('conversations')
-        .select('user_a,user_b,messages,last_read_at_user_a,last_read_at_user_b');
-      if (error) return;
-      const total = (data || []).reduce((acc: number, row: any) => {
-        const isA = row.user_a === user.id;
-        const myLastRead = isA ? row.last_read_at_user_a : row.last_read_at_user_b;
-        const unread = (row.messages || []).filter((m: any) => m.message_type === 'text' && m.sender_id !== user.id && (!myLastRead || m.created_at > myLastRead)).length;
-        return acc + unread;
-      }, 0);
-      if (isMounted) setTotalUnreadCount(total);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user || !isMounted) return;
+        
+        // Try cache first for instant display
+        const cacheKey = `messenger_unread_${user.id}`;
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          const { count, timestamp } = JSON.parse(cached);
+          // Use cache if less than 1 minute old
+          if (Date.now() - timestamp < 60000) {
+            setTotalUnreadCount(count);
+          }
+        }
+        
+        const { data, error } = await supabase
+          .from('conversations')
+          .select('user_a,user_b,messages,last_read_at_user_a,last_read_at_user_b');
+        if (error || !isMounted) return;
+        
+        const total = (data || []).reduce((acc: number, row: any) => {
+          const isA = row.user_a === user.id;
+          const myLastRead = isA ? row.last_read_at_user_a : row.last_read_at_user_b;
+          const unread = (row.messages || []).filter((m: any) => 
+            m.message_type === 'text' && 
+            m.sender_id !== user.id && 
+            (m.status === 'approved' || m.status === 'pending') && // Count both approved and pending
+            (!myLastRead || m.created_at > myLastRead)
+          ).length;
+          return acc + unread;
+        }, 0);
+        
+        if (isMounted) {
+          setTotalUnreadCount(total);
+          // Cache the result
+          localStorage.setItem(cacheKey, JSON.stringify({ count: total, timestamp: Date.now() }));
+        }
+      } catch (e) {
+        console.error('Failed to compute messenger unread count:', e);
+      }
     };
 
+    // Initial load
     computeTotal();
 
+    // Real-time updates with immediate callback
     const channel = supabase
       .channel('conversations-unread-total')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, () => computeTotal())
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'conversations' 
+      }, (payload) => {
+        // Immediate update without waiting for full recompute
+        setTimeout(computeTotal, 0);
+      })
       .subscribe();
-    return () => { isMounted = false; try { supabase.removeChannel(channel); } catch {} };
+      
+    // Also poll every 30 seconds as fallback
+    const interval = setInterval(computeTotal, 30000);
+    
+    return () => { 
+      isMounted = false; 
+      try { supabase.removeChannel(channel); } catch {} 
+      clearInterval(interval);
+    };
   }, []);
   const { unreadCount, refreshNotifications } = useNotifications();
   const router = useRouter();
