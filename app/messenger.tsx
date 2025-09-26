@@ -334,7 +334,7 @@ const Messenger = () => {
           id: msg.id,
           type: 'text_message',
           isSent: msg.sender_id === currentUserId,
-          status: 'accepted',
+          status: msg.status || 'pending', // Use actual status from DB
           timestamp: msg.created_at,
           recordId: msg.id,
           canTakeAction: false,
@@ -409,12 +409,12 @@ const Messenger = () => {
           const myLastReadAt = (user_a === currentUserId) ? last_read_at_user_a : last_read_at_user_b;
 
           // Transform text messages from row.messages (if present)
-      const textMsgs: ChatMessage[] = Array.isArray(messages)
+        const textMsgs: ChatMessage[] = Array.isArray(messages)
             ? (messages as any[]).map((m) => ({
                 id: m.id,
                 type: 'text_message',
                 isSent: m.sender_id === currentUserId,
-          status: 'accepted',
+                status: m.status || 'pending', // Use actual status from realtime update
                 timestamp: m.created_at,
                 recordId: m.id,
                 canTakeAction: false,
