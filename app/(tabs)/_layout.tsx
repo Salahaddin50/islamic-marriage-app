@@ -15,6 +15,7 @@ const TabLayout = () => {
   const [receivedInterestPendingCount, setReceivedInterestPendingCount] = useState<number>(0);
   const [receivedMeetPendingCount, setReceivedMeetPendingCount] = useState<number>(0);
   const [receivedMessagePendingCount, setReceivedMessagePendingCount] = useState<number>(0);
+  const [conversationsUnreadCount, setConversationsUnreadCount] = useState<number>(0);
   // Global ring overlay removed
   useEffect(() => {
     let isMounted = true;
@@ -53,6 +54,7 @@ const TabLayout = () => {
         if (!user) {
           setApprovedInterestNewCount(0); setApprovedMeetNewCount(0); setApprovedMessageNewCount(0);
           setReceivedInterestPendingCount(0); setReceivedMeetPendingCount(0); setReceivedMessagePendingCount(0);
+          setConversationsUnreadCount(0);
           return;
         }
 
@@ -95,6 +97,28 @@ const TabLayout = () => {
         setReceivedInterestPendingCount(interestsPendingRes.count || 0);
         setReceivedMeetPendingCount(meetsPendingRes.count || 0);
         setReceivedMessagePendingCount(messagesPendingRes.count || 0);
+
+        // Compute unread text messages across conversations
+        try {
+          const { data: convoRows } = await supabase
+            .from('conversations')
+            .select('user_a,user_b,messages,last_read_at_user_a,last_read_at_user_b');
+          const total = (convoRows || []).reduce((acc: number, row: any) => {
+            const isA = row.user_a === user.id;
+            const myLastRead = isA ? row.last_read_at_user_a : row.last_read_at_user_b;
+            const msgs: any[] = Array.isArray(row.messages) ? row.messages : [];
+            const unread = msgs.filter((m: any) =>
+              m.message_type === 'text' &&
+              m.sender_id !== user.id &&
+              // Count only messages after myLastRead if present
+              (!myLastRead || new Date(m.created_at).getTime() > new Date(myLastRead).getTime())
+            ).length;
+            return acc + unread;
+          }, 0);
+          setConversationsUnreadCount(total);
+        } catch {
+          setConversationsUnreadCount(0);
+        }
       } catch {}
     };
 
@@ -105,6 +129,7 @@ const TabLayout = () => {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'interests' }, loadCounts)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'meet_requests' }, loadCounts)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'message_requests' }, loadCounts)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, loadCounts)
       .subscribe();
 
     // Poll as a fallback to ensure counts reflect local deletes/updates quickly
@@ -273,10 +298,14 @@ const TabLayout = () => {
                       tintColor: focused ? COLORS.primary : COLORS.gray3,
                     }}
                   />
-                  {(receivedMessagePendingCount > 0 || approvedMessageNewCount > 0) && (
+                  {(conversationsUnreadCount > 0 || receivedMessagePendingCount > 0 || approvedMessageNewCount > 0) && (
                     <View style={{ position: 'absolute', top: isMobileWeb() ? 1 : 3, left: isMobileWeb() ? 26 : 30, backgroundColor: COLORS.primary, minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}>
                       <Text style={{ color: COLORS.white, fontSize: 10, fontFamily: 'bold' }}>
-                        {receivedMessagePendingCount > 0 ? t('badges.new') : (approvedMessageNewCount > 99 ? '99+' : approvedMessageNewCount)}
+                        {conversationsUnreadCount > 0
+                          ? (conversationsUnreadCount > 99 ? '99+' : conversationsUnreadCount)
+                          : receivedMessagePendingCount > 0
+                            ? t('badges.new')
+                            : (approvedMessageNewCount > 99 ? '99+' : approvedMessageNewCount)}
                       </Text>
                     </View>
                   )}

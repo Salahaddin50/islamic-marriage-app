@@ -182,6 +182,44 @@ const Messenger = () => {
         });
       }
 
+      // Load conversations to compute unread counts and update lastActivity
+      try {
+        const { data: convoRows } = await supabase
+          .from('conversations')
+          .select('id,user_a,user_b,last_message_at,last_read_at_user_a,last_read_at_user_b,messages')
+          .or(`user_a.eq.${currentUserId},user_b.eq.${currentUserId}`);
+
+        (convoRows || []).forEach((row: any) => {
+          const otherUserId = row.user_a === currentUserId ? row.user_b : row.user_a;
+          const myLastRead = row.user_a === currentUserId ? row.last_read_at_user_a : row.last_read_at_user_b;
+
+          let unread = 0;
+          const msgs: any[] = Array.isArray(row.messages) ? row.messages : [];
+          if (myLastRead) {
+            unread = msgs.filter((m: any) =>
+              m.message_type === 'text' &&
+              m.sender_id !== currentUserId &&
+              new Date(m.created_at).getTime() > new Date(myLastRead).getTime()
+            ).length;
+          } else {
+            unread = msgs.filter((m: any) =>
+              m.message_type === 'text' &&
+              m.sender_id !== currentUserId
+            ).length;
+          }
+
+          const existing = contactsMap.get(otherUserId);
+          if (existing) {
+            existing.unreadCount = unread;
+            existing.hasUnreadActivity = unread > 0;
+            existing.conversationId = row.id;
+            if (row.last_message_at) {
+              existing.lastActivity = row.last_message_at;
+            }
+          }
+        });
+      } catch {}
+
       // Sort contacts by last activity
       const contactsList = Array.from(contactsMap.values())
         .map(c => {
@@ -190,7 +228,8 @@ const Messenger = () => {
             ...c,
             messages: existing?.messages || c.messages,
             hasUnreadActivity: existing?.hasUnreadActivity ?? c.hasUnreadActivity,
-            unreadCount: existing?.unreadCount ?? c.unreadCount,
+            // Prefer freshly computed unreadCount from conversations over any cached value
+            unreadCount: c.unreadCount,
           } as Contact;
         })
         .sort((a, b) => new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime());
@@ -528,6 +567,7 @@ const Messenger = () => {
         lastActivity: new Date().toISOString(),
         messages: [],
         hasUnreadActivity: false,
+        unreadCount: 0,
       };
       return [placeholder, ...prev];
     });
