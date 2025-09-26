@@ -109,8 +109,8 @@ const TabLayout = () => {
             const msgs: any[] = Array.isArray(row.messages) ? row.messages : [];
             const unread = msgs.filter((m: any) =>
               m.message_type === 'text' &&
+              m.status === 'approved' &&
               m.sender_id !== user.id &&
-              // Count only messages after myLastRead if present
               (!myLastRead || new Date(m.created_at).getTime() > new Date(myLastRead).getTime())
             ).length;
             return acc + unread;

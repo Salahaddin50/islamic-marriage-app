@@ -343,7 +343,7 @@ const HomeScreen = () => {
           const unread = (row.messages || []).filter((m: any) => 
             m.message_type === 'text' && 
             m.sender_id !== user.id && 
-            (m.status === 'approved' || m.status === 'pending') && // Count both approved and pending
+            (m.status === 'approved') && // Count only approved
             (!myLastRead || m.created_at > myLastRead)
           ).length;
           return acc + unread;

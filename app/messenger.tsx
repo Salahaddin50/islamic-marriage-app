@@ -394,15 +394,15 @@ const Messenger = () => {
         ? conversationRow.data?.last_read_at_user_b
         : conversationRow.data?.last_read_at_user_a;
 
-      // Compute unread (text) messages from the other user since my last read
+      // Compute unread (text) messages from the other user since my last read (approved only)
       const myLastReadAt = (conversationRow.data?.user_a === currentUserId)
         ? conversationRow.data?.last_read_at_user_a
         : conversationRow.data?.last_read_at_user_b;
       let unreadCount = 0;
       if (myLastReadAt) {
-        unreadCount = convoMessages.filter((m: any) => m.message_type === 'text' && m.created_at > myLastReadAt && m.sender_id !== currentUserId).length;
+        unreadCount = convoMessages.filter((m: any) => m.message_type === 'text' && (m.status === 'approved') && m.created_at > myLastReadAt && m.sender_id !== currentUserId).length;
       } else {
-        unreadCount = convoMessages.filter((m: any) => m.message_type === 'text' && m.sender_id !== currentUserId).length;
+        unreadCount = convoMessages.filter((m: any) => m.message_type === 'text' && (m.status === 'approved') && m.sender_id !== currentUserId).length;
       }
 
       setContacts(prev => prev.map(c => c.userId === otherUserId ? { 
@@ -473,16 +473,16 @@ const Messenger = () => {
               }))
             : [];
 
-          // Unread count: text messages from other after myLastReadAt
+          // Unread count: text messages from other after myLastReadAt (approved only)
           let unreadCount = 0;
           if (Array.isArray(messages)) {
             if (myLastReadAt) {
               unreadCount = (messages as any[]).filter(
-                (m: any) => m.message_type === 'text' && m.sender_id !== currentUserId && m.created_at > myLastReadAt
+                (m: any) => m.message_type === 'text' && (m.status === 'approved') && m.sender_id !== currentUserId && m.created_at > myLastReadAt
               ).length;
             } else {
               unreadCount = (messages as any[]).filter(
-                (m: any) => m.message_type === 'text' && m.sender_id !== currentUserId
+                (m: any) => m.message_type === 'text' && (m.status === 'approved') && m.sender_id !== currentUserId
               ).length;
             }
           }
