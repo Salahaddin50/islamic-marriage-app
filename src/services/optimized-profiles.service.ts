@@ -5,6 +5,55 @@
 import { supabase } from '../config/supabase';
 import { images } from '../../constants';
 
+// Locale-robust variant maps for religion-related fields
+const RELIGIOUS_LEVEL_VARIANTS: Record<string, string[]> = {
+  very_religious: ['Very Religious','Çok Dindar','متدين جداً','Très religieux','Очень религиозный'],
+  religious: ['Religious','Dindar','متدين','Religieux','Религиозный'],
+  moderately_religious: ['Moderately Religious','Orta Derece Dindar','متدين بشكل معتدل','Modérément religieux','Умеренно религиозный'],
+  somewhat_religious: ['Somewhat Religious','Biraz Dindar','متدين نوعاً ما','Quelque peu religieux','Несколько религиозный'],
+  learning: ['Learning','Öğreniyor','يتعلم','Apprenant','Изучает']
+};
+const PRAYER_FREQUENCY_VARIANTS: Record<string, string[]> = {
+  all_5_daily_prayers: ['All 5 Daily Prayers','Günün 5 Vakti','كل الصلوات الخمس','Les 5 prières quotidiennes','Все 5 ежедневных молитв'],
+  most_prayers: ['Most Prayers','Çoğu Vakit','أغلب الصلوات','La plupart des prières','Большинство молитв'],
+  some_prayers: ['Some Prayers','Bazı Vakitler','بعض الصلوات','Quelques prières','Некоторые молитвы'],
+  friday_only: ['Friday Only','Sadece Cuma','الجمعة فقط','Vendredi seulement','Только в пятницу'],
+  occasionally: ['Occasionally','Ara sıra','أحياناً','Occasionnellement','Иногда'],
+  learning_to_pray: ['Learning to Pray','Namaz Kılmayı Öğreniyor','يتعلم الصلاة','Apprend à prier','Учится молиться']
+};
+const QURAN_READING_VARIANTS: Record<string, string[]> = {
+  memorized_significant_portions: ['Memorized Significant Portions','Önemli Bölümleri Ezberlemiş','حفظ أجزاء كبيرة','Mémorisé des portions importantes','Выучил значительные части'],
+  read_fluently: ['Read Fluently','Akıcı Okuyor','يقرأ بطلاقة','Lit couramment','Читает свободно'],
+  read_with_help: ['Read with Help','Yardımla Okuyor','يقرأ بمساعدة','Lit avec aide','Читает с помощью'],
+  learning_to_read: ['Learning to Read','Okumayı Öğreniyor','يتعلم القراءة','Apprend à lire','Учится читать'],
+  cannot_read_arabic: ['Cannot Read Arabic','Arapça Okuyamıyor','لا يستطيع قراءة العربية','Ne peut pas lire l\'arabe','Не может читать по-арабски']
+};
+const COVERING_LEVEL_VARIANTS: Record<string, string[]> = {
+  will_cover: ['Will Cover','Örtünecek','ستتحجب','Se couvrira','Будет покрываться'],
+  hijab: ['Hijab','Başörtüsü','حجاب','Hijab','Хиджаб'],
+  niqab: ['Niqab','Peçe','نقاب','Niqab','Никаб']
+};
+const BEARD_PRACTICE_VARIANTS: Record<string, string[]> = {
+  full_beard: ['Full Beard','Tam Sakal','لحية كاملة','Barbe complète','Полная борода'],
+  trimmed_beard: ['Trimmed Beard','Kırpılmış Sakal','لحية مهذبة','Barbe taillée','Подстриженная борода'],
+  mustache_only: ['Mustache Only','Sadece Bıyık','شارب فقط','Moustache seulement','Только усы'],
+  clean_shaven: ['Clean Shaven','Temiz Tıraşlı','حليق','Rasé de près','Чисто выбрит']
+};
+
+function buildLocaleInListFromSelected(selected: string[] = [], variants: Record<string, string[]>): string {
+  const values = new Set<string>();
+  for (const sel of selected) {
+    const escapedSel = String(sel).replace(/\"/g, '\\\"').replace(/"/g, '\\"');
+    values.add(escapedSel);
+    for (const [key, list] of Object.entries(variants)) {
+      if (key === sel || list.includes(sel)) {
+        for (const v of list) values.add(String(v).replace(/\"/g, '\\\"').replace(/"/g, '\\"'));
+      }
+    }
+  }
+  return `("${Array.from(values).join('","')}")`;
+}
+
 export interface OptimizedProfileFilters {
   ageRange?: [number, number];
   selectedCountry?: string;
@@ -142,23 +191,25 @@ export class OptimizedProfilesService {
         query = query.contains('languages_spoken', filters.selectedLanguages);
       }
 
-      // Apply religious filters (JSON fields)
-      // NOTE: optimized view stores values as user-entered text; to be robust across locales, rely on UI providing translated values
+      // Apply religious filters (JSON fields) with locale-robust expansion
       if (filters.selectedReligiousLevel?.length) {
-        query = query.filter('islamic_questionnaire->>religious_level', 'in', `("${filters.selectedReligiousLevel.map(v=>String(v).replace(/\"/g,'\\\"')).join('","')}")`);
+        const list = buildLocaleInListFromSelected(filters.selectedReligiousLevel, RELIGIOUS_LEVEL_VARIANTS);
+        query = query.filter('islamic_questionnaire->>religious_level', 'in', list);
       }
       if (filters.selectedPrayerFrequency?.length) {
-        query = query.filter('islamic_questionnaire->>prayer_frequency', 'in', `("${filters.selectedPrayerFrequency.map(v=>String(v).replace(/\"/g,'\\\"')).join('","')}")`);
+        const list = buildLocaleInListFromSelected(filters.selectedPrayerFrequency, PRAYER_FREQUENCY_VARIANTS);
+        query = query.filter('islamic_questionnaire->>prayer_frequency', 'in', list);
       }
       if (filters.selectedQuranReading?.length) {
-        query = query.filter('islamic_questionnaire->>quran_reading_level', 'in', `("${filters.selectedQuranReading.map(v=>String(v).replace(/\"/g,'\\\"')).join('","')}")`);
+        const list = buildLocaleInListFromSelected(filters.selectedQuranReading, QURAN_READING_VARIANTS);
+        query = query.filter('islamic_questionnaire->>quran_reading_level', 'in', list);
       }
 
       // Apply gender-specific religious filters
       const oppositeGender = currentUserGender?.toLowerCase() === 'male' ? 'female' : 'male';
       if (oppositeGender === 'female') {
         if (filters.selectedCoveringLevel?.length) {
-          const list = `("${filters.selectedCoveringLevel.map(v=>String(v).replace(/\"/g,'\\\"')).join('","')}")`;
+          const list = buildLocaleInListFromSelected(filters.selectedCoveringLevel, COVERING_LEVEL_VARIANTS);
           if (filters.selectedCoveringLevel.length === 3) {
             query = query.or(`islamic_questionnaire->>covering_level.in.${list},islamic_questionnaire->>covering_level.is.null,islamic_questionnaire.is.null`);
           } else {
@@ -176,7 +227,7 @@ export class OptimizedProfilesService {
       }
       if (oppositeGender === 'male') {
         if (filters.selectedBeardPractice?.length) {
-          const list = `("${filters.selectedBeardPractice.map(v=>String(v).replace(/\"/g,'\\\"')).join('","')}")`;
+          const list = buildLocaleInListFromSelected(filters.selectedBeardPractice, BEARD_PRACTICE_VARIANTS);
           if (filters.selectedBeardPractice.length === 4) {
             query = query.or(`islamic_questionnaire->>beard_practice.in.${list},islamic_questionnaire->>beard_practice.is.null,islamic_questionnaire.is.null`);
           } else {
@@ -423,7 +474,8 @@ export class OptimizedProfilesService {
       if (filters.selectedLivingCondition?.length) {
         query = query.in('living_condition', filters.selectedLivingCondition);
       }
-      if (filters.selectedSocialCondition?.length) {
+      // Social condition applies only when targeting male profiles
+      if (filters.selectedSocialCondition?.length && currentUserGender && currentUserGender.toLowerCase() === 'female') {
         query = query.in('social_condition', filters.selectedSocialCondition);
       }
       if (filters.selectedWorkStatus?.length) {
@@ -435,26 +487,29 @@ export class OptimizedProfilesService {
         query = query.contains('languages_spoken', filters.selectedLanguages);
       }
 
-      // Religious filters (JSON in view)
+      // Religious filters (JSON) with locale-robust expansion
       if (filters.selectedReligiousLevel?.length) {
-        query = query.filter('islamic_questionnaire->>religious_level', 'in', `("${filters.selectedReligiousLevel.join('","')}")`);
+        const list = buildLocaleInListFromSelected(filters.selectedReligiousLevel, RELIGIOUS_LEVEL_VARIANTS);
+        query = query.filter('islamic_questionnaire->>religious_level', 'in', list);
       }
       if (filters.selectedPrayerFrequency?.length) {
-        query = query.filter('islamic_questionnaire->>prayer_frequency', 'in', `("${filters.selectedPrayerFrequency.join('","')}")`);
+        const list = buildLocaleInListFromSelected(filters.selectedPrayerFrequency, PRAYER_FREQUENCY_VARIANTS);
+        query = query.filter('islamic_questionnaire->>prayer_frequency', 'in', list);
       }
       if (filters.selectedQuranReading?.length) {
-        query = query.filter('islamic_questionnaire->>quran_reading_level', 'in', `("${filters.selectedQuranReading.join('","')}")`);
+        const list = buildLocaleInListFromSelected(filters.selectedQuranReading, QURAN_READING_VARIANTS);
+        query = query.filter('islamic_questionnaire->>quran_reading_level', 'in', list);
       }
 
       // Gender-specific religious filters
       const oppositeGender = currentUserGender?.toLowerCase() === 'male' ? 'female' : 'male';
       if (oppositeGender === 'female') {
         if (filters.selectedCoveringLevel?.length) {
-          // If all covering options are selected, include null/missing values too
+          const list = buildLocaleInListFromSelected(filters.selectedCoveringLevel, COVERING_LEVEL_VARIANTS);
           if (filters.selectedCoveringLevel.length === 3) {
-            query = query.or(`islamic_questionnaire->>covering_level.in.("${filters.selectedCoveringLevel.join('","')}"),islamic_questionnaire->>covering_level.is.null,islamic_questionnaire.is.null`);
+            query = query.or(`islamic_questionnaire->>covering_level.in.${list},islamic_questionnaire->>covering_level.is.null,islamic_questionnaire.is.null`);
           } else {
-            query = query.filter('islamic_questionnaire->>covering_level', 'in', `("${filters.selectedCoveringLevel.join('","')}")`);
+            query = query.filter('islamic_questionnaire->>covering_level', 'in', list);
           }
         }
         if (filters.selectedAcceptedWifePositions?.length) {
@@ -465,11 +520,11 @@ export class OptimizedProfilesService {
       }
       if (oppositeGender === 'male') {
         if (filters.selectedBeardPractice?.length) {
-          // If all beard options are selected, include null/missing values too
+          const list = buildLocaleInListFromSelected(filters.selectedBeardPractice, BEARD_PRACTICE_VARIANTS);
           if (filters.selectedBeardPractice.length === 4) {
-            query = query.or(`islamic_questionnaire->>beard_practice.in.("${filters.selectedBeardPractice.join('","')}"),islamic_questionnaire->>beard_practice.is.null,islamic_questionnaire.is.null`);
+            query = query.or(`islamic_questionnaire->>beard_practice.in.${list},islamic_questionnaire->>beard_practice.is.null,islamic_questionnaire.is.null`);
           } else {
-            query = query.filter('islamic_questionnaire->>beard_practice', 'in', `("${filters.selectedBeardPractice.join('","')}")`);
+            query = query.filter('islamic_questionnaire->>beard_practice', 'in', list);
           }
         }
         if (filters.selectedSeekingWifeNumber?.length) {

@@ -61,7 +61,12 @@
     }
     </script>
     
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preload" as="image" href="landing-page/assets/images/onboarding6.png">
+    <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -948,8 +953,8 @@
                 </div>
             </div>
             <div class="hero-image">
-                <img src="landing-page/assets/images/onboarding6.png" alt="ZawajPlus Hero" class="hero-illustration">
-                <img src="landing-page/assets/images/ornament.png" alt="Ornament" class="floating-ornament">
+                <img src="landing-page/assets/images/onboarding6.png" alt="ZawajPlus Hero" class="hero-illustration" loading="eager" fetchpriority="high" decoding="async">
+                <img src="landing-page/assets/images/ornament.png" alt="Ornament" class="floating-ornament" loading="lazy" fetchpriority="low" decoding="async">
             </div>
         </div>
     </section>
@@ -966,8 +971,8 @@
                     </p>
                 </div>
                 <div class="onboarding-image fade-in-up">
-                    <img src="landing-page/assets/images/onboarding2.png" alt="Shariah Compliant" class="onboarding-illustration">
-                    <img src="landing-page/assets/images/ornament.png" alt="Ornament" class="floating-ornament">
+                    <img src="landing-page/assets/images/onboarding2.png" alt="Shariah Compliant" class="onboarding-illustration" loading="lazy" fetchpriority="low" decoding="async">
+                    <img src="landing-page/assets/images/ornament.png" alt="Ornament" class="floating-ornament" loading="lazy" fetchpriority="low" decoding="async">
                 </div>
             </div>
         </div>
@@ -985,8 +990,8 @@
                     </p>
                 </div>
                 <div class="onboarding-image fade-in-up">
-                    <img src="landing-page/assets/images/onboarding3.png" alt="Verified Profiles" class="onboarding-illustration">
-                    <img src="landing-page/assets/images/ornament.png" alt="Ornament" class="floating-ornament">
+                    <img src="landing-page/assets/images/onboarding3.png" alt="Verified Profiles" class="onboarding-illustration" loading="lazy" fetchpriority="low" decoding="async">
+                    <img src="landing-page/assets/images/ornament.png" alt="Ornament" class="floating-ornament" loading="lazy" fetchpriority="low" decoding="async">
                 </div>
             </div>
         </div>
@@ -1004,8 +1009,8 @@
                     </p>
                 </div>
                 <div class="onboarding-image fade-in-up">
-                    <img src="landing-page/assets/images/onboarding4.png" alt="Serious Intentions" class="onboarding-illustration">
-                    <img src="landing-page/assets/images/ornament.png" alt="Ornament" class="floating-ornament">
+                    <img src="landing-page/assets/images/onboarding4.png" alt="Serious Intentions" class="onboarding-illustration" loading="lazy" fetchpriority="low" decoding="async">
+                    <img src="landing-page/assets/images/ornament.png" alt="Ornament" class="floating-ornament" loading="lazy" fetchpriority="low" decoding="async">
                 </div>
             </div>
         </div>
@@ -1086,7 +1091,7 @@
                 <div>
             <div class="footer-brand">
                 <div class="logo-icon">
-                    <img src="landing-page/assets/images/logo2.png" alt="ZawajPlus Logo" style="filter: brightness(0) invert(1);">
+                    <img src="landing-page/assets/images/logo2.png" alt="ZawajPlus Logo" style="filter: brightness(0) invert(1);" loading="lazy" decoding="async">
                 </div>
                 ZawajPlus
             </div>
