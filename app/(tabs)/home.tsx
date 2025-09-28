@@ -999,6 +999,16 @@ const HomeScreen = () => {
   // Cache current user data to avoid repeated queries
   const [currentUserData, setCurrentUserData] = useState<{user: any, gender: string | null} | null>(null);
   
+  // Keep oppositeGender in sync with current user's gender regardless of fetch path
+  useEffect(() => {
+    const g = currentUserData?.gender ? String(currentUserData.gender).toLowerCase() : null;
+    if (g === 'male') {
+      setOppositeGender('female');
+    } else if (g === 'female') {
+      setOppositeGender('male');
+    }
+  }, [currentUserData?.gender]);
+  
   // Initialize current user data once using auth cache
   const initializeCurrentUser = useCallback(async () => {
     if (currentUserData) return currentUserData;
@@ -1038,6 +1048,11 @@ const HomeScreen = () => {
       // Use the same user data source as profile fetching for consistency
       const userData = await initializeCurrentUser();
       const currentUserGender = userData?.gender;
+      // Ensure oppositeGender is set even when using optimized flow
+      if (currentUserGender) {
+        const og = String(currentUserGender).toLowerCase() === 'male' ? 'female' : 'male';
+        setOppositeGender(og);
+      }
       
       if (!currentUserGender) {
         setTotalPublicCount(null);
@@ -1264,7 +1279,7 @@ const HomeScreen = () => {
 
       // Apply gender filter based on current user's gender to show opposite gender
       if (currentUserGender) {
-        const og = currentUserGender.toLowerCase() === 'male' ? 'female' : 'male';
+        const og = String(currentUserGender).toLowerCase() === 'male' ? 'female' : 'male';
         setOppositeGender(og);
         query = query.eq('gender', og);
         // Additional rule: male users should not see unapproved female profiles
