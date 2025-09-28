@@ -2,6 +2,7 @@ import React, { useMemo, useState, FC } from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, FlatList, Platform } from 'react-native';
 import DatePicker from 'react-native-modern-datepicker';
 import { COLORS } from '../constants';
+import { useLanguage } from '../src/contexts/LanguageContext';
 
 // Suppress React defaultProps warnings for cleaner console
 const error = console.error;
@@ -26,6 +27,7 @@ const DatePickerModal: FC<DatePickerModalProps> = ({
   onClose,
   onChangeStartDate,
 }) => {
+  const { currentLanguage } = useLanguage();
   const [selectedStartDate, setSelectedStartDate] = useState(selectedDate);
   const [showYearList, setShowYearList] = useState(false);
 
@@ -82,6 +84,12 @@ const DatePickerModal: FC<DatePickerModalProps> = ({
   const modalVisible = open;
   const calendarCurrent = `${displayYear}/${selMonth}/${selDay}`;
   const calendarKey = `dp-${displayYear}-${selMonth}-${selDay}`;
+  const pickerLocale = useMemo(() => {
+    // Map app languages to picker-supported locales
+    const supported = ['en', 'ar', 'tr', 'fr', 'ru'] as const;
+    const base = (currentLanguage || 'en').toLowerCase();
+    return (supported as readonly string[]).includes(base) ? base : 'en';
+  }, [currentLanguage]);
 
   return (
     <Modal animationType="slide" transparent={true} visible={modalVisible}>
@@ -110,6 +118,8 @@ const DatePickerModal: FC<DatePickerModalProps> = ({
             selected={toPickerFmt(selectedStartDate)}
             onDateChange={handleDateChange}
             onSelectedChange={(date) => setSelectedStartDate(fromPickerFmt(date))}
+            locale={pickerLocale}
+            isGregorian={true}
             options={{
               backgroundColor: COLORS.primary,
               textHeaderColor: COLORS.white,

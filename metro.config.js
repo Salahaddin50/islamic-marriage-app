@@ -6,18 +6,19 @@ const config = getDefaultConfig(__dirname);
 config.resolver.alias = {
   ...config.resolver.alias,
   'buffer': require.resolve('buffer'),
-  // Add polyfill for react-native-get-random-values
-  'react-native-get-random-values': require.resolve('./web-stubs/react-native-get-random-values.js'),
 };
+
+// Remove problematic web stubs for native builds
+// config.resolver.alias['react-native-get-random-values'] = require.resolve('./web-stubs/react-native-get-random-values.js');
 
 // Add CSS support for web
 config.resolver.assetExts.push('css');
 
-// Add buffer to the global polyfills
+// Optimize for native builds
 config.transformer.getTransformOptions = async () => ({
   transform: {
     experimentalImportSupport: false,
-    inlineRequires: true,
+    inlineRequires: false, // Changed to false for better compatibility
   },
 });
 

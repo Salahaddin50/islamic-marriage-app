@@ -367,11 +367,12 @@
       "education_options": {
         "high_school": "Lise",
         "some_college": "Üniversite (Yarım)",
-        "associate_degree": "Ön Lisans",
         "bachelors_degree": "Lisans",
         "masters_degree": "Yüksek Lisans",
         "doctorate": "Doktora",
-        "trade_school": "Meslek Okulu",
+        "phd_doctorate": "PhD/Doktora",
+        "islamic_studies": "İslami İlimler",
+        "professional_certification": "Profesyonel Sertifika",
         "other": "Diğer"
       },
       "work_options": {
@@ -402,14 +403,18 @@
         "fair": "Açık",
         "medium": "Orta",
         "olive": "Zeytin",
+        "brown": "Kahverengi",
+        "dark_brown": "Koyu Kahverengi",
         "dark": "Koyu",
         "very_dark": "Çok Koyu"
       },
       "body_type_options": {
         "slim": "İnce",
-        "athletic": "Atletik",
         "average": "Ortalama",
+        "athletic": "Atletik",
+        "heavy_set": "İri Yapılı",
         "curvy": "Kıvrımlı",
+        "plus_size": "Büyük Beden",
         "muscular": "Kaslı"
       },
       "language_options": {
@@ -423,9 +428,11 @@
       },
       "housing_options": {
         "own_house": "Kendi Evi",
+        "own_apartment": "Kendi Dairesi",
+        "rent_house": "Kiralık Ev",
         "rent_apartment": "Kiralık Daire",
         "family_home": "Aile Evi",
-        "shared_accommodation": "Ortak Konut",
+        "shared_accommodation": "Paylaşımlı Konut",
         "other": "Diğer"
       },
       "living_condition_options": {
@@ -443,14 +450,21 @@
         "religious": "Dindar",
         "moderately_religious": "Orta Derece Dindar",
         "somewhat_religious": "Biraz Dindar",
-        "not_very_religious": "Çok Dindar Değil"
+        "not_very_religious": "Çok Dindar Değil",
+        "learning": "Öğreniyor"
       },
       "prayer_frequency_options": {
         "5_times_daily": "Günde 5 Kez",
         "regularly": "Düzenli",
         "sometimes": "Bazen",
         "rarely": "Nadiren",
-        "never": "Hiçbir Zaman"
+        "never": "Hiçbir Zaman",
+        "all_5_daily_prayers": "Günün 5 Vakti",
+        "most_prayers": "Çoğu Vakit",
+        "some_prayers": "Bazı Vakitler",
+        "friday_only": "Sadece Cuma",
+        "occasionally": "Ara sıra",
+        "learning_to_pray": "Namaz Kılmayı Öğreniyor"
       },
       "quran_reading_options": {
         "memorized_significant_portions": "Önemli Bölümleri Ezberlemiş",

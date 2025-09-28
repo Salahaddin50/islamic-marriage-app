@@ -472,20 +472,20 @@ const HomeScreen = () => {
   // Options arrays (matching database enums)
   const eyeColorOptions = ['Brown', 'Black', 'Hazel', 'Green', 'Blue', 'Gray', 'Amber'];
   const hairColorOptions = ['Black', 'Dark Brown', 'Brown', 'Light Brown', 'Blonde', 'Red', 'Gray', 'White'];
-  const skinToneOptions = ['Very Fair', 'Fair', 'Medium', 'Olive', 'Dark', 'Very Dark'];
-  const bodyTypeOptions = ['Slim', 'Athletic', 'Average', 'Curvy', 'Muscular'];
-  const educationOptions = ['High School', 'Some College', 'Associate Degree', 'Bachelor\'s Degree', 'Master\'s Degree', 'Doctorate', 'Trade School', 'Other'];
+  const skinToneOptions = ['Very Fair', 'Fair', 'Medium', 'Olive', 'Brown', 'Dark Brown', 'Very Dark'];
+  const bodyTypeOptions = ['Slim', 'Average', 'Athletic', 'Curvy', 'Heavy Set', 'Plus Size'];
+  const educationOptions = ['High School', 'Some College', 'Bachelor\'s Degree', 'Master\'s Degree', 'PhD/Doctorate', 'Islamic Studies', 'Professional Certification', 'Other'];
   
   // Helper function to get education translation key
   const getEducationTranslationKey = (option: string) => {
     const keyMap: { [key: string]: string } = {
       'High School': 'high_school',
       'Some College': 'some_college',
-      'Associate Degree': 'associate_degree',
       'Bachelor\'s Degree': 'bachelors_degree',
       'Master\'s Degree': 'masters_degree',
-      'Doctorate': 'doctorate',
-      'Trade School': 'trade_school',
+      'PhD/Doctorate': 'phd_doctorate',
+      'Islamic Studies': 'islamic_studies',
+      'Professional Certification': 'professional_certification',
       'Other': 'other'
     };
     return keyMap[option] || option.toLowerCase().replace(/[^a-z0-9]/g, '_');
@@ -573,12 +573,12 @@ const HomeScreen = () => {
     return option; // Numbers are already clean
   };
   const languageOptions = ['Arabic', 'English', 'Turkish', 'Russian', 'Spanish', 'French', 'Urdu'];
-  const housingOptions = ['Own House', 'Rent Apartment', 'Family Home', 'Shared Accommodation', 'Other'];
+  const housingOptions = ['own_house', 'rent_house', 'own_apartment', 'rent_apartment', 'family_home', 'shared_accommodation', 'other'];
   const livingConditionOptions = ['living_with_parents', 'living_alone', 'living_with_children'];
   const socialConditionOptions = ['sufficient', 'rich', 'very_rich'];
   const workStatusOptions = ['working', 'not_working'];
-  const religiousLevelOptions = ['Very Religious', 'Religious', 'Moderately Religious', 'Somewhat Religious', 'Not Very Religious'];
-  const prayerFrequencyOptions = ['5 Times Daily', 'Regularly', 'Sometimes', 'Rarely', 'Never'];
+  const religiousLevelOptions = ['Very Religious', 'Religious', 'Moderately Religious', 'Somewhat Religious', 'Learning'];
+  const prayerFrequencyOptions = ['All 5 Daily Prayers', 'Most Prayers', 'Some Prayers', 'Friday Only', 'Occasionally', 'Learning to Pray'];
   const quranReadingOptions = ['Memorized Significant Portions', 'Read Fluently', 'Read with Help', 'Learning to Read', 'Cannot Read Arabic'];
   const coveringLevelOptions = ['will_cover', 'hijab', 'niqab'];
   const beardPracticeOptions = ['Full Beard', 'Trimmed Beard', 'Mustache Only', 'Clean Shaven'];
@@ -2647,7 +2647,9 @@ const HomeScreen = () => {
             )}
           </View>
           <View style={styles.separateLine} />
-          <ScrollView style={{ flex: 1, maxHeight: windowHeight * 0.9 - 150 }} showsVerticalScrollIndicator={false}>
+          
+          
+          <ScrollView style={{ flex: 1, maxHeight: windowHeight * 0.9 - 160 }} contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
           <View style={{ marginHorizontal: 16 }}>
             {/* Country first */}
             <Text style={[styles.subtitle, {

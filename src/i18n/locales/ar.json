@@ -246,11 +246,12 @@
       "education_options": {
         "high_school": "الثانوية العامة",
         "some_college": "بعض الكلية",
-        "associate_degree": "درجة الزمالة",
         "bachelors_degree": "درجة البكالوريوس",
         "masters_degree": "درجة الماجستير",
         "doctorate": "الدكتوراه",
-        "trade_school": "مدرسة مهنية",
+        "phd_doctorate": "دكتوراه/PhD",
+        "islamic_studies": "الدراسات الإسلامية",
+        "professional_certification": "شهادة مهنية",
         "other": "أخرى"
       },
       "work_options": {
@@ -281,14 +282,18 @@
         "fair": "فاتح",
         "medium": "متوسط",
         "olive": "زيتوني",
+        "brown": "بني",
+        "dark_brown": "بني داكن",
         "dark": "داكن",
         "very_dark": "داكن جداً"
       },
       "body_type_options": {
         "slim": "نحيف",
-        "athletic": "رياضي",
         "average": "متوسط",
+        "athletic": "رياضي",
+        "heavy_set": "ممتلئ",
         "curvy": "منحني",
+        "plus_size": "مقاس كبير",
         "muscular": "عضلي"
       },
       "language_options": {
@@ -302,6 +307,8 @@
       },
       "housing_options": {
         "own_house": "منزل ملك",
+        "own_apartment": "شقة ملك",
+        "rent_house": "منزل مستأجر",
         "rent_apartment": "شقة مستأجرة",
         "family_home": "منزل العائلة",
         "shared_accommodation": "سكن مشترك",
@@ -322,14 +329,21 @@
         "religious": "متدين",
         "moderately_religious": "متدين بشكل معتدل",
         "somewhat_religious": "متدين نوعاً ما",
-        "not_very_religious": "غير متدين كثيراً"
+        "not_very_religious": "غير متدين كثيراً",
+        "learning": "يتعلم"
       },
       "prayer_frequency_options": {
         "5_times_daily": "5 مرات يومياً",
         "regularly": "بانتظام",
         "sometimes": "أحياناً",
         "rarely": "نادراً",
-        "never": "أبداً"
+        "never": "أبداً",
+        "all_5_daily_prayers": "كل الصلوات الخمس",
+        "most_prayers": "أغلب الصلوات",
+        "some_prayers": "بعض الصلوات",
+        "friday_only": "الجمعة فقط",
+        "occasionally": "أحياناً",
+        "learning_to_pray": "يتعلم الصلاة"
       },
       "quran_reading_options": {
         "memorized_significant_portions": "حفظ أجزاء كبيرة",

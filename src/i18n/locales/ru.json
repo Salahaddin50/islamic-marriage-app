@@ -402,14 +402,18 @@
         "fair": "Светлая",
         "medium": "Средняя",
         "olive": "Оливковая",
+        "brown": "Коричневая",
+        "dark_brown": "Темно-коричневая",
         "dark": "Темная",
         "very_dark": "Очень темная"
       },
       "body_type_options": {
         "slim": "Стройное",
-        "athletic": "Спортивное",
         "average": "Среднее",
+        "athletic": "Спортивное",
+        "heavy_set": "Крупное",
         "curvy": "Пышное",
+        "plus_size": "Большого размера",
         "muscular": "Мускулистое"
       },
       "language_options": {
@@ -423,6 +427,8 @@
       },
       "housing_options": {
         "own_house": "Владеет домом",
+        "own_apartment": "Владеет квартирой",
+        "rent_house": "Снимает дом",
         "rent_apartment": "Снимает квартиру",
         "family_home": "Семейный дом",
         "shared_accommodation": "Совместное жилье",
@@ -443,14 +449,21 @@
         "religious": "Религиозный",
         "moderately_religious": "Умеренно религиозный",
         "somewhat_religious": "Несколько религиозный",
-        "not_very_religious": "Не очень религиозный"
+        "not_very_religious": "Не очень религиозный",
+        "learning": "Изучает"
       },
       "prayer_frequency_options": {
         "5_times_daily": "5 раз в день",
         "regularly": "Регулярно",
         "sometimes": "Иногда",
         "rarely": "Редко",
-        "never": "Никогда"
+        "never": "Никогда",
+        "all_5_daily_prayers": "Все 5 ежедневных молитв",
+        "most_prayers": "Большинство молитв",
+        "some_prayers": "Некоторые молитвы",
+        "friday_only": "Только в пятницу",
+        "occasionally": "Иногда",
+        "learning_to_pray": "Учится молиться"
       },
       "quran_reading_options": {
         "memorized_significant_portions": "Выучил значительные части",

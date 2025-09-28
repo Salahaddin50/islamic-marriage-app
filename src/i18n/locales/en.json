@@ -370,11 +370,12 @@
       "education_options": {
         "high_school": "High School",
         "some_college": "Some College",
-        "associate_degree": "Associate Degree",
         "bachelors_degree": "Bachelor's Degree",
         "masters_degree": "Master's Degree",
         "doctorate": "Doctorate",
-        "trade_school": "Trade School",
+        "phd_doctorate": "PhD/Doctorate",
+        "islamic_studies": "Islamic Studies",
+        "professional_certification": "Professional Certification",
         "other": "Other"
       },
       "work_options": {
@@ -405,14 +406,19 @@
         "fair": "Fair",
         "medium": "Medium",
         "olive": "Olive",
+        "brown": "Brown",
+        "dark_brown": "Dark Brown",
         "dark": "Dark",
         "very_dark": "Very Dark"
       },
       "body_type_options": {
         "slim": "Slim",
+        "average": "Average",
         "athletic": "Athletic",
         "average": "Average",
         "curvy": "Curvy",
+        "heavy_set": "Heavy Set",
+        "plus_size": "Plus Size",
         "muscular": "Muscular"
       },
       "language_options": {
@@ -426,6 +432,8 @@
       },
       "housing_options": {
         "own_house": "Own House",
+        "own_apartment": "Own Apartment",
+        "rent_house": "Rent House",
         "rent_apartment": "Rent Apartment",
         "family_home": "Family Home",
         "shared_accommodation": "Shared Accommodation",
@@ -446,14 +454,21 @@
         "religious": "Religious",
         "moderately_religious": "Moderately Religious",
         "somewhat_religious": "Somewhat Religious",
-        "not_very_religious": "Not Very Religious"
+        "not_very_religious": "Not Very Religious",
+        "learning": "Learning"
       },
       "prayer_frequency_options": {
         "5_times_daily": "5 Times Daily",
         "regularly": "Regularly",
         "sometimes": "Sometimes",
         "rarely": "Rarely",
-        "never": "Never"
+        "never": "Never",
+        "all_5_daily_prayers": "All 5 Daily Prayers",
+        "most_prayers": "Most Prayers",
+        "some_prayers": "Some Prayers",
+        "friday_only": "Friday Only",
+        "occasionally": "Occasionally",
+        "learning_to_pray": "Learning to Pray"
       },
       "quran_reading_options": {
         "memorized_significant_portions": "Memorized Significant Portions",
