@@ -570,17 +570,19 @@ const HomeScreen = () => {
   const RELIGIOUS_LEVEL_VARIANTS: Record<string, string[]> = {
     very_religious: ['Very Religious','Çok Dindar','متدين جداً','Très religieux','Очень религиозный'],
     religious: ['Religious','Dindar','متدين','Religieux','Религиозный'],
-    moderately_religious: ['Moderately Religious','Orta Derece Dindar','متدين بشكل معتدل','Modérément religieux','Умеренно религиозный'],
-    somewhat_religious: ['Somewhat Religious','Biraz Dindar','متدين نوعاً ما','Quelque peu religieux','Несколько религиозный'],
-    learning: ['Learning','Öğreniyor','يتعلم','Apprenant','Изучает']
+    // Include Arabic UI variants from profile setup and home filters
+    moderately_religious: ['Moderately Religious','Orta Derece Dindar','متدين بشكل معتدل','متوسط التدين','Modérément religieux','Умеренно религиозный'],
+    somewhat_religious: ['Somewhat Religious','Biraz Dindar','متدين نوعاً ما','قليل التدين','Quelque peu religieux','Несколько религиозный'],
+    learning: ['Learning','Öğreniyor','يتعلم','في طور التعلم','Apprenant','Изучает']
   };
   const PRAYER_FREQUENCY_VARIANTS: Record<string, string[]> = {
-    all_5_daily_prayers: ['All 5 Daily Prayers','Günün 5 Vakti','كل الصلوات الخمس','Les 5 prières quotidiennes','Все 5 ежедневных молитв'],
-    most_prayers: ['Most Prayers','Çoğu Vakit','أغلب الصلوات','La plupart des prières','Большинство молитв'],
-    some_prayers: ['Some Prayers','Bazı Vakitler','بعض الصلوات','Quelques prières','Некоторые молитвы'],
+    // Add both profile_setup and home filter Turkish variants
+    all_5_daily_prayers: ['All 5 Daily Prayers','Günün 5 Vakti','Günde 5 Vakit Namaz','كل الصلوات الخمس','Les 5 prières quotidiennes','Все 5 ежедневных молитв'],
+    most_prayers: ['Most Prayers','Çoğu Vakit','Çoğu Namaz','أغلب الصلوات','La plupart des prières','Большинство молитв'],
+    some_prayers: ['Some Prayers','Bazı Vakitler','Bazı Namazlar','بعض الصلوات','Quelques prières','Некоторые молитвы'],
     friday_only: ['Friday Only','Sadece Cuma','الجمعة فقط','Vendredi seulement','Только в пятницу'],
-    occasionally: ['Occasionally','Ara sıra','أحياناً','Occasionnellement','Иногда'],
-    learning_to_pray: ['Learning to Pray','Namaz Kılmayı Öğreniyor','يتعلم الصلاة','Apprend à prier','Учится молиться']
+    occasionally: ['Occasionally','Ara sıra','Ara Sıra','أحياناً','Occasionnellement','Иногда'],
+    learning_to_pray: ['Learning to Pray','Namaz Kılmayı Öğreniyor','Namaz Öğreniyor','يتعلم الصلاة','Apprend à prier','Учится молиться']
   };
   const QURAN_READING_VARIANTS: Record<string, string[]> = {
     memorized_significant_portions: ['Memorized Significant Portions','Önemli Bölümleri Ezberlemiş','حفظ أجزاء كبيرة','Mémorisé des portions importantes','Выучил значительные части'],
