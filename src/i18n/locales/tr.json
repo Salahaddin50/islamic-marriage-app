@@ -299,8 +299,8 @@
       },
       "covering": {
         "will_cover": "Örtünecek",
-        "hijab": "Başörtüsü",
-        "niqab": "Peçe"
+        "hijab": "Türban",
+        "niqab": "Niqab"
       },
       "work_status": {
         "not_working": "Çalışmıyor",
@@ -475,8 +475,8 @@
       },
       "covering_level_options": {
         "will_cover": "Örtünecek",
-        "hijab": "Başörtüsü",
-        "niqab": "Peçe"
+        "hijab": "Türban",
+        "niqab": "Niqab"
       },
       "beard_practice_options": {
         "full_beard": "Tam Sakal",
@@ -485,9 +485,9 @@
         "clean_shaven": "Temiz Tıraşlı"
       },
       "wife_number_options": {
-        "2": "2. Eş",
-        "3": "3. Eş",
-        "4": "4. Eş"
+        "2": "2-ci Eş",
+        "3": "3-cü Eş",
+        "4": "4-cü Eş"
       },
       "title_eye_color": "Göz Rengi",
       "title_hair_color": "Saç Rengi",
@@ -502,8 +502,8 @@
       "title_quran_reading": "Kuran Okuma Seviyesi",
       "title_covering_level": "Örtünme Seviyesi",
       "title_beard_practice": "Sakal Uygulaması",
-      "title_looking_for_wife": "Hangi Eş Arıyor",
-      "title_accepted_positions": "Kabul Edilen Eş Pozisyonları",
+      "title_looking_for_wife": "Kaçıncı Eş Arıyor",
+      "title_accepted_positions": "Kabul Edilen Eş Sırası",
       "title_weight_range": "Kilo Aralığı (kg)"
     }
   },

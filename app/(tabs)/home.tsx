@@ -530,43 +530,61 @@ const HomeScreen = () => {
   };
 
   const getReligiousLevelTranslationKey = (option: string) => {
-    return option.toLowerCase().replace(/\s+/g, '_');
+    // Map translated values back to keys
+    const reverseMap: { [key: string]: string } = {
+      [t('profile_setup.options.religious_level.very_religious')]: 'very_religious',
+      [t('profile_setup.options.religious_level.religious')]: 'religious',
+      [t('profile_setup.options.religious_level.moderate')]: 'moderately_religious',
+      [t('profile_setup.options.religious_level.somewhat')]: 'somewhat_religious',
+      [t('profile_setup.options.religious_level.learning')]: 'learning',
+    };
+    return reverseMap[option] || option.toLowerCase().replace(/\s+/g, '_');
   };
 
   const getPrayerFrequencyTranslationKey = (option: string) => {
-    const keyMap: { [key: string]: string } = {
-      '5 Times Daily': '5_times_daily',
-      'Regularly': 'regularly',
-      'Sometimes': 'sometimes',
-      'Rarely': 'rarely',
-      'Never': 'never'
+    // Map translated values back to keys
+    const reverseMap: { [key: string]: string } = {
+      [t('profile_setup.options.prayer_frequency.all_5')]: 'all_5_daily_prayers',
+      [t('profile_setup.options.prayer_frequency.most')]: 'most_prayers',
+      [t('profile_setup.options.prayer_frequency.some')]: 'some_prayers',
+      [t('profile_setup.options.prayer_frequency.friday')]: 'friday_only',
+      [t('profile_setup.options.prayer_frequency.occasionally')]: 'occasionally',
+      [t('profile_setup.options.prayer_frequency.learning')]: 'learning_to_pray',
     };
-    return keyMap[option] || option.toLowerCase().replace(/\s+/g, '_');
+    return reverseMap[option] || option.toLowerCase().replace(/\s+/g, '_');
   };
 
   const getQuranReadingTranslationKey = (option: string) => {
-    const keyMap: { [key: string]: string } = {
-      'Memorized Significant Portions': 'memorized_significant_portions',
-      'Read Fluently': 'read_fluently',
-      'Read with Help': 'read_with_help',
-      'Learning to Read': 'learning_to_read',
-      'Cannot Read Arabic': 'cannot_read_arabic'
+    // Map translated values back to keys
+    const reverseMap: { [key: string]: string } = {
+      [t('profile_setup.options.quran.memorized')]: 'memorized_significant_portions',
+      [t('profile_setup.options.quran.fluent')]: 'read_fluently',
+      [t('profile_setup.options.quran.with_help')]: 'read_with_help',
+      [t('profile_setup.options.quran.learning')]: 'learning_to_read',
+      [t('profile_setup.options.quran.cannot_read')]: 'cannot_read_arabic',
     };
-    return keyMap[option] || option.toLowerCase().replace(/\s+/g, '_');
+    return reverseMap[option] || option.toLowerCase().replace(/\s+/g, '_');
   };
 
   const getCoveringLevelTranslationKey = (option: string) => {
-    return option; // Already in snake_case
+    // Map translated values back to keys
+    const reverseMap: { [key: string]: string } = {
+      [t('profile_setup.options.covering.will_cover')]: 'will_cover',
+      [t('profile_setup.options.covering.hijab')]: 'hijab',
+      [t('profile_setup.options.covering.niqab')]: 'niqab',
+    };
+    return reverseMap[option] || option.toLowerCase().replace(/\s+/g, '_');
   };
 
   const getBeardPracticeTranslationKey = (option: string) => {
-    const keyMap: { [key: string]: string } = {
-      'Full Beard': 'full_beard',
-      'Trimmed Beard': 'trimmed_beard',
-      'Mustache Only': 'mustache_only',
-      'Clean Shaven': 'clean_shaven'
+    // Map translated values back to keys
+    const reverseMap: { [key: string]: string } = {
+      [t('profile_setup.options.beard.full')]: 'full_beard',
+      [t('profile_setup.options.beard.trimmed')]: 'trimmed_beard',
+      [t('profile_setup.options.beard.mustache')]: 'mustache_only',
+      [t('profile_setup.options.beard.clean')]: 'clean_shaven',
     };
-    return keyMap[option] || option.toLowerCase().replace(/\s+/g, '_');
+    return reverseMap[option] || option.toLowerCase().replace(/\s+/g, '_');
   };
 
   const getWifeNumberTranslationKey = (option: string) => {
@@ -577,11 +595,42 @@ const HomeScreen = () => {
   const livingConditionOptions = ['living_with_parents', 'living_alone', 'living_with_children'];
   const socialConditionOptions = ['sufficient', 'rich', 'very_rich'];
   const workStatusOptions = ['working', 'not_working'];
-  const religiousLevelOptions = ['Very Religious', 'Religious', 'Moderately Religious', 'Somewhat Religious', 'Learning'];
-  const prayerFrequencyOptions = ['All 5 Daily Prayers', 'Most Prayers', 'Some Prayers', 'Friday Only', 'Occasionally', 'Learning to Pray'];
-  const quranReadingOptions = ['Memorized Significant Portions', 'Read Fluently', 'Read with Help', 'Learning to Read', 'Cannot Read Arabic'];
-  const coveringLevelOptions = ['will_cover', 'hijab', 'niqab'];
-  const beardPracticeOptions = ['Full Beard', 'Trimmed Beard', 'Mustache Only', 'Clean Shaven'];
+  // Religious options - use the same translated values that are saved in DB
+  const religiousLevelOptions = [
+    t('profile_setup.options.religious_level.very_religious'),
+    t('profile_setup.options.religious_level.religious'),
+    t('profile_setup.options.religious_level.moderate'),
+    t('profile_setup.options.religious_level.somewhat'),
+    t('profile_setup.options.religious_level.learning'),
+  ];
+  const prayerFrequencyOptions = [
+    t('profile_setup.options.prayer_frequency.all_5'),
+    t('profile_setup.options.prayer_frequency.most'),
+    t('profile_setup.options.prayer_frequency.some'),
+    t('profile_setup.options.prayer_frequency.friday'),
+    t('profile_setup.options.prayer_frequency.occasionally'),
+    t('profile_setup.options.prayer_frequency.learning'),
+  ];
+  const quranReadingOptions = [
+    t('profile_setup.options.quran.memorized'),
+    t('profile_setup.options.quran.fluent'),
+    t('profile_setup.options.quran.with_help'),
+    t('profile_setup.options.quran.learning'),
+    t('profile_setup.options.quran.cannot_read'),
+  ];
+  // Covering level options - use the same translated values that are saved in DB
+  const coveringLevelOptions = [
+    t('profile_setup.options.covering.will_cover'),
+    t('profile_setup.options.covering.hijab'),
+    t('profile_setup.options.covering.niqab'),
+  ];
+  // Beard practice options - use the same translated values that are saved in DB
+  const beardPracticeOptions = [
+    t('profile_setup.options.beard.full'),
+    t('profile_setup.options.beard.trimmed'),
+    t('profile_setup.options.beard.mustache'),
+    t('profile_setup.options.beard.clean'),
+  ];
   const acceptedWifeOptions = ['2', '3', '4'];
 
   // Predefined range buckets for multi-select filters
@@ -1346,28 +1395,32 @@ const HomeScreen = () => {
       // Apply religious filters (from islamic_questionnaire JSON)
       if (shouldApplyFilters && selectedReligiousLevel.length) {
         console.log('🔍 Filtering by religious_level:', selectedReligiousLevel);
-        query = query.filter('islamic_questionnaire->>religious_level', 'in', `(${selectedReligiousLevel.join(',')})`);
+        query = query.filter('islamic_questionnaire->>religious_level', 'in', `("${selectedReligiousLevel.join('","')}")`);
       }
       if (shouldApplyFilters && selectedPrayerFrequency.length) {
         console.log('🔍 Filtering by prayer_frequency:', selectedPrayerFrequency);
-        query = query.filter('islamic_questionnaire->>prayer_frequency', 'in', `(${selectedPrayerFrequency.join(',')})`);
+        query = query.filter('islamic_questionnaire->>prayer_frequency', 'in', `("${selectedPrayerFrequency.join('","')}")`);
       }
       if (shouldApplyFilters && selectedQuranReading.length) {
         console.log('🔍 Filtering by quran_reading_level:', selectedQuranReading);
-        query = query.filter('islamic_questionnaire->>quran_reading_level', 'in', `(${selectedQuranReading.join(',')})`);
+        query = query.filter('islamic_questionnaire->>quran_reading_level', 'in', `("${selectedQuranReading.join('","')}")`);
       }
       // Apply gender-specific filters
       if (oppositeGender === 'female') {
         if (shouldApplyFilters && selectedCoveringLevel.length) {
           console.log('🔍 Filtering by covering_level:', selectedCoveringLevel);
-          query = query.filter('islamic_questionnaire->>covering_level', 'in', `(${selectedCoveringLevel.join(',')})`);
+          // If all covering options are selected, include null/missing values too
+          if (selectedCoveringLevel.length === 3) {
+            // Show all profiles (including those without covering_level specified)
+            query = query.or(`islamic_questionnaire->>covering_level.in.("${selectedCoveringLevel.join('","')}"),islamic_questionnaire->>covering_level.is.null,islamic_questionnaire.is.null`);
+          } else {
+            query = query.filter('islamic_questionnaire->>covering_level', 'in', `("${selectedCoveringLevel.join('","')}")`);
+          }
         }
         if (shouldApplyFilters && selectedAcceptedWifePositions.length) {
           console.log('🔍 Filtering by accepted_wife_positions:', selectedAcceptedWifePositions);
-          // For arrays, we need to check if the JSON array contains any of the selected values
-          selectedAcceptedWifePositions.forEach(position => {
-            query = query.filter('islamic_questionnaire->accepted_wife_positions', 'cs', `["${position}"]`);
-          });
+          // Use overlaps operator (&&) to check if any selected value exists in the array
+          query = query.filter('islamic_questionnaire->accepted_wife_positions', 'ov', `["${selectedAcceptedWifePositions.join('","')}"]`);
         }
         if (shouldApplyFilters && selectedWorkStatus.length) {
           query = query.in('work_status', selectedWorkStatus);
@@ -1376,11 +1429,21 @@ const HomeScreen = () => {
       if (oppositeGender === 'male') {
         if (shouldApplyFilters && selectedBeardPractice.length) {
           console.log('🔍 Filtering by beard_practice:', selectedBeardPractice);
-          query = query.filter('islamic_questionnaire->>beard_practice', 'in', `(${selectedBeardPractice.join(',')})`);
+          // If all beard options are selected, include null/missing values too
+          if (selectedBeardPractice.length === 4) {
+            query = query.or(`islamic_questionnaire->>beard_practice.in.("${selectedBeardPractice.join('","')}"),islamic_questionnaire->>beard_practice.is.null,islamic_questionnaire.is.null`);
+          } else {
+            query = query.filter('islamic_questionnaire->>beard_practice', 'in', `("${selectedBeardPractice.join('","')}")`);
+          }
         }
         if (shouldApplyFilters && selectedSeekingWifeNumber.length) {
           console.log('🔍 Filtering by seeking_wife_number:', selectedSeekingWifeNumber);
-          query = query.filter('islamic_questionnaire->>seeking_wife_number', 'in', `(${selectedSeekingWifeNumber.join(',')})`);
+          // If all wife number options are selected, include null/missing values too
+          if (selectedSeekingWifeNumber.length === 3) {
+            query = query.or(`islamic_questionnaire->>seeking_wife_number.in.("${selectedSeekingWifeNumber.join('","')}"),islamic_questionnaire->>seeking_wife_number.is.null,islamic_questionnaire.is.null`);
+          } else {
+            query = query.filter('islamic_questionnaire->>seeking_wife_number', 'in', `("${selectedSeekingWifeNumber.join('","')}")`);
+          }
         }
         if (shouldApplyFilters && selectedSocialCondition.length) {
           query = query.in('social_condition', selectedSocialCondition);
