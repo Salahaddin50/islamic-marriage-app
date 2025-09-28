@@ -602,7 +602,7 @@ const HomeScreen = () => {
   };
 
   const buildInListFromKeys = (keys: string[], variants: Record<string,string[]>) => {
-    const vals = keys.flatMap(k => variants[k] || []);
+    const vals = keys.flatMap(k => [k, ...(variants[k] || [])]);
     // De-duplicate and escape quotes
     const uniq = Array.from(new Set(vals)).map(v => v.replace(/"/g,'\"'));
     return `("${uniq.join('","')}")`;
