@@ -1670,8 +1670,8 @@
             localStorage.setItem('appLanguage', currentLanguage);
             localStorage.setItem('landingLanguage', currentLanguage);
             
-            // Add language parameter to URL for immediate recognition
-            const urlWithLang = `${url}?lang=${currentLanguage}`;
+            // Add language parameter and use hash routing to avoid server 404/500 on SPA routes
+            const urlWithLang = `${url}?lang=${currentLanguage}#/login`;
             
             // Navigate to React page with language context
             window.location.href = urlWithLang;

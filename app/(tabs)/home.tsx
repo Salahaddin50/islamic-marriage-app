@@ -1419,8 +1419,12 @@ const HomeScreen = () => {
         }
         if (shouldApplyFilters && selectedAcceptedWifePositions.length) {
           console.log('🔍 Filtering by accepted_wife_positions:', selectedAcceptedWifePositions);
-          // Use overlaps operator (&&) to check if any selected value exists in the array
-          query = query.filter('islamic_questionnaire->accepted_wife_positions', 'ov', `["${selectedAcceptedWifePositions.join('","')}"]`);
+          // Match ANY of the selected positions using OR of individual contains checks
+          const orExpr = selectedAcceptedWifePositions
+            .map(p => `islamic_questionnaire->accepted_wife_positions.cs.[\"${p}\"]`)
+            .join(',');
+          // @ts-ignore supabase-js or
+          query = (query as any).or(orExpr);
         }
         if (shouldApplyFilters && selectedWorkStatus.length) {
           query = query.in('work_status', selectedWorkStatus);

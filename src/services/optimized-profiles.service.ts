@@ -163,8 +163,12 @@ export class OptimizedProfilesService {
           }
         }
         if (filters.selectedAcceptedWifePositions?.length) {
-          // Use overlaps operator (ov) to check if any selected value exists in the array
-          query = query.filter('islamic_questionnaire->accepted_wife_positions', 'ov', `["${filters.selectedAcceptedWifePositions.join('","')}"]`);
+          // Match ANY position via OR expression
+          const orExpr = filters.selectedAcceptedWifePositions
+            .map(p => `islamic_questionnaire->accepted_wife_positions.cs.[\"${p}\"]`)
+            .join(',');
+          // @ts-ignore - supabase-js .or supported
+          query = (query as any).or(orExpr);
         }
       }
       if (oppositeGender === 'male') {
@@ -451,8 +455,9 @@ export class OptimizedProfilesService {
           }
         }
         if (filters.selectedAcceptedWifePositions?.length) {
-          // Use overlaps operator (ov) to check if any selected value exists in the array
-          query = query.filter('islamic_questionnaire->accepted_wife_positions', 'ov', `["${filters.selectedAcceptedWifePositions.join('","')}"]`);
+          filters.selectedAcceptedWifePositions.forEach(position => {
+            query = query.filter('islamic_questionnaire->accepted_wife_positions', 'cs', `["${position}"]`);
+          });
         }
       }
       if (oppositeGender === 'male') {
