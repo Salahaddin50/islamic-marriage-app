@@ -128,7 +128,9 @@ export class OptimizedProfilesService {
       if (filters.selectedLivingCondition?.length) {
         query = query.in('living_condition', filters.selectedLivingCondition);
       }
-      if (filters.selectedSocialCondition?.length) {
+      // Social condition applies to male-targeted filtering only
+      if (filters.selectedSocialCondition?.length && currentUserGender && currentUserGender.toLowerCase() === 'female') {
+        // female user -> opposite gender male
         query = query.in('social_condition', filters.selectedSocialCondition);
       }
       if (filters.selectedWorkStatus?.length) {
@@ -141,25 +143,26 @@ export class OptimizedProfilesService {
       }
 
       // Apply religious filters (JSON fields)
+      // NOTE: optimized view stores values as user-entered text; to be robust across locales, rely on UI providing translated values
       if (filters.selectedReligiousLevel?.length) {
-        query = query.filter('islamic_questionnaire->>religious_level', 'in', `("${filters.selectedReligiousLevel.join('","')}")`);
+        query = query.filter('islamic_questionnaire->>religious_level', 'in', `("${filters.selectedReligiousLevel.map(v=>String(v).replace(/\"/g,'\\\"')).join('","')}")`);
       }
       if (filters.selectedPrayerFrequency?.length) {
-        query = query.filter('islamic_questionnaire->>prayer_frequency', 'in', `("${filters.selectedPrayerFrequency.join('","')}")`);
+        query = query.filter('islamic_questionnaire->>prayer_frequency', 'in', `("${filters.selectedPrayerFrequency.map(v=>String(v).replace(/\"/g,'\\\"')).join('","')}")`);
       }
       if (filters.selectedQuranReading?.length) {
-        query = query.filter('islamic_questionnaire->>quran_reading_level', 'in', `("${filters.selectedQuranReading.join('","')}")`);
+        query = query.filter('islamic_questionnaire->>quran_reading_level', 'in', `("${filters.selectedQuranReading.map(v=>String(v).replace(/\"/g,'\\\"')).join('","')}")`);
       }
 
       // Apply gender-specific religious filters
       const oppositeGender = currentUserGender?.toLowerCase() === 'male' ? 'female' : 'male';
       if (oppositeGender === 'female') {
         if (filters.selectedCoveringLevel?.length) {
-          // If all covering options are selected, include null/missing values too
+          const list = `("${filters.selectedCoveringLevel.map(v=>String(v).replace(/\"/g,'\\\"')).join('","')}")`;
           if (filters.selectedCoveringLevel.length === 3) {
-            query = query.or(`islamic_questionnaire->>covering_level.in.("${filters.selectedCoveringLevel.join('","')}"),islamic_questionnaire->>covering_level.is.null,islamic_questionnaire.is.null`);
+            query = query.or(`islamic_questionnaire->>covering_level.in.${list},islamic_questionnaire->>covering_level.is.null,islamic_questionnaire.is.null`);
           } else {
-            query = query.filter('islamic_questionnaire->>covering_level', 'in', `("${filters.selectedCoveringLevel.join('","')}")`);
+            query = query.filter('islamic_questionnaire->>covering_level', 'in', list);
           }
         }
         if (filters.selectedAcceptedWifePositions?.length) {
@@ -173,19 +176,19 @@ export class OptimizedProfilesService {
       }
       if (oppositeGender === 'male') {
         if (filters.selectedBeardPractice?.length) {
-          // If all beard options are selected, include null/missing values too
+          const list = `("${filters.selectedBeardPractice.map(v=>String(v).replace(/\"/g,'\\\"')).join('","')}")`;
           if (filters.selectedBeardPractice.length === 4) {
-            query = query.or(`islamic_questionnaire->>beard_practice.in.("${filters.selectedBeardPractice.join('","')}"),islamic_questionnaire->>beard_practice.is.null,islamic_questionnaire.is.null`);
+            query = query.or(`islamic_questionnaire->>beard_practice.in.${list},islamic_questionnaire->>beard_practice.is.null,islamic_questionnaire.is.null`);
           } else {
-            query = query.filter('islamic_questionnaire->>beard_practice', 'in', `("${filters.selectedBeardPractice.join('","')}")`);
+            query = query.filter('islamic_questionnaire->>beard_practice', 'in', list);
           }
         }
         if (filters.selectedSeekingWifeNumber?.length) {
-          // If all wife number options are selected, include null/missing values too
+          const list = `("${filters.selectedSeekingWifeNumber.map(v=>String(v).replace(/\"/g,'\\\"')).join('","')}")`;
           if (filters.selectedSeekingWifeNumber.length === 3) {
-            query = query.or(`islamic_questionnaire->>seeking_wife_number.in.("${filters.selectedSeekingWifeNumber.join('","')}"),islamic_questionnaire->>seeking_wife_number.is.null,islamic_questionnaire.is.null`);
+            query = query.or(`islamic_questionnaire->>seeking_wife_number.in.${list},islamic_questionnaire->>seeking_wife_number.is.null,islamic_questionnaire.is.null`);
           } else {
-            query = query.filter('islamic_questionnaire->>seeking_wife_number', 'in', `("${filters.selectedSeekingWifeNumber.join('","')}")`);
+            query = query.filter('islamic_questionnaire->>seeking_wife_number', 'in', list);
           }
         }
       }

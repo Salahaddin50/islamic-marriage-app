@@ -566,6 +566,48 @@ const HomeScreen = () => {
     return reverseMap[option] || option.toLowerCase().replace(/\s+/g, '_');
   };
 
+  // Cross-language variants for values saved in DB (profiles may be saved in different UI languages)
+  const RELIGIOUS_LEVEL_VARIANTS: Record<string, string[]> = {
+    very_religious: ['Very Religious','Çok Dindar','متدين جداً','Très religieux','Очень религиозный'],
+    religious: ['Religious','Dindar','متدين','Religieux','Религиозный'],
+    moderately_religious: ['Moderately Religious','Orta Derece Dindar','متدين بشكل معتدل','Modérément religieux','Умеренно религиозный'],
+    somewhat_religious: ['Somewhat Religious','Biraz Dindar','متدين نوعاً ما','Quelque peu religieux','Несколько религиозный'],
+    learning: ['Learning','Öğreniyor','يتعلم','Apprenant','Изучает']
+  };
+  const PRAYER_FREQUENCY_VARIANTS: Record<string, string[]> = {
+    all_5_daily_prayers: ['All 5 Daily Prayers','Günün 5 Vakti','كل الصلوات الخمس','Les 5 prières quotidiennes','Все 5 ежедневных молитв'],
+    most_prayers: ['Most Prayers','Çoğu Vakit','أغلب الصلوات','La plupart des prières','Большинство молитв'],
+    some_prayers: ['Some Prayers','Bazı Vakitler','بعض الصلوات','Quelques prières','Некоторые молитвы'],
+    friday_only: ['Friday Only','Sadece Cuma','الجمعة فقط','Vendredi seulement','Только в пятницу'],
+    occasionally: ['Occasionally','Ara sıra','أحياناً','Occasionnellement','Иногда'],
+    learning_to_pray: ['Learning to Pray','Namaz Kılmayı Öğreniyor','يتعلم الصلاة','Apprend à prier','Учится молиться']
+  };
+  const QURAN_READING_VARIANTS: Record<string, string[]> = {
+    memorized_significant_portions: ['Memorized Significant Portions','Önemli Bölümleri Ezberlemiş','حفظ أجزاء كبيرة','Mémorisé des portions importantes','Выучил значительные части'],
+    read_fluently: ['Read Fluently','Akıcı Okuyor','يقرأ بطلاقة','Lit couramment','Читает свободно'],
+    read_with_help: ['Read with Help','Yardımla Okuyor','يقرأ بمساعدة','Lit avec aide','Читает с помощью'],
+    learning_to_read: ['Learning to Read','Okumayı Öğreniyor','يتعلم القراءة','Apprend à lire','Учится читать'],
+    cannot_read_arabic: ['Cannot Read Arabic','Arapça Okuyamıyor','لا يستطيع قراءة العربية','Ne peut pas lire l\'arabe','Не может читать по-арабски']
+  };
+  const COVERING_LEVEL_VARIANTS: Record<string, string[]> = {
+    will_cover: ['Will Cover','Örtünecek','ستتحجب','Se couvrira','Будет покрываться'],
+    hijab: ['Hijab','Başörtüsü','حجاب','Hijab','Хиджаб'],
+    niqab: ['Niqab','Peçe','نقاب','Niqab','Никаб']
+  };
+  const BEARD_PRACTICE_VARIANTS: Record<string, string[]> = {
+    full_beard: ['Full Beard','Tam Sakal','لحية كاملة','Barbe complète','Полная борода'],
+    trimmed_beard: ['Trimmed Beard','Kırpılmış Sakal','لحية مهذبة','Barbe taillée','Подстриженная борода'],
+    mustache_only: ['Mustache Only','Sadece Bıyık','شارب فقط','Moustache seulement','Только усы'],
+    clean_shaven: ['Clean Shaven','Temiz Tıraşlı','حليق','Rasé de près','Чисто выбрит']
+  };
+
+  const buildInListFromKeys = (keys: string[], variants: Record<string,string[]>) => {
+    const vals = keys.flatMap(k => variants[k] || []);
+    // De-duplicate and escape quotes
+    const uniq = Array.from(new Set(vals)).map(v => v.replace(/"/g,'\"'));
+    return `("${uniq.join('","')}")`;
+  };
+
   const getCoveringLevelTranslationKey = (option: string) => {
     // Map translated values back to keys
     const reverseMap: { [key: string]: string } = {
@@ -1385,7 +1427,7 @@ const HomeScreen = () => {
       if (shouldApplyFilters && selectedLivingCondition.length) {
         query = query.in('living_condition', selectedLivingCondition);
       }
-      if (shouldApplyFilters && selectedSocialCondition.length) {
+      if (shouldApplyFilters && selectedSocialCondition.length && oppositeGender === 'male') {
         query = query.in('social_condition', selectedSocialCondition);
       }
       if (shouldApplyFilters && selectedWorkStatus.length) {
@@ -1395,26 +1437,32 @@ const HomeScreen = () => {
       // Apply religious filters (from islamic_questionnaire JSON)
       if (shouldApplyFilters && selectedReligiousLevel.length) {
         console.log('🔍 Filtering by religious_level:', selectedReligiousLevel);
-        query = query.filter('islamic_questionnaire->>religious_level', 'in', `("${selectedReligiousLevel.join('","')}")`);
+        const keys = selectedReligiousLevel.map(getReligiousLevelTranslationKey);
+        const list = buildInListFromKeys(keys, RELIGIOUS_LEVEL_VARIANTS);
+        query = query.filter('islamic_questionnaire->>religious_level', 'in', list);
       }
       if (shouldApplyFilters && selectedPrayerFrequency.length) {
         console.log('🔍 Filtering by prayer_frequency:', selectedPrayerFrequency);
-        query = query.filter('islamic_questionnaire->>prayer_frequency', 'in', `("${selectedPrayerFrequency.join('","')}")`);
+        const keys = selectedPrayerFrequency.map(getPrayerFrequencyTranslationKey);
+        const list = buildInListFromKeys(keys, PRAYER_FREQUENCY_VARIANTS);
+        query = query.filter('islamic_questionnaire->>prayer_frequency', 'in', list);
       }
       if (shouldApplyFilters && selectedQuranReading.length) {
         console.log('🔍 Filtering by quran_reading_level:', selectedQuranReading);
-        query = query.filter('islamic_questionnaire->>quran_reading_level', 'in', `("${selectedQuranReading.join('","')}")`);
+        const keys = selectedQuranReading.map(getQuranReadingTranslationKey);
+        const list = buildInListFromKeys(keys, QURAN_READING_VARIANTS);
+        query = query.filter('islamic_questionnaire->>quran_reading_level', 'in', list);
       }
       // Apply gender-specific filters
       if (oppositeGender === 'female') {
         if (shouldApplyFilters && selectedCoveringLevel.length) {
           console.log('🔍 Filtering by covering_level:', selectedCoveringLevel);
-          // If all covering options are selected, include null/missing values too
+          const keys = selectedCoveringLevel.map(getCoveringLevelTranslationKey);
+          const list = buildInListFromKeys(keys, COVERING_LEVEL_VARIANTS);
           if (selectedCoveringLevel.length === 3) {
-            // Show all profiles (including those without covering_level specified)
-            query = query.or(`islamic_questionnaire->>covering_level.in.("${selectedCoveringLevel.join('","')}"),islamic_questionnaire->>covering_level.is.null,islamic_questionnaire.is.null`);
+            query = query.or(`islamic_questionnaire->>covering_level.in.${list},islamic_questionnaire->>covering_level.is.null,islamic_questionnaire.is.null`);
           } else {
-            query = query.filter('islamic_questionnaire->>covering_level', 'in', `("${selectedCoveringLevel.join('","')}")`);
+            query = query.filter('islamic_questionnaire->>covering_level', 'in', list);
           }
         }
         if (shouldApplyFilters && selectedAcceptedWifePositions.length) {
@@ -1433,11 +1481,12 @@ const HomeScreen = () => {
       if (oppositeGender === 'male') {
         if (shouldApplyFilters && selectedBeardPractice.length) {
           console.log('🔍 Filtering by beard_practice:', selectedBeardPractice);
-          // If all beard options are selected, include null/missing values too
+          const keys = selectedBeardPractice.map(getBeardPracticeTranslationKey);
+          const list = buildInListFromKeys(keys, BEARD_PRACTICE_VARIANTS);
           if (selectedBeardPractice.length === 4) {
-            query = query.or(`islamic_questionnaire->>beard_practice.in.("${selectedBeardPractice.join('","')}"),islamic_questionnaire->>beard_practice.is.null,islamic_questionnaire.is.null`);
+            query = query.or(`islamic_questionnaire->>beard_practice.in.${list},islamic_questionnaire->>beard_practice.is.null,islamic_questionnaire.is.null`);
           } else {
-            query = query.filter('islamic_questionnaire->>beard_practice', 'in', `("${selectedBeardPractice.join('","')}")`);
+            query = query.filter('islamic_questionnaire->>beard_practice', 'in', list);
           }
         }
         if (shouldApplyFilters && selectedSeekingWifeNumber.length) {
@@ -2342,19 +2391,23 @@ const HomeScreen = () => {
                 })}
               </View>
 
-              <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_social_condition')}</Text>
-              <View style={styles.horizontalMultiSelect}>
-                {socialConditionOptions.map((option: string) => {
-                  const translationKey = getSocialConditionTranslationKey(option);
-                  const translatedLabel = t(`home.filters.social_condition_options.${translationKey}`) || formatLabel(option);
-                  const selected = selectedSocialCondition.includes(option);
-                  return (
-                    <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedSocialCondition, setSelectedSocialCondition)}>
-                      <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
+              {oppositeGender === 'male' && (
+                <>
+                  <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_social_condition')}</Text>
+                  <View style={styles.horizontalMultiSelect}>
+                    {socialConditionOptions.map((option: string) => {
+                      const translationKey = getSocialConditionTranslationKey(option);
+                      const translatedLabel = t(`home.filters.social_condition_options.${translationKey}`) || formatLabel(option);
+                      const selected = selectedSocialCondition.includes(option);
+                      return (
+                        <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedSocialCondition, setSelectedSocialCondition)}>
+                          <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </>
+              )}
 
               <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_work')}</Text>
               <View style={styles.horizontalMultiSelect}>
@@ -2964,19 +3017,23 @@ const HomeScreen = () => {
               })}
             </View>
 
-            <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_social_condition')}</Text>
-            <View style={styles.horizontalMultiSelect}>
-              {socialConditionOptions.map((option: string) => {
-                const translationKey = getSocialConditionTranslationKey(option);
-                const translatedLabel = t(`home.filters.social_condition_options.${translationKey}`) || formatLabel(option);
-                const selected = selectedSocialCondition.includes(option);
-                return (
-                  <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedSocialCondition, setSelectedSocialCondition)}>
-                    <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+            {oppositeGender === 'male' && (
+              <>
+                <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_social_condition')}</Text>
+                <View style={styles.horizontalMultiSelect}>
+                  {socialConditionOptions.map((option: string) => {
+                    const translationKey = getSocialConditionTranslationKey(option);
+                    const translatedLabel = t(`home.filters.social_condition_options.${translationKey}`) || formatLabel(option);
+                    const selected = selectedSocialCondition.includes(option);
+                    return (
+                      <TouchableOpacity key={option} style={[styles.optionChip, selected && styles.optionChipSelected]} onPress={() => toggleSelection(option, selectedSocialCondition, setSelectedSocialCondition)}>
+                        <Text style={[styles.optionChipText, selected && styles.optionChipTextSelected]}>{translatedLabel}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </>
+            )}
 
             <Text style={[styles.subtitle, { color: COLORS.greyscale900, marginTop: 16 }]}>{t('home.filters.title_work')}</Text>
             <View style={styles.horizontalMultiSelect}>
