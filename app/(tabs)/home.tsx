@@ -577,12 +577,12 @@ const HomeScreen = () => {
   };
   const PRAYER_FREQUENCY_VARIANTS: Record<string, string[]> = {
     // Add both profile_setup and home filter Turkish variants
-    all_5_daily_prayers: ['All 5 Daily Prayers','Günün 5 Vakti','Günde 5 Vakit Namaz','كل الصلوات الخمس','Les 5 prières quotidiennes','Все 5 ежедневных молитв'],
+    all_5_daily_prayers: ['All 5 Daily Prayers','Günün 5 Vakti','Günde 5 Vakit Namaz','كل الصلوات الخمس','الصلوات الخمس جميعًا','Les 5 prières quotidiennes','Все 5 ежедневных молитв'],
     most_prayers: ['Most Prayers','Çoğu Vakit','Çoğu Namaz','أغلب الصلوات','La plupart des prières','Большинство молитв'],
     some_prayers: ['Some Prayers','Bazı Vakitler','Bazı Namazlar','بعض الصلوات','Quelques prières','Некоторые молитвы'],
     friday_only: ['Friday Only','Sadece Cuma','الجمعة فقط','Vendredi seulement','Только в пятницу'],
-    occasionally: ['Occasionally','Ara sıra','Ara Sıra','أحياناً','Occasionnellement','Иногда'],
-    learning_to_pray: ['Learning to Pray','Namaz Kılmayı Öğreniyor','Namaz Öğreniyor','يتعلم الصلاة','Apprend à prier','Учится молиться']
+    occasionally: ['Occasionally','Ara sıra','Ara Sıra','أحياناً','أحيانًا','Occasionnellement','Иногда'],
+    learning_to_pray: ['Learning to Pray','Namaz Kılmayı Öğreniyor','Namaz Öğreniyor','يتعلم الصلاة','أتعلّم الصلاة','Apprend à prier','Учится молиться']
   };
   const QURAN_READING_VARIANTS: Record<string, string[]> = {
     memorized_significant_portions: ['Memorized Significant Portions','Önemli Bölümleri Ezberlemiş','حفظ أجزاء كبيرة','Mémorisé des portions importantes','Выучил значительные части'],
@@ -592,14 +592,14 @@ const HomeScreen = () => {
     cannot_read_arabic: ['Cannot Read Arabic','Arapça Okuyamıyor','لا يستطيع قراءة العربية','Ne peut pas lire l\'arabe','Не может читать по-арабски']
   };
   const COVERING_LEVEL_VARIANTS: Record<string, string[]> = {
-    will_cover: ['Will Cover','Örtünecek','سألتزم بالتغطية','Se couvrira','Будет покрываться'],
+    will_cover: ['Will Cover','Örtünecek','سألتزم بالتغطية','ستتحجب','Se couvrira','Будет покрываться'],
     hijab: ['Hijab','Türban','حجاب','Hijab','Хиджаб'],
     niqab: ['Niqab','Peçe','نقاب','Niqab','Никаб']
   };
   const BEARD_PRACTICE_VARIANTS: Record<string, string[]> = {
     full_beard: ['Full Beard','Tam Sakal','لحية كاملة','Barbe complète','Полная борода'],
-    trimmed_beard: ['Trimmed Beard','Kırpılmış Sakal','لحية مهذبة','Barbe taillée','Подстриженная борода'],
-    mustache_only: ['Mustache Only','Sadece Bıyık','شارب فقط','Moustache seulement','Только усы'],
+    trimmed_beard: ['Trimmed Beard','Kırpılmış Sakal','لحية مهذبة','لحية مشذبة','Barbe taillée','Подстриженная борода'],
+    mustache_only: ['Mustache Only','Sadece Bıyık','شارب فقط','شوارب فقط','Moustache seulement','Только усы'],
     clean_shaven: ['Clean Shaven','Temiz Tıraşlı','حليق','Rasé de près','Чисто выбрит']
   };
 
