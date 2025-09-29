@@ -105,7 +105,8 @@
     "typescript": "^5.3.3"
   },
   "overrides": {
-    "@types/react": "~19.1.0"
+    "@types/react": "~19.1.0",
+    "uuid": "9.0.1"
   },
   "private": true
 }

@@ -6,6 +6,8 @@ const config = getDefaultConfig(__dirname);
 config.resolver.alias = {
   ...config.resolver.alias,
   'buffer': require.resolve('buffer'),
+  // Force uuid to use a custom shim to provide a default export for react-native-gifted-chat
+  'uuid': require.resolve('./shims/uuid-shim.js'),
 };
 
 // Remove problematic web stubs for native builds

@@ -131,6 +131,9 @@ body {
     transition: all 0.2s ease;
 }
 
+/* Hide sidebar logout button: we use top-bar icon instead */
+.sidebar-footer .logout-btn { display: none; }
+
 .logout-btn:hover {
     background: #fecaca;
 }
