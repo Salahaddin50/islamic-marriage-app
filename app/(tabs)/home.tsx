@@ -568,7 +568,7 @@ const HomeScreen = () => {
 
   // Cross-language variants for values saved in DB (profiles may be saved in different UI languages)
   const RELIGIOUS_LEVEL_VARIANTS: Record<string, string[]> = {
-    very_religious: ['Very Religious','Çok Dindar','متدين جداً','Très religieux','Очень религиозный'],
+    very_religious: ['Very Religious','Çok Dindar','متدين جدًا','Très religieux','Очень религиозный'],
     religious: ['Religious','Dindar','متدين','Religieux','Религиозный'],
     // Include Arabic UI variants from profile setup and home filters
     moderately_religious: ['Moderately Religious','Orta Derece Dindar','متدين بشكل معتدل','متوسط التدين','Modérément religieux','Умеренно религиозный'],
@@ -592,8 +592,8 @@ const HomeScreen = () => {
     cannot_read_arabic: ['Cannot Read Arabic','Arapça Okuyamıyor','لا يستطيع قراءة العربية','Ne peut pas lire l\'arabe','Не может читать по-арабски']
   };
   const COVERING_LEVEL_VARIANTS: Record<string, string[]> = {
-    will_cover: ['Will Cover','Örtünecek','ستتحجب','Se couvrira','Будет покрываться'],
-    hijab: ['Hijab','Başörtüsü','حجاب','Hijab','Хиджаб'],
+    will_cover: ['Will Cover','Örtünecek','سألتزم بالتغطية','Se couvrira','Будет покрываться'],
+    hijab: ['Hijab','Türban','حجاب','Hijab','Хиджаб'],
     niqab: ['Niqab','Peçe','نقاب','Niqab','Никаб']
   };
   const BEARD_PRACTICE_VARIANTS: Record<string, string[]> = {
