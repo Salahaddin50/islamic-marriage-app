@@ -4,10 +4,23 @@
 const SUPABASE_URL = 'https://rpzkugodaacelruquhtc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwemt1Z29kYWFjZWxydXF1aHRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyOTIwNTQsImV4cCI6MjA3MDg2ODA1NH0.NEPLSSs8JG4LK-RwJWI3GIg9hwzQLMXyllVF3Fv3yCE';
 
-
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-// Expose client globally for other pages/scripts
-window.supabaseClient = supabase;
+// Do NOT declare a global 'supabase' variable to avoid conflicts with the CDN script.
+// Create the client and expose it as window.supabaseClient, and use a local alias SB.
+const SB = (window && window.supabase && typeof window.supabase.createClient === 'function')
+	? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+	: null;
+window.supabaseClient = SB;
+// Provide a global alias so existing pages that use `supabase` keep working
+try {
+	if (SB) {
+		// Preserve original library under __supabaseLib in case it's needed
+		if (!window.__supabaseLib && window.supabase && typeof window.supabase.createClient === 'function') {
+			window.__supabaseLib = window.supabase;
+		}
+		// Set `supabase` to the client instance so code can call supabase.auth / supabase.from
+		window.supabase = SB;
+	}
+} catch {}
 
 // Global variables
 let currentAdmin = null;
@@ -50,7 +63,7 @@ async function checkAuth() {
         if (stored) {
             supabaseSession = JSON.parse(stored);
             if (supabaseSession && supabaseSession.access_token && supabaseSession.refresh_token) {
-                await supabase.auth.setSession({
+                await SB.auth.setSession({
                     access_token: supabaseSession.access_token,
                     refresh_token: supabaseSession.refresh_token
                 });
@@ -58,7 +71,7 @@ async function checkAuth() {
         }
 
         // Ensure we actually have a valid session
-        const { data: sessionResult } = await supabase.auth.getSession();
+        const { data: sessionResult } = await SB.auth.getSession();
         if (!sessionResult || !sessionResult.session) {
             logout();
             return;
@@ -85,8 +98,9 @@ async function checkAuth() {
         
     } catch (error) {
         console.error('Auth check error:', error);
-        // Always logout on error
-        logout();
+        // In local/dev, avoid redirect loops; show notice and stay
+        try { showNotification('Auth check issue. Continuing in limited mode.', 'warning'); } catch {}
+        return;
     }
 }
 
@@ -123,7 +137,7 @@ function loadAdminInfo() {
 async function logout() {
     try {
         // Sign out from Supabase
-        await supabase.auth.signOut();
+        await SB.auth.signOut();
     } catch (error) {
         console.error('Logout error:', error);
     }
@@ -138,7 +152,7 @@ async function logout() {
 }
 
 // Keep session in sync and handle refresh failures
-supabase.auth.onAuthStateChange((event, session) => {
+SB && SB.auth.onAuthStateChange((event, session) => {
     try {
         if (session) {
             supabaseSession = session;

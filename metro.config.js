@@ -1,4 +1,5 @@
 const { getDefaultConfig } = require('expo/metro-config');
+const path = require('path');
 
 const config = getDefaultConfig(__dirname);
 
@@ -6,8 +7,8 @@ const config = getDefaultConfig(__dirname);
 config.resolver.alias = {
   ...config.resolver.alias,
   'buffer': require.resolve('buffer'),
-  // Force uuid to use a custom shim to provide a default export for react-native-gifted-chat
-  'uuid': require.resolve('./shims/uuid-shim.js'),
+  // Force uuid to our shim
+  'uuid': path.resolve(__dirname, 'shims/uuid-shim.js'),
 };
 
 // Remove problematic web stubs for native builds
@@ -15,6 +16,19 @@ config.resolver.alias = {
 
 // Add CSS support for web
 config.resolver.assetExts.push('css');
+
+// Hard override all uuid subpath resolutions (e.g. 'uuid/wrapper.mjs') to the shim
+const originalResolveRequest = config.resolver.resolveRequest;
+const uuidShimPath = path.resolve(__dirname, 'shims/uuid-shim.js');
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (moduleName === 'uuid' || (typeof moduleName === 'string' && moduleName.startsWith('uuid/'))) {
+    return { type: 'sourceFile', filePath: uuidShimPath };
+  }
+  if (typeof originalResolveRequest === 'function') {
+    return originalResolveRequest(context, moduleName, platform);
+  }
+  return context.resolveRequest(context, moduleName, platform);
+};
 
 // Optimize for native builds
 config.transformer.getTransformOptions = async () => ({
